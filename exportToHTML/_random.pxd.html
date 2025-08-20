@@ -1,0 +1,57 @@
+<html>
+<head>
+<title>_random.pxd</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_random.pxd</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Authors: The scikit-learn developers</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># SPDX-License-Identifier: BSD-3-Clause</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">from </span><span class="s3">.</span><span class="s1">_typedefs </span><span class="s2">cimport </span><span class="s1">uint32_t</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">cdef </span><span class="s1">inline uint32_t DEFAULT_SEED </span><span class="s3">= </span><span class="s4">1</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">cdef </span><span class="s1">enum</span><span class="s3">:</span>
+<a name="l10"><span class="ln">10   </span></a>    <span class="s0"># Max value for our rand_r replacement (near the bottom).</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s0"># We don't use RAND_MAX because it's different across platforms and</span>
+<a name="l12"><span class="ln">12   </span></a>    <span class="s0"># particularly tiny on Windows/MSVC.</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s0"># It corresponds to the maximum representable value for</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s0"># 32-bit signed integers (i.e. 2^31 - 1).</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s1">RAND_R_MAX </span><span class="s3">= </span><span class="s4">2147483647</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a>
+<a name="l18"><span class="ln">18   </span></a><span class="s0"># rand_r replacement using a 32bit XorShift generator</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s0"># See http://www.jstatsoft.org/v08/i14/paper for details</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s2">cdef </span><span class="s1">inline uint32_t our_rand_r</span><span class="s3">(</span><span class="s1">uint32_t</span><span class="s3">* </span><span class="s1">seed</span><span class="s3">) </span><span class="s1">nogil</span><span class="s3">:</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s5">&quot;&quot;&quot;Generate a pseudo-random np.uint32 from a np.uint32 seed&quot;&quot;&quot;</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s0"># seed shouldn't ever be 0.</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s2">if </span><span class="s3">(</span><span class="s1">seed</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] == </span><span class="s4">0</span><span class="s3">):</span>
+<a name="l24"><span class="ln">24   </span></a>        <span class="s1">seed</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] = </span><span class="s1">DEFAULT_SEED</span>
+<a name="l25"><span class="ln">25   </span></a>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s1">seed</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] ^= &lt;</span><span class="s1">uint32_t</span><span class="s3">&gt;(</span><span class="s1">seed</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] &lt;&lt; </span><span class="s4">13</span><span class="s3">)</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s1">seed</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] ^= &lt;</span><span class="s1">uint32_t</span><span class="s3">&gt;(</span><span class="s1">seed</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] &gt;&gt; </span><span class="s4">17</span><span class="s3">)</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s1">seed</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] ^= &lt;</span><span class="s1">uint32_t</span><span class="s3">&gt;(</span><span class="s1">seed</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] &lt;&lt; </span><span class="s4">5</span><span class="s3">)</span>
+<a name="l29"><span class="ln">29   </span></a>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s0"># Use the modulo to make sure that we don't return a values greater than the</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s0"># maximum representable value for signed 32bit integers (i.e. 2^31 - 1).</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s0"># Note that the parenthesis are needed to avoid overflow: here</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s0"># RAND_R_MAX is cast to uint32_t before 1 is added.</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s2">return </span><span class="s1">seed</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] % ((&lt;</span><span class="s1">uint32_t</span><span class="s3">&gt;</span><span class="s1">RAND_R_MAX</span><span class="s3">) + </span><span class="s4">1</span><span class="s3">)</span>
+<a name="l35"><span class="ln">35   </span></a></pre>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>pyversion_compat.h</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #6aab73;}
+.s3 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+pyversion_compat.h</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">#include </span><span class="s2">&quot;Python.h&quot;</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s3">// default to Python's own target Windows version(s)</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s3">// override by setting WINVER, _WIN32_WINNT, (maybe also NTDDI_VERSION?) macros</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">#ifdef </span><span class="s1">Py_WINVER</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">#ifndef </span><span class="s1">WINVER</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">#define </span><span class="s1">WINVER Py_WINVER</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">#endif</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0">#ifndef </span><span class="s1">_WIN32_WINNT</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">#define </span><span class="s1">_WIN32_WINNT Py_WINVER</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s0">#endif</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0">#endif</span>
+<a name="l13"><span class="ln">13   </span></a></pre>
+</body>
+</html>

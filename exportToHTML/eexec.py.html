@@ -1,0 +1,142 @@
+<html>
+<head>
+<title>eexec.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+eexec.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>PostScript Type 1 fonts make use of two types of encryption: charstring 
+<a name="l3"><span class="ln">3    </span></a>encryption and ``eexec`` encryption. Charstring encryption is used for 
+<a name="l4"><span class="ln">4    </span></a>the charstrings themselves, while ``eexec`` is used to encrypt larger 
+<a name="l5"><span class="ln">5    </span></a>sections of the font program, such as the ``Private`` and ``CharStrings`` 
+<a name="l6"><span class="ln">6    </span></a>dictionaries. Despite the different names, the algorithm is the same, 
+<a name="l7"><span class="ln">7    </span></a>although ``eexec`` encryption uses a fixed initial key R=55665. 
+<a name="l8"><span class="ln">8    </span></a> 
+<a name="l9"><span class="ln">9    </span></a>The algorithm uses cipher feedback, meaning that the ciphertext is used 
+<a name="l10"><span class="ln">10   </span></a>to modify the key. Because of this, the routines in this module return 
+<a name="l11"><span class="ln">11   </span></a>the new key at the end of the operation. 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>&quot;&quot;&quot;</span>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a><span class="s2">from </span><span class="s1">fontTools</span><span class="s3">.</span><span class="s1">misc</span><span class="s3">.</span><span class="s1">textTools </span><span class="s2">import </span><span class="s1">bytechr</span><span class="s3">, </span><span class="s1">bytesjoin</span><span class="s3">, </span><span class="s1">byteord</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a>
+<a name="l18"><span class="ln">18   </span></a><span class="s2">def </span><span class="s1">_decryptChar</span><span class="s3">(</span><span class="s1">cipher</span><span class="s3">, </span><span class="s1">R</span><span class="s3">):</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s1">cipher </span><span class="s3">= </span><span class="s1">byteord</span><span class="s3">(</span><span class="s1">cipher</span><span class="s3">)</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s1">plain </span><span class="s3">= ((</span><span class="s1">cipher </span><span class="s3">^ (</span><span class="s1">R </span><span class="s3">&gt;&gt; </span><span class="s4">8</span><span class="s3">))) &amp; </span><span class="s4">0xFF</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s1">R </span><span class="s3">= ((</span><span class="s1">cipher </span><span class="s3">+ </span><span class="s1">R</span><span class="s3">) * </span><span class="s4">52845 </span><span class="s3">+ </span><span class="s4">22719</span><span class="s3">) &amp; </span><span class="s4">0xFFFF</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s2">return </span><span class="s1">bytechr</span><span class="s3">(</span><span class="s1">plain</span><span class="s3">), </span><span class="s1">R</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a><span class="s2">def </span><span class="s1">_encryptChar</span><span class="s3">(</span><span class="s1">plain</span><span class="s3">, </span><span class="s1">R</span><span class="s3">):</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s1">plain </span><span class="s3">= </span><span class="s1">byteord</span><span class="s3">(</span><span class="s1">plain</span><span class="s3">)</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s1">cipher </span><span class="s3">= ((</span><span class="s1">plain </span><span class="s3">^ (</span><span class="s1">R </span><span class="s3">&gt;&gt; </span><span class="s4">8</span><span class="s3">))) &amp; </span><span class="s4">0xFF</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s1">R </span><span class="s3">= ((</span><span class="s1">cipher </span><span class="s3">+ </span><span class="s1">R</span><span class="s3">) * </span><span class="s4">52845 </span><span class="s3">+ </span><span class="s4">22719</span><span class="s3">) &amp; </span><span class="s4">0xFFFF</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s2">return </span><span class="s1">bytechr</span><span class="s3">(</span><span class="s1">cipher</span><span class="s3">), </span><span class="s1">R</span>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a><span class="s2">def </span><span class="s1">decrypt</span><span class="s3">(</span><span class="s1">cipherstring</span><span class="s3">, </span><span class="s1">R</span><span class="s3">):</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s0">r&quot;&quot;&quot; 
+<a name="l34"><span class="ln">34   </span></a>    Decrypts a string using the Type 1 encryption algorithm. 
+<a name="l35"><span class="ln">35   </span></a> 
+<a name="l36"><span class="ln">36   </span></a>    Args: 
+<a name="l37"><span class="ln">37   </span></a>            cipherstring: String of ciphertext. 
+<a name="l38"><span class="ln">38   </span></a>            R: Initial key. 
+<a name="l39"><span class="ln">39   </span></a> 
+<a name="l40"><span class="ln">40   </span></a>    Returns: 
+<a name="l41"><span class="ln">41   </span></a>            decryptedStr: Plaintext string. 
+<a name="l42"><span class="ln">42   </span></a>            R: Output key for subsequent decryptions. 
+<a name="l43"><span class="ln">43   </span></a> 
+<a name="l44"><span class="ln">44   </span></a>    Examples:: 
+<a name="l45"><span class="ln">45   </span></a> 
+<a name="l46"><span class="ln">46   </span></a>            &gt;&gt;&gt; testStr = b&quot;\0\0asdadads asds\265&quot; 
+<a name="l47"><span class="ln">47   </span></a>            &gt;&gt;&gt; decryptedStr, R = decrypt(testStr, 12321) 
+<a name="l48"><span class="ln">48   </span></a>            &gt;&gt;&gt; decryptedStr == b'0d\nh\x15\xe8\xc4\xb2\x15\x1d\x108\x1a&lt;6\xa1' 
+<a name="l49"><span class="ln">49   </span></a>            True 
+<a name="l50"><span class="ln">50   </span></a>            &gt;&gt;&gt; R == 36142 
+<a name="l51"><span class="ln">51   </span></a>            True 
+<a name="l52"><span class="ln">52   </span></a>    &quot;&quot;&quot;</span>
+<a name="l53"><span class="ln">53   </span></a>    <span class="s1">plainList </span><span class="s3">= []</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s2">for </span><span class="s1">cipher </span><span class="s2">in </span><span class="s1">cipherstring</span><span class="s3">:</span>
+<a name="l55"><span class="ln">55   </span></a>        <span class="s1">plain</span><span class="s3">, </span><span class="s1">R </span><span class="s3">= </span><span class="s1">_decryptChar</span><span class="s3">(</span><span class="s1">cipher</span><span class="s3">, </span><span class="s1">R</span><span class="s3">)</span>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s1">plainList</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">plain</span><span class="s3">)</span>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s1">plainstring </span><span class="s3">= </span><span class="s1">bytesjoin</span><span class="s3">(</span><span class="s1">plainList</span><span class="s3">)</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s2">return </span><span class="s1">plainstring</span><span class="s3">, </span><span class="s1">int</span><span class="s3">(</span><span class="s1">R</span><span class="s3">)</span>
+<a name="l59"><span class="ln">59   </span></a>
+<a name="l60"><span class="ln">60   </span></a>
+<a name="l61"><span class="ln">61   </span></a><span class="s2">def </span><span class="s1">encrypt</span><span class="s3">(</span><span class="s1">plainstring</span><span class="s3">, </span><span class="s1">R</span><span class="s3">):</span>
+<a name="l62"><span class="ln">62   </span></a>    <span class="s0">r&quot;&quot;&quot; 
+<a name="l63"><span class="ln">63   </span></a>    Encrypts a string using the Type 1 encryption algorithm. 
+<a name="l64"><span class="ln">64   </span></a> 
+<a name="l65"><span class="ln">65   </span></a>    Note that the algorithm as described in the Type 1 specification requires the 
+<a name="l66"><span class="ln">66   </span></a>    plaintext to be prefixed with a number of random bytes. (For ``eexec`` the 
+<a name="l67"><span class="ln">67   </span></a>    number of random bytes is set to 4.) This routine does *not* add the random 
+<a name="l68"><span class="ln">68   </span></a>    prefix to its input. 
+<a name="l69"><span class="ln">69   </span></a> 
+<a name="l70"><span class="ln">70   </span></a>    Args: 
+<a name="l71"><span class="ln">71   </span></a>            plainstring: String of plaintext. 
+<a name="l72"><span class="ln">72   </span></a>            R: Initial key. 
+<a name="l73"><span class="ln">73   </span></a> 
+<a name="l74"><span class="ln">74   </span></a>    Returns: 
+<a name="l75"><span class="ln">75   </span></a>            cipherstring: Ciphertext string. 
+<a name="l76"><span class="ln">76   </span></a>            R: Output key for subsequent encryptions. 
+<a name="l77"><span class="ln">77   </span></a> 
+<a name="l78"><span class="ln">78   </span></a>    Examples:: 
+<a name="l79"><span class="ln">79   </span></a> 
+<a name="l80"><span class="ln">80   </span></a>            &gt;&gt;&gt; testStr = b&quot;\0\0asdadads asds\265&quot; 
+<a name="l81"><span class="ln">81   </span></a>            &gt;&gt;&gt; decryptedStr, R = decrypt(testStr, 12321) 
+<a name="l82"><span class="ln">82   </span></a>            &gt;&gt;&gt; decryptedStr == b'0d\nh\x15\xe8\xc4\xb2\x15\x1d\x108\x1a&lt;6\xa1' 
+<a name="l83"><span class="ln">83   </span></a>            True 
+<a name="l84"><span class="ln">84   </span></a>            &gt;&gt;&gt; R == 36142 
+<a name="l85"><span class="ln">85   </span></a>            True 
+<a name="l86"><span class="ln">86   </span></a> 
+<a name="l87"><span class="ln">87   </span></a>    &gt;&gt;&gt; testStr = b'0d\nh\x15\xe8\xc4\xb2\x15\x1d\x108\x1a&lt;6\xa1' 
+<a name="l88"><span class="ln">88   </span></a>    &gt;&gt;&gt; encryptedStr, R = encrypt(testStr, 12321) 
+<a name="l89"><span class="ln">89   </span></a>    &gt;&gt;&gt; encryptedStr == b&quot;\0\0asdadads asds\265&quot; 
+<a name="l90"><span class="ln">90   </span></a>    True 
+<a name="l91"><span class="ln">91   </span></a>    &gt;&gt;&gt; R == 36142 
+<a name="l92"><span class="ln">92   </span></a>    True 
+<a name="l93"><span class="ln">93   </span></a>    &quot;&quot;&quot;</span>
+<a name="l94"><span class="ln">94   </span></a>    <span class="s1">cipherList </span><span class="s3">= []</span>
+<a name="l95"><span class="ln">95   </span></a>    <span class="s2">for </span><span class="s1">plain </span><span class="s2">in </span><span class="s1">plainstring</span><span class="s3">:</span>
+<a name="l96"><span class="ln">96   </span></a>        <span class="s1">cipher</span><span class="s3">, </span><span class="s1">R </span><span class="s3">= </span><span class="s1">_encryptChar</span><span class="s3">(</span><span class="s1">plain</span><span class="s3">, </span><span class="s1">R</span><span class="s3">)</span>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s1">cipherList</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">cipher</span><span class="s3">)</span>
+<a name="l98"><span class="ln">98   </span></a>    <span class="s1">cipherstring </span><span class="s3">= </span><span class="s1">bytesjoin</span><span class="s3">(</span><span class="s1">cipherList</span><span class="s3">)</span>
+<a name="l99"><span class="ln">99   </span></a>    <span class="s2">return </span><span class="s1">cipherstring</span><span class="s3">, </span><span class="s1">int</span><span class="s3">(</span><span class="s1">R</span><span class="s3">)</span>
+<a name="l100"><span class="ln">100  </span></a>
+<a name="l101"><span class="ln">101  </span></a>
+<a name="l102"><span class="ln">102  </span></a><span class="s2">def </span><span class="s1">hexString</span><span class="s3">(</span><span class="s1">s</span><span class="s3">):</span>
+<a name="l103"><span class="ln">103  </span></a>    <span class="s2">import </span><span class="s1">binascii</span>
+<a name="l104"><span class="ln">104  </span></a>
+<a name="l105"><span class="ln">105  </span></a>    <span class="s2">return </span><span class="s1">binascii</span><span class="s3">.</span><span class="s1">hexlify</span><span class="s3">(</span><span class="s1">s</span><span class="s3">)</span>
+<a name="l106"><span class="ln">106  </span></a>
+<a name="l107"><span class="ln">107  </span></a>
+<a name="l108"><span class="ln">108  </span></a><span class="s2">def </span><span class="s1">deHexString</span><span class="s3">(</span><span class="s1">h</span><span class="s3">):</span>
+<a name="l109"><span class="ln">109  </span></a>    <span class="s2">import </span><span class="s1">binascii</span>
+<a name="l110"><span class="ln">110  </span></a>
+<a name="l111"><span class="ln">111  </span></a>    <span class="s1">h </span><span class="s3">= </span><span class="s1">bytesjoin</span><span class="s3">(</span><span class="s1">h</span><span class="s3">.</span><span class="s1">split</span><span class="s3">())</span>
+<a name="l112"><span class="ln">112  </span></a>    <span class="s2">return </span><span class="s1">binascii</span><span class="s3">.</span><span class="s1">unhexlify</span><span class="s3">(</span><span class="s1">h</span><span class="s3">)</span>
+<a name="l113"><span class="ln">113  </span></a>
+<a name="l114"><span class="ln">114  </span></a>
+<a name="l115"><span class="ln">115  </span></a><span class="s2">if </span><span class="s1">__name__ </span><span class="s3">== </span><span class="s5">&quot;__main__&quot;</span><span class="s3">:</span>
+<a name="l116"><span class="ln">116  </span></a>    <span class="s2">import </span><span class="s1">sys</span>
+<a name="l117"><span class="ln">117  </span></a>    <span class="s2">import </span><span class="s1">doctest</span>
+<a name="l118"><span class="ln">118  </span></a>
+<a name="l119"><span class="ln">119  </span></a>    <span class="s1">sys</span><span class="s3">.</span><span class="s1">exit</span><span class="s3">(</span><span class="s1">doctest</span><span class="s3">.</span><span class="s1">testmod</span><span class="s3">().</span><span class="s1">failed</span><span class="s3">)</span>
+<a name="l120"><span class="ln">120  </span></a></pre>
+</body>
+</html>

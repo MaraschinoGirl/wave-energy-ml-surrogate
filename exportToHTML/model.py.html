@@ -1,0 +1,868 @@
+<html>
+<head>
+<title>model.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #7a7e85;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+model.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">import </span><span class="s1">inspect</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">import </span><span class="s1">json</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">import </span><span class="s1">typing</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">import </span><span class="s1">warnings</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src </span><span class="s0">import </span><span class="s1">backend</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src </span><span class="s0">import </span><span class="s1">utils</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">api_export </span><span class="s0">import </span><span class="s1">keras_export</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">layers</span><span class="s2">.</span><span class="s1">layer </span><span class="s0">import </span><span class="s1">Layer</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">models</span><span class="s2">.</span><span class="s1">variable_mapping </span><span class="s0">import </span><span class="s1">map_saveable_variables</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">saving </span><span class="s0">import </span><span class="s1">saving_api</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">trainers </span><span class="s0">import </span><span class="s1">trainer </span><span class="s0">as </span><span class="s1">base_trainer</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">utils </span><span class="s0">import </span><span class="s1">summary_utils</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">utils </span><span class="s0">import </span><span class="s1">traceback_utils</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a><span class="s0">if </span><span class="s1">backend</span><span class="s2">.</span><span class="s1">backend</span><span class="s2">() == </span><span class="s3">&quot;tensorflow&quot;</span><span class="s2">:</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">backend</span><span class="s2">.</span><span class="s1">tensorflow</span><span class="s2">.</span><span class="s1">trainer </span><span class="s0">import </span><span class="s2">(</span>
+<a name="l18"><span class="ln">18   </span></a>        <span class="s1">TensorFlowTrainer </span><span class="s0">as </span><span class="s1">Trainer</span><span class="s2">,</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s2">)</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s0">elif </span><span class="s1">backend</span><span class="s2">.</span><span class="s1">backend</span><span class="s2">() == </span><span class="s3">&quot;jax&quot;</span><span class="s2">:</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">backend</span><span class="s2">.</span><span class="s1">jax</span><span class="s2">.</span><span class="s1">trainer </span><span class="s0">import </span><span class="s1">JAXTrainer </span><span class="s0">as </span><span class="s1">Trainer</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s0">elif </span><span class="s1">backend</span><span class="s2">.</span><span class="s1">backend</span><span class="s2">() == </span><span class="s3">&quot;torch&quot;</span><span class="s2">:</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">backend</span><span class="s2">.</span><span class="s1">torch</span><span class="s2">.</span><span class="s1">trainer </span><span class="s0">import </span><span class="s1">TorchTrainer </span><span class="s0">as </span><span class="s1">Trainer</span>
+<a name="l24"><span class="ln">24   </span></a><span class="s0">elif </span><span class="s1">backend</span><span class="s2">.</span><span class="s1">backend</span><span class="s2">() == </span><span class="s3">&quot;numpy&quot;</span><span class="s2">:</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">backend</span><span class="s2">.</span><span class="s1">numpy</span><span class="s2">.</span><span class="s1">trainer </span><span class="s0">import </span><span class="s1">NumpyTrainer </span><span class="s0">as </span><span class="s1">Trainer</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s0">elif </span><span class="s1">backend</span><span class="s2">.</span><span class="s1">backend</span><span class="s2">() == </span><span class="s3">&quot;openvino&quot;</span><span class="s2">:</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">backend</span><span class="s2">.</span><span class="s1">openvino</span><span class="s2">.</span><span class="s1">trainer </span><span class="s0">import </span><span class="s1">OpenVINOTrainer </span><span class="s0">as </span><span class="s1">Trainer</span>
+<a name="l28"><span class="ln">28   </span></a><span class="s0">else</span><span class="s2">:</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s0">raise </span><span class="s1">RuntimeError</span><span class="s2">(</span>
+<a name="l30"><span class="ln">30   </span></a>        <span class="s3">f&quot;Backend '</span><span class="s0">{</span><span class="s1">backend</span><span class="s2">.</span><span class="s1">backend</span><span class="s2">()</span><span class="s0">}</span><span class="s3">' must implement the Trainer class.&quot;</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s2">)</span>
+<a name="l32"><span class="ln">32   </span></a>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a><span class="s2">@</span><span class="s1">keras_export</span><span class="s2">([</span><span class="s3">&quot;keras.Model&quot;</span><span class="s2">, </span><span class="s3">&quot;keras.models.Model&quot;</span><span class="s2">])</span>
+<a name="l35"><span class="ln">35   </span></a><span class="s0">class </span><span class="s1">Model</span><span class="s2">(</span><span class="s1">Trainer</span><span class="s2">, </span><span class="s1">base_trainer</span><span class="s2">.</span><span class="s1">Trainer</span><span class="s2">, </span><span class="s1">Layer</span><span class="s2">):</span>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s4">&quot;&quot;&quot;A model grouping layers into an object with training/inference features. 
+<a name="l37"><span class="ln">37   </span></a> 
+<a name="l38"><span class="ln">38   </span></a>    There are three ways to instantiate a `Model`: 
+<a name="l39"><span class="ln">39   </span></a> 
+<a name="l40"><span class="ln">40   </span></a>    ## With the &quot;Functional API&quot; 
+<a name="l41"><span class="ln">41   </span></a> 
+<a name="l42"><span class="ln">42   </span></a>    You start from `Input`, 
+<a name="l43"><span class="ln">43   </span></a>    you chain layer calls to specify the model's forward pass, 
+<a name="l44"><span class="ln">44   </span></a>    and finally, you create your model from inputs and outputs: 
+<a name="l45"><span class="ln">45   </span></a> 
+<a name="l46"><span class="ln">46   </span></a>    ```python 
+<a name="l47"><span class="ln">47   </span></a>    inputs = keras.Input(shape=(37,)) 
+<a name="l48"><span class="ln">48   </span></a>    x = keras.layers.Dense(32, activation=&quot;relu&quot;)(inputs) 
+<a name="l49"><span class="ln">49   </span></a>    outputs = keras.layers.Dense(5, activation=&quot;softmax&quot;)(x) 
+<a name="l50"><span class="ln">50   </span></a>    model = keras.Model(inputs=inputs, outputs=outputs) 
+<a name="l51"><span class="ln">51   </span></a>    ``` 
+<a name="l52"><span class="ln">52   </span></a> 
+<a name="l53"><span class="ln">53   </span></a>    Note: Only dicts, lists, and tuples of input tensors are supported. Nested 
+<a name="l54"><span class="ln">54   </span></a>    inputs are not supported (e.g. lists of list or dicts of dict). 
+<a name="l55"><span class="ln">55   </span></a> 
+<a name="l56"><span class="ln">56   </span></a>    A new Functional API model can also be created by using the 
+<a name="l57"><span class="ln">57   </span></a>    intermediate tensors. This enables you to quickly extract sub-components 
+<a name="l58"><span class="ln">58   </span></a>    of the model. 
+<a name="l59"><span class="ln">59   </span></a> 
+<a name="l60"><span class="ln">60   </span></a>    Example: 
+<a name="l61"><span class="ln">61   </span></a> 
+<a name="l62"><span class="ln">62   </span></a>    ```python 
+<a name="l63"><span class="ln">63   </span></a>    inputs = keras.Input(shape=(None, None, 3)) 
+<a name="l64"><span class="ln">64   </span></a>    processed = keras.layers.RandomCrop(width=128, height=128)(inputs) 
+<a name="l65"><span class="ln">65   </span></a>    conv = keras.layers.Conv2D(filters=32, kernel_size=3)(processed) 
+<a name="l66"><span class="ln">66   </span></a>    pooling = keras.layers.GlobalAveragePooling2D()(conv) 
+<a name="l67"><span class="ln">67   </span></a>    feature = keras.layers.Dense(10)(pooling) 
+<a name="l68"><span class="ln">68   </span></a> 
+<a name="l69"><span class="ln">69   </span></a>    full_model = keras.Model(inputs, feature) 
+<a name="l70"><span class="ln">70   </span></a>    backbone = keras.Model(processed, conv) 
+<a name="l71"><span class="ln">71   </span></a>    activations = keras.Model(conv, feature) 
+<a name="l72"><span class="ln">72   </span></a>    ``` 
+<a name="l73"><span class="ln">73   </span></a> 
+<a name="l74"><span class="ln">74   </span></a>    Note that the `backbone` and `activations` models are not 
+<a name="l75"><span class="ln">75   </span></a>    created with `keras.Input` objects, but with the tensors that originate 
+<a name="l76"><span class="ln">76   </span></a>    from `keras.Input` objects. Under the hood, the layers and weights will 
+<a name="l77"><span class="ln">77   </span></a>    be shared across these models, so that user can train the `full_model`, and 
+<a name="l78"><span class="ln">78   </span></a>    use `backbone` or `activations` to do feature extraction. 
+<a name="l79"><span class="ln">79   </span></a>    The inputs and outputs of the model can be nested structures of tensors as 
+<a name="l80"><span class="ln">80   </span></a>    well, and the created models are standard Functional API models that support 
+<a name="l81"><span class="ln">81   </span></a>    all the existing APIs. 
+<a name="l82"><span class="ln">82   </span></a> 
+<a name="l83"><span class="ln">83   </span></a>    ## By subclassing the `Model` class 
+<a name="l84"><span class="ln">84   </span></a> 
+<a name="l85"><span class="ln">85   </span></a>    In that case, you should define your 
+<a name="l86"><span class="ln">86   </span></a>    layers in `__init__()` and you should implement the model's forward pass 
+<a name="l87"><span class="ln">87   </span></a>    in `call()`. 
+<a name="l88"><span class="ln">88   </span></a> 
+<a name="l89"><span class="ln">89   </span></a>    ```python 
+<a name="l90"><span class="ln">90   </span></a>    class MyModel(keras.Model): 
+<a name="l91"><span class="ln">91   </span></a>        def __init__(self): 
+<a name="l92"><span class="ln">92   </span></a>            super().__init__() 
+<a name="l93"><span class="ln">93   </span></a>            self.dense1 = keras.layers.Dense(32, activation=&quot;relu&quot;) 
+<a name="l94"><span class="ln">94   </span></a>            self.dense2 = keras.layers.Dense(5, activation=&quot;softmax&quot;) 
+<a name="l95"><span class="ln">95   </span></a> 
+<a name="l96"><span class="ln">96   </span></a>        def call(self, inputs): 
+<a name="l97"><span class="ln">97   </span></a>            x = self.dense1(inputs) 
+<a name="l98"><span class="ln">98   </span></a>            return self.dense2(x) 
+<a name="l99"><span class="ln">99   </span></a> 
+<a name="l100"><span class="ln">100  </span></a>    model = MyModel() 
+<a name="l101"><span class="ln">101  </span></a>    ``` 
+<a name="l102"><span class="ln">102  </span></a> 
+<a name="l103"><span class="ln">103  </span></a>    If you subclass `Model`, you can optionally have 
+<a name="l104"><span class="ln">104  </span></a>    a `training` argument (boolean) in `call()`, which you can use to specify 
+<a name="l105"><span class="ln">105  </span></a>    a different behavior in training and inference: 
+<a name="l106"><span class="ln">106  </span></a> 
+<a name="l107"><span class="ln">107  </span></a>    ```python 
+<a name="l108"><span class="ln">108  </span></a>    class MyModel(keras.Model): 
+<a name="l109"><span class="ln">109  </span></a>        def __init__(self): 
+<a name="l110"><span class="ln">110  </span></a>            super().__init__() 
+<a name="l111"><span class="ln">111  </span></a>            self.dense1 = keras.layers.Dense(32, activation=&quot;relu&quot;) 
+<a name="l112"><span class="ln">112  </span></a>            self.dense2 = keras.layers.Dense(5, activation=&quot;softmax&quot;) 
+<a name="l113"><span class="ln">113  </span></a>            self.dropout = keras.layers.Dropout(0.5) 
+<a name="l114"><span class="ln">114  </span></a> 
+<a name="l115"><span class="ln">115  </span></a>        def call(self, inputs, training=False): 
+<a name="l116"><span class="ln">116  </span></a>            x = self.dense1(inputs) 
+<a name="l117"><span class="ln">117  </span></a>            x = self.dropout(x, training=training) 
+<a name="l118"><span class="ln">118  </span></a>            return self.dense2(x) 
+<a name="l119"><span class="ln">119  </span></a> 
+<a name="l120"><span class="ln">120  </span></a>    model = MyModel() 
+<a name="l121"><span class="ln">121  </span></a>    ``` 
+<a name="l122"><span class="ln">122  </span></a> 
+<a name="l123"><span class="ln">123  </span></a>    Once the model is created, you can config the model with losses and metrics 
+<a name="l124"><span class="ln">124  </span></a>    with `model.compile()`, train the model with `model.fit()`, or use the model 
+<a name="l125"><span class="ln">125  </span></a>    to do prediction with `model.predict()`. 
+<a name="l126"><span class="ln">126  </span></a> 
+<a name="l127"><span class="ln">127  </span></a>    ## With the `Sequential` class 
+<a name="l128"><span class="ln">128  </span></a> 
+<a name="l129"><span class="ln">129  </span></a>    In addition, `keras.Sequential` is a special case of model where 
+<a name="l130"><span class="ln">130  </span></a>    the model is purely a stack of single-input, single-output layers. 
+<a name="l131"><span class="ln">131  </span></a> 
+<a name="l132"><span class="ln">132  </span></a>    ```python 
+<a name="l133"><span class="ln">133  </span></a>    model = keras.Sequential([ 
+<a name="l134"><span class="ln">134  </span></a>        keras.Input(shape=(None, None, 3)), 
+<a name="l135"><span class="ln">135  </span></a>        keras.layers.Conv2D(filters=32, kernel_size=3), 
+<a name="l136"><span class="ln">136  </span></a>    ]) 
+<a name="l137"><span class="ln">137  </span></a>    ``` 
+<a name="l138"><span class="ln">138  </span></a>    &quot;&quot;&quot;</span>
+<a name="l139"><span class="ln">139  </span></a>
+<a name="l140"><span class="ln">140  </span></a>    <span class="s0">def </span><span class="s1">__new__</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+<a name="l141"><span class="ln">141  </span></a>        <span class="s5"># Signature detection for usage of `Model` as a `Functional`</span>
+<a name="l142"><span class="ln">142  </span></a>        <span class="s0">if </span><span class="s1">functional_init_arguments</span><span class="s2">(</span><span class="s1">args</span><span class="s2">, </span><span class="s1">kwargs</span><span class="s2">) </span><span class="s0">and </span><span class="s1">cls </span><span class="s2">== </span><span class="s1">Model</span><span class="s2">:</span>
+<a name="l143"><span class="ln">143  </span></a>            <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">models</span><span class="s2">.</span><span class="s1">functional </span><span class="s0">import </span><span class="s1">Functional</span>
+<a name="l144"><span class="ln">144  </span></a>
+<a name="l145"><span class="ln">145  </span></a>            <span class="s0">return </span><span class="s1">Functional</span><span class="s2">.</span><span class="s1">__new__</span><span class="s2">(</span><span class="s1">Functional</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">)</span>
+<a name="l146"><span class="ln">146  </span></a>        <span class="s0">return </span><span class="s1">typing</span><span class="s2">.</span><span class="s1">cast</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">super</span><span class="s2">().</span><span class="s1">__new__</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">))</span>
+<a name="l147"><span class="ln">147  </span></a>
+<a name="l148"><span class="ln">148  </span></a>    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+<a name="l149"><span class="ln">149  </span></a>        <span class="s1">Trainer</span><span class="s2">.</span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">)</span>
+<a name="l150"><span class="ln">150  </span></a>        <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">models </span><span class="s0">import </span><span class="s1">functional</span>
+<a name="l151"><span class="ln">151  </span></a>
+<a name="l152"><span class="ln">152  </span></a>        <span class="s5"># Signature detection for usage of a `Model` subclass</span>
+<a name="l153"><span class="ln">153  </span></a>        <span class="s5"># as a `Functional` subclass</span>
+<a name="l154"><span class="ln">154  </span></a>        <span class="s0">if </span><span class="s1">functional_init_arguments</span><span class="s2">(</span><span class="s1">args</span><span class="s2">, </span><span class="s1">kwargs</span><span class="s2">):</span>
+<a name="l155"><span class="ln">155  </span></a>            <span class="s1">inject_functional_model_class</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">__class__</span><span class="s2">)</span>
+<a name="l156"><span class="ln">156  </span></a>            <span class="s1">functional</span><span class="s2">.</span><span class="s1">Functional</span><span class="s2">.</span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">)</span>
+<a name="l157"><span class="ln">157  </span></a>        <span class="s0">else</span><span class="s2">:</span>
+<a name="l158"><span class="ln">158  </span></a>            <span class="s1">Layer</span><span class="s2">.</span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">)</span>
+<a name="l159"><span class="ln">159  </span></a>
+<a name="l160"><span class="ln">160  </span></a>    <span class="s0">def </span><span class="s1">call</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *</span><span class="s1">args</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+<a name="l161"><span class="ln">161  </span></a>        <span class="s0">raise </span><span class="s1">NotImplementedError</span><span class="s2">(</span>
+<a name="l162"><span class="ln">162  </span></a>            <span class="s3">f&quot;Model </span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">__class__</span><span class="s2">.</span><span class="s1">__name__</span><span class="s0">} </span><span class="s3">does not have a `call()` &quot;</span>
+<a name="l163"><span class="ln">163  </span></a>            <span class="s3">&quot;method implemented.&quot;</span>
+<a name="l164"><span class="ln">164  </span></a>        <span class="s2">)</span>
+<a name="l165"><span class="ln">165  </span></a>
+<a name="l166"><span class="ln">166  </span></a>    <span class="s2">@</span><span class="s1">property</span>
+<a name="l167"><span class="ln">167  </span></a>    <span class="s0">def </span><span class="s1">layers</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+<a name="l168"><span class="ln">168  </span></a>        <span class="s0">return </span><span class="s1">list</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_flatten_layers</span><span class="s2">(</span><span class="s1">include_self</span><span class="s2">=</span><span class="s0">False</span><span class="s2">, </span><span class="s1">recursive</span><span class="s2">=</span><span class="s0">False</span><span class="s2">))</span>
+<a name="l169"><span class="ln">169  </span></a>
+<a name="l170"><span class="ln">170  </span></a>    <span class="s2">@</span><span class="s1">layers</span><span class="s2">.</span><span class="s1">setter</span>
+<a name="l171"><span class="ln">171  </span></a>    <span class="s0">def </span><span class="s1">layers</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">_</span><span class="s2">):</span>
+<a name="l172"><span class="ln">172  </span></a>        <span class="s0">raise </span><span class="s1">AttributeError</span><span class="s2">(</span>
+<a name="l173"><span class="ln">173  </span></a>            <span class="s3">&quot;`Model.layers` attribute is reserved and should not be used. &quot;</span>
+<a name="l174"><span class="ln">174  </span></a>            <span class="s3">&quot;Please use another name.&quot;</span>
+<a name="l175"><span class="ln">175  </span></a>        <span class="s2">)</span>
+<a name="l176"><span class="ln">176  </span></a>
+<a name="l177"><span class="ln">177  </span></a>    <span class="s2">@</span><span class="s1">traceback_utils</span><span class="s2">.</span><span class="s1">filter_traceback</span>
+<a name="l178"><span class="ln">178  </span></a>    <span class="s0">def </span><span class="s1">get_layer</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">name</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">index</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+<a name="l179"><span class="ln">179  </span></a>        <span class="s4">&quot;&quot;&quot;Retrieves a layer based on either its name (unique) or index. 
+<a name="l180"><span class="ln">180  </span></a> 
+<a name="l181"><span class="ln">181  </span></a>        If `name` and `index` are both provided, `index` will take precedence. 
+<a name="l182"><span class="ln">182  </span></a>        Indices are based on order of horizontal graph traversal (bottom-up). 
+<a name="l183"><span class="ln">183  </span></a> 
+<a name="l184"><span class="ln">184  </span></a>        Args: 
+<a name="l185"><span class="ln">185  </span></a>            name: String, name of layer. 
+<a name="l186"><span class="ln">186  </span></a>            index: Integer, index of layer. 
+<a name="l187"><span class="ln">187  </span></a> 
+<a name="l188"><span class="ln">188  </span></a>        Returns: 
+<a name="l189"><span class="ln">189  </span></a>            A layer instance. 
+<a name="l190"><span class="ln">190  </span></a>        &quot;&quot;&quot;</span>
+<a name="l191"><span class="ln">191  </span></a>        <span class="s0">if </span><span class="s1">index </span><span class="s0">is not None and </span><span class="s1">name </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l192"><span class="ln">192  </span></a>            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+<a name="l193"><span class="ln">193  </span></a>                <span class="s3">&quot;Provide only a layer name or a layer index. Received: &quot;</span>
+<a name="l194"><span class="ln">194  </span></a>                <span class="s3">f&quot;index=</span><span class="s0">{</span><span class="s1">index</span><span class="s0">}</span><span class="s3">, name=</span><span class="s0">{</span><span class="s1">name</span><span class="s0">}</span><span class="s3">.&quot;</span>
+<a name="l195"><span class="ln">195  </span></a>            <span class="s2">)</span>
+<a name="l196"><span class="ln">196  </span></a>        <span class="s0">if </span><span class="s1">index </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l197"><span class="ln">197  </span></a>            <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">layers</span><span class="s2">) &lt;= </span><span class="s1">index</span><span class="s2">:</span>
+<a name="l198"><span class="ln">198  </span></a>                <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+<a name="l199"><span class="ln">199  </span></a>                    <span class="s3">f&quot;Was asked to retrieve layer at index </span><span class="s0">{</span><span class="s1">index</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l200"><span class="ln">200  </span></a>                    <span class="s3">f&quot; but model only has </span><span class="s0">{</span><span class="s1">len</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">layers</span><span class="s2">)</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l201"><span class="ln">201  </span></a>                    <span class="s3">&quot; layers.&quot;</span>
+<a name="l202"><span class="ln">202  </span></a>                <span class="s2">)</span>
+<a name="l203"><span class="ln">203  </span></a>            <span class="s0">else</span><span class="s2">:</span>
+<a name="l204"><span class="ln">204  </span></a>                <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">layers</span><span class="s2">[</span><span class="s1">index</span><span class="s2">]</span>
+<a name="l205"><span class="ln">205  </span></a>
+<a name="l206"><span class="ln">206  </span></a>        <span class="s0">if </span><span class="s1">name </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l207"><span class="ln">207  </span></a>            <span class="s0">for </span><span class="s1">layer </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">layers</span><span class="s2">:</span>
+<a name="l208"><span class="ln">208  </span></a>                <span class="s0">if </span><span class="s1">layer</span><span class="s2">.</span><span class="s1">name </span><span class="s2">== </span><span class="s1">name</span><span class="s2">:</span>
+<a name="l209"><span class="ln">209  </span></a>                    <span class="s0">return </span><span class="s1">layer</span>
+<a name="l210"><span class="ln">210  </span></a>            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+<a name="l211"><span class="ln">211  </span></a>                <span class="s3">f&quot;No such layer: </span><span class="s0">{</span><span class="s1">name</span><span class="s0">}</span><span class="s3">. Existing layers are: &quot;</span>
+<a name="l212"><span class="ln">212  </span></a>                <span class="s3">f&quot;</span><span class="s0">{</span><span class="s1">list</span><span class="s2">(</span><span class="s1">layer</span><span class="s2">.</span><span class="s1">name </span><span class="s0">for </span><span class="s1">layer </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">layers</span><span class="s2">)</span><span class="s0">}</span><span class="s3">.&quot;</span>
+<a name="l213"><span class="ln">213  </span></a>            <span class="s2">)</span>
+<a name="l214"><span class="ln">214  </span></a>        <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+<a name="l215"><span class="ln">215  </span></a>            <span class="s3">&quot;Provide either a layer name or layer index at `get_layer`.&quot;</span>
+<a name="l216"><span class="ln">216  </span></a>        <span class="s2">)</span>
+<a name="l217"><span class="ln">217  </span></a>
+<a name="l218"><span class="ln">218  </span></a>    <span class="s2">@</span><span class="s1">traceback_utils</span><span class="s2">.</span><span class="s1">filter_traceback</span>
+<a name="l219"><span class="ln">219  </span></a>    <span class="s0">def </span><span class="s1">summary</span><span class="s2">(</span>
+<a name="l220"><span class="ln">220  </span></a>        <span class="s1">self</span><span class="s2">,</span>
+<a name="l221"><span class="ln">221  </span></a>        <span class="s1">line_length</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l222"><span class="ln">222  </span></a>        <span class="s1">positions</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l223"><span class="ln">223  </span></a>        <span class="s1">print_fn</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l224"><span class="ln">224  </span></a>        <span class="s1">expand_nested</span><span class="s2">=</span><span class="s0">False</span><span class="s2">,</span>
+<a name="l225"><span class="ln">225  </span></a>        <span class="s1">show_trainable</span><span class="s2">=</span><span class="s0">False</span><span class="s2">,</span>
+<a name="l226"><span class="ln">226  </span></a>        <span class="s1">layer_range</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l227"><span class="ln">227  </span></a>    <span class="s2">):</span>
+<a name="l228"><span class="ln">228  </span></a>        <span class="s4">&quot;&quot;&quot;Prints a string summary of the network. 
+<a name="l229"><span class="ln">229  </span></a> 
+<a name="l230"><span class="ln">230  </span></a>        Args: 
+<a name="l231"><span class="ln">231  </span></a>            line_length: Total length of printed lines 
+<a name="l232"><span class="ln">232  </span></a>                (e.g. set this to adapt the display to different 
+<a name="l233"><span class="ln">233  </span></a>                terminal window sizes). 
+<a name="l234"><span class="ln">234  </span></a>            positions: Relative or absolute positions of log elements 
+<a name="l235"><span class="ln">235  </span></a>                in each line. If not provided, becomes 
+<a name="l236"><span class="ln">236  </span></a>                `[0.3, 0.6, 0.70, 1.]`. Defaults to `None`. 
+<a name="l237"><span class="ln">237  </span></a>            print_fn: Print function to use. By default, prints to `stdout`. 
+<a name="l238"><span class="ln">238  </span></a>                If `stdout` doesn't work in your environment, change to `print`. 
+<a name="l239"><span class="ln">239  </span></a>                It will be called on each line of the summary. 
+<a name="l240"><span class="ln">240  </span></a>                You can set it to a custom function 
+<a name="l241"><span class="ln">241  </span></a>                in order to capture the string summary. 
+<a name="l242"><span class="ln">242  </span></a>            expand_nested: Whether to expand the nested models. 
+<a name="l243"><span class="ln">243  </span></a>                Defaults to `False`. 
+<a name="l244"><span class="ln">244  </span></a>            show_trainable: Whether to show if a layer is trainable. 
+<a name="l245"><span class="ln">245  </span></a>                Defaults to `False`. 
+<a name="l246"><span class="ln">246  </span></a>            layer_range: a list or tuple of 2 strings, 
+<a name="l247"><span class="ln">247  </span></a>                which is the starting layer name and ending layer name 
+<a name="l248"><span class="ln">248  </span></a>                (both inclusive) indicating the range of layers to be printed 
+<a name="l249"><span class="ln">249  </span></a>                in summary. It also accepts regex patterns instead of exact 
+<a name="l250"><span class="ln">250  </span></a>                names. In this case, the start predicate will be 
+<a name="l251"><span class="ln">251  </span></a>                the first element that matches `layer_range[0]` 
+<a name="l252"><span class="ln">252  </span></a>                and the end predicate will be the last element 
+<a name="l253"><span class="ln">253  </span></a>                that matches `layer_range[1]`. 
+<a name="l254"><span class="ln">254  </span></a>                By default `None` considers all layers of the model. 
+<a name="l255"><span class="ln">255  </span></a> 
+<a name="l256"><span class="ln">256  </span></a>        Raises: 
+<a name="l257"><span class="ln">257  </span></a>            ValueError: if `summary()` is called before the model is built. 
+<a name="l258"><span class="ln">258  </span></a>        &quot;&quot;&quot;</span>
+<a name="l259"><span class="ln">259  </span></a>        <span class="s1">summary_utils</span><span class="s2">.</span><span class="s1">print_summary</span><span class="s2">(</span>
+<a name="l260"><span class="ln">260  </span></a>            <span class="s1">self</span><span class="s2">,</span>
+<a name="l261"><span class="ln">261  </span></a>            <span class="s1">line_length</span><span class="s2">=</span><span class="s1">line_length</span><span class="s2">,</span>
+<a name="l262"><span class="ln">262  </span></a>            <span class="s1">positions</span><span class="s2">=</span><span class="s1">positions</span><span class="s2">,</span>
+<a name="l263"><span class="ln">263  </span></a>            <span class="s1">print_fn</span><span class="s2">=</span><span class="s1">print_fn</span><span class="s2">,</span>
+<a name="l264"><span class="ln">264  </span></a>            <span class="s1">expand_nested</span><span class="s2">=</span><span class="s1">expand_nested</span><span class="s2">,</span>
+<a name="l265"><span class="ln">265  </span></a>            <span class="s1">show_trainable</span><span class="s2">=</span><span class="s1">show_trainable</span><span class="s2">,</span>
+<a name="l266"><span class="ln">266  </span></a>            <span class="s1">layer_range</span><span class="s2">=</span><span class="s1">layer_range</span><span class="s2">,</span>
+<a name="l267"><span class="ln">267  </span></a>        <span class="s2">)</span>
+<a name="l268"><span class="ln">268  </span></a>
+<a name="l269"><span class="ln">269  </span></a>    <span class="s2">@</span><span class="s1">traceback_utils</span><span class="s2">.</span><span class="s1">filter_traceback</span>
+<a name="l270"><span class="ln">270  </span></a>    <span class="s0">def </span><span class="s1">save</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">filepath</span><span class="s2">, </span><span class="s1">overwrite</span><span class="s2">=</span><span class="s0">True</span><span class="s2">, </span><span class="s1">zipped</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+<a name="l271"><span class="ln">271  </span></a>        <span class="s4">&quot;&quot;&quot;Saves a model as a `.keras` file. 
+<a name="l272"><span class="ln">272  </span></a> 
+<a name="l273"><span class="ln">273  </span></a>        Args: 
+<a name="l274"><span class="ln">274  </span></a>            filepath: `str` or `pathlib.Path` object. 
+<a name="l275"><span class="ln">275  </span></a>                The path where to save the model. Must end in `.keras` 
+<a name="l276"><span class="ln">276  </span></a>                (unless saving the model as an unzipped directory 
+<a name="l277"><span class="ln">277  </span></a>                via `zipped=False`). 
+<a name="l278"><span class="ln">278  </span></a>            overwrite: Whether we should overwrite any existing model at 
+<a name="l279"><span class="ln">279  </span></a>                the target location, or instead ask the user via 
+<a name="l280"><span class="ln">280  </span></a>                an interactive prompt. 
+<a name="l281"><span class="ln">281  </span></a>            zipped: Whether to save the model as a zipped `.keras` 
+<a name="l282"><span class="ln">282  </span></a>                archive (default when saving locally), or as an 
+<a name="l283"><span class="ln">283  </span></a>                unzipped directory (default when saving on the 
+<a name="l284"><span class="ln">284  </span></a>                Hugging Face Hub). 
+<a name="l285"><span class="ln">285  </span></a> 
+<a name="l286"><span class="ln">286  </span></a>        Example: 
+<a name="l287"><span class="ln">287  </span></a> 
+<a name="l288"><span class="ln">288  </span></a>        ```python 
+<a name="l289"><span class="ln">289  </span></a>        model = keras.Sequential( 
+<a name="l290"><span class="ln">290  </span></a>            [ 
+<a name="l291"><span class="ln">291  </span></a>                keras.layers.Dense(5, input_shape=(3,)), 
+<a name="l292"><span class="ln">292  </span></a>                keras.layers.Softmax(), 
+<a name="l293"><span class="ln">293  </span></a>            ], 
+<a name="l294"><span class="ln">294  </span></a>        ) 
+<a name="l295"><span class="ln">295  </span></a>        model.save(&quot;model.keras&quot;) 
+<a name="l296"><span class="ln">296  </span></a>        loaded_model = keras.saving.load_model(&quot;model.keras&quot;) 
+<a name="l297"><span class="ln">297  </span></a>        x = keras.random.uniform((10, 3)) 
+<a name="l298"><span class="ln">298  </span></a>        assert np.allclose(model.predict(x), loaded_model.predict(x)) 
+<a name="l299"><span class="ln">299  </span></a>        ``` 
+<a name="l300"><span class="ln">300  </span></a> 
+<a name="l301"><span class="ln">301  </span></a>        Note that `model.save()` is an alias for `keras.saving.save_model()`. 
+<a name="l302"><span class="ln">302  </span></a> 
+<a name="l303"><span class="ln">303  </span></a>        The saved `.keras` file contains: 
+<a name="l304"><span class="ln">304  </span></a> 
+<a name="l305"><span class="ln">305  </span></a>        - The model's configuration (architecture) 
+<a name="l306"><span class="ln">306  </span></a>        - The model's weights 
+<a name="l307"><span class="ln">307  </span></a>        - The model's optimizer's state (if any) 
+<a name="l308"><span class="ln">308  </span></a> 
+<a name="l309"><span class="ln">309  </span></a>        Thus models can be reinstantiated in the exact same state. 
+<a name="l310"><span class="ln">310  </span></a>        &quot;&quot;&quot;</span>
+<a name="l311"><span class="ln">311  </span></a>        <span class="s0">return </span><span class="s1">saving_api</span><span class="s2">.</span><span class="s1">save_model</span><span class="s2">(</span>
+<a name="l312"><span class="ln">312  </span></a>            <span class="s1">self</span><span class="s2">, </span><span class="s1">filepath</span><span class="s2">, </span><span class="s1">overwrite</span><span class="s2">=</span><span class="s1">overwrite</span><span class="s2">, </span><span class="s1">zipped</span><span class="s2">=</span><span class="s1">zipped</span><span class="s2">, **</span><span class="s1">kwargs</span>
+<a name="l313"><span class="ln">313  </span></a>        <span class="s2">)</span>
+<a name="l314"><span class="ln">314  </span></a>
+<a name="l315"><span class="ln">315  </span></a>    <span class="s2">@</span><span class="s1">traceback_utils</span><span class="s2">.</span><span class="s1">filter_traceback</span>
+<a name="l316"><span class="ln">316  </span></a>    <span class="s0">def </span><span class="s1">save_weights</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">filepath</span><span class="s2">, </span><span class="s1">overwrite</span><span class="s2">=</span><span class="s0">True</span><span class="s2">):</span>
+<a name="l317"><span class="ln">317  </span></a>        <span class="s4">&quot;&quot;&quot;Saves all layer weights to a `.weights.h5` file. 
+<a name="l318"><span class="ln">318  </span></a> 
+<a name="l319"><span class="ln">319  </span></a>        Args: 
+<a name="l320"><span class="ln">320  </span></a>            filepath: `str` or `pathlib.Path` object. 
+<a name="l321"><span class="ln">321  </span></a>                Path where to save the model. Must end in `.weights.h5`. 
+<a name="l322"><span class="ln">322  </span></a>            overwrite: Whether we should overwrite any existing model 
+<a name="l323"><span class="ln">323  </span></a>                at the target location, or instead ask the user 
+<a name="l324"><span class="ln">324  </span></a>                via an interactive prompt. 
+<a name="l325"><span class="ln">325  </span></a>        &quot;&quot;&quot;</span>
+<a name="l326"><span class="ln">326  </span></a>        <span class="s0">return </span><span class="s1">saving_api</span><span class="s2">.</span><span class="s1">save_weights</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">filepath</span><span class="s2">, </span><span class="s1">overwrite</span><span class="s2">=</span><span class="s1">overwrite</span><span class="s2">)</span>
+<a name="l327"><span class="ln">327  </span></a>
+<a name="l328"><span class="ln">328  </span></a>    <span class="s2">@</span><span class="s1">traceback_utils</span><span class="s2">.</span><span class="s1">filter_traceback</span>
+<a name="l329"><span class="ln">329  </span></a>    <span class="s0">def </span><span class="s1">load_weights</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">filepath</span><span class="s2">, </span><span class="s1">skip_mismatch</span><span class="s2">=</span><span class="s0">False</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+<a name="l330"><span class="ln">330  </span></a>        <span class="s4">&quot;&quot;&quot;Load weights from a file saved via `save_weights()`. 
+<a name="l331"><span class="ln">331  </span></a> 
+<a name="l332"><span class="ln">332  </span></a>        Weights are loaded based on the network's 
+<a name="l333"><span class="ln">333  </span></a>        topology. This means the architecture should be the same as when the 
+<a name="l334"><span class="ln">334  </span></a>        weights were saved. Note that layers that don't have weights are not 
+<a name="l335"><span class="ln">335  </span></a>        taken into account in the topological ordering, so adding or removing 
+<a name="l336"><span class="ln">336  </span></a>        layers is fine as long as they don't have weights. 
+<a name="l337"><span class="ln">337  </span></a> 
+<a name="l338"><span class="ln">338  </span></a>        **Partial weight loading** 
+<a name="l339"><span class="ln">339  </span></a> 
+<a name="l340"><span class="ln">340  </span></a>        If you have modified your model, for instance by adding a new layer 
+<a name="l341"><span class="ln">341  </span></a>        (with weights) or by changing the shape of the weights of a layer, 
+<a name="l342"><span class="ln">342  </span></a>        you can choose to ignore errors and continue loading 
+<a name="l343"><span class="ln">343  </span></a>        by setting `skip_mismatch=True`. In this case any layer with 
+<a name="l344"><span class="ln">344  </span></a>        mismatching weights will be skipped. A warning will be displayed 
+<a name="l345"><span class="ln">345  </span></a>        for each skipped layer. 
+<a name="l346"><span class="ln">346  </span></a> 
+<a name="l347"><span class="ln">347  </span></a>        Args: 
+<a name="l348"><span class="ln">348  </span></a>            filepath: String, path to the weights file to load. 
+<a name="l349"><span class="ln">349  </span></a>                It can either be a `.weights.h5` file 
+<a name="l350"><span class="ln">350  </span></a>                or a legacy `.h5` weights file. 
+<a name="l351"><span class="ln">351  </span></a>            skip_mismatch: Boolean, whether to skip loading of layers where 
+<a name="l352"><span class="ln">352  </span></a>                there is a mismatch in the number of weights, or a mismatch in 
+<a name="l353"><span class="ln">353  </span></a>                the shape of the weights. 
+<a name="l354"><span class="ln">354  </span></a>        &quot;&quot;&quot;</span>
+<a name="l355"><span class="ln">355  </span></a>        <span class="s1">saving_api</span><span class="s2">.</span><span class="s1">load_weights</span><span class="s2">(</span>
+<a name="l356"><span class="ln">356  </span></a>            <span class="s1">self</span><span class="s2">, </span><span class="s1">filepath</span><span class="s2">, </span><span class="s1">skip_mismatch</span><span class="s2">=</span><span class="s1">skip_mismatch</span><span class="s2">, **</span><span class="s1">kwargs</span>
+<a name="l357"><span class="ln">357  </span></a>        <span class="s2">)</span>
+<a name="l358"><span class="ln">358  </span></a>
+<a name="l359"><span class="ln">359  </span></a>    <span class="s0">def </span><span class="s1">quantize</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">mode</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+<a name="l360"><span class="ln">360  </span></a>        <span class="s4">&quot;&quot;&quot;Quantize the weights of the model. 
+<a name="l361"><span class="ln">361  </span></a> 
+<a name="l362"><span class="ln">362  </span></a>        Note that the model must be built first before calling this method. 
+<a name="l363"><span class="ln">363  </span></a>        `quantize` will recursively call `quantize(mode)` in all layers and 
+<a name="l364"><span class="ln">364  </span></a>        will be skipped if the layer doesn't implement the function. 
+<a name="l365"><span class="ln">365  </span></a> 
+<a name="l366"><span class="ln">366  </span></a>        Args: 
+<a name="l367"><span class="ln">367  </span></a>            mode: The mode of the quantization. Only 'int8' is supported at this 
+<a name="l368"><span class="ln">368  </span></a>                time. 
+<a name="l369"><span class="ln">369  </span></a>        &quot;&quot;&quot;</span>
+<a name="l370"><span class="ln">370  </span></a>        <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">dtype_policies </span><span class="s0">import </span><span class="s1">QUANTIZATION_MODES</span>
+<a name="l371"><span class="ln">371  </span></a>
+<a name="l372"><span class="ln">372  </span></a>        <span class="s1">type_check </span><span class="s2">= </span><span class="s1">kwargs</span><span class="s2">.</span><span class="s1">pop</span><span class="s2">(</span><span class="s3">&quot;type_check&quot;</span><span class="s2">, </span><span class="s0">True</span><span class="s2">)</span>
+<a name="l373"><span class="ln">373  </span></a>        <span class="s0">if </span><span class="s1">kwargs</span><span class="s2">:</span>
+<a name="l374"><span class="ln">374  </span></a>            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+<a name="l375"><span class="ln">375  </span></a>                <span class="s3">&quot;Unrecognized keyword arguments &quot;</span>
+<a name="l376"><span class="ln">376  </span></a>                <span class="s3">f&quot;passed to </span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">__class__</span><span class="s2">.</span><span class="s1">__name__</span><span class="s0">}</span><span class="s3">: </span><span class="s0">{</span><span class="s1">kwargs</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l377"><span class="ln">377  </span></a>            <span class="s2">)</span>
+<a name="l378"><span class="ln">378  </span></a>        <span class="s0">if </span><span class="s1">mode </span><span class="s0">not in </span><span class="s1">QUANTIZATION_MODES</span><span class="s2">:</span>
+<a name="l379"><span class="ln">379  </span></a>            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+<a name="l380"><span class="ln">380  </span></a>                <span class="s3">&quot;Invalid quantization mode. &quot;</span>
+<a name="l381"><span class="ln">381  </span></a>                <span class="s3">f&quot;Expected one of </span><span class="s0">{</span><span class="s1">QUANTIZATION_MODES</span><span class="s0">}</span><span class="s3">. Received: mode=</span><span class="s0">{</span><span class="s1">mode</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l382"><span class="ln">382  </span></a>            <span class="s2">)</span>
+<a name="l383"><span class="ln">383  </span></a>        <span class="s1">mode_changed </span><span class="s2">= </span><span class="s0">False</span>
+<a name="l384"><span class="ln">384  </span></a>        <span class="s0">for </span><span class="s1">layer </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_flatten_layers</span><span class="s2">():</span>
+<a name="l385"><span class="ln">385  </span></a>            <span class="s1">list_of_sublayers </span><span class="s2">= </span><span class="s1">list</span><span class="s2">(</span><span class="s1">layer</span><span class="s2">.</span><span class="s1">_flatten_layers</span><span class="s2">())</span>
+<a name="l386"><span class="ln">386  </span></a>            <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">list_of_sublayers</span><span class="s2">) == </span><span class="s6">1</span><span class="s2">:  </span><span class="s5"># leaves of the model</span>
+<a name="l387"><span class="ln">387  </span></a>                <span class="s0">try</span><span class="s2">:</span>
+<a name="l388"><span class="ln">388  </span></a>                    <span class="s1">layer</span><span class="s2">.</span><span class="s1">quantize</span><span class="s2">(</span><span class="s1">mode</span><span class="s2">, </span><span class="s1">type_check</span><span class="s2">=</span><span class="s1">type_check</span><span class="s2">)</span>
+<a name="l389"><span class="ln">389  </span></a>                    <span class="s1">mode_changed </span><span class="s2">= </span><span class="s0">True</span>
+<a name="l390"><span class="ln">390  </span></a>                <span class="s0">except </span><span class="s1">NotImplementedError </span><span class="s0">as </span><span class="s1">e</span><span class="s2">:</span>
+<a name="l391"><span class="ln">391  </span></a>                    <span class="s1">warnings</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span><span class="s1">str</span><span class="s2">(</span><span class="s1">e</span><span class="s2">))</span>
+<a name="l392"><span class="ln">392  </span></a>        <span class="s5"># We need to set these functions to `None` to remake them for changed</span>
+<a name="l393"><span class="ln">393  </span></a>        <span class="s5"># call function</span>
+<a name="l394"><span class="ln">394  </span></a>        <span class="s0">if </span><span class="s1">mode_changed</span><span class="s2">:</span>
+<a name="l395"><span class="ln">395  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">train_function </span><span class="s2">= </span><span class="s0">None</span>
+<a name="l396"><span class="ln">396  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">test_function </span><span class="s2">= </span><span class="s0">None</span>
+<a name="l397"><span class="ln">397  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">predict_function </span><span class="s2">= </span><span class="s0">None</span>
+<a name="l398"><span class="ln">398  </span></a>
+<a name="l399"><span class="ln">399  </span></a>    <span class="s0">def </span><span class="s1">build_from_config</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">config</span><span class="s2">):</span>
+<a name="l400"><span class="ln">400  </span></a>        <span class="s0">if not </span><span class="s1">config</span><span class="s2">:</span>
+<a name="l401"><span class="ln">401  </span></a>            <span class="s0">return</span>
+<a name="l402"><span class="ln">402  </span></a>        <span class="s1">status </span><span class="s2">= </span><span class="s0">False</span>
+<a name="l403"><span class="ln">403  </span></a>        <span class="s0">if </span><span class="s3">&quot;input_shape&quot; </span><span class="s0">in </span><span class="s1">config</span><span class="s2">:</span>
+<a name="l404"><span class="ln">404  </span></a>            <span class="s5"># Case: all inputs are in the first arg (possibly nested).</span>
+<a name="l405"><span class="ln">405  </span></a>            <span class="s0">if </span><span class="s1">utils</span><span class="s2">.</span><span class="s1">is_default</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">build</span><span class="s2">):</span>
+<a name="l406"><span class="ln">406  </span></a>                <span class="s1">status </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_build_by_run_for_single_pos_arg</span><span class="s2">(</span>
+<a name="l407"><span class="ln">407  </span></a>                    <span class="s1">config</span><span class="s2">[</span><span class="s3">&quot;input_shape&quot;</span><span class="s2">]</span>
+<a name="l408"><span class="ln">408  </span></a>                <span class="s2">)</span>
+<a name="l409"><span class="ln">409  </span></a>            <span class="s0">else</span><span class="s2">:</span>
+<a name="l410"><span class="ln">410  </span></a>                <span class="s0">try</span><span class="s2">:</span>
+<a name="l411"><span class="ln">411  </span></a>                    <span class="s1">self</span><span class="s2">.</span><span class="s1">build</span><span class="s2">(</span><span class="s1">config</span><span class="s2">[</span><span class="s3">&quot;input_shape&quot;</span><span class="s2">])</span>
+<a name="l412"><span class="ln">412  </span></a>                    <span class="s1">status </span><span class="s2">= </span><span class="s0">True</span>
+<a name="l413"><span class="ln">413  </span></a>                <span class="s0">except</span><span class="s2">:</span>
+<a name="l414"><span class="ln">414  </span></a>                    <span class="s0">pass</span>
+<a name="l415"><span class="ln">415  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">_build_shapes_dict </span><span class="s2">= </span><span class="s1">config</span>
+<a name="l416"><span class="ln">416  </span></a>
+<a name="l417"><span class="ln">417  </span></a>        <span class="s0">elif </span><span class="s3">&quot;shapes_dict&quot; </span><span class="s0">in </span><span class="s1">config</span><span class="s2">:</span>
+<a name="l418"><span class="ln">418  </span></a>            <span class="s5"># Case: inputs were recorded as multiple keyword arguments.</span>
+<a name="l419"><span class="ln">419  </span></a>            <span class="s0">if </span><span class="s1">utils</span><span class="s2">.</span><span class="s1">is_default</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">build</span><span class="s2">):</span>
+<a name="l420"><span class="ln">420  </span></a>                <span class="s1">status </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_build_by_run_for_kwargs</span><span class="s2">(</span><span class="s1">config</span><span class="s2">[</span><span class="s3">&quot;shapes_dict&quot;</span><span class="s2">])</span>
+<a name="l421"><span class="ln">421  </span></a>            <span class="s0">else</span><span class="s2">:</span>
+<a name="l422"><span class="ln">422  </span></a>                <span class="s0">try</span><span class="s2">:</span>
+<a name="l423"><span class="ln">423  </span></a>                    <span class="s1">self</span><span class="s2">.</span><span class="s1">build</span><span class="s2">(**</span><span class="s1">config</span><span class="s2">[</span><span class="s3">&quot;shapes_dict&quot;</span><span class="s2">])</span>
+<a name="l424"><span class="ln">424  </span></a>                    <span class="s1">status </span><span class="s2">= </span><span class="s0">True</span>
+<a name="l425"><span class="ln">425  </span></a>                <span class="s0">except</span><span class="s2">:</span>
+<a name="l426"><span class="ln">426  </span></a>                    <span class="s0">pass</span>
+<a name="l427"><span class="ln">427  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">_build_shapes_dict </span><span class="s2">= </span><span class="s1">config</span><span class="s2">[</span><span class="s3">&quot;shapes_dict&quot;</span><span class="s2">]</span>
+<a name="l428"><span class="ln">428  </span></a>
+<a name="l429"><span class="ln">429  </span></a>        <span class="s0">if not </span><span class="s1">status</span><span class="s2">:</span>
+<a name="l430"><span class="ln">430  </span></a>            <span class="s1">warnings</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span>
+<a name="l431"><span class="ln">431  </span></a>                <span class="s3">f&quot;Model '</span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">name</span><span class="s0">}</span><span class="s3">' had a build config, but the model &quot;</span>
+<a name="l432"><span class="ln">432  </span></a>                <span class="s3">&quot;cannot be built automatically in &quot;</span>
+<a name="l433"><span class="ln">433  </span></a>                <span class="s3">&quot;`build_from_config(config)`. &quot;</span>
+<a name="l434"><span class="ln">434  </span></a>                <span class="s3">&quot;You should implement &quot;</span>
+<a name="l435"><span class="ln">435  </span></a>                <span class="s3">&quot;`def build_from_config(self, config)`, &quot;</span>
+<a name="l436"><span class="ln">436  </span></a>                <span class="s3">&quot;and you might also want to implement the method &quot;</span>
+<a name="l437"><span class="ln">437  </span></a>                <span class="s3">&quot; that generates the config at saving time, &quot;</span>
+<a name="l438"><span class="ln">438  </span></a>                <span class="s3">&quot;`def get_build_config(self)`. &quot;</span>
+<a name="l439"><span class="ln">439  </span></a>                <span class="s3">&quot;The method `build_from_config()` is meant to &quot;</span>
+<a name="l440"><span class="ln">440  </span></a>                <span class="s3">&quot;create the state of the model (i.e. its variables) &quot;</span>
+<a name="l441"><span class="ln">441  </span></a>                <span class="s3">&quot;upon deserialization.&quot;</span><span class="s2">,</span>
+<a name="l442"><span class="ln">442  </span></a>                <span class="s1">stacklevel</span><span class="s2">=</span><span class="s6">2</span><span class="s2">,</span>
+<a name="l443"><span class="ln">443  </span></a>            <span class="s2">)</span>
+<a name="l444"><span class="ln">444  </span></a>
+<a name="l445"><span class="ln">445  </span></a>    <span class="s0">def </span><span class="s1">to_json</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+<a name="l446"><span class="ln">446  </span></a>        <span class="s4">&quot;&quot;&quot;Returns a JSON string containing the network configuration. 
+<a name="l447"><span class="ln">447  </span></a> 
+<a name="l448"><span class="ln">448  </span></a>        To load a network from a JSON save file, use 
+<a name="l449"><span class="ln">449  </span></a>        `keras.models.model_from_json(json_string, custom_objects={...})`. 
+<a name="l450"><span class="ln">450  </span></a> 
+<a name="l451"><span class="ln">451  </span></a>        Args: 
+<a name="l452"><span class="ln">452  </span></a>            **kwargs: Additional keyword arguments to be passed to 
+<a name="l453"><span class="ln">453  </span></a>                `json.dumps()`. 
+<a name="l454"><span class="ln">454  </span></a> 
+<a name="l455"><span class="ln">455  </span></a>        Returns: 
+<a name="l456"><span class="ln">456  </span></a>            A JSON string. 
+<a name="l457"><span class="ln">457  </span></a>        &quot;&quot;&quot;</span>
+<a name="l458"><span class="ln">458  </span></a>        <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">saving </span><span class="s0">import </span><span class="s1">serialization_lib</span>
+<a name="l459"><span class="ln">459  </span></a>
+<a name="l460"><span class="ln">460  </span></a>        <span class="s1">model_config </span><span class="s2">= </span><span class="s1">serialization_lib</span><span class="s2">.</span><span class="s1">serialize_keras_object</span><span class="s2">(</span><span class="s1">self</span><span class="s2">)</span>
+<a name="l461"><span class="ln">461  </span></a>        <span class="s0">return </span><span class="s1">json</span><span class="s2">.</span><span class="s1">dumps</span><span class="s2">(</span><span class="s1">model_config</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">)</span>
+<a name="l462"><span class="ln">462  </span></a>
+<a name="l463"><span class="ln">463  </span></a>    <span class="s0">def </span><span class="s1">export</span><span class="s2">(</span>
+<a name="l464"><span class="ln">464  </span></a>        <span class="s1">self</span><span class="s2">,</span>
+<a name="l465"><span class="ln">465  </span></a>        <span class="s1">filepath</span><span class="s2">,</span>
+<a name="l466"><span class="ln">466  </span></a>        <span class="s1">format</span><span class="s2">=</span><span class="s3">&quot;tf_saved_model&quot;</span><span class="s2">,</span>
+<a name="l467"><span class="ln">467  </span></a>        <span class="s1">verbose</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l468"><span class="ln">468  </span></a>        <span class="s1">input_signature</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l469"><span class="ln">469  </span></a>        <span class="s2">**</span><span class="s1">kwargs</span><span class="s2">,</span>
+<a name="l470"><span class="ln">470  </span></a>    <span class="s2">):</span>
+<a name="l471"><span class="ln">471  </span></a>        <span class="s4">&quot;&quot;&quot;Export the model as an artifact for inference. 
+<a name="l472"><span class="ln">472  </span></a> 
+<a name="l473"><span class="ln">473  </span></a>        Args: 
+<a name="l474"><span class="ln">474  </span></a>            filepath: `str` or `pathlib.Path` object. The path to save the 
+<a name="l475"><span class="ln">475  </span></a>                artifact. 
+<a name="l476"><span class="ln">476  </span></a>            format: `str`. The export format. Supported values: 
+<a name="l477"><span class="ln">477  </span></a>                `&quot;tf_saved_model&quot;` and `&quot;onnx&quot;`.  Defaults to 
+<a name="l478"><span class="ln">478  </span></a>                `&quot;tf_saved_model&quot;`. 
+<a name="l479"><span class="ln">479  </span></a>            verbose: `bool`. Whether to print a message during export. Defaults 
+<a name="l480"><span class="ln">480  </span></a>                to `None`, which uses the default value set by different 
+<a name="l481"><span class="ln">481  </span></a>                backends and formats. 
+<a name="l482"><span class="ln">482  </span></a>            input_signature: Optional. Specifies the shape and dtype of the 
+<a name="l483"><span class="ln">483  </span></a>                model inputs. Can be a structure of `keras.InputSpec`, 
+<a name="l484"><span class="ln">484  </span></a>                `tf.TensorSpec`, `backend.KerasTensor`, or backend tensor. If 
+<a name="l485"><span class="ln">485  </span></a>                not provided, it will be automatically computed. Defaults to 
+<a name="l486"><span class="ln">486  </span></a>                `None`. 
+<a name="l487"><span class="ln">487  </span></a>            **kwargs: Additional keyword arguments: 
+<a name="l488"><span class="ln">488  </span></a>                - Specific to the JAX backend and `format=&quot;tf_saved_model&quot;`: 
+<a name="l489"><span class="ln">489  </span></a>                    - `is_static`: Optional `bool`. Indicates whether `fn` is 
+<a name="l490"><span class="ln">490  </span></a>                        static. Set to `False` if `fn` involves state updates 
+<a name="l491"><span class="ln">491  </span></a>                        (e.g., RNG seeds and counters). 
+<a name="l492"><span class="ln">492  </span></a>                    - `jax2tf_kwargs`: Optional `dict`. Arguments for 
+<a name="l493"><span class="ln">493  </span></a>                        `jax2tf.convert`. See the documentation for 
+<a name="l494"><span class="ln">494  </span></a>                        [`jax2tf.convert`]( 
+<a name="l495"><span class="ln">495  </span></a>                            https://github.com/google/jax/blob/main/jax/experimental/jax2tf/README.md). 
+<a name="l496"><span class="ln">496  </span></a>                        If `native_serialization` and `polymorphic_shapes` are 
+<a name="l497"><span class="ln">497  </span></a>                        not provided, they will be automatically computed. 
+<a name="l498"><span class="ln">498  </span></a> 
+<a name="l499"><span class="ln">499  </span></a>        **Note:** This feature is currently supported only with TensorFlow, JAX 
+<a name="l500"><span class="ln">500  </span></a>        and Torch backends. 
+<a name="l501"><span class="ln">501  </span></a> 
+<a name="l502"><span class="ln">502  </span></a>        **Note:** Be aware that the exported artifact may contain information 
+<a name="l503"><span class="ln">503  </span></a>        from the local file system when using `format=&quot;onnx&quot;`, `verbose=True` 
+<a name="l504"><span class="ln">504  </span></a>        and Torch backend. 
+<a name="l505"><span class="ln">505  </span></a> 
+<a name="l506"><span class="ln">506  </span></a>        Examples: 
+<a name="l507"><span class="ln">507  </span></a> 
+<a name="l508"><span class="ln">508  </span></a>        Here's how to export a TensorFlow SavedModel for inference. 
+<a name="l509"><span class="ln">509  </span></a> 
+<a name="l510"><span class="ln">510  </span></a>        ```python 
+<a name="l511"><span class="ln">511  </span></a>        # Export the model as a TensorFlow SavedModel artifact 
+<a name="l512"><span class="ln">512  </span></a>        model.export(&quot;path/to/location&quot;, format=&quot;tf_saved_model&quot;) 
+<a name="l513"><span class="ln">513  </span></a> 
+<a name="l514"><span class="ln">514  </span></a>        # Load the artifact in a different process/environment 
+<a name="l515"><span class="ln">515  </span></a>        reloaded_artifact = tf.saved_model.load(&quot;path/to/location&quot;) 
+<a name="l516"><span class="ln">516  </span></a>        predictions = reloaded_artifact.serve(input_data) 
+<a name="l517"><span class="ln">517  </span></a>        ``` 
+<a name="l518"><span class="ln">518  </span></a> 
+<a name="l519"><span class="ln">519  </span></a>        Here's how to export an ONNX for inference. 
+<a name="l520"><span class="ln">520  </span></a> 
+<a name="l521"><span class="ln">521  </span></a>        ```python 
+<a name="l522"><span class="ln">522  </span></a>        # Export the model as a ONNX artifact 
+<a name="l523"><span class="ln">523  </span></a>        model.export(&quot;path/to/location&quot;, format=&quot;onnx&quot;) 
+<a name="l524"><span class="ln">524  </span></a> 
+<a name="l525"><span class="ln">525  </span></a>        # Load the artifact in a different process/environment 
+<a name="l526"><span class="ln">526  </span></a>        ort_session = onnxruntime.InferenceSession(&quot;path/to/location&quot;) 
+<a name="l527"><span class="ln">527  </span></a>        ort_inputs = { 
+<a name="l528"><span class="ln">528  </span></a>            k.name: v for k, v in zip(ort_session.get_inputs(), input_data) 
+<a name="l529"><span class="ln">529  </span></a>        } 
+<a name="l530"><span class="ln">530  </span></a>        predictions = ort_session.run(None, ort_inputs) 
+<a name="l531"><span class="ln">531  </span></a>        ``` 
+<a name="l532"><span class="ln">532  </span></a>        &quot;&quot;&quot;</span>
+<a name="l533"><span class="ln">533  </span></a>        <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">export </span><span class="s0">import </span><span class="s1">export_onnx</span>
+<a name="l534"><span class="ln">534  </span></a>        <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">export </span><span class="s0">import </span><span class="s1">export_saved_model</span>
+<a name="l535"><span class="ln">535  </span></a>
+<a name="l536"><span class="ln">536  </span></a>        <span class="s1">available_formats </span><span class="s2">= (</span><span class="s3">&quot;tf_saved_model&quot;</span><span class="s2">, </span><span class="s3">&quot;onnx&quot;</span><span class="s2">)</span>
+<a name="l537"><span class="ln">537  </span></a>        <span class="s0">if </span><span class="s1">format </span><span class="s0">not in </span><span class="s1">available_formats</span><span class="s2">:</span>
+<a name="l538"><span class="ln">538  </span></a>            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+<a name="l539"><span class="ln">539  </span></a>                <span class="s3">f&quot;Unrecognized format=</span><span class="s0">{</span><span class="s1">format</span><span class="s0">}</span><span class="s3">. Supported formats are: &quot;</span>
+<a name="l540"><span class="ln">540  </span></a>                <span class="s3">f&quot;</span><span class="s0">{</span><span class="s1">list</span><span class="s2">(</span><span class="s1">available_formats</span><span class="s2">)</span><span class="s0">}</span><span class="s3">.&quot;</span>
+<a name="l541"><span class="ln">541  </span></a>            <span class="s2">)</span>
+<a name="l542"><span class="ln">542  </span></a>
+<a name="l543"><span class="ln">543  </span></a>        <span class="s0">if </span><span class="s1">format </span><span class="s2">== </span><span class="s3">&quot;tf_saved_model&quot;</span><span class="s2">:</span>
+<a name="l544"><span class="ln">544  </span></a>            <span class="s1">export_saved_model</span><span class="s2">(</span>
+<a name="l545"><span class="ln">545  </span></a>                <span class="s1">self</span><span class="s2">,</span>
+<a name="l546"><span class="ln">546  </span></a>                <span class="s1">filepath</span><span class="s2">,</span>
+<a name="l547"><span class="ln">547  </span></a>                <span class="s1">verbose</span><span class="s2">,</span>
+<a name="l548"><span class="ln">548  </span></a>                <span class="s1">input_signature</span><span class="s2">=</span><span class="s1">input_signature</span><span class="s2">,</span>
+<a name="l549"><span class="ln">549  </span></a>                <span class="s2">**</span><span class="s1">kwargs</span><span class="s2">,</span>
+<a name="l550"><span class="ln">550  </span></a>            <span class="s2">)</span>
+<a name="l551"><span class="ln">551  </span></a>        <span class="s0">elif </span><span class="s1">format </span><span class="s2">== </span><span class="s3">&quot;onnx&quot;</span><span class="s2">:</span>
+<a name="l552"><span class="ln">552  </span></a>            <span class="s1">export_onnx</span><span class="s2">(</span>
+<a name="l553"><span class="ln">553  </span></a>                <span class="s1">self</span><span class="s2">,</span>
+<a name="l554"><span class="ln">554  </span></a>                <span class="s1">filepath</span><span class="s2">,</span>
+<a name="l555"><span class="ln">555  </span></a>                <span class="s1">verbose</span><span class="s2">,</span>
+<a name="l556"><span class="ln">556  </span></a>                <span class="s1">input_signature</span><span class="s2">=</span><span class="s1">input_signature</span><span class="s2">,</span>
+<a name="l557"><span class="ln">557  </span></a>                <span class="s2">**</span><span class="s1">kwargs</span><span class="s2">,</span>
+<a name="l558"><span class="ln">558  </span></a>            <span class="s2">)</span>
+<a name="l559"><span class="ln">559  </span></a>
+<a name="l560"><span class="ln">560  </span></a>    <span class="s2">@</span><span class="s1">classmethod</span>
+<a name="l561"><span class="ln">561  </span></a>    <span class="s0">def </span><span class="s1">from_config</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">config</span><span class="s2">, </span><span class="s1">custom_objects</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+<a name="l562"><span class="ln">562  </span></a>        <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">models</span><span class="s2">.</span><span class="s1">functional </span><span class="s0">import </span><span class="s1">Functional</span>
+<a name="l563"><span class="ln">563  </span></a>
+<a name="l564"><span class="ln">564  </span></a>        <span class="s1">functional_config_keys </span><span class="s2">= [</span>
+<a name="l565"><span class="ln">565  </span></a>            <span class="s3">&quot;name&quot;</span><span class="s2">,</span>
+<a name="l566"><span class="ln">566  </span></a>            <span class="s3">&quot;layers&quot;</span><span class="s2">,</span>
+<a name="l567"><span class="ln">567  </span></a>            <span class="s3">&quot;input_layers&quot;</span><span class="s2">,</span>
+<a name="l568"><span class="ln">568  </span></a>            <span class="s3">&quot;output_layers&quot;</span><span class="s2">,</span>
+<a name="l569"><span class="ln">569  </span></a>        <span class="s2">]</span>
+<a name="l570"><span class="ln">570  </span></a>        <span class="s1">is_functional_config </span><span class="s2">= </span><span class="s1">all</span><span class="s2">(</span>
+<a name="l571"><span class="ln">571  </span></a>            <span class="s1">key </span><span class="s0">in </span><span class="s1">config </span><span class="s0">for </span><span class="s1">key </span><span class="s0">in </span><span class="s1">functional_config_keys</span>
+<a name="l572"><span class="ln">572  </span></a>        <span class="s2">)</span>
+<a name="l573"><span class="ln">573  </span></a>        <span class="s1">argspec </span><span class="s2">= </span><span class="s1">inspect</span><span class="s2">.</span><span class="s1">getfullargspec</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">.</span><span class="s1">__init__</span><span class="s2">)</span>
+<a name="l574"><span class="ln">574  </span></a>        <span class="s1">functional_init_args </span><span class="s2">= </span><span class="s1">inspect</span><span class="s2">.</span><span class="s1">getfullargspec</span><span class="s2">(</span><span class="s1">Functional</span><span class="s2">.</span><span class="s1">__init__</span><span class="s2">).</span><span class="s1">args</span><span class="s2">[</span>
+<a name="l575"><span class="ln">575  </span></a>            <span class="s6">1</span><span class="s2">:</span>
+<a name="l576"><span class="ln">576  </span></a>        <span class="s2">]</span>
+<a name="l577"><span class="ln">577  </span></a>        <span class="s1">revivable_as_functional </span><span class="s2">= (</span>
+<a name="l578"><span class="ln">578  </span></a>            <span class="s1">cls </span><span class="s0">in </span><span class="s2">{</span><span class="s1">Functional</span><span class="s2">, </span><span class="s1">Model</span><span class="s2">}</span>
+<a name="l579"><span class="ln">579  </span></a>            <span class="s0">or </span><span class="s1">argspec</span><span class="s2">.</span><span class="s1">args</span><span class="s2">[</span><span class="s6">1</span><span class="s2">:] == </span><span class="s1">functional_init_args</span>
+<a name="l580"><span class="ln">580  </span></a>            <span class="s0">or </span><span class="s2">(</span><span class="s1">argspec</span><span class="s2">.</span><span class="s1">varargs </span><span class="s2">== </span><span class="s3">&quot;args&quot; </span><span class="s0">and </span><span class="s1">argspec</span><span class="s2">.</span><span class="s1">varkw </span><span class="s2">== </span><span class="s3">&quot;kwargs&quot;</span><span class="s2">)</span>
+<a name="l581"><span class="ln">581  </span></a>        <span class="s2">)</span>
+<a name="l582"><span class="ln">582  </span></a>        <span class="s0">if </span><span class="s1">is_functional_config </span><span class="s0">and </span><span class="s1">revivable_as_functional</span><span class="s2">:</span>
+<a name="l583"><span class="ln">583  </span></a>            <span class="s5"># Revive Functional model</span>
+<a name="l584"><span class="ln">584  </span></a>            <span class="s5"># (but not Functional subclasses with a custom __init__)</span>
+<a name="l585"><span class="ln">585  </span></a>            <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">models</span><span class="s2">.</span><span class="s1">functional </span><span class="s0">import </span><span class="s1">functional_from_config</span>
+<a name="l586"><span class="ln">586  </span></a>
+<a name="l587"><span class="ln">587  </span></a>            <span class="s0">return </span><span class="s1">functional_from_config</span><span class="s2">(</span>
+<a name="l588"><span class="ln">588  </span></a>                <span class="s1">cls</span><span class="s2">, </span><span class="s1">config</span><span class="s2">, </span><span class="s1">custom_objects</span><span class="s2">=</span><span class="s1">custom_objects</span>
+<a name="l589"><span class="ln">589  </span></a>            <span class="s2">)</span>
+<a name="l590"><span class="ln">590  </span></a>
+<a name="l591"><span class="ln">591  </span></a>        <span class="s5"># Either the model has a custom __init__, or the config</span>
+<a name="l592"><span class="ln">592  </span></a>        <span class="s5"># does not contain all the information necessary to</span>
+<a name="l593"><span class="ln">593  </span></a>        <span class="s5"># revive a Functional model. This happens when the user creates</span>
+<a name="l594"><span class="ln">594  </span></a>        <span class="s5"># subclassed models where `get_config()` is returning</span>
+<a name="l595"><span class="ln">595  </span></a>        <span class="s5"># insufficient information to be considered a Functional model.</span>
+<a name="l596"><span class="ln">596  </span></a>        <span class="s5"># In this case, we fall back to provide all config into the</span>
+<a name="l597"><span class="ln">597  </span></a>        <span class="s5"># constructor of the class.</span>
+<a name="l598"><span class="ln">598  </span></a>        <span class="s0">try</span><span class="s2">:</span>
+<a name="l599"><span class="ln">599  </span></a>            <span class="s0">return </span><span class="s1">cls</span><span class="s2">(**</span><span class="s1">config</span><span class="s2">)</span>
+<a name="l600"><span class="ln">600  </span></a>        <span class="s0">except </span><span class="s1">TypeError </span><span class="s0">as </span><span class="s1">e</span><span class="s2">:</span>
+<a name="l601"><span class="ln">601  </span></a>            <span class="s0">raise </span><span class="s1">TypeError</span><span class="s2">(</span>
+<a name="l602"><span class="ln">602  </span></a>                <span class="s3">&quot;Unable to revive model from config. When overriding &quot;</span>
+<a name="l603"><span class="ln">603  </span></a>                <span class="s3">&quot;the `get_config()` method, make sure that the &quot;</span>
+<a name="l604"><span class="ln">604  </span></a>                <span class="s3">&quot;returned config contains all items used as arguments &quot;</span>
+<a name="l605"><span class="ln">605  </span></a>                <span class="s3">f&quot;in the  constructor to </span><span class="s0">{</span><span class="s1">cls</span><span class="s0">}</span><span class="s3">, &quot;</span>
+<a name="l606"><span class="ln">606  </span></a>                <span class="s3">&quot;which is the default behavior. &quot;</span>
+<a name="l607"><span class="ln">607  </span></a>                <span class="s3">&quot;You can override this default behavior by defining a &quot;</span>
+<a name="l608"><span class="ln">608  </span></a>                <span class="s3">&quot;`from_config(cls, config)` class method to specify &quot;</span>
+<a name="l609"><span class="ln">609  </span></a>                <span class="s3">&quot;how to create an &quot;</span>
+<a name="l610"><span class="ln">610  </span></a>                <span class="s3">f&quot;instance of </span><span class="s0">{</span><span class="s1">cls</span><span class="s2">.</span><span class="s1">__name__</span><span class="s0">} </span><span class="s3">from its config.</span><span class="s0">\n\n</span><span class="s3">&quot;</span>
+<a name="l611"><span class="ln">611  </span></a>                <span class="s3">f&quot;Received config=</span><span class="s0">{</span><span class="s1">config</span><span class="s0">}\n\n</span><span class="s3">&quot;</span>
+<a name="l612"><span class="ln">612  </span></a>                <span class="s3">f&quot;Error encountered during deserialization: </span><span class="s0">{</span><span class="s1">e</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l613"><span class="ln">613  </span></a>            <span class="s2">)</span>
+<a name="l614"><span class="ln">614  </span></a>
+<a name="l615"><span class="ln">615  </span></a>    <span class="s0">def </span><span class="s1">_get_variable_map</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+<a name="l616"><span class="ln">616  </span></a>        <span class="s1">store </span><span class="s2">= {}</span>
+<a name="l617"><span class="ln">617  </span></a>        <span class="s1">map_saveable_variables</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">store</span><span class="s2">=</span><span class="s1">store</span><span class="s2">, </span><span class="s1">visited_saveables</span><span class="s2">=</span><span class="s1">set</span><span class="s2">())</span>
+<a name="l618"><span class="ln">618  </span></a>        <span class="s0">return </span><span class="s1">store</span>
+<a name="l619"><span class="ln">619  </span></a>
+<a name="l620"><span class="ln">620  </span></a>    <span class="s0">def </span><span class="s1">get_state_tree</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">value_format</span><span class="s2">=</span><span class="s3">&quot;backend_tensor&quot;</span><span class="s2">):</span>
+<a name="l621"><span class="ln">621  </span></a>        <span class="s4">&quot;&quot;&quot;Retrieves tree-like structure of model variables. 
+<a name="l622"><span class="ln">622  </span></a> 
+<a name="l623"><span class="ln">623  </span></a>        This method allows retrieval of different model variables (trainable, 
+<a name="l624"><span class="ln">624  </span></a>        non-trainable, optimizer, and metrics). The variables are returned in a 
+<a name="l625"><span class="ln">625  </span></a>        nested dictionary format, where the keys correspond to the variable 
+<a name="l626"><span class="ln">626  </span></a>        names and the values are the nested representations of the variables. 
+<a name="l627"><span class="ln">627  </span></a> 
+<a name="l628"><span class="ln">628  </span></a>        Returns: 
+<a name="l629"><span class="ln">629  </span></a>            dict: A dictionary containing the nested representations of the 
+<a name="l630"><span class="ln">630  </span></a>                requested variables. The keys are the variable names, and the 
+<a name="l631"><span class="ln">631  </span></a>                values are the corresponding nested dictionaries. 
+<a name="l632"><span class="ln">632  </span></a>            value_format: One of `&quot;backend_tensor&quot;`, `&quot;numpy_array&quot;`. 
+<a name="l633"><span class="ln">633  </span></a>                The kind of array to return as the leaves of the nested 
+<a name="l634"><span class="ln">634  </span></a>                    state tree. 
+<a name="l635"><span class="ln">635  </span></a> 
+<a name="l636"><span class="ln">636  </span></a>        Example: 
+<a name="l637"><span class="ln">637  </span></a> 
+<a name="l638"><span class="ln">638  </span></a>        ```python 
+<a name="l639"><span class="ln">639  </span></a>        model = keras.Sequential([ 
+<a name="l640"><span class="ln">640  </span></a>            keras.Input(shape=(1,), name=&quot;my_input&quot;), 
+<a name="l641"><span class="ln">641  </span></a>            keras.layers.Dense(1, activation=&quot;sigmoid&quot;, name=&quot;my_dense&quot;), 
+<a name="l642"><span class="ln">642  </span></a>        ], name=&quot;my_sequential&quot;) 
+<a name="l643"><span class="ln">643  </span></a>        model.compile(optimizer=&quot;adam&quot;, loss=&quot;mse&quot;, metrics=[&quot;mae&quot;]) 
+<a name="l644"><span class="ln">644  </span></a>        model.fit(np.array([[1.0]]), np.array([[1.0]])) 
+<a name="l645"><span class="ln">645  </span></a>        state_tree = model.get_state_tree() 
+<a name="l646"><span class="ln">646  </span></a>        ``` 
+<a name="l647"><span class="ln">647  </span></a> 
+<a name="l648"><span class="ln">648  </span></a>        The `state_tree` dictionary returned looks like: 
+<a name="l649"><span class="ln">649  </span></a> 
+<a name="l650"><span class="ln">650  </span></a>        ``` 
+<a name="l651"><span class="ln">651  </span></a>        { 
+<a name="l652"><span class="ln">652  </span></a>            'metrics_variables': { 
+<a name="l653"><span class="ln">653  </span></a>                'loss': { 
+<a name="l654"><span class="ln">654  </span></a>                    'count': ..., 
+<a name="l655"><span class="ln">655  </span></a>                    'total': ..., 
+<a name="l656"><span class="ln">656  </span></a>                }, 
+<a name="l657"><span class="ln">657  </span></a>                'mean_absolute_error': { 
+<a name="l658"><span class="ln">658  </span></a>                    'count': ..., 
+<a name="l659"><span class="ln">659  </span></a>                    'total': ..., 
+<a name="l660"><span class="ln">660  </span></a>                } 
+<a name="l661"><span class="ln">661  </span></a>            }, 
+<a name="l662"><span class="ln">662  </span></a>            'trainable_variables': { 
+<a name="l663"><span class="ln">663  </span></a>                'my_sequential': { 
+<a name="l664"><span class="ln">664  </span></a>                    'my_dense': { 
+<a name="l665"><span class="ln">665  </span></a>                        'bias': ..., 
+<a name="l666"><span class="ln">666  </span></a>                        'kernel': ..., 
+<a name="l667"><span class="ln">667  </span></a>                    } 
+<a name="l668"><span class="ln">668  </span></a>                } 
+<a name="l669"><span class="ln">669  </span></a>            }, 
+<a name="l670"><span class="ln">670  </span></a>            'non_trainable_variables': {}, 
+<a name="l671"><span class="ln">671  </span></a>            'optimizer_variables': { 
+<a name="l672"><span class="ln">672  </span></a>                'adam': { 
+<a name="l673"><span class="ln">673  </span></a>                        'iteration': ..., 
+<a name="l674"><span class="ln">674  </span></a>                        'learning_rate': ..., 
+<a name="l675"><span class="ln">675  </span></a>                        'my_sequential_my_dense_bias_momentum': ..., 
+<a name="l676"><span class="ln">676  </span></a>                        'my_sequential_my_dense_bias_velocity': ..., 
+<a name="l677"><span class="ln">677  </span></a>                        'my_sequential_my_dense_kernel_momentum': ..., 
+<a name="l678"><span class="ln">678  </span></a>                        'my_sequential_my_dense_kernel_velocity': ..., 
+<a name="l679"><span class="ln">679  </span></a>                    } 
+<a name="l680"><span class="ln">680  </span></a>                } 
+<a name="l681"><span class="ln">681  </span></a>            } 
+<a name="l682"><span class="ln">682  </span></a>        } 
+<a name="l683"><span class="ln">683  </span></a>        ``` 
+<a name="l684"><span class="ln">684  </span></a>        &quot;&quot;&quot;</span>
+<a name="l685"><span class="ln">685  </span></a>        <span class="s1">variables </span><span class="s2">= {}</span>
+<a name="l686"><span class="ln">686  </span></a>        <span class="s1">variables</span><span class="s2">[</span><span class="s3">&quot;trainable_variables&quot;</span><span class="s2">] = </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_create_nested_dict</span><span class="s2">(</span>
+<a name="l687"><span class="ln">687  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">trainable_variables</span><span class="s2">, </span><span class="s1">value_format</span>
+<a name="l688"><span class="ln">688  </span></a>        <span class="s2">)</span>
+<a name="l689"><span class="ln">689  </span></a>        <span class="s1">variables</span><span class="s2">[</span><span class="s3">&quot;non_trainable_variables&quot;</span><span class="s2">] = </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_create_nested_dict</span><span class="s2">(</span>
+<a name="l690"><span class="ln">690  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">non_trainable_variables</span><span class="s2">, </span><span class="s1">value_format</span>
+<a name="l691"><span class="ln">691  </span></a>        <span class="s2">)</span>
+<a name="l692"><span class="ln">692  </span></a>        <span class="s1">variables</span><span class="s2">[</span><span class="s3">&quot;optimizer_variables&quot;</span><span class="s2">] = </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_create_nested_dict</span><span class="s2">(</span>
+<a name="l693"><span class="ln">693  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">optimizer</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">, </span><span class="s1">value_format</span>
+<a name="l694"><span class="ln">694  </span></a>        <span class="s2">)</span>
+<a name="l695"><span class="ln">695  </span></a>        <span class="s1">variables</span><span class="s2">[</span><span class="s3">&quot;metrics_variables&quot;</span><span class="s2">] = </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_create_nested_dict</span><span class="s2">(</span>
+<a name="l696"><span class="ln">696  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">metrics_variables</span><span class="s2">, </span><span class="s1">value_format</span>
+<a name="l697"><span class="ln">697  </span></a>        <span class="s2">)</span>
+<a name="l698"><span class="ln">698  </span></a>        <span class="s0">return </span><span class="s1">variables</span>
+<a name="l699"><span class="ln">699  </span></a>
+<a name="l700"><span class="ln">700  </span></a>    <span class="s0">def </span><span class="s1">_create_nested_dict</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">variables</span><span class="s2">, </span><span class="s1">value_format</span><span class="s2">):</span>
+<a name="l701"><span class="ln">701  </span></a>        <span class="s1">flat_dict </span><span class="s2">= {}</span>
+<a name="l702"><span class="ln">702  </span></a>        <span class="s0">for </span><span class="s1">v </span><span class="s0">in </span><span class="s1">variables</span><span class="s2">:</span>
+<a name="l703"><span class="ln">703  </span></a>            <span class="s0">if </span><span class="s1">v</span><span class="s2">.</span><span class="s1">path </span><span class="s0">in </span><span class="s1">flat_dict</span><span class="s2">:</span>
+<a name="l704"><span class="ln">704  </span></a>                <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+<a name="l705"><span class="ln">705  </span></a>                    <span class="s3">&quot;The following variable path is found twice in the model: &quot;</span>
+<a name="l706"><span class="ln">706  </span></a>                    <span class="s3">f&quot;'</span><span class="s0">{</span><span class="s1">v</span><span class="s2">.</span><span class="s1">path</span><span class="s0">}</span><span class="s3">'. `get_state_tree()` can only be called when &quot;</span>
+<a name="l707"><span class="ln">707  </span></a>                    <span class="s3">&quot;all variable paths are unique. Make sure to give unique &quot;</span>
+<a name="l708"><span class="ln">708  </span></a>                    <span class="s3">&quot;names to your layers (and other objects).&quot;</span>
+<a name="l709"><span class="ln">709  </span></a>                <span class="s2">)</span>
+<a name="l710"><span class="ln">710  </span></a>            <span class="s0">if </span><span class="s1">value_format </span><span class="s2">== </span><span class="s3">&quot;backend_tensor&quot;</span><span class="s2">:</span>
+<a name="l711"><span class="ln">711  </span></a>                <span class="s1">flat_dict</span><span class="s2">[</span><span class="s1">v</span><span class="s2">.</span><span class="s1">path</span><span class="s2">] = </span><span class="s1">v</span><span class="s2">.</span><span class="s1">value</span>
+<a name="l712"><span class="ln">712  </span></a>            <span class="s0">elif </span><span class="s1">value_format </span><span class="s2">== </span><span class="s3">&quot;numpy_array&quot;</span><span class="s2">:</span>
+<a name="l713"><span class="ln">713  </span></a>                <span class="s1">flat_dict</span><span class="s2">[</span><span class="s1">v</span><span class="s2">.</span><span class="s1">path</span><span class="s2">] = </span><span class="s1">v</span><span class="s2">.</span><span class="s1">numpy</span><span class="s2">()</span>
+<a name="l714"><span class="ln">714  </span></a>            <span class="s0">else</span><span class="s2">:</span>
+<a name="l715"><span class="ln">715  </span></a>                <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+<a name="l716"><span class="ln">716  </span></a>                    <span class="s3">&quot;Invalid `value_format` argument. Expected one of &quot;</span>
+<a name="l717"><span class="ln">717  </span></a>                    <span class="s3">&quot;{'numpy_array', 'backend_tensor'}. Received: &quot;</span>
+<a name="l718"><span class="ln">718  </span></a>                    <span class="s3">f&quot;value_format=</span><span class="s0">{</span><span class="s1">value_format</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l719"><span class="ln">719  </span></a>                <span class="s2">)</span>
+<a name="l720"><span class="ln">720  </span></a>
+<a name="l721"><span class="ln">721  </span></a>        <span class="s1">nested_dict </span><span class="s2">= {}</span>
+<a name="l722"><span class="ln">722  </span></a>        <span class="s0">for </span><span class="s1">path</span><span class="s2">, </span><span class="s1">value </span><span class="s0">in </span><span class="s1">flat_dict</span><span class="s2">.</span><span class="s1">items</span><span class="s2">():</span>
+<a name="l723"><span class="ln">723  </span></a>            <span class="s1">parts </span><span class="s2">= </span><span class="s1">path</span><span class="s2">.</span><span class="s1">split</span><span class="s2">(</span><span class="s3">&quot;/&quot;</span><span class="s2">)</span>
+<a name="l724"><span class="ln">724  </span></a>            <span class="s1">current_dict </span><span class="s2">= </span><span class="s1">nested_dict</span>
+<a name="l725"><span class="ln">725  </span></a>            <span class="s0">for </span><span class="s1">part </span><span class="s0">in </span><span class="s1">parts</span><span class="s2">[:-</span><span class="s6">1</span><span class="s2">]:</span>
+<a name="l726"><span class="ln">726  </span></a>                <span class="s0">if </span><span class="s1">part </span><span class="s0">not in </span><span class="s1">current_dict</span><span class="s2">:</span>
+<a name="l727"><span class="ln">727  </span></a>                    <span class="s1">current_dict</span><span class="s2">[</span><span class="s1">part</span><span class="s2">] = {}</span>
+<a name="l728"><span class="ln">728  </span></a>                <span class="s1">current_dict </span><span class="s2">= </span><span class="s1">current_dict</span><span class="s2">[</span><span class="s1">part</span><span class="s2">]</span>
+<a name="l729"><span class="ln">729  </span></a>            <span class="s1">current_dict</span><span class="s2">[</span><span class="s1">parts</span><span class="s2">[-</span><span class="s6">1</span><span class="s2">]] = </span><span class="s1">value</span>
+<a name="l730"><span class="ln">730  </span></a>
+<a name="l731"><span class="ln">731  </span></a>        <span class="s0">return </span><span class="s1">nested_dict</span>
+<a name="l732"><span class="ln">732  </span></a>
+<a name="l733"><span class="ln">733  </span></a>    <span class="s0">def </span><span class="s1">set_state_tree</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">state_tree</span><span class="s2">):</span>
+<a name="l734"><span class="ln">734  </span></a>        <span class="s4">&quot;&quot;&quot;Assigns values to variables of the model. 
+<a name="l735"><span class="ln">735  </span></a> 
+<a name="l736"><span class="ln">736  </span></a>        This method takes a dictionary of nested variable values, which 
+<a name="l737"><span class="ln">737  </span></a>        represents the state tree of the model, and assigns them to the 
+<a name="l738"><span class="ln">738  </span></a>        corresponding variables of the model. The dictionary keys represent the 
+<a name="l739"><span class="ln">739  </span></a>        variable names (e.g., `'trainable_variables'`, `'optimizer_variables'`), 
+<a name="l740"><span class="ln">740  </span></a>        and the values are nested dictionaries containing the variable 
+<a name="l741"><span class="ln">741  </span></a>        paths and their corresponding values. 
+<a name="l742"><span class="ln">742  </span></a> 
+<a name="l743"><span class="ln">743  </span></a>        Args: 
+<a name="l744"><span class="ln">744  </span></a>            state_tree: A dictionary representing the state tree of the model. 
+<a name="l745"><span class="ln">745  </span></a>                The keys are the variable names, and the values are nested 
+<a name="l746"><span class="ln">746  </span></a>                dictionaries representing the variable paths and their values. 
+<a name="l747"><span class="ln">747  </span></a>        &quot;&quot;&quot;</span>
+<a name="l748"><span class="ln">748  </span></a>        <span class="s0">for </span><span class="s1">k</span><span class="s2">, </span><span class="s1">v </span><span class="s0">in </span><span class="s1">state_tree</span><span class="s2">.</span><span class="s1">items</span><span class="s2">():</span>
+<a name="l749"><span class="ln">749  </span></a>            <span class="s1">path_value_dict </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_flatten_nested_dict</span><span class="s2">(</span><span class="s1">v</span><span class="s2">)</span>
+<a name="l750"><span class="ln">750  </span></a>            <span class="s0">if </span><span class="s1">k </span><span class="s2">== </span><span class="s3">&quot;trainable_variables&quot;</span><span class="s2">:</span>
+<a name="l751"><span class="ln">751  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">_assign_variable_values</span><span class="s2">(</span>
+<a name="l752"><span class="ln">752  </span></a>                    <span class="s1">self</span><span class="s2">.</span><span class="s1">trainable_variables</span><span class="s2">, </span><span class="s1">path_value_dict</span>
+<a name="l753"><span class="ln">753  </span></a>                <span class="s2">)</span>
+<a name="l754"><span class="ln">754  </span></a>            <span class="s0">elif </span><span class="s1">k </span><span class="s2">== </span><span class="s3">&quot;non_trainable_variables&quot;</span><span class="s2">:</span>
+<a name="l755"><span class="ln">755  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">_assign_variable_values</span><span class="s2">(</span>
+<a name="l756"><span class="ln">756  </span></a>                    <span class="s1">self</span><span class="s2">.</span><span class="s1">non_trainable_variables</span><span class="s2">, </span><span class="s1">path_value_dict</span>
+<a name="l757"><span class="ln">757  </span></a>                <span class="s2">)</span>
+<a name="l758"><span class="ln">758  </span></a>            <span class="s0">elif </span><span class="s1">k </span><span class="s2">== </span><span class="s3">&quot;optimizer_variables&quot;</span><span class="s2">:</span>
+<a name="l759"><span class="ln">759  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">_assign_variable_values</span><span class="s2">(</span>
+<a name="l760"><span class="ln">760  </span></a>                    <span class="s1">self</span><span class="s2">.</span><span class="s1">optimizer</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">, </span><span class="s1">path_value_dict</span>
+<a name="l761"><span class="ln">761  </span></a>                <span class="s2">)</span>
+<a name="l762"><span class="ln">762  </span></a>            <span class="s0">elif </span><span class="s1">k </span><span class="s2">== </span><span class="s3">&quot;metrics_variables&quot;</span><span class="s2">:</span>
+<a name="l763"><span class="ln">763  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">_assign_variable_values</span><span class="s2">(</span>
+<a name="l764"><span class="ln">764  </span></a>                    <span class="s1">self</span><span class="s2">.</span><span class="s1">metrics_variables</span><span class="s2">, </span><span class="s1">path_value_dict</span>
+<a name="l765"><span class="ln">765  </span></a>                <span class="s2">)</span>
+<a name="l766"><span class="ln">766  </span></a>            <span class="s0">else</span><span class="s2">:</span>
+<a name="l767"><span class="ln">767  </span></a>                <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s3">f&quot;Unknown variable name: </span><span class="s0">{</span><span class="s1">k</span><span class="s0">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+<a name="l768"><span class="ln">768  </span></a>
+<a name="l769"><span class="ln">769  </span></a>    <span class="s0">def </span><span class="s1">_assign_variable_values</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">variables</span><span class="s2">, </span><span class="s1">path_value_dict</span><span class="s2">):</span>
+<a name="l770"><span class="ln">770  </span></a>        <span class="s0">for </span><span class="s1">path</span><span class="s2">, </span><span class="s1">value </span><span class="s0">in </span><span class="s1">path_value_dict</span><span class="s2">.</span><span class="s1">items</span><span class="s2">():</span>
+<a name="l771"><span class="ln">771  </span></a>            <span class="s0">for </span><span class="s1">variable </span><span class="s0">in </span><span class="s1">variables</span><span class="s2">:</span>
+<a name="l772"><span class="ln">772  </span></a>                <span class="s0">if </span><span class="s1">variable</span><span class="s2">.</span><span class="s1">path </span><span class="s2">== </span><span class="s1">path</span><span class="s2">:</span>
+<a name="l773"><span class="ln">773  </span></a>                    <span class="s1">variable</span><span class="s2">.</span><span class="s1">assign</span><span class="s2">(</span><span class="s1">value</span><span class="s2">)</span>
+<a name="l774"><span class="ln">774  </span></a>
+<a name="l775"><span class="ln">775  </span></a>    <span class="s0">def </span><span class="s1">_flatten_nested_dict</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">nested_dict</span><span class="s2">):</span>
+<a name="l776"><span class="ln">776  </span></a>        <span class="s1">flat_dict </span><span class="s2">= {}</span>
+<a name="l777"><span class="ln">777  </span></a>
+<a name="l778"><span class="ln">778  </span></a>        <span class="s0">def </span><span class="s1">_flatten</span><span class="s2">(</span><span class="s1">current_dict</span><span class="s2">, </span><span class="s1">prefix</span><span class="s2">=</span><span class="s3">&quot;&quot;</span><span class="s2">):</span>
+<a name="l779"><span class="ln">779  </span></a>            <span class="s0">for </span><span class="s1">key</span><span class="s2">, </span><span class="s1">value </span><span class="s0">in </span><span class="s1">current_dict</span><span class="s2">.</span><span class="s1">items</span><span class="s2">():</span>
+<a name="l780"><span class="ln">780  </span></a>                <span class="s0">if </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">value</span><span class="s2">, </span><span class="s1">dict</span><span class="s2">):</span>
+<a name="l781"><span class="ln">781  </span></a>                    <span class="s1">_flatten</span><span class="s2">(</span><span class="s1">value</span><span class="s2">, </span><span class="s1">prefix </span><span class="s2">+ </span><span class="s1">key </span><span class="s2">+ </span><span class="s3">&quot;/&quot;</span><span class="s2">)</span>
+<a name="l782"><span class="ln">782  </span></a>                <span class="s0">else</span><span class="s2">:</span>
+<a name="l783"><span class="ln">783  </span></a>                    <span class="s1">flat_dict</span><span class="s2">[</span><span class="s1">prefix </span><span class="s2">+ </span><span class="s1">key</span><span class="s2">] = </span><span class="s1">value</span>
+<a name="l784"><span class="ln">784  </span></a>
+<a name="l785"><span class="ln">785  </span></a>        <span class="s1">_flatten</span><span class="s2">(</span><span class="s1">nested_dict</span><span class="s2">)</span>
+<a name="l786"><span class="ln">786  </span></a>        <span class="s0">return </span><span class="s1">flat_dict</span>
+<a name="l787"><span class="ln">787  </span></a>
+<a name="l788"><span class="ln">788  </span></a>
+<a name="l789"><span class="ln">789  </span></a><span class="s2">@</span><span class="s1">keras_export</span><span class="s2">(</span><span class="s3">&quot;keras.models.model_from_json&quot;</span><span class="s2">)</span>
+<a name="l790"><span class="ln">790  </span></a><span class="s0">def </span><span class="s1">model_from_json</span><span class="s2">(</span><span class="s1">json_string</span><span class="s2">, </span><span class="s1">custom_objects</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+<a name="l791"><span class="ln">791  </span></a>    <span class="s4">&quot;&quot;&quot;Parses a JSON model configuration string and returns a model instance. 
+<a name="l792"><span class="ln">792  </span></a> 
+<a name="l793"><span class="ln">793  </span></a>    Example: 
+<a name="l794"><span class="ln">794  </span></a> 
+<a name="l795"><span class="ln">795  </span></a>    &gt;&gt;&gt; model = keras.Sequential([ 
+<a name="l796"><span class="ln">796  </span></a>    ...     keras.layers.Dense(5, input_shape=(3,)), 
+<a name="l797"><span class="ln">797  </span></a>    ...     keras.layers.Softmax()]) 
+<a name="l798"><span class="ln">798  </span></a>    &gt;&gt;&gt; config = model.to_json() 
+<a name="l799"><span class="ln">799  </span></a>    &gt;&gt;&gt; loaded_model = keras.models.model_from_json(config) 
+<a name="l800"><span class="ln">800  </span></a> 
+<a name="l801"><span class="ln">801  </span></a>    Args: 
+<a name="l802"><span class="ln">802  </span></a>        json_string: JSON string encoding a model configuration. 
+<a name="l803"><span class="ln">803  </span></a>        custom_objects: Optional dictionary mapping names 
+<a name="l804"><span class="ln">804  </span></a>            (strings) to custom classes or functions to be 
+<a name="l805"><span class="ln">805  </span></a>            considered during deserialization. 
+<a name="l806"><span class="ln">806  </span></a> 
+<a name="l807"><span class="ln">807  </span></a>    Returns: 
+<a name="l808"><span class="ln">808  </span></a>        A Keras model instance (uncompiled). 
+<a name="l809"><span class="ln">809  </span></a>    &quot;&quot;&quot;</span>
+<a name="l810"><span class="ln">810  </span></a>    <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">saving </span><span class="s0">import </span><span class="s1">serialization_lib</span>
+<a name="l811"><span class="ln">811  </span></a>
+<a name="l812"><span class="ln">812  </span></a>    <span class="s1">model_config </span><span class="s2">= </span><span class="s1">json</span><span class="s2">.</span><span class="s1">loads</span><span class="s2">(</span><span class="s1">json_string</span><span class="s2">)</span>
+<a name="l813"><span class="ln">813  </span></a>    <span class="s0">return </span><span class="s1">serialization_lib</span><span class="s2">.</span><span class="s1">deserialize_keras_object</span><span class="s2">(</span>
+<a name="l814"><span class="ln">814  </span></a>        <span class="s1">model_config</span><span class="s2">, </span><span class="s1">custom_objects</span><span class="s2">=</span><span class="s1">custom_objects</span>
+<a name="l815"><span class="ln">815  </span></a>    <span class="s2">)</span>
+<a name="l816"><span class="ln">816  </span></a>
+<a name="l817"><span class="ln">817  </span></a>
+<a name="l818"><span class="ln">818  </span></a><span class="s0">def </span><span class="s1">functional_init_arguments</span><span class="s2">(</span><span class="s1">args</span><span class="s2">, </span><span class="s1">kwargs</span><span class="s2">):</span>
+<a name="l819"><span class="ln">819  </span></a>    <span class="s0">return </span><span class="s2">(</span>
+<a name="l820"><span class="ln">820  </span></a>        <span class="s2">(</span><span class="s1">len</span><span class="s2">(</span><span class="s1">args</span><span class="s2">) == </span><span class="s6">2</span><span class="s2">)</span>
+<a name="l821"><span class="ln">821  </span></a>        <span class="s0">or </span><span class="s2">(</span><span class="s1">len</span><span class="s2">(</span><span class="s1">args</span><span class="s2">) == </span><span class="s6">1 </span><span class="s0">and </span><span class="s3">&quot;outputs&quot; </span><span class="s0">in </span><span class="s1">kwargs</span><span class="s2">)</span>
+<a name="l822"><span class="ln">822  </span></a>        <span class="s0">or </span><span class="s2">(</span><span class="s3">&quot;inputs&quot; </span><span class="s0">in </span><span class="s1">kwargs </span><span class="s0">and </span><span class="s3">&quot;outputs&quot; </span><span class="s0">in </span><span class="s1">kwargs</span><span class="s2">)</span>
+<a name="l823"><span class="ln">823  </span></a>    <span class="s2">)</span>
+<a name="l824"><span class="ln">824  </span></a>
+<a name="l825"><span class="ln">825  </span></a>
+<a name="l826"><span class="ln">826  </span></a><span class="s0">def </span><span class="s1">inject_functional_model_class</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">):</span>
+<a name="l827"><span class="ln">827  </span></a>    <span class="s4">&quot;&quot;&quot;Inject `Functional` into the hierarchy of this class if needed.&quot;&quot;&quot;</span>
+<a name="l828"><span class="ln">828  </span></a>    <span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">models </span><span class="s0">import </span><span class="s1">functional</span>
+<a name="l829"><span class="ln">829  </span></a>
+<a name="l830"><span class="ln">830  </span></a>    <span class="s0">if </span><span class="s1">cls </span><span class="s0">is </span><span class="s1">Model</span><span class="s2">:</span>
+<a name="l831"><span class="ln">831  </span></a>        <span class="s0">return </span><span class="s1">functional</span><span class="s2">.</span><span class="s1">Functional</span>
+<a name="l832"><span class="ln">832  </span></a>    <span class="s5"># In case there is any multiple inheritance, we stop injecting the</span>
+<a name="l833"><span class="ln">833  </span></a>    <span class="s5"># class if keras model is not in its class hierarchy.</span>
+<a name="l834"><span class="ln">834  </span></a>    <span class="s0">if </span><span class="s1">cls </span><span class="s0">is </span><span class="s1">object</span><span class="s2">:</span>
+<a name="l835"><span class="ln">835  </span></a>        <span class="s0">return </span><span class="s1">object</span>
+<a name="l836"><span class="ln">836  </span></a>
+<a name="l837"><span class="ln">837  </span></a>    <span class="s1">cls</span><span class="s2">.</span><span class="s1">__bases__ </span><span class="s2">= </span><span class="s1">tuple</span><span class="s2">(</span>
+<a name="l838"><span class="ln">838  </span></a>        <span class="s1">inject_functional_model_class</span><span class="s2">(</span><span class="s1">base</span><span class="s2">) </span><span class="s0">for </span><span class="s1">base </span><span class="s0">in </span><span class="s1">cls</span><span class="s2">.</span><span class="s1">__bases__</span>
+<a name="l839"><span class="ln">839  </span></a>    <span class="s2">)</span>
+<a name="l840"><span class="ln">840  </span></a>    <span class="s5"># Trigger any `__new__` class swapping that needed to happen on `Functional`</span>
+<a name="l841"><span class="ln">841  </span></a>    <span class="s5"># but did not because functional was not in the class hierarchy.</span>
+<a name="l842"><span class="ln">842  </span></a>    <span class="s1">cls</span><span class="s2">.</span><span class="s1">__new__</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">)</span>
+<a name="l843"><span class="ln">843  </span></a>
+<a name="l844"><span class="ln">844  </span></a>    <span class="s0">return </span><span class="s1">cls</span>
+<a name="l845"><span class="ln">845  </span></a></pre>
+</body>
+</html>

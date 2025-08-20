@@ -1,0 +1,48 @@
+<html>
+<head>
+<title>masking.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #5f826b; font-style: italic;}
+.s4 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+masking.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">backend</span><span class="s2">.</span><span class="s1">common</span><span class="s2">.</span><span class="s1">tensor_attributes </span><span class="s0">import </span><span class="s1">get_tensor_attr</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">backend</span><span class="s2">.</span><span class="s1">common</span><span class="s2">.</span><span class="s1">tensor_attributes </span><span class="s0">import </span><span class="s1">set_tensor_attr</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">def </span><span class="s1">set_keras_mask</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">mask</span><span class="s2">):</span>
+<a name="l6"><span class="ln">6    </span></a>    <span class="s3">&quot;&quot;&quot;Sets the Keras mask attribute for the given tensor in-place. 
+<a name="l7"><span class="ln">7    </span></a> 
+<a name="l8"><span class="ln">8    </span></a>    Args: 
+<a name="l9"><span class="ln">9    </span></a>        x: Input tensor. 
+<a name="l10"><span class="ln">10   </span></a>        mask: The mask tensor to be set. If `None`, the `_keras_mask` attribute 
+<a name="l11"><span class="ln">11   </span></a>            will be cleared. 
+<a name="l12"><span class="ln">12   </span></a>    &quot;&quot;&quot;</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s1">set_tensor_attr</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s4">&quot;_keras_mask&quot;</span><span class="s2">, </span><span class="s1">mask</span><span class="s2">)</span>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a><span class="s0">def </span><span class="s1">get_keras_mask</span><span class="s2">(</span><span class="s1">x</span><span class="s2">):</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s3">&quot;&quot;&quot;Gets the Keras mask attribute from the given tensor. 
+<a name="l18"><span class="ln">18   </span></a> 
+<a name="l19"><span class="ln">19   </span></a>    Args: 
+<a name="l20"><span class="ln">20   </span></a>        x: Input tensor. 
+<a name="l21"><span class="ln">21   </span></a> 
+<a name="l22"><span class="ln">22   </span></a>    Returns: 
+<a name="l23"><span class="ln">23   </span></a>        The mask tensor associated with the input tensor, or `None` if no mask 
+<a name="l24"><span class="ln">24   </span></a>        has been set. 
+<a name="l25"><span class="ln">25   </span></a>    &quot;&quot;&quot;</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s0">return </span><span class="s1">get_tensor_attr</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s4">&quot;_keras_mask&quot;</span><span class="s2">)</span>
+<a name="l27"><span class="ln">27   </span></a></pre>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<html>
+<head>
+<title>geometry.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #7a7e85;}
+.s6 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+geometry.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot;Helpers for manipulating 2D points and vectors in COLR table.&quot;&quot;&quot;</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s2">from </span><span class="s1">math </span><span class="s2">import </span><span class="s1">copysign</span><span class="s3">, </span><span class="s1">cos</span><span class="s3">, </span><span class="s1">hypot</span><span class="s3">, </span><span class="s1">isclose</span><span class="s3">, </span><span class="s1">pi</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">from </span><span class="s1">fontTools</span><span class="s3">.</span><span class="s1">misc</span><span class="s3">.</span><span class="s1">roundTools </span><span class="s2">import </span><span class="s1">otRound</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">def </span><span class="s1">_vector_between</span><span class="s3">(</span><span class="s1">origin</span><span class="s3">, </span><span class="s1">target</span><span class="s3">):</span>
+<a name="l8"><span class="ln">8    </span></a>    <span class="s2">return </span><span class="s3">(</span><span class="s1">target</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] - </span><span class="s1">origin</span><span class="s3">[</span><span class="s4">0</span><span class="s3">], </span><span class="s1">target</span><span class="s3">[</span><span class="s4">1</span><span class="s3">] - </span><span class="s1">origin</span><span class="s3">[</span><span class="s4">1</span><span class="s3">])</span>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s2">def </span><span class="s1">_round_point</span><span class="s3">(</span><span class="s1">pt</span><span class="s3">):</span>
+<a name="l12"><span class="ln">12   </span></a>    <span class="s2">return </span><span class="s3">(</span><span class="s1">otRound</span><span class="s3">(</span><span class="s1">pt</span><span class="s3">[</span><span class="s4">0</span><span class="s3">]), </span><span class="s1">otRound</span><span class="s3">(</span><span class="s1">pt</span><span class="s3">[</span><span class="s4">1</span><span class="s3">]))</span>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a><span class="s2">def </span><span class="s1">_unit_vector</span><span class="s3">(</span><span class="s1">vec</span><span class="s3">):</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s1">length </span><span class="s3">= </span><span class="s1">hypot</span><span class="s3">(*</span><span class="s1">vec</span><span class="s3">)</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s2">if </span><span class="s1">length </span><span class="s3">== </span><span class="s4">0</span><span class="s3">:</span>
+<a name="l18"><span class="ln">18   </span></a>        <span class="s2">return None</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s2">return </span><span class="s3">(</span><span class="s1">vec</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] / </span><span class="s1">length</span><span class="s3">, </span><span class="s1">vec</span><span class="s3">[</span><span class="s4">1</span><span class="s3">] / </span><span class="s1">length</span><span class="s3">)</span>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a>
+<a name="l22"><span class="ln">22   </span></a><span class="s1">_CIRCLE_INSIDE_TOLERANCE </span><span class="s3">= </span><span class="s4">1e-4</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a><span class="s5"># The unit vector's X and Y components are respectively</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s5">#   U = (cos(α), sin(α))</span>
+<a name="l27"><span class="ln">27   </span></a><span class="s5"># where α is the angle between the unit vector and the positive x axis.</span>
+<a name="l28"><span class="ln">28   </span></a><span class="s1">_UNIT_VECTOR_THRESHOLD </span><span class="s3">= </span><span class="s1">cos</span><span class="s3">(</span><span class="s4">3 </span><span class="s3">/ </span><span class="s4">8 </span><span class="s3">* </span><span class="s1">pi</span><span class="s3">)  </span><span class="s5"># == sin(1/8 * pi) == 0.38268343236508984</span>
+<a name="l29"><span class="ln">29   </span></a>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a><span class="s2">def </span><span class="s1">_rounding_offset</span><span class="s3">(</span><span class="s1">direction</span><span class="s3">):</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s5"># Return 2-tuple of -/+ 1.0 or 0.0 approximately based on the direction vector.</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s5"># We divide the unit circle in 8 equal slices oriented towards the cardinal</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s5"># (N, E, S, W) and intermediate (NE, SE, SW, NW) directions. To each slice we</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s5"># map one of the possible cases: -1, 0, +1 for either X and Y coordinate.</span>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s5"># E.g. Return (+1.0, -1.0) if unit vector is oriented towards SE, or</span>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s5"># (-1.0, 0.0) if it's pointing West, etc.</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s1">uv </span><span class="s3">= </span><span class="s1">_unit_vector</span><span class="s3">(</span><span class="s1">direction</span><span class="s3">)</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s2">if not </span><span class="s1">uv</span><span class="s3">:</span>
+<a name="l40"><span class="ln">40   </span></a>        <span class="s2">return </span><span class="s3">(</span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+<a name="l41"><span class="ln">41   </span></a>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s1">result </span><span class="s3">= []</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s2">for </span><span class="s1">uv_component </span><span class="s2">in </span><span class="s1">uv</span><span class="s3">:</span>
+<a name="l44"><span class="ln">44   </span></a>        <span class="s2">if </span><span class="s3">-</span><span class="s1">_UNIT_VECTOR_THRESHOLD </span><span class="s3">&lt;= </span><span class="s1">uv_component </span><span class="s3">&lt; </span><span class="s1">_UNIT_VECTOR_THRESHOLD</span><span class="s3">:</span>
+<a name="l45"><span class="ln">45   </span></a>            <span class="s5"># unit vector component near 0: direction almost orthogonal to the</span>
+<a name="l46"><span class="ln">46   </span></a>            <span class="s5"># direction of the current axis, thus keep coordinate unchanged</span>
+<a name="l47"><span class="ln">47   </span></a>            <span class="s1">result</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s4">0</span><span class="s3">)</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l49"><span class="ln">49   </span></a>            <span class="s5"># nudge coord by +/- 1.0 in direction of unit vector</span>
+<a name="l50"><span class="ln">50   </span></a>            <span class="s1">result</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">copysign</span><span class="s3">(</span><span class="s4">1.0</span><span class="s3">, </span><span class="s1">uv_component</span><span class="s3">))</span>
+<a name="l51"><span class="ln">51   </span></a>    <span class="s2">return </span><span class="s1">tuple</span><span class="s3">(</span><span class="s1">result</span><span class="s3">)</span>
+<a name="l52"><span class="ln">52   </span></a>
+<a name="l53"><span class="ln">53   </span></a>
+<a name="l54"><span class="ln">54   </span></a><span class="s2">class </span><span class="s1">Circle</span><span class="s3">:</span>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">centre</span><span class="s3">, </span><span class="s1">radius</span><span class="s3">):</span>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">centre </span><span class="s3">= </span><span class="s1">centre</span>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">radius </span><span class="s3">= </span><span class="s1">radius</span>
+<a name="l58"><span class="ln">58   </span></a>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s2">def </span><span class="s1">__repr__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s2">return </span><span class="s6">f&quot;Circle(centre=</span><span class="s2">{</span><span class="s1">self</span><span class="s3">.</span><span class="s1">centre</span><span class="s2">}</span><span class="s6">, radius=</span><span class="s2">{</span><span class="s1">self</span><span class="s3">.</span><span class="s1">radius</span><span class="s2">}</span><span class="s6">)&quot;</span>
+<a name="l61"><span class="ln">61   </span></a>
+<a name="l62"><span class="ln">62   </span></a>    <span class="s2">def </span><span class="s1">round</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s2">return </span><span class="s1">Circle</span><span class="s3">(</span><span class="s1">_round_point</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">centre</span><span class="s3">), </span><span class="s1">otRound</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">))</span>
+<a name="l64"><span class="ln">64   </span></a>
+<a name="l65"><span class="ln">65   </span></a>    <span class="s2">def </span><span class="s1">inside</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">outer_circle</span><span class="s3">, </span><span class="s1">tolerance</span><span class="s3">=</span><span class="s1">_CIRCLE_INSIDE_TOLERANCE</span><span class="s3">):</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s1">dist </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">radius </span><span class="s3">+ </span><span class="s1">hypot</span><span class="s3">(*</span><span class="s1">_vector_between</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">centre</span><span class="s3">, </span><span class="s1">outer_circle</span><span class="s3">.</span><span class="s1">centre</span><span class="s3">))</span>
+<a name="l67"><span class="ln">67   </span></a>        <span class="s2">return </span><span class="s3">(</span>
+<a name="l68"><span class="ln">68   </span></a>            <span class="s1">isclose</span><span class="s3">(</span><span class="s1">outer_circle</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">, </span><span class="s1">dist</span><span class="s3">, </span><span class="s1">rel_tol</span><span class="s3">=</span><span class="s1">_CIRCLE_INSIDE_TOLERANCE</span><span class="s3">)</span>
+<a name="l69"><span class="ln">69   </span></a>            <span class="s2">or </span><span class="s1">outer_circle</span><span class="s3">.</span><span class="s1">radius </span><span class="s3">&gt; </span><span class="s1">dist</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s3">)</span>
+<a name="l71"><span class="ln">71   </span></a>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s2">def </span><span class="s1">concentric</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">other</span><span class="s3">):</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">centre </span><span class="s3">== </span><span class="s1">other</span><span class="s3">.</span><span class="s1">centre</span>
+<a name="l74"><span class="ln">74   </span></a>
+<a name="l75"><span class="ln">75   </span></a>    <span class="s2">def </span><span class="s1">move</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">dx</span><span class="s3">, </span><span class="s1">dy</span><span class="s3">):</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">centre </span><span class="s3">= (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">centre</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] + </span><span class="s1">dx</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">centre</span><span class="s3">[</span><span class="s4">1</span><span class="s3">] + </span><span class="s1">dy</span><span class="s3">)</span>
+<a name="l77"><span class="ln">77   </span></a>
+<a name="l78"><span class="ln">78   </span></a>
+<a name="l79"><span class="ln">79   </span></a><span class="s2">def </span><span class="s1">round_start_circle_stable_containment</span><span class="s3">(</span><span class="s1">c0</span><span class="s3">, </span><span class="s1">r0</span><span class="s3">, </span><span class="s1">c1</span><span class="s3">, </span><span class="s1">r1</span><span class="s3">):</span>
+<a name="l80"><span class="ln">80   </span></a>    <span class="s0">&quot;&quot;&quot;Round start circle so that it stays inside/outside end circle after rounding. 
+<a name="l81"><span class="ln">81   </span></a> 
+<a name="l82"><span class="ln">82   </span></a>    The rounding of circle coordinates to integers may cause an abrupt change 
+<a name="l83"><span class="ln">83   </span></a>    if the start circle c0 is so close to the end circle c1's perimiter that 
+<a name="l84"><span class="ln">84   </span></a>    it ends up falling outside (or inside) as a result of the rounding. 
+<a name="l85"><span class="ln">85   </span></a>    To keep the gradient unchanged, we nudge it in the right direction. 
+<a name="l86"><span class="ln">86   </span></a> 
+<a name="l87"><span class="ln">87   </span></a>    See: 
+<a name="l88"><span class="ln">88   </span></a>    https://github.com/googlefonts/colr-gradients-spec/issues/204 
+<a name="l89"><span class="ln">89   </span></a>    https://github.com/googlefonts/picosvg/issues/158 
+<a name="l90"><span class="ln">90   </span></a>    &quot;&quot;&quot;</span>
+<a name="l91"><span class="ln">91   </span></a>    <span class="s1">start</span><span class="s3">, </span><span class="s1">end </span><span class="s3">= </span><span class="s1">Circle</span><span class="s3">(</span><span class="s1">c0</span><span class="s3">, </span><span class="s1">r0</span><span class="s3">), </span><span class="s1">Circle</span><span class="s3">(</span><span class="s1">c1</span><span class="s3">, </span><span class="s1">r1</span><span class="s3">)</span>
+<a name="l92"><span class="ln">92   </span></a>
+<a name="l93"><span class="ln">93   </span></a>    <span class="s1">inside_before_round </span><span class="s3">= </span><span class="s1">start</span><span class="s3">.</span><span class="s1">inside</span><span class="s3">(</span><span class="s1">end</span><span class="s3">)</span>
+<a name="l94"><span class="ln">94   </span></a>
+<a name="l95"><span class="ln">95   </span></a>    <span class="s1">round_start </span><span class="s3">= </span><span class="s1">start</span><span class="s3">.</span><span class="s1">round</span><span class="s3">()</span>
+<a name="l96"><span class="ln">96   </span></a>    <span class="s1">round_end </span><span class="s3">= </span><span class="s1">end</span><span class="s3">.</span><span class="s1">round</span><span class="s3">()</span>
+<a name="l97"><span class="ln">97   </span></a>    <span class="s1">inside_after_round </span><span class="s3">= </span><span class="s1">round_start</span><span class="s3">.</span><span class="s1">inside</span><span class="s3">(</span><span class="s1">round_end</span><span class="s3">)</span>
+<a name="l98"><span class="ln">98   </span></a>
+<a name="l99"><span class="ln">99   </span></a>    <span class="s2">if </span><span class="s1">inside_before_round </span><span class="s3">== </span><span class="s1">inside_after_round</span><span class="s3">:</span>
+<a name="l100"><span class="ln">100  </span></a>        <span class="s2">return </span><span class="s1">round_start</span>
+<a name="l101"><span class="ln">101  </span></a>    <span class="s2">elif </span><span class="s1">inside_after_round</span><span class="s3">:</span>
+<a name="l102"><span class="ln">102  </span></a>        <span class="s5"># start was outside before rounding: we need to push start away from end</span>
+<a name="l103"><span class="ln">103  </span></a>        <span class="s1">direction </span><span class="s3">= </span><span class="s1">_vector_between</span><span class="s3">(</span><span class="s1">round_end</span><span class="s3">.</span><span class="s1">centre</span><span class="s3">, </span><span class="s1">round_start</span><span class="s3">.</span><span class="s1">centre</span><span class="s3">)</span>
+<a name="l104"><span class="ln">104  </span></a>        <span class="s1">radius_delta </span><span class="s3">= +</span><span class="s4">1.0</span>
+<a name="l105"><span class="ln">105  </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l106"><span class="ln">106  </span></a>        <span class="s5"># start was inside before rounding: we need to push start towards end</span>
+<a name="l107"><span class="ln">107  </span></a>        <span class="s1">direction </span><span class="s3">= </span><span class="s1">_vector_between</span><span class="s3">(</span><span class="s1">round_start</span><span class="s3">.</span><span class="s1">centre</span><span class="s3">, </span><span class="s1">round_end</span><span class="s3">.</span><span class="s1">centre</span><span class="s3">)</span>
+<a name="l108"><span class="ln">108  </span></a>        <span class="s1">radius_delta </span><span class="s3">= -</span><span class="s4">1.0</span>
+<a name="l109"><span class="ln">109  </span></a>    <span class="s1">dx</span><span class="s3">, </span><span class="s1">dy </span><span class="s3">= </span><span class="s1">_rounding_offset</span><span class="s3">(</span><span class="s1">direction</span><span class="s3">)</span>
+<a name="l110"><span class="ln">110  </span></a>
+<a name="l111"><span class="ln">111  </span></a>    <span class="s5"># At most 2 iterations ought to be enough to converge. Before the loop, we</span>
+<a name="l112"><span class="ln">112  </span></a>    <span class="s5"># know the start circle didn't keep containment after normal rounding; thus</span>
+<a name="l113"><span class="ln">113  </span></a>    <span class="s5"># we continue adjusting by -/+ 1.0 until containment is restored.</span>
+<a name="l114"><span class="ln">114  </span></a>    <span class="s5"># Normal rounding can at most move each coordinates -/+0.5; in the worst case</span>
+<a name="l115"><span class="ln">115  </span></a>    <span class="s5"># both the start and end circle's centres and radii will be rounded in opposite</span>
+<a name="l116"><span class="ln">116  </span></a>    <span class="s5"># directions, e.g. when they move along a 45 degree diagonal:</span>
+<a name="l117"><span class="ln">117  </span></a>    <span class="s5">#   c0 = (1.5, 1.5) ===&gt; (2.0, 2.0)</span>
+<a name="l118"><span class="ln">118  </span></a>    <span class="s5">#   r0 = 0.5 ===&gt; 1.0</span>
+<a name="l119"><span class="ln">119  </span></a>    <span class="s5">#   c1 = (0.499, 0.499) ===&gt; (0.0, 0.0)</span>
+<a name="l120"><span class="ln">120  </span></a>    <span class="s5">#   r1 = 2.499 ===&gt; 2.0</span>
+<a name="l121"><span class="ln">121  </span></a>    <span class="s5"># In this example, the relative distance between the circles, calculated</span>
+<a name="l122"><span class="ln">122  </span></a>    <span class="s5"># as r1 - (r0 + distance(c0, c1)) is initially 0.57437 (c0 is inside c1), and</span>
+<a name="l123"><span class="ln">123  </span></a>    <span class="s5"># -1.82842 after rounding (c0 is now outside c1). Nudging c0 by -1.0 on both</span>
+<a name="l124"><span class="ln">124  </span></a>    <span class="s5"># x and y axes moves it towards c1 by hypot(-1.0, -1.0) = 1.41421. Two of these</span>
+<a name="l125"><span class="ln">125  </span></a>    <span class="s5"># moves cover twice that distance, which is enough to restore containment.</span>
+<a name="l126"><span class="ln">126  </span></a>    <span class="s1">max_attempts </span><span class="s3">= </span><span class="s4">2</span>
+<a name="l127"><span class="ln">127  </span></a>    <span class="s2">for </span><span class="s1">_ </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s1">max_attempts</span><span class="s3">):</span>
+<a name="l128"><span class="ln">128  </span></a>        <span class="s2">if </span><span class="s1">round_start</span><span class="s3">.</span><span class="s1">concentric</span><span class="s3">(</span><span class="s1">round_end</span><span class="s3">):</span>
+<a name="l129"><span class="ln">129  </span></a>            <span class="s5"># can't move c0 towards c1 (they are the same), so we change the radius</span>
+<a name="l130"><span class="ln">130  </span></a>            <span class="s1">round_start</span><span class="s3">.</span><span class="s1">radius </span><span class="s3">+= </span><span class="s1">radius_delta</span>
+<a name="l131"><span class="ln">131  </span></a>            <span class="s2">assert </span><span class="s1">round_start</span><span class="s3">.</span><span class="s1">radius </span><span class="s3">&gt;= </span><span class="s4">0</span>
+<a name="l132"><span class="ln">132  </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l133"><span class="ln">133  </span></a>            <span class="s1">round_start</span><span class="s3">.</span><span class="s1">move</span><span class="s3">(</span><span class="s1">dx</span><span class="s3">, </span><span class="s1">dy</span><span class="s3">)</span>
+<a name="l134"><span class="ln">134  </span></a>        <span class="s2">if </span><span class="s1">inside_before_round </span><span class="s3">== </span><span class="s1">round_start</span><span class="s3">.</span><span class="s1">inside</span><span class="s3">(</span><span class="s1">round_end</span><span class="s3">):</span>
+<a name="l135"><span class="ln">135  </span></a>            <span class="s2">break</span>
+<a name="l136"><span class="ln">136  </span></a>    <span class="s2">else</span><span class="s3">:  </span><span class="s5"># likely a bug</span>
+<a name="l137"><span class="ln">137  </span></a>        <span class="s2">raise </span><span class="s1">AssertionError</span><span class="s3">(</span>
+<a name="l138"><span class="ln">138  </span></a>            <span class="s6">f&quot;Rounding circle </span><span class="s2">{</span><span class="s1">start</span><span class="s2">} </span><span class="s6">&quot;</span>
+<a name="l139"><span class="ln">139  </span></a>            <span class="s6">f&quot;</span><span class="s2">{</span><span class="s6">'inside' </span><span class="s2">if </span><span class="s1">inside_before_round </span><span class="s2">else </span><span class="s6">'outside'</span><span class="s2">} </span><span class="s6">&quot;</span>
+<a name="l140"><span class="ln">140  </span></a>            <span class="s6">f&quot;</span><span class="s2">{</span><span class="s1">end</span><span class="s2">} </span><span class="s6">failed after </span><span class="s2">{</span><span class="s1">max_attempts</span><span class="s2">} </span><span class="s6">attempts!&quot;</span>
+<a name="l141"><span class="ln">141  </span></a>        <span class="s3">)</span>
+<a name="l142"><span class="ln">142  </span></a>
+<a name="l143"><span class="ln">143  </span></a>    <span class="s2">return </span><span class="s1">round_start</span>
+<a name="l144"><span class="ln">144  </span></a></pre>
+</body>
+</html>

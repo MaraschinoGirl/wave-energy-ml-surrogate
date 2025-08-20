@@ -1,0 +1,417 @@
+<html>
+<head>
+<title>flagsaver.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+flagsaver.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Copyright 2017 The Abseil Authors.</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">#</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0"># you may not use this file except in compliance with the License.</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0"># You may obtain a copy of the License at</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">#</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">#</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0"># Unless required by applicable law or agreed to in writing, software</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s0"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0"># See the License for the specific language governing permissions and</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s0"># limitations under the License.</span>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a><span class="s2">&quot;&quot;&quot;Decorator and context manager for saving and restoring flag values. 
+<a name="l16"><span class="ln">16   </span></a> 
+<a name="l17"><span class="ln">17   </span></a>There are many ways to save and restore.  Always use the most convenient method 
+<a name="l18"><span class="ln">18   </span></a>for a given use case. 
+<a name="l19"><span class="ln">19   </span></a> 
+<a name="l20"><span class="ln">20   </span></a>Here are examples of each method.  They all call ``do_stuff()`` while 
+<a name="l21"><span class="ln">21   </span></a>``FLAGS.someflag`` is temporarily set to ``'foo'``:: 
+<a name="l22"><span class="ln">22   </span></a> 
+<a name="l23"><span class="ln">23   </span></a>    from absl.testing import flagsaver 
+<a name="l24"><span class="ln">24   </span></a> 
+<a name="l25"><span class="ln">25   </span></a>    # Use a decorator which can optionally override flags via arguments. 
+<a name="l26"><span class="ln">26   </span></a>    @flagsaver.flagsaver(someflag='foo') 
+<a name="l27"><span class="ln">27   </span></a>    def some_func(): 
+<a name="l28"><span class="ln">28   </span></a>      do_stuff() 
+<a name="l29"><span class="ln">29   </span></a> 
+<a name="l30"><span class="ln">30   </span></a>    # Use a decorator which can optionally override flags with flagholders. 
+<a name="l31"><span class="ln">31   </span></a>    @flagsaver.flagsaver((module.FOO_FLAG, 'foo'), (other_mod.BAR_FLAG, 23)) 
+<a name="l32"><span class="ln">32   </span></a>    def some_func(): 
+<a name="l33"><span class="ln">33   </span></a>      do_stuff() 
+<a name="l34"><span class="ln">34   </span></a> 
+<a name="l35"><span class="ln">35   </span></a>    # Use a decorator which does not override flags itself. 
+<a name="l36"><span class="ln">36   </span></a>    @flagsaver.flagsaver 
+<a name="l37"><span class="ln">37   </span></a>    def some_func(): 
+<a name="l38"><span class="ln">38   </span></a>      FLAGS.someflag = 'foo' 
+<a name="l39"><span class="ln">39   </span></a>      do_stuff() 
+<a name="l40"><span class="ln">40   </span></a> 
+<a name="l41"><span class="ln">41   </span></a>    # Use a context manager which can optionally override flags via arguments. 
+<a name="l42"><span class="ln">42   </span></a>    with flagsaver.flagsaver(someflag='foo'): 
+<a name="l43"><span class="ln">43   </span></a>      do_stuff() 
+<a name="l44"><span class="ln">44   </span></a> 
+<a name="l45"><span class="ln">45   </span></a>    # Save and restore the flag values yourself. 
+<a name="l46"><span class="ln">46   </span></a>    saved_flag_values = flagsaver.save_flag_values() 
+<a name="l47"><span class="ln">47   </span></a>    try: 
+<a name="l48"><span class="ln">48   </span></a>      FLAGS.someflag = 'foo' 
+<a name="l49"><span class="ln">49   </span></a>      do_stuff() 
+<a name="l50"><span class="ln">50   </span></a>    finally: 
+<a name="l51"><span class="ln">51   </span></a>      flagsaver.restore_flag_values(saved_flag_values) 
+<a name="l52"><span class="ln">52   </span></a> 
+<a name="l53"><span class="ln">53   </span></a>    # Use the parsing version to emulate users providing the flags. 
+<a name="l54"><span class="ln">54   </span></a>    # Note that all flags must be provided as strings (unparsed). 
+<a name="l55"><span class="ln">55   </span></a>    @flagsaver.as_parsed(some_int_flag='123') 
+<a name="l56"><span class="ln">56   </span></a>    def some_func(): 
+<a name="l57"><span class="ln">57   </span></a>      # Because the flag was parsed it is considered &quot;present&quot;. 
+<a name="l58"><span class="ln">58   </span></a>      assert FLAGS.some_int_flag.present 
+<a name="l59"><span class="ln">59   </span></a>      do_stuff() 
+<a name="l60"><span class="ln">60   </span></a> 
+<a name="l61"><span class="ln">61   </span></a>    # flagsaver.as_parsed() can also be used as a context manager just like 
+<a name="l62"><span class="ln">62   </span></a>    # flagsaver.flagsaver() 
+<a name="l63"><span class="ln">63   </span></a>    with flagsaver.as_parsed(some_int_flag='123'): 
+<a name="l64"><span class="ln">64   </span></a>      do_stuff() 
+<a name="l65"><span class="ln">65   </span></a> 
+<a name="l66"><span class="ln">66   </span></a>    # The flagsaver.as_parsed() interface also supports FlagHolder objects. 
+<a name="l67"><span class="ln">67   </span></a>    @flagsaver.as_parsed((module.FOO_FLAG, 'foo'), (other_mod.BAR_FLAG, '23')) 
+<a name="l68"><span class="ln">68   </span></a>    def some_func(): 
+<a name="l69"><span class="ln">69   </span></a>      do_stuff() 
+<a name="l70"><span class="ln">70   </span></a> 
+<a name="l71"><span class="ln">71   </span></a>    # Using as_parsed with a multi_X flag requires a sequence of strings. 
+<a name="l72"><span class="ln">72   </span></a>    @flagsaver.as_parsed(some_multi_int_flag=['123', '456']) 
+<a name="l73"><span class="ln">73   </span></a>    def some_func(): 
+<a name="l74"><span class="ln">74   </span></a>      assert FLAGS.some_multi_int_flag.present 
+<a name="l75"><span class="ln">75   </span></a>      do_stuff() 
+<a name="l76"><span class="ln">76   </span></a> 
+<a name="l77"><span class="ln">77   </span></a>    # If a flag name includes non-identifier characters it can be specified like 
+<a name="l78"><span class="ln">78   </span></a>    # so: 
+<a name="l79"><span class="ln">79   </span></a>    @flagsaver.as_parsed(**{'i-like-dashes': 'true'}) 
+<a name="l80"><span class="ln">80   </span></a>    def some_func(): 
+<a name="l81"><span class="ln">81   </span></a>      do_stuff() 
+<a name="l82"><span class="ln">82   </span></a> 
+<a name="l83"><span class="ln">83   </span></a>We save and restore a shallow copy of each Flag object's ``__dict__`` attribute. 
+<a name="l84"><span class="ln">84   </span></a>This preserves all attributes of the flag, such as whether or not it was 
+<a name="l85"><span class="ln">85   </span></a>overridden from its default value. 
+<a name="l86"><span class="ln">86   </span></a> 
+<a name="l87"><span class="ln">87   </span></a>WARNING: Currently a flag that is saved and then deleted cannot be restored.  An 
+<a name="l88"><span class="ln">88   </span></a>exception will be raised.  However if you *add* a flag after saving flag values, 
+<a name="l89"><span class="ln">89   </span></a>and then restore flag values, the added flag will be deleted with no errors. 
+<a name="l90"><span class="ln">90   </span></a>&quot;&quot;&quot;</span>
+<a name="l91"><span class="ln">91   </span></a>
+<a name="l92"><span class="ln">92   </span></a><span class="s3">import </span><span class="s1">collections</span>
+<a name="l93"><span class="ln">93   </span></a><span class="s3">import </span><span class="s1">functools</span>
+<a name="l94"><span class="ln">94   </span></a><span class="s3">import </span><span class="s1">inspect</span>
+<a name="l95"><span class="ln">95   </span></a><span class="s3">from </span><span class="s1">typing </span><span class="s3">import </span><span class="s1">Any</span><span class="s4">, </span><span class="s1">Callable</span><span class="s4">, </span><span class="s1">Dict</span><span class="s4">, </span><span class="s1">Mapping</span><span class="s4">, </span><span class="s1">Sequence</span><span class="s4">, </span><span class="s1">Tuple</span><span class="s4">, </span><span class="s1">Type</span><span class="s4">, </span><span class="s1">TypeVar</span><span class="s4">, </span><span class="s1">Union</span><span class="s4">, </span><span class="s1">overload</span>
+<a name="l96"><span class="ln">96   </span></a>
+<a name="l97"><span class="ln">97   </span></a><span class="s3">from </span><span class="s1">absl </span><span class="s3">import </span><span class="s1">flags</span>
+<a name="l98"><span class="ln">98   </span></a>
+<a name="l99"><span class="ln">99   </span></a><span class="s1">FLAGS </span><span class="s4">= </span><span class="s1">flags</span><span class="s4">.</span><span class="s1">FLAGS</span>
+<a name="l100"><span class="ln">100  </span></a>
+<a name="l101"><span class="ln">101  </span></a>
+<a name="l102"><span class="ln">102  </span></a><span class="s0"># The type of pre/post wrapped functions.</span>
+<a name="l103"><span class="ln">103  </span></a><span class="s1">_CallableT </span><span class="s4">= </span><span class="s1">TypeVar</span><span class="s4">(</span><span class="s5">'_CallableT'</span><span class="s4">, </span><span class="s1">bound</span><span class="s4">=</span><span class="s1">Callable</span><span class="s4">)</span>
+<a name="l104"><span class="ln">104  </span></a>
+<a name="l105"><span class="ln">105  </span></a>
+<a name="l106"><span class="ln">106  </span></a><span class="s4">@</span><span class="s1">overload</span>
+<a name="l107"><span class="ln">107  </span></a><span class="s3">def </span><span class="s1">flagsaver</span><span class="s4">(</span><span class="s1">func</span><span class="s4">: </span><span class="s1">_CallableT</span><span class="s4">) </span><span class="s1">-&gt; _CallableT</span><span class="s4">:</span>
+<a name="l108"><span class="ln">108  </span></a>  <span class="s4">...</span>
+<a name="l109"><span class="ln">109  </span></a>
+<a name="l110"><span class="ln">110  </span></a>
+<a name="l111"><span class="ln">111  </span></a><span class="s4">@</span><span class="s1">overload</span>
+<a name="l112"><span class="ln">112  </span></a><span class="s3">def </span><span class="s1">flagsaver</span><span class="s4">(</span>
+<a name="l113"><span class="ln">113  </span></a>    <span class="s4">*</span><span class="s1">args</span><span class="s4">: </span><span class="s1">Tuple</span><span class="s4">[</span><span class="s1">flags</span><span class="s4">.</span><span class="s1">FlagHolder</span><span class="s4">, </span><span class="s1">Any</span><span class="s4">], **</span><span class="s1">kwargs</span><span class="s4">: </span><span class="s1">Any</span>
+<a name="l114"><span class="ln">114  </span></a><span class="s4">) </span><span class="s1">-&gt; </span><span class="s5">'_FlagOverrider'</span><span class="s4">:</span>
+<a name="l115"><span class="ln">115  </span></a>  <span class="s4">...</span>
+<a name="l116"><span class="ln">116  </span></a>
+<a name="l117"><span class="ln">117  </span></a>
+<a name="l118"><span class="ln">118  </span></a><span class="s3">def </span><span class="s1">flagsaver</span><span class="s4">(*</span><span class="s1">args</span><span class="s4">, **</span><span class="s1">kwargs</span><span class="s4">):</span>
+<a name="l119"><span class="ln">119  </span></a>  <span class="s2">&quot;&quot;&quot;The main flagsaver interface. See module doc for usage.&quot;&quot;&quot;</span>
+<a name="l120"><span class="ln">120  </span></a>  <span class="s3">return </span><span class="s1">_construct_overrider</span><span class="s4">(</span><span class="s1">_FlagOverrider</span><span class="s4">, *</span><span class="s1">args</span><span class="s4">, **</span><span class="s1">kwargs</span><span class="s4">)  </span><span class="s0"># type: ignore[bad-return-type]</span>
+<a name="l121"><span class="ln">121  </span></a>
+<a name="l122"><span class="ln">122  </span></a>
+<a name="l123"><span class="ln">123  </span></a><span class="s4">@</span><span class="s1">overload</span>
+<a name="l124"><span class="ln">124  </span></a><span class="s3">def </span><span class="s1">as_parsed</span><span class="s4">(*</span><span class="s1">args</span><span class="s4">: </span><span class="s1">Tuple</span><span class="s4">[</span><span class="s1">flags</span><span class="s4">.</span><span class="s1">FlagHolder</span><span class="s4">, </span><span class="s1">Union</span><span class="s4">[</span><span class="s1">str</span><span class="s4">, </span><span class="s1">Sequence</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]]],</span>
+<a name="l125"><span class="ln">125  </span></a>              <span class="s4">**</span><span class="s1">kwargs</span><span class="s4">: </span><span class="s1">Union</span><span class="s4">[</span><span class="s1">str</span><span class="s4">, </span><span class="s1">Sequence</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]]) </span><span class="s1">-&gt; </span><span class="s5">'_ParsingFlagOverrider'</span><span class="s4">:</span>
+<a name="l126"><span class="ln">126  </span></a>  <span class="s4">...</span>
+<a name="l127"><span class="ln">127  </span></a>
+<a name="l128"><span class="ln">128  </span></a>
+<a name="l129"><span class="ln">129  </span></a><span class="s4">@</span><span class="s1">overload</span>
+<a name="l130"><span class="ln">130  </span></a><span class="s3">def </span><span class="s1">as_parsed</span><span class="s4">(</span><span class="s1">func</span><span class="s4">: </span><span class="s1">_CallableT</span><span class="s4">) </span><span class="s1">-&gt; _CallableT</span><span class="s4">:</span>
+<a name="l131"><span class="ln">131  </span></a>  <span class="s4">...</span>
+<a name="l132"><span class="ln">132  </span></a>
+<a name="l133"><span class="ln">133  </span></a>
+<a name="l134"><span class="ln">134  </span></a><span class="s3">def </span><span class="s1">as_parsed</span><span class="s4">(*</span><span class="s1">args</span><span class="s4">, **</span><span class="s1">kwargs</span><span class="s4">):</span>
+<a name="l135"><span class="ln">135  </span></a>  <span class="s2">&quot;&quot;&quot;Overrides flags by parsing strings, saves flag state similar to flagsaver. 
+<a name="l136"><span class="ln">136  </span></a> 
+<a name="l137"><span class="ln">137  </span></a>  This function can be used as either a decorator or context manager similar to 
+<a name="l138"><span class="ln">138  </span></a>  flagsaver.flagsaver(). However, where flagsaver.flagsaver() directly sets the 
+<a name="l139"><span class="ln">139  </span></a>  flags to new values, this function will parse the provided arguments as if 
+<a name="l140"><span class="ln">140  </span></a>  they were provided on the command line. Among other things, this will cause 
+<a name="l141"><span class="ln">141  </span></a>  `FLAGS['flag_name'].present == True`. 
+<a name="l142"><span class="ln">142  </span></a> 
+<a name="l143"><span class="ln">143  </span></a>  A note on unparsed input: For many flag types, the unparsed version will be 
+<a name="l144"><span class="ln">144  </span></a>  a single string. However for multi_x (multi_string, multi_integer, multi_enum) 
+<a name="l145"><span class="ln">145  </span></a>  the unparsed version will be a Sequence of strings. 
+<a name="l146"><span class="ln">146  </span></a> 
+<a name="l147"><span class="ln">147  </span></a>  Args: 
+<a name="l148"><span class="ln">148  </span></a>    *args: Tuples of FlagHolders and their unparsed value. 
+<a name="l149"><span class="ln">149  </span></a>    **kwargs: The keyword args are flag names, and the values are unparsed 
+<a name="l150"><span class="ln">150  </span></a>      values. 
+<a name="l151"><span class="ln">151  </span></a> 
+<a name="l152"><span class="ln">152  </span></a>  Returns: 
+<a name="l153"><span class="ln">153  </span></a>    _ParsingFlagOverrider that serves as a context manager or decorator. Will 
+<a name="l154"><span class="ln">154  </span></a>    save previous flag state and parse new flags, then on cleanup it will 
+<a name="l155"><span class="ln">155  </span></a>    restore the previous flag state. 
+<a name="l156"><span class="ln">156  </span></a>  &quot;&quot;&quot;</span>
+<a name="l157"><span class="ln">157  </span></a>  <span class="s3">return </span><span class="s1">_construct_overrider</span><span class="s4">(</span><span class="s1">_ParsingFlagOverrider</span><span class="s4">, *</span><span class="s1">args</span><span class="s4">, **</span><span class="s1">kwargs</span><span class="s4">)</span>
+<a name="l158"><span class="ln">158  </span></a>
+<a name="l159"><span class="ln">159  </span></a>
+<a name="l160"><span class="ln">160  </span></a><span class="s0"># NOTE: the order of these overload declarations matters. The type checker will</span>
+<a name="l161"><span class="ln">161  </span></a><span class="s0"># pick the first match which could be incorrect.</span>
+<a name="l162"><span class="ln">162  </span></a><span class="s4">@</span><span class="s1">overload</span>
+<a name="l163"><span class="ln">163  </span></a><span class="s3">def </span><span class="s1">_construct_overrider</span><span class="s4">(</span>
+<a name="l164"><span class="ln">164  </span></a>    <span class="s1">flag_overrider_cls</span><span class="s4">: </span><span class="s1">Type</span><span class="s4">[</span><span class="s5">'_ParsingFlagOverrider'</span><span class="s4">],</span>
+<a name="l165"><span class="ln">165  </span></a>    <span class="s4">*</span><span class="s1">args</span><span class="s4">: </span><span class="s1">Tuple</span><span class="s4">[</span><span class="s1">flags</span><span class="s4">.</span><span class="s1">FlagHolder</span><span class="s4">, </span><span class="s1">Union</span><span class="s4">[</span><span class="s1">str</span><span class="s4">, </span><span class="s1">Sequence</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]]],</span>
+<a name="l166"><span class="ln">166  </span></a>    <span class="s4">**</span><span class="s1">kwargs</span><span class="s4">: </span><span class="s1">Union</span><span class="s4">[</span><span class="s1">str</span><span class="s4">, </span><span class="s1">Sequence</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]]) </span><span class="s1">-&gt; </span><span class="s5">'_ParsingFlagOverrider'</span><span class="s4">:</span>
+<a name="l167"><span class="ln">167  </span></a>  <span class="s4">...</span>
+<a name="l168"><span class="ln">168  </span></a>
+<a name="l169"><span class="ln">169  </span></a>
+<a name="l170"><span class="ln">170  </span></a><span class="s4">@</span><span class="s1">overload</span>
+<a name="l171"><span class="ln">171  </span></a><span class="s3">def </span><span class="s1">_construct_overrider</span><span class="s4">(</span>
+<a name="l172"><span class="ln">172  </span></a>    <span class="s1">flag_overrider_cls</span><span class="s4">: </span><span class="s1">Type</span><span class="s4">[</span><span class="s5">'_FlagOverrider'</span><span class="s4">], </span><span class="s1">func</span><span class="s4">: </span><span class="s1">_CallableT</span>
+<a name="l173"><span class="ln">173  </span></a><span class="s4">) </span><span class="s1">-&gt; _CallableT</span><span class="s4">:</span>
+<a name="l174"><span class="ln">174  </span></a>  <span class="s4">...</span>
+<a name="l175"><span class="ln">175  </span></a>
+<a name="l176"><span class="ln">176  </span></a>
+<a name="l177"><span class="ln">177  </span></a><span class="s4">@</span><span class="s1">overload</span>
+<a name="l178"><span class="ln">178  </span></a><span class="s3">def </span><span class="s1">_construct_overrider</span><span class="s4">(</span>
+<a name="l179"><span class="ln">179  </span></a>    <span class="s1">flag_overrider_cls</span><span class="s4">: </span><span class="s1">Type</span><span class="s4">[</span><span class="s5">'_FlagOverrider'</span><span class="s4">],</span>
+<a name="l180"><span class="ln">180  </span></a>    <span class="s4">*</span><span class="s1">args</span><span class="s4">: </span><span class="s1">Tuple</span><span class="s4">[</span><span class="s1">flags</span><span class="s4">.</span><span class="s1">FlagHolder</span><span class="s4">, </span><span class="s1">Any</span><span class="s4">],</span>
+<a name="l181"><span class="ln">181  </span></a>    <span class="s4">**</span><span class="s1">kwargs</span><span class="s4">: </span><span class="s1">Any</span><span class="s4">,</span>
+<a name="l182"><span class="ln">182  </span></a><span class="s4">) </span><span class="s1">-&gt; </span><span class="s5">'_FlagOverrider'</span><span class="s4">:</span>
+<a name="l183"><span class="ln">183  </span></a>  <span class="s4">...</span>
+<a name="l184"><span class="ln">184  </span></a>
+<a name="l185"><span class="ln">185  </span></a>
+<a name="l186"><span class="ln">186  </span></a><span class="s3">def </span><span class="s1">_construct_overrider</span><span class="s4">(</span><span class="s1">flag_overrider_cls</span><span class="s4">, *</span><span class="s1">args</span><span class="s4">, **</span><span class="s1">kwargs</span><span class="s4">):</span>
+<a name="l187"><span class="ln">187  </span></a>  <span class="s2">&quot;&quot;&quot;Handles the args/kwargs returning an instance of flag_overrider_cls. 
+<a name="l188"><span class="ln">188  </span></a> 
+<a name="l189"><span class="ln">189  </span></a>  If flag_overrider_cls is _FlagOverrider then values should be native python 
+<a name="l190"><span class="ln">190  </span></a>  types matching the python types. Otherwise if flag_overrider_cls is 
+<a name="l191"><span class="ln">191  </span></a>  _ParsingFlagOverrider the values should be strings or sequences of strings. 
+<a name="l192"><span class="ln">192  </span></a> 
+<a name="l193"><span class="ln">193  </span></a>  Args: 
+<a name="l194"><span class="ln">194  </span></a>    flag_overrider_cls: The class that will do the overriding. 
+<a name="l195"><span class="ln">195  </span></a>    *args: Tuples of FlagHolder and the new flag value. 
+<a name="l196"><span class="ln">196  </span></a>    **kwargs: Keword args mapping flag name to new flag value. 
+<a name="l197"><span class="ln">197  </span></a> 
+<a name="l198"><span class="ln">198  </span></a>  Returns: 
+<a name="l199"><span class="ln">199  </span></a>    A _FlagOverrider to be used as a decorator or context manager. 
+<a name="l200"><span class="ln">200  </span></a>  &quot;&quot;&quot;</span>
+<a name="l201"><span class="ln">201  </span></a>  <span class="s3">if not </span><span class="s1">args</span><span class="s4">:</span>
+<a name="l202"><span class="ln">202  </span></a>    <span class="s3">return </span><span class="s1">flag_overrider_cls</span><span class="s4">(**</span><span class="s1">kwargs</span><span class="s4">)</span>
+<a name="l203"><span class="ln">203  </span></a>  <span class="s0"># args can be [func] if used as `@flagsaver` instead of `@flagsaver(...)`</span>
+<a name="l204"><span class="ln">204  </span></a>  <span class="s3">if </span><span class="s1">len</span><span class="s4">(</span><span class="s1">args</span><span class="s4">) == </span><span class="s6">1 </span><span class="s3">and </span><span class="s1">callable</span><span class="s4">(</span><span class="s1">args</span><span class="s4">[</span><span class="s6">0</span><span class="s4">]):</span>
+<a name="l205"><span class="ln">205  </span></a>    <span class="s3">if </span><span class="s1">kwargs</span><span class="s4">:</span>
+<a name="l206"><span class="ln">206  </span></a>      <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span>
+<a name="l207"><span class="ln">207  </span></a>          <span class="s5">&quot;It's invalid to specify both positional and keyword parameters.&quot;</span><span class="s4">)</span>
+<a name="l208"><span class="ln">208  </span></a>    <span class="s1">func </span><span class="s4">= </span><span class="s1">args</span><span class="s4">[</span><span class="s6">0</span><span class="s4">]</span>
+<a name="l209"><span class="ln">209  </span></a>    <span class="s3">if </span><span class="s1">inspect</span><span class="s4">.</span><span class="s1">isclass</span><span class="s4">(</span><span class="s1">func</span><span class="s4">):</span>
+<a name="l210"><span class="ln">210  </span></a>      <span class="s3">raise </span><span class="s1">TypeError</span><span class="s4">(</span><span class="s5">'@flagsaver.flagsaver cannot be applied to a class.'</span><span class="s4">)</span>
+<a name="l211"><span class="ln">211  </span></a>    <span class="s3">return </span><span class="s1">_wrap</span><span class="s4">(</span><span class="s1">flag_overrider_cls</span><span class="s4">, </span><span class="s1">func</span><span class="s4">, {})</span>
+<a name="l212"><span class="ln">212  </span></a>  <span class="s0"># args can be a list of (FlagHolder, value) pairs.</span>
+<a name="l213"><span class="ln">213  </span></a>  <span class="s0"># In which case they augment any specified kwargs.</span>
+<a name="l214"><span class="ln">214  </span></a>  <span class="s3">for </span><span class="s1">arg </span><span class="s3">in </span><span class="s1">args</span><span class="s4">:</span>
+<a name="l215"><span class="ln">215  </span></a>    <span class="s3">if not </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">arg</span><span class="s4">, </span><span class="s1">tuple</span><span class="s4">) </span><span class="s3">or </span><span class="s1">len</span><span class="s4">(</span><span class="s1">arg</span><span class="s4">) != </span><span class="s6">2</span><span class="s4">:</span>
+<a name="l216"><span class="ln">216  </span></a>      <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Expected (FlagHolder, value) pair, found %r' </span><span class="s4">% (</span><span class="s1">arg</span><span class="s4">,))</span>
+<a name="l217"><span class="ln">217  </span></a>    <span class="s1">holder</span><span class="s4">, </span><span class="s1">value </span><span class="s4">= </span><span class="s1">arg</span>
+<a name="l218"><span class="ln">218  </span></a>    <span class="s3">if not </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">holder</span><span class="s4">, </span><span class="s1">flags</span><span class="s4">.</span><span class="s1">FlagHolder</span><span class="s4">):</span>
+<a name="l219"><span class="ln">219  </span></a>      <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Expected (FlagHolder, value) pair, found %r' </span><span class="s4">% (</span><span class="s1">arg</span><span class="s4">,))</span>
+<a name="l220"><span class="ln">220  </span></a>    <span class="s3">if </span><span class="s1">holder</span><span class="s4">.</span><span class="s1">name </span><span class="s3">in </span><span class="s1">kwargs</span><span class="s4">:</span>
+<a name="l221"><span class="ln">221  </span></a>      <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Cannot set --%s multiple times' </span><span class="s4">% </span><span class="s1">holder</span><span class="s4">.</span><span class="s1">name</span><span class="s4">)</span>
+<a name="l222"><span class="ln">222  </span></a>    <span class="s1">kwargs</span><span class="s4">[</span><span class="s1">holder</span><span class="s4">.</span><span class="s1">name</span><span class="s4">] = </span><span class="s1">value</span>
+<a name="l223"><span class="ln">223  </span></a>  <span class="s3">return </span><span class="s1">flag_overrider_cls</span><span class="s4">(**</span><span class="s1">kwargs</span><span class="s4">)</span>
+<a name="l224"><span class="ln">224  </span></a>
+<a name="l225"><span class="ln">225  </span></a>
+<a name="l226"><span class="ln">226  </span></a><span class="s3">def </span><span class="s1">save_flag_values</span><span class="s4">(</span>
+<a name="l227"><span class="ln">227  </span></a>    <span class="s1">flag_values</span><span class="s4">: </span><span class="s1">flags</span><span class="s4">.</span><span class="s1">FlagValues </span><span class="s4">= </span><span class="s1">FLAGS</span><span class="s4">,</span>
+<a name="l228"><span class="ln">228  </span></a><span class="s4">) </span><span class="s1">-&gt; Dict</span><span class="s4">[</span><span class="s1">str</span><span class="s4">, </span><span class="s1">Dict</span><span class="s4">[</span><span class="s1">str</span><span class="s4">, </span><span class="s1">Any</span><span class="s4">]]:</span>
+<a name="l229"><span class="ln">229  </span></a>  <span class="s2">&quot;&quot;&quot;Returns copy of flag values as a dict. 
+<a name="l230"><span class="ln">230  </span></a> 
+<a name="l231"><span class="ln">231  </span></a>  Args: 
+<a name="l232"><span class="ln">232  </span></a>    flag_values: FlagValues, the FlagValues instance with which the flag will be 
+<a name="l233"><span class="ln">233  </span></a>      saved. This should almost never need to be overridden. 
+<a name="l234"><span class="ln">234  </span></a> 
+<a name="l235"><span class="ln">235  </span></a>  Returns: 
+<a name="l236"><span class="ln">236  </span></a>    Dictionary mapping keys to values. Keys are flag names, values are 
+<a name="l237"><span class="ln">237  </span></a>    corresponding ``__dict__`` members. E.g. ``{'key': value_dict, ...}``. 
+<a name="l238"><span class="ln">238  </span></a>  &quot;&quot;&quot;</span>
+<a name="l239"><span class="ln">239  </span></a>  <span class="s3">return </span><span class="s4">{</span><span class="s1">name</span><span class="s4">: </span><span class="s1">_copy_flag_dict</span><span class="s4">(</span><span class="s1">flag_values</span><span class="s4">[</span><span class="s1">name</span><span class="s4">]) </span><span class="s3">for </span><span class="s1">name </span><span class="s3">in </span><span class="s1">flag_values</span><span class="s4">}</span>
+<a name="l240"><span class="ln">240  </span></a>
+<a name="l241"><span class="ln">241  </span></a>
+<a name="l242"><span class="ln">242  </span></a><span class="s3">def </span><span class="s1">restore_flag_values</span><span class="s4">(</span>
+<a name="l243"><span class="ln">243  </span></a>    <span class="s1">saved_flag_values</span><span class="s4">: </span><span class="s1">Mapping</span><span class="s4">[</span><span class="s1">str</span><span class="s4">, </span><span class="s1">Dict</span><span class="s4">[</span><span class="s1">str</span><span class="s4">, </span><span class="s1">Any</span><span class="s4">]],</span>
+<a name="l244"><span class="ln">244  </span></a>    <span class="s1">flag_values</span><span class="s4">: </span><span class="s1">flags</span><span class="s4">.</span><span class="s1">FlagValues </span><span class="s4">= </span><span class="s1">FLAGS</span><span class="s4">,</span>
+<a name="l245"><span class="ln">245  </span></a><span class="s4">) </span><span class="s1">-&gt; </span><span class="s3">None</span><span class="s4">:</span>
+<a name="l246"><span class="ln">246  </span></a>  <span class="s2">&quot;&quot;&quot;Restores flag values based on the dictionary of flag values. 
+<a name="l247"><span class="ln">247  </span></a> 
+<a name="l248"><span class="ln">248  </span></a>  Args: 
+<a name="l249"><span class="ln">249  </span></a>    saved_flag_values: {'flag_name': value_dict, ...} 
+<a name="l250"><span class="ln">250  </span></a>    flag_values: FlagValues, the FlagValues instance from which the flag will be 
+<a name="l251"><span class="ln">251  </span></a>      restored. This should almost never need to be overridden. 
+<a name="l252"><span class="ln">252  </span></a>  &quot;&quot;&quot;</span>
+<a name="l253"><span class="ln">253  </span></a>  <span class="s1">new_flag_names </span><span class="s4">= </span><span class="s1">list</span><span class="s4">(</span><span class="s1">flag_values</span><span class="s4">)</span>
+<a name="l254"><span class="ln">254  </span></a>  <span class="s3">for </span><span class="s1">name </span><span class="s3">in </span><span class="s1">new_flag_names</span><span class="s4">:</span>
+<a name="l255"><span class="ln">255  </span></a>    <span class="s1">saved </span><span class="s4">= </span><span class="s1">saved_flag_values</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s1">name</span><span class="s4">)</span>
+<a name="l256"><span class="ln">256  </span></a>    <span class="s3">if </span><span class="s1">saved </span><span class="s3">is None</span><span class="s4">:</span>
+<a name="l257"><span class="ln">257  </span></a>      <span class="s0"># If __dict__ was not saved delete &quot;new&quot; flag.</span>
+<a name="l258"><span class="ln">258  </span></a>      <span class="s1">delattr</span><span class="s4">(</span><span class="s1">flag_values</span><span class="s4">, </span><span class="s1">name</span><span class="s4">)</span>
+<a name="l259"><span class="ln">259  </span></a>    <span class="s3">else</span><span class="s4">:</span>
+<a name="l260"><span class="ln">260  </span></a>      <span class="s3">if </span><span class="s1">flag_values</span><span class="s4">[</span><span class="s1">name</span><span class="s4">].</span><span class="s1">value </span><span class="s4">!= </span><span class="s1">saved</span><span class="s4">[</span><span class="s5">'_value'</span><span class="s4">]:</span>
+<a name="l261"><span class="ln">261  </span></a>        <span class="s1">flag_values</span><span class="s4">[</span><span class="s1">name</span><span class="s4">].</span><span class="s1">value </span><span class="s4">= </span><span class="s1">saved</span><span class="s4">[</span><span class="s5">'_value'</span><span class="s4">]  </span><span class="s0"># Ensure C++ value is set.</span>
+<a name="l262"><span class="ln">262  </span></a>      <span class="s1">flag_values</span><span class="s4">[</span><span class="s1">name</span><span class="s4">].</span><span class="s1">__dict__ </span><span class="s4">= </span><span class="s1">saved</span>
+<a name="l263"><span class="ln">263  </span></a>
+<a name="l264"><span class="ln">264  </span></a>
+<a name="l265"><span class="ln">265  </span></a><span class="s4">@</span><span class="s1">overload</span>
+<a name="l266"><span class="ln">266  </span></a><span class="s3">def </span><span class="s1">_wrap</span><span class="s4">(</span><span class="s1">flag_overrider_cls</span><span class="s4">: </span><span class="s1">Type</span><span class="s4">[</span><span class="s5">'_FlagOverrider'</span><span class="s4">], </span><span class="s1">func</span><span class="s4">: </span><span class="s1">_CallableT</span><span class="s4">,</span>
+<a name="l267"><span class="ln">267  </span></a>          <span class="s1">overrides</span><span class="s4">: </span><span class="s1">Mapping</span><span class="s4">[</span><span class="s1">str</span><span class="s4">, </span><span class="s1">Any</span><span class="s4">]) </span><span class="s1">-&gt; _CallableT</span><span class="s4">:</span>
+<a name="l268"><span class="ln">268  </span></a>  <span class="s4">...</span>
+<a name="l269"><span class="ln">269  </span></a>
+<a name="l270"><span class="ln">270  </span></a>
+<a name="l271"><span class="ln">271  </span></a><span class="s4">@</span><span class="s1">overload</span>
+<a name="l272"><span class="ln">272  </span></a><span class="s3">def </span><span class="s1">_wrap</span><span class="s4">(</span><span class="s1">flag_overrider_cls</span><span class="s4">: </span><span class="s1">Type</span><span class="s4">[</span><span class="s5">'_ParsingFlagOverrider'</span><span class="s4">], </span><span class="s1">func</span><span class="s4">: </span><span class="s1">_CallableT</span><span class="s4">,</span>
+<a name="l273"><span class="ln">273  </span></a>          <span class="s1">overrides</span><span class="s4">: </span><span class="s1">Mapping</span><span class="s4">[</span><span class="s1">str</span><span class="s4">, </span><span class="s1">Union</span><span class="s4">[</span><span class="s1">str</span><span class="s4">, </span><span class="s1">Sequence</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]]]) </span><span class="s1">-&gt; _CallableT</span><span class="s4">:</span>
+<a name="l274"><span class="ln">274  </span></a>  <span class="s4">...</span>
+<a name="l275"><span class="ln">275  </span></a>
+<a name="l276"><span class="ln">276  </span></a>
+<a name="l277"><span class="ln">277  </span></a><span class="s3">def </span><span class="s1">_wrap</span><span class="s4">(</span><span class="s1">flag_overrider_cls</span><span class="s4">, </span><span class="s1">func</span><span class="s4">, </span><span class="s1">overrides</span><span class="s4">):</span>
+<a name="l278"><span class="ln">278  </span></a>  <span class="s2">&quot;&quot;&quot;Creates a wrapper function that saves/restores flag values. 
+<a name="l279"><span class="ln">279  </span></a> 
+<a name="l280"><span class="ln">280  </span></a>  Args: 
+<a name="l281"><span class="ln">281  </span></a>    flag_overrider_cls: The class that will be used as a context manager. 
+<a name="l282"><span class="ln">282  </span></a>    func: This will be called between saving flags and restoring flags. 
+<a name="l283"><span class="ln">283  </span></a>    overrides: Flag names mapped to their values. These flags will be set after 
+<a name="l284"><span class="ln">284  </span></a>      saving the original flag state. The type of the values depends on if 
+<a name="l285"><span class="ln">285  </span></a>      _FlagOverrider or _ParsingFlagOverrider was specified. 
+<a name="l286"><span class="ln">286  </span></a> 
+<a name="l287"><span class="ln">287  </span></a>  Returns: 
+<a name="l288"><span class="ln">288  </span></a>    A wrapped version of func. 
+<a name="l289"><span class="ln">289  </span></a>  &quot;&quot;&quot;</span>
+<a name="l290"><span class="ln">290  </span></a>
+<a name="l291"><span class="ln">291  </span></a>  <span class="s4">@</span><span class="s1">functools</span><span class="s4">.</span><span class="s1">wraps</span><span class="s4">(</span><span class="s1">func</span><span class="s4">)</span>
+<a name="l292"><span class="ln">292  </span></a>  <span class="s3">def </span><span class="s1">_flagsaver_wrapper</span><span class="s4">(*</span><span class="s1">args</span><span class="s4">, **</span><span class="s1">kwargs</span><span class="s4">):</span>
+<a name="l293"><span class="ln">293  </span></a>    <span class="s2">&quot;&quot;&quot;Wrapper function that saves and restores flags.&quot;&quot;&quot;</span>
+<a name="l294"><span class="ln">294  </span></a>    <span class="s3">with </span><span class="s1">flag_overrider_cls</span><span class="s4">(**</span><span class="s1">overrides</span><span class="s4">):</span>
+<a name="l295"><span class="ln">295  </span></a>      <span class="s3">return </span><span class="s1">func</span><span class="s4">(*</span><span class="s1">args</span><span class="s4">, **</span><span class="s1">kwargs</span><span class="s4">)</span>
+<a name="l296"><span class="ln">296  </span></a>
+<a name="l297"><span class="ln">297  </span></a>  <span class="s3">return </span><span class="s1">_flagsaver_wrapper</span>
+<a name="l298"><span class="ln">298  </span></a>
+<a name="l299"><span class="ln">299  </span></a>
+<a name="l300"><span class="ln">300  </span></a><span class="s3">class </span><span class="s1">_FlagOverrider</span><span class="s4">:</span>
+<a name="l301"><span class="ln">301  </span></a>  <span class="s2">&quot;&quot;&quot;Overrides flags for the duration of the decorated function call. 
+<a name="l302"><span class="ln">302  </span></a> 
+<a name="l303"><span class="ln">303  </span></a>  It also restores all original values of flags after decorated method 
+<a name="l304"><span class="ln">304  </span></a>  completes. 
+<a name="l305"><span class="ln">305  </span></a>  &quot;&quot;&quot;</span>
+<a name="l306"><span class="ln">306  </span></a>
+<a name="l307"><span class="ln">307  </span></a>  <span class="s3">def </span><span class="s1">__init__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, **</span><span class="s1">overrides</span><span class="s4">: </span><span class="s1">Any</span><span class="s4">):</span>
+<a name="l308"><span class="ln">308  </span></a>    <span class="s1">self</span><span class="s4">.</span><span class="s1">_overrides </span><span class="s4">= </span><span class="s1">overrides</span>
+<a name="l309"><span class="ln">309  </span></a>    <span class="s1">self</span><span class="s4">.</span><span class="s1">_saved_flag_values </span><span class="s4">= </span><span class="s3">None</span>
+<a name="l310"><span class="ln">310  </span></a>
+<a name="l311"><span class="ln">311  </span></a>  <span class="s3">def </span><span class="s1">__call__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">func</span><span class="s4">: </span><span class="s1">_CallableT</span><span class="s4">) </span><span class="s1">-&gt; _CallableT</span><span class="s4">:</span>
+<a name="l312"><span class="ln">312  </span></a>    <span class="s3">if </span><span class="s1">inspect</span><span class="s4">.</span><span class="s1">isclass</span><span class="s4">(</span><span class="s1">func</span><span class="s4">):</span>
+<a name="l313"><span class="ln">313  </span></a>      <span class="s3">raise </span><span class="s1">TypeError</span><span class="s4">(</span><span class="s5">'flagsaver cannot be applied to a class.'</span><span class="s4">)</span>
+<a name="l314"><span class="ln">314  </span></a>    <span class="s3">return </span><span class="s1">_wrap</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">__class__</span><span class="s4">, </span><span class="s1">func</span><span class="s4">, </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_overrides</span><span class="s4">)</span>
+<a name="l315"><span class="ln">315  </span></a>
+<a name="l316"><span class="ln">316  </span></a>  <span class="s3">def </span><span class="s1">__enter__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l317"><span class="ln">317  </span></a>    <span class="s1">self</span><span class="s4">.</span><span class="s1">_saved_flag_values </span><span class="s4">= </span><span class="s1">save_flag_values</span><span class="s4">(</span><span class="s1">FLAGS</span><span class="s4">)</span>
+<a name="l318"><span class="ln">318  </span></a>    <span class="s3">try</span><span class="s4">:</span>
+<a name="l319"><span class="ln">319  </span></a>      <span class="s1">FLAGS</span><span class="s4">.</span><span class="s1">_set_attributes</span><span class="s4">(**</span><span class="s1">self</span><span class="s4">.</span><span class="s1">_overrides</span><span class="s4">)</span>
+<a name="l320"><span class="ln">320  </span></a>    <span class="s3">except</span><span class="s4">:</span>
+<a name="l321"><span class="ln">321  </span></a>      <span class="s0"># It may fail because of flag validators.</span>
+<a name="l322"><span class="ln">322  </span></a>      <span class="s1">restore_flag_values</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">_saved_flag_values</span><span class="s4">, </span><span class="s1">FLAGS</span><span class="s4">)</span>
+<a name="l323"><span class="ln">323  </span></a>      <span class="s3">raise</span>
+<a name="l324"><span class="ln">324  </span></a>
+<a name="l325"><span class="ln">325  </span></a>  <span class="s3">def </span><span class="s1">__exit__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">exc_type</span><span class="s4">, </span><span class="s1">exc_value</span><span class="s4">, </span><span class="s1">traceback</span><span class="s4">):</span>
+<a name="l326"><span class="ln">326  </span></a>    <span class="s1">restore_flag_values</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">_saved_flag_values</span><span class="s4">, </span><span class="s1">FLAGS</span><span class="s4">)</span>
+<a name="l327"><span class="ln">327  </span></a>
+<a name="l328"><span class="ln">328  </span></a>
+<a name="l329"><span class="ln">329  </span></a><span class="s3">class </span><span class="s1">_ParsingFlagOverrider</span><span class="s4">(</span><span class="s1">_FlagOverrider</span><span class="s4">):</span>
+<a name="l330"><span class="ln">330  </span></a>  <span class="s2">&quot;&quot;&quot;Context manager for overriding flags. 
+<a name="l331"><span class="ln">331  </span></a> 
+<a name="l332"><span class="ln">332  </span></a>  Simulates command line parsing. 
+<a name="l333"><span class="ln">333  </span></a> 
+<a name="l334"><span class="ln">334  </span></a>  This is simlar to _FlagOverrider except that all **overrides should be 
+<a name="l335"><span class="ln">335  </span></a>  strings or sequences of strings, and when context is entered this class calls 
+<a name="l336"><span class="ln">336  </span></a>  .parse(value) 
+<a name="l337"><span class="ln">337  </span></a> 
+<a name="l338"><span class="ln">338  </span></a>  This results in the flags having .present set properly. 
+<a name="l339"><span class="ln">339  </span></a>  &quot;&quot;&quot;</span>
+<a name="l340"><span class="ln">340  </span></a>
+<a name="l341"><span class="ln">341  </span></a>  <span class="s3">def </span><span class="s1">__init__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, **</span><span class="s1">overrides</span><span class="s4">: </span><span class="s1">Union</span><span class="s4">[</span><span class="s1">str</span><span class="s4">, </span><span class="s1">Sequence</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]]):</span>
+<a name="l342"><span class="ln">342  </span></a>    <span class="s3">for </span><span class="s1">flag_name</span><span class="s4">, </span><span class="s1">new_value </span><span class="s3">in </span><span class="s1">overrides</span><span class="s4">.</span><span class="s1">items</span><span class="s4">():</span>
+<a name="l343"><span class="ln">343  </span></a>      <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">new_value</span><span class="s4">, </span><span class="s1">str</span><span class="s4">):</span>
+<a name="l344"><span class="ln">344  </span></a>        <span class="s3">continue</span>
+<a name="l345"><span class="ln">345  </span></a>      <span class="s3">if </span><span class="s4">(</span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">new_value</span><span class="s4">, </span><span class="s1">collections</span><span class="s4">.</span><span class="s1">abc</span><span class="s4">.</span><span class="s1">Sequence</span><span class="s4">) </span><span class="s3">and</span>
+<a name="l346"><span class="ln">346  </span></a>          <span class="s1">all</span><span class="s4">(</span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">single_value</span><span class="s4">, </span><span class="s1">str</span><span class="s4">) </span><span class="s3">for </span><span class="s1">single_value </span><span class="s3">in </span><span class="s1">new_value</span><span class="s4">)):</span>
+<a name="l347"><span class="ln">347  </span></a>        <span class="s3">continue</span>
+<a name="l348"><span class="ln">348  </span></a>      <span class="s3">raise </span><span class="s1">TypeError</span><span class="s4">(</span>
+<a name="l349"><span class="ln">349  </span></a>          <span class="s5">f'flagsaver.as_parsed() cannot parse </span><span class="s3">{</span><span class="s1">flag_name</span><span class="s3">}</span><span class="s5">. Expected a single '</span>
+<a name="l350"><span class="ln">350  </span></a>          <span class="s5">f'string or sequence of strings but </span><span class="s3">{</span><span class="s1">type</span><span class="s4">(</span><span class="s1">new_value</span><span class="s4">)</span><span class="s3">} </span><span class="s5">was provided.'</span><span class="s4">)</span>
+<a name="l351"><span class="ln">351  </span></a>    <span class="s1">super</span><span class="s4">().</span><span class="s1">__init__</span><span class="s4">(**</span><span class="s1">overrides</span><span class="s4">)</span>
+<a name="l352"><span class="ln">352  </span></a>
+<a name="l353"><span class="ln">353  </span></a>  <span class="s3">def </span><span class="s1">__enter__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l354"><span class="ln">354  </span></a>    <span class="s1">self</span><span class="s4">.</span><span class="s1">_saved_flag_values </span><span class="s4">= </span><span class="s1">save_flag_values</span><span class="s4">(</span><span class="s1">FLAGS</span><span class="s4">)</span>
+<a name="l355"><span class="ln">355  </span></a>    <span class="s3">try</span><span class="s4">:</span>
+<a name="l356"><span class="ln">356  </span></a>      <span class="s3">for </span><span class="s1">flag_name</span><span class="s4">, </span><span class="s1">unparsed_value </span><span class="s3">in </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_overrides</span><span class="s4">.</span><span class="s1">items</span><span class="s4">():</span>
+<a name="l357"><span class="ln">357  </span></a>        <span class="s0"># LINT.IfChange(flag_override_parsing)</span>
+<a name="l358"><span class="ln">358  </span></a>        <span class="s1">FLAGS</span><span class="s4">[</span><span class="s1">flag_name</span><span class="s4">].</span><span class="s1">parse</span><span class="s4">(</span><span class="s1">unparsed_value</span><span class="s4">)</span>
+<a name="l359"><span class="ln">359  </span></a>        <span class="s1">FLAGS</span><span class="s4">[</span><span class="s1">flag_name</span><span class="s4">].</span><span class="s1">using_default_value </span><span class="s4">= </span><span class="s3">False</span>
+<a name="l360"><span class="ln">360  </span></a>        <span class="s0"># LINT.ThenChange()</span>
+<a name="l361"><span class="ln">361  </span></a>
+<a name="l362"><span class="ln">362  </span></a>      <span class="s0"># Perform the validation on all modified flags. This is something that</span>
+<a name="l363"><span class="ln">363  </span></a>      <span class="s0"># FLAGS._set_attributes() does for you in _FlagOverrider.</span>
+<a name="l364"><span class="ln">364  </span></a>      <span class="s3">for </span><span class="s1">flag_name </span><span class="s3">in </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_overrides</span><span class="s4">:</span>
+<a name="l365"><span class="ln">365  </span></a>        <span class="s1">FLAGS</span><span class="s4">.</span><span class="s1">_assert_validators</span><span class="s4">(</span><span class="s1">FLAGS</span><span class="s4">[</span><span class="s1">flag_name</span><span class="s4">].</span><span class="s1">validators</span><span class="s4">)</span>
+<a name="l366"><span class="ln">366  </span></a>
+<a name="l367"><span class="ln">367  </span></a>    <span class="s3">except </span><span class="s1">KeyError </span><span class="s3">as </span><span class="s1">e</span><span class="s4">:</span>
+<a name="l368"><span class="ln">368  </span></a>      <span class="s0"># If a flag doesn't exist, an UnrecognizedFlagError is more specific.</span>
+<a name="l369"><span class="ln">369  </span></a>      <span class="s1">restore_flag_values</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">_saved_flag_values</span><span class="s4">, </span><span class="s1">FLAGS</span><span class="s4">)</span>
+<a name="l370"><span class="ln">370  </span></a>      <span class="s3">raise </span><span class="s1">flags</span><span class="s4">.</span><span class="s1">UnrecognizedFlagError</span><span class="s4">(</span><span class="s5">'Unknown command line flag.'</span><span class="s4">) </span><span class="s3">from </span><span class="s1">e</span>
+<a name="l371"><span class="ln">371  </span></a>
+<a name="l372"><span class="ln">372  </span></a>    <span class="s3">except</span><span class="s4">:</span>
+<a name="l373"><span class="ln">373  </span></a>      <span class="s0"># It may fail because of flag validators or general parsing issues.</span>
+<a name="l374"><span class="ln">374  </span></a>      <span class="s1">restore_flag_values</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">_saved_flag_values</span><span class="s4">, </span><span class="s1">FLAGS</span><span class="s4">)</span>
+<a name="l375"><span class="ln">375  </span></a>      <span class="s3">raise</span>
+<a name="l376"><span class="ln">376  </span></a>
+<a name="l377"><span class="ln">377  </span></a>
+<a name="l378"><span class="ln">378  </span></a><span class="s3">def </span><span class="s1">_copy_flag_dict</span><span class="s4">(</span><span class="s1">flag</span><span class="s4">: </span><span class="s1">flags</span><span class="s4">.</span><span class="s1">Flag</span><span class="s4">) </span><span class="s1">-&gt; Dict</span><span class="s4">[</span><span class="s1">str</span><span class="s4">, </span><span class="s1">Any</span><span class="s4">]:</span>
+<a name="l379"><span class="ln">379  </span></a>  <span class="s2">&quot;&quot;&quot;Returns a copy of the flag object's ``__dict__``. 
+<a name="l380"><span class="ln">380  </span></a> 
+<a name="l381"><span class="ln">381  </span></a>  It's mostly a shallow copy of the ``__dict__``, except it also does a shallow 
+<a name="l382"><span class="ln">382  </span></a>  copy of the validator list. 
+<a name="l383"><span class="ln">383  </span></a> 
+<a name="l384"><span class="ln">384  </span></a>  Args: 
+<a name="l385"><span class="ln">385  </span></a>    flag: flags.Flag, the flag to copy. 
+<a name="l386"><span class="ln">386  </span></a> 
+<a name="l387"><span class="ln">387  </span></a>  Returns: 
+<a name="l388"><span class="ln">388  </span></a>    A copy of the flag object's ``__dict__``. 
+<a name="l389"><span class="ln">389  </span></a>  &quot;&quot;&quot;</span>
+<a name="l390"><span class="ln">390  </span></a>  <span class="s1">copy </span><span class="s4">= </span><span class="s1">flag</span><span class="s4">.</span><span class="s1">__dict__</span><span class="s4">.</span><span class="s1">copy</span><span class="s4">()</span>
+<a name="l391"><span class="ln">391  </span></a>  <span class="s1">copy</span><span class="s4">[</span><span class="s5">'_value'</span><span class="s4">] = </span><span class="s1">flag</span><span class="s4">.</span><span class="s1">value  </span><span class="s0"># Ensure correct restore for C++ flags.</span>
+<a name="l392"><span class="ln">392  </span></a>  <span class="s1">copy</span><span class="s4">[</span><span class="s5">'validators'</span><span class="s4">] = </span><span class="s1">list</span><span class="s4">(</span><span class="s1">flag</span><span class="s4">.</span><span class="s1">validators</span><span class="s4">)</span>
+<a name="l393"><span class="ln">393  </span></a>  <span class="s3">return </span><span class="s1">copy</span>
+<a name="l394"><span class="ln">394  </span></a></pre>
+</body>
+</html>

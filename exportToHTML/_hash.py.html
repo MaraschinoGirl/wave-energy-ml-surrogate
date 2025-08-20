@@ -1,0 +1,232 @@
+<html>
+<head>
+<title>_hash.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_hash.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Authors: The scikit-learn developers</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># SPDX-License-Identifier: BSD-3-Clause</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">from </span><span class="s1">itertools </span><span class="s2">import </span><span class="s1">chain</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s2">from </span><span class="s1">numbers </span><span class="s2">import </span><span class="s1">Integral</span>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">import </span><span class="s1">numpy </span><span class="s2">as </span><span class="s1">np</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s2">import </span><span class="s1">scipy</span><span class="s3">.</span><span class="s1">sparse </span><span class="s2">as </span><span class="s1">sp</span>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s2">from </span><span class="s1">sklearn</span><span class="s3">.</span><span class="s1">utils </span><span class="s2">import </span><span class="s1">metadata_routing</span>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">from </span><span class="s3">..</span><span class="s1">base </span><span class="s2">import </span><span class="s1">BaseEstimator</span><span class="s3">, </span><span class="s1">TransformerMixin</span><span class="s3">, </span><span class="s1">_fit_context</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s2">from </span><span class="s3">..</span><span class="s1">utils</span><span class="s3">.</span><span class="s1">_param_validation </span><span class="s2">import </span><span class="s1">Interval</span><span class="s3">, </span><span class="s1">StrOptions</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s2">from </span><span class="s3">.</span><span class="s1">_hashing_fast </span><span class="s2">import </span><span class="s1">transform </span><span class="s2">as </span><span class="s1">_hashing_transform</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s2">def </span><span class="s1">_iteritems</span><span class="s3">(</span><span class="s1">d</span><span class="s3">):</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s4">&quot;&quot;&quot;Like d.iteritems, but accepts any collections.Mapping.&quot;&quot;&quot;</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s2">return </span><span class="s1">d</span><span class="s3">.</span><span class="s1">iteritems</span><span class="s3">() </span><span class="s2">if </span><span class="s1">hasattr</span><span class="s3">(</span><span class="s1">d</span><span class="s3">, </span><span class="s5">&quot;iteritems&quot;</span><span class="s3">) </span><span class="s2">else </span><span class="s1">d</span><span class="s3">.</span><span class="s1">items</span><span class="s3">()</span>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a>
+<a name="l22"><span class="ln">22   </span></a><span class="s2">class </span><span class="s1">FeatureHasher</span><span class="s3">(</span><span class="s1">TransformerMixin</span><span class="s3">, </span><span class="s1">BaseEstimator</span><span class="s3">):</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s4">&quot;&quot;&quot;Implements feature hashing, aka the hashing trick. 
+<a name="l24"><span class="ln">24   </span></a> 
+<a name="l25"><span class="ln">25   </span></a>    This class turns sequences of symbolic feature names (strings) into 
+<a name="l26"><span class="ln">26   </span></a>    scipy.sparse matrices, using a hash function to compute the matrix column 
+<a name="l27"><span class="ln">27   </span></a>    corresponding to a name. The hash function employed is the signed 32-bit 
+<a name="l28"><span class="ln">28   </span></a>    version of Murmurhash3. 
+<a name="l29"><span class="ln">29   </span></a> 
+<a name="l30"><span class="ln">30   </span></a>    Feature names of type byte string are used as-is. Unicode strings are 
+<a name="l31"><span class="ln">31   </span></a>    converted to UTF-8 first, but no Unicode normalization is done. 
+<a name="l32"><span class="ln">32   </span></a>    Feature values must be (finite) numbers. 
+<a name="l33"><span class="ln">33   </span></a> 
+<a name="l34"><span class="ln">34   </span></a>    This class is a low-memory alternative to DictVectorizer and 
+<a name="l35"><span class="ln">35   </span></a>    CountVectorizer, intended for large-scale (online) learning and situations 
+<a name="l36"><span class="ln">36   </span></a>    where memory is tight, e.g. when running prediction code on embedded 
+<a name="l37"><span class="ln">37   </span></a>    devices. 
+<a name="l38"><span class="ln">38   </span></a> 
+<a name="l39"><span class="ln">39   </span></a>    For an efficiency comparison of the different feature extractors, see 
+<a name="l40"><span class="ln">40   </span></a>    :ref:`sphx_glr_auto_examples_text_plot_hashing_vs_dict_vectorizer.py`. 
+<a name="l41"><span class="ln">41   </span></a> 
+<a name="l42"><span class="ln">42   </span></a>    Read more in the :ref:`User Guide &lt;feature_hashing&gt;`. 
+<a name="l43"><span class="ln">43   </span></a> 
+<a name="l44"><span class="ln">44   </span></a>    .. versionadded:: 0.13 
+<a name="l45"><span class="ln">45   </span></a> 
+<a name="l46"><span class="ln">46   </span></a>    Parameters 
+<a name="l47"><span class="ln">47   </span></a>    ---------- 
+<a name="l48"><span class="ln">48   </span></a>    n_features : int, default=2**20 
+<a name="l49"><span class="ln">49   </span></a>        The number of features (columns) in the output matrices. Small numbers 
+<a name="l50"><span class="ln">50   </span></a>        of features are likely to cause hash collisions, but large numbers 
+<a name="l51"><span class="ln">51   </span></a>        will cause larger coefficient dimensions in linear learners. 
+<a name="l52"><span class="ln">52   </span></a>    input_type : str, default='dict' 
+<a name="l53"><span class="ln">53   </span></a>        Choose a string from {'dict', 'pair', 'string'}. 
+<a name="l54"><span class="ln">54   </span></a>        Either &quot;dict&quot; (the default) to accept dictionaries over 
+<a name="l55"><span class="ln">55   </span></a>        (feature_name, value); &quot;pair&quot; to accept pairs of (feature_name, value); 
+<a name="l56"><span class="ln">56   </span></a>        or &quot;string&quot; to accept single strings. 
+<a name="l57"><span class="ln">57   </span></a>        feature_name should be a string, while value should be a number. 
+<a name="l58"><span class="ln">58   </span></a>        In the case of &quot;string&quot;, a value of 1 is implied. 
+<a name="l59"><span class="ln">59   </span></a>        The feature_name is hashed to find the appropriate column for the 
+<a name="l60"><span class="ln">60   </span></a>        feature. The value's sign might be flipped in the output (but see 
+<a name="l61"><span class="ln">61   </span></a>        non_negative, below). 
+<a name="l62"><span class="ln">62   </span></a>    dtype : numpy dtype, default=np.float64 
+<a name="l63"><span class="ln">63   </span></a>        The type of feature values. Passed to scipy.sparse matrix constructors 
+<a name="l64"><span class="ln">64   </span></a>        as the dtype argument. Do not set this to bool, np.boolean or any 
+<a name="l65"><span class="ln">65   </span></a>        unsigned integer type. 
+<a name="l66"><span class="ln">66   </span></a>    alternate_sign : bool, default=True 
+<a name="l67"><span class="ln">67   </span></a>        When True, an alternating sign is added to the features as to 
+<a name="l68"><span class="ln">68   </span></a>        approximately conserve the inner product in the hashed space even for 
+<a name="l69"><span class="ln">69   </span></a>        small n_features. This approach is similar to sparse random projection. 
+<a name="l70"><span class="ln">70   </span></a> 
+<a name="l71"><span class="ln">71   </span></a>        .. versionchanged:: 0.19 
+<a name="l72"><span class="ln">72   </span></a>            ``alternate_sign`` replaces the now deprecated ``non_negative`` 
+<a name="l73"><span class="ln">73   </span></a>            parameter. 
+<a name="l74"><span class="ln">74   </span></a> 
+<a name="l75"><span class="ln">75   </span></a>    See Also 
+<a name="l76"><span class="ln">76   </span></a>    -------- 
+<a name="l77"><span class="ln">77   </span></a>    DictVectorizer : Vectorizes string-valued features using a hash table. 
+<a name="l78"><span class="ln">78   </span></a>    sklearn.preprocessing.OneHotEncoder : Handles nominal/categorical features. 
+<a name="l79"><span class="ln">79   </span></a> 
+<a name="l80"><span class="ln">80   </span></a>    Notes 
+<a name="l81"><span class="ln">81   </span></a>    ----- 
+<a name="l82"><span class="ln">82   </span></a>    This estimator is :term:`stateless` and does not need to be fitted. 
+<a name="l83"><span class="ln">83   </span></a>    However, we recommend to call :meth:`fit_transform` instead of 
+<a name="l84"><span class="ln">84   </span></a>    :meth:`transform`, as parameter validation is only performed in 
+<a name="l85"><span class="ln">85   </span></a>    :meth:`fit`. 
+<a name="l86"><span class="ln">86   </span></a> 
+<a name="l87"><span class="ln">87   </span></a>    Examples 
+<a name="l88"><span class="ln">88   </span></a>    -------- 
+<a name="l89"><span class="ln">89   </span></a>    &gt;&gt;&gt; from sklearn.feature_extraction import FeatureHasher 
+<a name="l90"><span class="ln">90   </span></a>    &gt;&gt;&gt; h = FeatureHasher(n_features=10) 
+<a name="l91"><span class="ln">91   </span></a>    &gt;&gt;&gt; D = [{'dog': 1, 'cat':2, 'elephant':4},{'dog': 2, 'run': 5}] 
+<a name="l92"><span class="ln">92   </span></a>    &gt;&gt;&gt; f = h.transform(D) 
+<a name="l93"><span class="ln">93   </span></a>    &gt;&gt;&gt; f.toarray() 
+<a name="l94"><span class="ln">94   </span></a>    array([[ 0.,  0., -4., -1.,  0.,  0.,  0.,  0.,  0.,  2.], 
+<a name="l95"><span class="ln">95   </span></a>           [ 0.,  0.,  0., -2., -5.,  0.,  0.,  0.,  0.,  0.]]) 
+<a name="l96"><span class="ln">96   </span></a> 
+<a name="l97"><span class="ln">97   </span></a>    With `input_type=&quot;string&quot;`, the input must be an iterable over iterables of 
+<a name="l98"><span class="ln">98   </span></a>    strings: 
+<a name="l99"><span class="ln">99   </span></a> 
+<a name="l100"><span class="ln">100  </span></a>    &gt;&gt;&gt; h = FeatureHasher(n_features=8, input_type=&quot;string&quot;) 
+<a name="l101"><span class="ln">101  </span></a>    &gt;&gt;&gt; raw_X = [[&quot;dog&quot;, &quot;cat&quot;, &quot;snake&quot;], [&quot;snake&quot;, &quot;dog&quot;], [&quot;cat&quot;, &quot;bird&quot;]] 
+<a name="l102"><span class="ln">102  </span></a>    &gt;&gt;&gt; f = h.transform(raw_X) 
+<a name="l103"><span class="ln">103  </span></a>    &gt;&gt;&gt; f.toarray() 
+<a name="l104"><span class="ln">104  </span></a>    array([[ 0.,  0.,  0., -1.,  0., -1.,  0.,  1.], 
+<a name="l105"><span class="ln">105  </span></a>           [ 0.,  0.,  0., -1.,  0., -1.,  0.,  0.], 
+<a name="l106"><span class="ln">106  </span></a>           [ 0., -1.,  0.,  0.,  0.,  0.,  0.,  1.]]) 
+<a name="l107"><span class="ln">107  </span></a>    &quot;&quot;&quot;</span>
+<a name="l108"><span class="ln">108  </span></a>
+<a name="l109"><span class="ln">109  </span></a>    <span class="s0"># raw_X should have been called X</span>
+<a name="l110"><span class="ln">110  </span></a>    <span class="s1">__metadata_request__transform </span><span class="s3">= {</span><span class="s5">&quot;raw_X&quot;</span><span class="s3">: </span><span class="s1">metadata_routing</span><span class="s3">.</span><span class="s1">UNUSED</span><span class="s3">}</span>
+<a name="l111"><span class="ln">111  </span></a>
+<a name="l112"><span class="ln">112  </span></a>    <span class="s1">_parameter_constraints</span><span class="s3">: </span><span class="s1">dict </span><span class="s3">= {</span>
+<a name="l113"><span class="ln">113  </span></a>        <span class="s5">&quot;n_features&quot;</span><span class="s3">: [</span><span class="s1">Interval</span><span class="s3">(</span><span class="s1">Integral</span><span class="s3">, </span><span class="s6">1</span><span class="s3">, </span><span class="s1">np</span><span class="s3">.</span><span class="s1">iinfo</span><span class="s3">(</span><span class="s1">np</span><span class="s3">.</span><span class="s1">int32</span><span class="s3">).</span><span class="s1">max</span><span class="s3">, </span><span class="s1">closed</span><span class="s3">=</span><span class="s5">&quot;both&quot;</span><span class="s3">)],</span>
+<a name="l114"><span class="ln">114  </span></a>        <span class="s5">&quot;input_type&quot;</span><span class="s3">: [</span><span class="s1">StrOptions</span><span class="s3">({</span><span class="s5">&quot;dict&quot;</span><span class="s3">, </span><span class="s5">&quot;pair&quot;</span><span class="s3">, </span><span class="s5">&quot;string&quot;</span><span class="s3">})],</span>
+<a name="l115"><span class="ln">115  </span></a>        <span class="s5">&quot;dtype&quot;</span><span class="s3">: </span><span class="s5">&quot;no_validation&quot;</span><span class="s3">,  </span><span class="s0"># delegate to numpy</span>
+<a name="l116"><span class="ln">116  </span></a>        <span class="s5">&quot;alternate_sign&quot;</span><span class="s3">: [</span><span class="s5">&quot;boolean&quot;</span><span class="s3">],</span>
+<a name="l117"><span class="ln">117  </span></a>    <span class="s3">}</span>
+<a name="l118"><span class="ln">118  </span></a>
+<a name="l119"><span class="ln">119  </span></a>    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span>
+<a name="l120"><span class="ln">120  </span></a>        <span class="s1">self</span><span class="s3">,</span>
+<a name="l121"><span class="ln">121  </span></a>        <span class="s1">n_features</span><span class="s3">=(</span><span class="s6">2</span><span class="s3">**</span><span class="s6">20</span><span class="s3">),</span>
+<a name="l122"><span class="ln">122  </span></a>        <span class="s3">*,</span>
+<a name="l123"><span class="ln">123  </span></a>        <span class="s1">input_type</span><span class="s3">=</span><span class="s5">&quot;dict&quot;</span><span class="s3">,</span>
+<a name="l124"><span class="ln">124  </span></a>        <span class="s1">dtype</span><span class="s3">=</span><span class="s1">np</span><span class="s3">.</span><span class="s1">float64</span><span class="s3">,</span>
+<a name="l125"><span class="ln">125  </span></a>        <span class="s1">alternate_sign</span><span class="s3">=</span><span class="s2">True</span><span class="s3">,</span>
+<a name="l126"><span class="ln">126  </span></a>    <span class="s3">):</span>
+<a name="l127"><span class="ln">127  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">dtype </span><span class="s3">= </span><span class="s1">dtype</span>
+<a name="l128"><span class="ln">128  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">input_type </span><span class="s3">= </span><span class="s1">input_type</span>
+<a name="l129"><span class="ln">129  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">n_features </span><span class="s3">= </span><span class="s1">n_features</span>
+<a name="l130"><span class="ln">130  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">alternate_sign </span><span class="s3">= </span><span class="s1">alternate_sign</span>
+<a name="l131"><span class="ln">131  </span></a>
+<a name="l132"><span class="ln">132  </span></a>    <span class="s3">@</span><span class="s1">_fit_context</span><span class="s3">(</span><span class="s1">prefer_skip_nested_validation</span><span class="s3">=</span><span class="s2">True</span><span class="s3">)</span>
+<a name="l133"><span class="ln">133  </span></a>    <span class="s2">def </span><span class="s1">fit</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">X</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">y</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+<a name="l134"><span class="ln">134  </span></a>        <span class="s4">&quot;&quot;&quot;Only validates estimator's parameters. 
+<a name="l135"><span class="ln">135  </span></a> 
+<a name="l136"><span class="ln">136  </span></a>        This method allows to: (i) validate the estimator's parameters and 
+<a name="l137"><span class="ln">137  </span></a>        (ii) be consistent with the scikit-learn transformer API. 
+<a name="l138"><span class="ln">138  </span></a> 
+<a name="l139"><span class="ln">139  </span></a>        Parameters 
+<a name="l140"><span class="ln">140  </span></a>        ---------- 
+<a name="l141"><span class="ln">141  </span></a>        X : Ignored 
+<a name="l142"><span class="ln">142  </span></a>            Not used, present here for API consistency by convention. 
+<a name="l143"><span class="ln">143  </span></a> 
+<a name="l144"><span class="ln">144  </span></a>        y : Ignored 
+<a name="l145"><span class="ln">145  </span></a>            Not used, present here for API consistency by convention. 
+<a name="l146"><span class="ln">146  </span></a> 
+<a name="l147"><span class="ln">147  </span></a>        Returns 
+<a name="l148"><span class="ln">148  </span></a>        ------- 
+<a name="l149"><span class="ln">149  </span></a>        self : object 
+<a name="l150"><span class="ln">150  </span></a>            FeatureHasher class instance. 
+<a name="l151"><span class="ln">151  </span></a>        &quot;&quot;&quot;</span>
+<a name="l152"><span class="ln">152  </span></a>        <span class="s2">return </span><span class="s1">self</span>
+<a name="l153"><span class="ln">153  </span></a>
+<a name="l154"><span class="ln">154  </span></a>    <span class="s2">def </span><span class="s1">transform</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">raw_X</span><span class="s3">):</span>
+<a name="l155"><span class="ln">155  </span></a>        <span class="s4">&quot;&quot;&quot;Transform a sequence of instances to a scipy.sparse matrix. 
+<a name="l156"><span class="ln">156  </span></a> 
+<a name="l157"><span class="ln">157  </span></a>        Parameters 
+<a name="l158"><span class="ln">158  </span></a>        ---------- 
+<a name="l159"><span class="ln">159  </span></a>        raw_X : iterable over iterable over raw features, length = n_samples 
+<a name="l160"><span class="ln">160  </span></a>            Samples. Each sample must be iterable an (e.g., a list or tuple) 
+<a name="l161"><span class="ln">161  </span></a>            containing/generating feature names (and optionally values, see 
+<a name="l162"><span class="ln">162  </span></a>            the input_type constructor argument) which will be hashed. 
+<a name="l163"><span class="ln">163  </span></a>            raw_X need not support the len function, so it can be the result 
+<a name="l164"><span class="ln">164  </span></a>            of a generator; n_samples is determined on the fly. 
+<a name="l165"><span class="ln">165  </span></a> 
+<a name="l166"><span class="ln">166  </span></a>        Returns 
+<a name="l167"><span class="ln">167  </span></a>        ------- 
+<a name="l168"><span class="ln">168  </span></a>        X : sparse matrix of shape (n_samples, n_features) 
+<a name="l169"><span class="ln">169  </span></a>            Feature matrix, for use with estimators or further transformers. 
+<a name="l170"><span class="ln">170  </span></a>        &quot;&quot;&quot;</span>
+<a name="l171"><span class="ln">171  </span></a>        <span class="s1">raw_X </span><span class="s3">= </span><span class="s1">iter</span><span class="s3">(</span><span class="s1">raw_X</span><span class="s3">)</span>
+<a name="l172"><span class="ln">172  </span></a>        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">input_type </span><span class="s3">== </span><span class="s5">&quot;dict&quot;</span><span class="s3">:</span>
+<a name="l173"><span class="ln">173  </span></a>            <span class="s1">raw_X </span><span class="s3">= (</span><span class="s1">_iteritems</span><span class="s3">(</span><span class="s1">d</span><span class="s3">) </span><span class="s2">for </span><span class="s1">d </span><span class="s2">in </span><span class="s1">raw_X</span><span class="s3">)</span>
+<a name="l174"><span class="ln">174  </span></a>        <span class="s2">elif </span><span class="s1">self</span><span class="s3">.</span><span class="s1">input_type </span><span class="s3">== </span><span class="s5">&quot;string&quot;</span><span class="s3">:</span>
+<a name="l175"><span class="ln">175  </span></a>            <span class="s1">first_raw_X </span><span class="s3">= </span><span class="s1">next</span><span class="s3">(</span><span class="s1">raw_X</span><span class="s3">)</span>
+<a name="l176"><span class="ln">176  </span></a>            <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">first_raw_X</span><span class="s3">, </span><span class="s1">str</span><span class="s3">):</span>
+<a name="l177"><span class="ln">177  </span></a>                <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span>
+<a name="l178"><span class="ln">178  </span></a>                    <span class="s5">&quot;Samples can not be a single string. The input must be an iterable&quot;</span>
+<a name="l179"><span class="ln">179  </span></a>                    <span class="s5">&quot; over iterables of strings.&quot;</span>
+<a name="l180"><span class="ln">180  </span></a>                <span class="s3">)</span>
+<a name="l181"><span class="ln">181  </span></a>            <span class="s1">raw_X_ </span><span class="s3">= </span><span class="s1">chain</span><span class="s3">([</span><span class="s1">first_raw_X</span><span class="s3">], </span><span class="s1">raw_X</span><span class="s3">)</span>
+<a name="l182"><span class="ln">182  </span></a>            <span class="s1">raw_X </span><span class="s3">= (((</span><span class="s1">f</span><span class="s3">, </span><span class="s6">1</span><span class="s3">) </span><span class="s2">for </span><span class="s1">f </span><span class="s2">in </span><span class="s1">x</span><span class="s3">) </span><span class="s2">for </span><span class="s1">x </span><span class="s2">in </span><span class="s1">raw_X_</span><span class="s3">)</span>
+<a name="l183"><span class="ln">183  </span></a>
+<a name="l184"><span class="ln">184  </span></a>        <span class="s1">indices</span><span class="s3">, </span><span class="s1">indptr</span><span class="s3">, </span><span class="s1">values </span><span class="s3">= </span><span class="s1">_hashing_transform</span><span class="s3">(</span>
+<a name="l185"><span class="ln">185  </span></a>            <span class="s1">raw_X</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">n_features</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">alternate_sign</span><span class="s3">, </span><span class="s1">seed</span><span class="s3">=</span><span class="s6">0</span>
+<a name="l186"><span class="ln">186  </span></a>        <span class="s3">)</span>
+<a name="l187"><span class="ln">187  </span></a>        <span class="s1">n_samples </span><span class="s3">= </span><span class="s1">indptr</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">[</span><span class="s6">0</span><span class="s3">] - </span><span class="s6">1</span>
+<a name="l188"><span class="ln">188  </span></a>
+<a name="l189"><span class="ln">189  </span></a>        <span class="s2">if </span><span class="s1">n_samples </span><span class="s3">== </span><span class="s6">0</span><span class="s3">:</span>
+<a name="l190"><span class="ln">190  </span></a>            <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s5">&quot;Cannot vectorize empty sequence.&quot;</span><span class="s3">)</span>
+<a name="l191"><span class="ln">191  </span></a>
+<a name="l192"><span class="ln">192  </span></a>        <span class="s1">X </span><span class="s3">= </span><span class="s1">sp</span><span class="s3">.</span><span class="s1">csr_matrix</span><span class="s3">(</span>
+<a name="l193"><span class="ln">193  </span></a>            <span class="s3">(</span><span class="s1">values</span><span class="s3">, </span><span class="s1">indices</span><span class="s3">, </span><span class="s1">indptr</span><span class="s3">),</span>
+<a name="l194"><span class="ln">194  </span></a>            <span class="s1">dtype</span><span class="s3">=</span><span class="s1">self</span><span class="s3">.</span><span class="s1">dtype</span><span class="s3">,</span>
+<a name="l195"><span class="ln">195  </span></a>            <span class="s1">shape</span><span class="s3">=(</span><span class="s1">n_samples</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">n_features</span><span class="s3">),</span>
+<a name="l196"><span class="ln">196  </span></a>        <span class="s3">)</span>
+<a name="l197"><span class="ln">197  </span></a>        <span class="s1">X</span><span class="s3">.</span><span class="s1">sum_duplicates</span><span class="s3">()  </span><span class="s0"># also sorts the indices</span>
+<a name="l198"><span class="ln">198  </span></a>
+<a name="l199"><span class="ln">199  </span></a>        <span class="s2">return </span><span class="s1">X</span>
+<a name="l200"><span class="ln">200  </span></a>
+<a name="l201"><span class="ln">201  </span></a>    <span class="s2">def </span><span class="s1">__sklearn_tags__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l202"><span class="ln">202  </span></a>        <span class="s1">tags </span><span class="s3">= </span><span class="s1">super</span><span class="s3">().</span><span class="s1">__sklearn_tags__</span><span class="s3">()</span>
+<a name="l203"><span class="ln">203  </span></a>        <span class="s1">tags</span><span class="s3">.</span><span class="s1">input_tags</span><span class="s3">.</span><span class="s1">two_d_array </span><span class="s3">= </span><span class="s2">False</span>
+<a name="l204"><span class="ln">204  </span></a>        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">input_type </span><span class="s3">== </span><span class="s5">&quot;string&quot;</span><span class="s3">:</span>
+<a name="l205"><span class="ln">205  </span></a>            <span class="s1">tags</span><span class="s3">.</span><span class="s1">input_tags</span><span class="s3">.</span><span class="s1">string </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l206"><span class="ln">206  </span></a>        <span class="s2">elif </span><span class="s1">self</span><span class="s3">.</span><span class="s1">input_type </span><span class="s3">== </span><span class="s5">&quot;dict&quot;</span><span class="s3">:</span>
+<a name="l207"><span class="ln">207  </span></a>            <span class="s1">tags</span><span class="s3">.</span><span class="s1">input_tags</span><span class="s3">.</span><span class="s1">dict </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l208"><span class="ln">208  </span></a>        <span class="s2">return </span><span class="s1">tags</span>
+<a name="l209"><span class="ln">209  </span></a></pre>
+</body>
+</html>

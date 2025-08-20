@@ -1,0 +1,38 @@
+<html>
+<head>
+<title>pkcs12.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+pkcs12.pyi</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Any</span><span class="s2">, </span><span class="s1">List</span><span class="s2">, </span><span class="s1">Optional</span><span class="s2">, </span><span class="s1">Tuple</span><span class="s2">, </span><span class="s1">Union</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">from </span><span class="s1">cryptography</span><span class="s2">.</span><span class="s1">hazmat</span><span class="s2">.</span><span class="s1">primitives</span><span class="s2">.</span><span class="s1">asymmetric</span><span class="s2">.</span><span class="s1">dsa </span><span class="s0">import </span><span class="s1">DSAPrivateKeyWithSerialization</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">from </span><span class="s1">cryptography</span><span class="s2">.</span><span class="s1">hazmat</span><span class="s2">.</span><span class="s1">primitives</span><span class="s2">.</span><span class="s1">asymmetric</span><span class="s2">.</span><span class="s1">ec </span><span class="s0">import </span><span class="s1">EllipticCurvePrivateKeyWithSerialization</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">from </span><span class="s1">cryptography</span><span class="s2">.</span><span class="s1">hazmat</span><span class="s2">.</span><span class="s1">primitives</span><span class="s2">.</span><span class="s1">asymmetric</span><span class="s2">.</span><span class="s1">rsa </span><span class="s0">import </span><span class="s1">RSAPrivateKeyWithSerialization</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">from </span><span class="s1">cryptography</span><span class="s2">.</span><span class="s1">hazmat</span><span class="s2">.</span><span class="s1">primitives</span><span class="s2">.</span><span class="s1">serialization </span><span class="s0">import </span><span class="s1">KeySerializationEncryption</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">from </span><span class="s1">cryptography</span><span class="s2">.</span><span class="s1">x509 </span><span class="s0">import </span><span class="s1">Certificate</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s0">def </span><span class="s1">load_key_and_certificates</span><span class="s2">(</span>
+<a name="l10"><span class="ln">10   </span></a>    <span class="s1">data</span><span class="s2">: </span><span class="s1">bytes</span><span class="s2">, </span><span class="s1">password</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">bytes</span><span class="s2">], </span><span class="s1">backend</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">] = ...</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s2">) </span><span class="s1">-&gt; Tuple</span><span class="s2">[</span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">Any</span><span class="s2">], </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">Certificate</span><span class="s2">], </span><span class="s1">List</span><span class="s2">[</span><span class="s1">Certificate</span><span class="s2">]]: ...</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0">def </span><span class="s1">serialize_key_and_certificates</span><span class="s2">(</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s1">name</span><span class="s2">: </span><span class="s1">bytes</span><span class="s2">,</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s1">key</span><span class="s2">: </span><span class="s1">Union</span><span class="s2">[</span><span class="s1">RSAPrivateKeyWithSerialization</span><span class="s2">, </span><span class="s1">EllipticCurvePrivateKeyWithSerialization</span><span class="s2">, </span><span class="s1">DSAPrivateKeyWithSerialization</span><span class="s2">],</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s1">cert</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">Certificate</span><span class="s2">],</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s1">cas</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">List</span><span class="s2">[</span><span class="s1">Certificate</span><span class="s2">]],</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s1">enc</span><span class="s2">: </span><span class="s1">KeySerializationEncryption</span><span class="s2">,</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s2">) </span><span class="s1">-&gt; bytes</span><span class="s2">: ...</span>
+<a name="l19"><span class="ln">19   </span></a></pre>
+</body>
+</html>

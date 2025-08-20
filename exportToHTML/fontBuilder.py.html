@@ -1,0 +1,1032 @@
+<html>
+<head>
+<title>fontBuilder.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #bcbec4;}
+.s2 { color: #6aab73;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #2aacb8;}
+.s5 { color: #7a7e85;}
+.s6 { color: #5f826b; font-style: italic;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+fontBuilder.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">__all__ </span><span class="s1">= [</span><span class="s2">&quot;FontBuilder&quot;</span><span class="s1">]</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s2">&quot;&quot;&quot; 
+<a name="l4"><span class="ln">4    </span></a>This module is *experimental*, meaning it still may evolve and change. 
+<a name="l5"><span class="ln">5    </span></a> 
+<a name="l6"><span class="ln">6    </span></a>The `FontBuilder` class is a convenient helper to construct working TTF or 
+<a name="l7"><span class="ln">7    </span></a>OTF fonts from scratch. 
+<a name="l8"><span class="ln">8    </span></a> 
+<a name="l9"><span class="ln">9    </span></a>Note that the various setup methods cannot be called in arbitrary order, 
+<a name="l10"><span class="ln">10   </span></a>due to various interdependencies between OpenType tables. Here is an order 
+<a name="l11"><span class="ln">11   </span></a>that works: 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>    fb = FontBuilder(...) 
+<a name="l14"><span class="ln">14   </span></a>    fb.setupGlyphOrder(...) 
+<a name="l15"><span class="ln">15   </span></a>    fb.setupCharacterMap(...) 
+<a name="l16"><span class="ln">16   </span></a>    fb.setupGlyf(...) --or-- fb.setupCFF(...) 
+<a name="l17"><span class="ln">17   </span></a>    fb.setupHorizontalMetrics(...) 
+<a name="l18"><span class="ln">18   </span></a>    fb.setupHorizontalHeader() 
+<a name="l19"><span class="ln">19   </span></a>    fb.setupNameTable(...) 
+<a name="l20"><span class="ln">20   </span></a>    fb.setupOS2() 
+<a name="l21"><span class="ln">21   </span></a>    fb.addOpenTypeFeatures(...) 
+<a name="l22"><span class="ln">22   </span></a>    fb.setupPost() 
+<a name="l23"><span class="ln">23   </span></a>    fb.save(...) 
+<a name="l24"><span class="ln">24   </span></a> 
+<a name="l25"><span class="ln">25   </span></a>Here is how to build a minimal TTF: 
+<a name="l26"><span class="ln">26   </span></a> 
+<a name="l27"><span class="ln">27   </span></a>```python 
+<a name="l28"><span class="ln">28   </span></a>from fontTools.fontBuilder import FontBuilder 
+<a name="l29"><span class="ln">29   </span></a>from fontTools.pens.ttGlyphPen import TTGlyphPen 
+<a name="l30"><span class="ln">30   </span></a> 
+<a name="l31"><span class="ln">31   </span></a> 
+<a name="l32"><span class="ln">32   </span></a>def drawTestGlyph(pen): 
+<a name="l33"><span class="ln">33   </span></a>    pen.moveTo((100, 100)) 
+<a name="l34"><span class="ln">34   </span></a>    pen.lineTo((100, 1000)) 
+<a name="l35"><span class="ln">35   </span></a>    pen.qCurveTo((200, 900), (400, 900), (500, 1000)) 
+<a name="l36"><span class="ln">36   </span></a>    pen.lineTo((500, 100)) 
+<a name="l37"><span class="ln">37   </span></a>    pen.closePath() 
+<a name="l38"><span class="ln">38   </span></a> 
+<a name="l39"><span class="ln">39   </span></a> 
+<a name="l40"><span class="ln">40   </span></a>fb = FontBuilder(1024, isTTF=True) 
+<a name="l41"><span class="ln">41   </span></a>fb.setupGlyphOrder([&quot;.notdef&quot;, &quot;.null&quot;, &quot;space&quot;, &quot;A&quot;, &quot;a&quot;]) 
+<a name="l42"><span class="ln">42   </span></a>fb.setupCharacterMap({32: &quot;space&quot;, 65: &quot;A&quot;, 97: &quot;a&quot;}) 
+<a name="l43"><span class="ln">43   </span></a>advanceWidths = {&quot;.notdef&quot;: 600, &quot;space&quot;: 500, &quot;A&quot;: 600, &quot;a&quot;: 600, &quot;.null&quot;: 0} 
+<a name="l44"><span class="ln">44   </span></a> 
+<a name="l45"><span class="ln">45   </span></a>familyName = &quot;HelloTestFont&quot; 
+<a name="l46"><span class="ln">46   </span></a>styleName = &quot;TotallyNormal&quot; 
+<a name="l47"><span class="ln">47   </span></a>version = &quot;0.1&quot; 
+<a name="l48"><span class="ln">48   </span></a> 
+<a name="l49"><span class="ln">49   </span></a>nameStrings = dict( 
+<a name="l50"><span class="ln">50   </span></a>    familyName=dict(en=familyName, nl=&quot;HalloTestFont&quot;), 
+<a name="l51"><span class="ln">51   </span></a>    styleName=dict(en=styleName, nl=&quot;TotaalNormaal&quot;), 
+<a name="l52"><span class="ln">52   </span></a>    uniqueFontIdentifier=&quot;fontBuilder: &quot; + familyName + &quot;.&quot; + styleName, 
+<a name="l53"><span class="ln">53   </span></a>    fullName=familyName + &quot;-&quot; + styleName, 
+<a name="l54"><span class="ln">54   </span></a>    psName=familyName + &quot;-&quot; + styleName, 
+<a name="l55"><span class="ln">55   </span></a>    version=&quot;Version &quot; + version, 
+<a name="l56"><span class="ln">56   </span></a>) 
+<a name="l57"><span class="ln">57   </span></a> 
+<a name="l58"><span class="ln">58   </span></a>pen = TTGlyphPen(None) 
+<a name="l59"><span class="ln">59   </span></a>drawTestGlyph(pen) 
+<a name="l60"><span class="ln">60   </span></a>glyph = pen.glyph() 
+<a name="l61"><span class="ln">61   </span></a>glyphs = {&quot;.notdef&quot;: glyph, &quot;space&quot;: glyph, &quot;A&quot;: glyph, &quot;a&quot;: glyph, &quot;.null&quot;: glyph} 
+<a name="l62"><span class="ln">62   </span></a>fb.setupGlyf(glyphs) 
+<a name="l63"><span class="ln">63   </span></a>metrics = {} 
+<a name="l64"><span class="ln">64   </span></a>glyphTable = fb.font[&quot;glyf&quot;] 
+<a name="l65"><span class="ln">65   </span></a>for gn, advanceWidth in advanceWidths.items(): 
+<a name="l66"><span class="ln">66   </span></a>    metrics[gn] = (advanceWidth, glyphTable[gn].xMin) 
+<a name="l67"><span class="ln">67   </span></a>fb.setupHorizontalMetrics(metrics) 
+<a name="l68"><span class="ln">68   </span></a>fb.setupHorizontalHeader(ascent=824, descent=-200) 
+<a name="l69"><span class="ln">69   </span></a>fb.setupNameTable(nameStrings) 
+<a name="l70"><span class="ln">70   </span></a>fb.setupOS2(sTypoAscender=824, usWinAscent=824, usWinDescent=200) 
+<a name="l71"><span class="ln">71   </span></a>fb.setupPost() 
+<a name="l72"><span class="ln">72   </span></a>fb.save(&quot;test.ttf&quot;) 
+<a name="l73"><span class="ln">73   </span></a>``` 
+<a name="l74"><span class="ln">74   </span></a> 
+<a name="l75"><span class="ln">75   </span></a>And here's how to build a minimal OTF: 
+<a name="l76"><span class="ln">76   </span></a> 
+<a name="l77"><span class="ln">77   </span></a>```python 
+<a name="l78"><span class="ln">78   </span></a>from fontTools.fontBuilder import FontBuilder 
+<a name="l79"><span class="ln">79   </span></a>from fontTools.pens.t2CharStringPen import T2CharStringPen 
+<a name="l80"><span class="ln">80   </span></a> 
+<a name="l81"><span class="ln">81   </span></a> 
+<a name="l82"><span class="ln">82   </span></a>def drawTestGlyph(pen): 
+<a name="l83"><span class="ln">83   </span></a>    pen.moveTo((100, 100)) 
+<a name="l84"><span class="ln">84   </span></a>    pen.lineTo((100, 1000)) 
+<a name="l85"><span class="ln">85   </span></a>    pen.curveTo((200, 900), (400, 900), (500, 1000)) 
+<a name="l86"><span class="ln">86   </span></a>    pen.lineTo((500, 100)) 
+<a name="l87"><span class="ln">87   </span></a>    pen.closePath() 
+<a name="l88"><span class="ln">88   </span></a> 
+<a name="l89"><span class="ln">89   </span></a> 
+<a name="l90"><span class="ln">90   </span></a>fb = FontBuilder(1024, isTTF=False) 
+<a name="l91"><span class="ln">91   </span></a>fb.setupGlyphOrder([&quot;.notdef&quot;, &quot;.null&quot;, &quot;space&quot;, &quot;A&quot;, &quot;a&quot;]) 
+<a name="l92"><span class="ln">92   </span></a>fb.setupCharacterMap({32: &quot;space&quot;, 65: &quot;A&quot;, 97: &quot;a&quot;}) 
+<a name="l93"><span class="ln">93   </span></a>advanceWidths = {&quot;.notdef&quot;: 600, &quot;space&quot;: 500, &quot;A&quot;: 600, &quot;a&quot;: 600, &quot;.null&quot;: 0} 
+<a name="l94"><span class="ln">94   </span></a> 
+<a name="l95"><span class="ln">95   </span></a>familyName = &quot;HelloTestFont&quot; 
+<a name="l96"><span class="ln">96   </span></a>styleName = &quot;TotallyNormal&quot; 
+<a name="l97"><span class="ln">97   </span></a>version = &quot;0.1&quot; 
+<a name="l98"><span class="ln">98   </span></a> 
+<a name="l99"><span class="ln">99   </span></a>nameStrings = dict( 
+<a name="l100"><span class="ln">100  </span></a>    familyName=dict(en=familyName, nl=&quot;HalloTestFont&quot;), 
+<a name="l101"><span class="ln">101  </span></a>    styleName=dict(en=styleName, nl=&quot;TotaalNormaal&quot;), 
+<a name="l102"><span class="ln">102  </span></a>    uniqueFontIdentifier=&quot;fontBuilder: &quot; + familyName + &quot;.&quot; + styleName, 
+<a name="l103"><span class="ln">103  </span></a>    fullName=familyName + &quot;-&quot; + styleName, 
+<a name="l104"><span class="ln">104  </span></a>    psName=familyName + &quot;-&quot; + styleName, 
+<a name="l105"><span class="ln">105  </span></a>    version=&quot;Version &quot; + version, 
+<a name="l106"><span class="ln">106  </span></a>) 
+<a name="l107"><span class="ln">107  </span></a> 
+<a name="l108"><span class="ln">108  </span></a>pen = T2CharStringPen(600, None) 
+<a name="l109"><span class="ln">109  </span></a>drawTestGlyph(pen) 
+<a name="l110"><span class="ln">110  </span></a>charString = pen.getCharString() 
+<a name="l111"><span class="ln">111  </span></a>charStrings = { 
+<a name="l112"><span class="ln">112  </span></a>    &quot;.notdef&quot;: charString, 
+<a name="l113"><span class="ln">113  </span></a>    &quot;space&quot;: charString, 
+<a name="l114"><span class="ln">114  </span></a>    &quot;A&quot;: charString, 
+<a name="l115"><span class="ln">115  </span></a>    &quot;a&quot;: charString, 
+<a name="l116"><span class="ln">116  </span></a>    &quot;.null&quot;: charString, 
+<a name="l117"><span class="ln">117  </span></a>} 
+<a name="l118"><span class="ln">118  </span></a>fb.setupCFF(nameStrings[&quot;psName&quot;], {&quot;FullName&quot;: nameStrings[&quot;psName&quot;]}, charStrings, {}) 
+<a name="l119"><span class="ln">119  </span></a>lsb = {gn: cs.calcBounds(None)[0] for gn, cs in charStrings.items()} 
+<a name="l120"><span class="ln">120  </span></a>metrics = {} 
+<a name="l121"><span class="ln">121  </span></a>for gn, advanceWidth in advanceWidths.items(): 
+<a name="l122"><span class="ln">122  </span></a>    metrics[gn] = (advanceWidth, lsb[gn]) 
+<a name="l123"><span class="ln">123  </span></a>fb.setupHorizontalMetrics(metrics) 
+<a name="l124"><span class="ln">124  </span></a>fb.setupHorizontalHeader(ascent=824, descent=200) 
+<a name="l125"><span class="ln">125  </span></a>fb.setupNameTable(nameStrings) 
+<a name="l126"><span class="ln">126  </span></a>fb.setupOS2(sTypoAscender=824, usWinAscent=824, usWinDescent=200) 
+<a name="l127"><span class="ln">127  </span></a>fb.setupPost() 
+<a name="l128"><span class="ln">128  </span></a>fb.save(&quot;test.otf&quot;) 
+<a name="l129"><span class="ln">129  </span></a>``` 
+<a name="l130"><span class="ln">130  </span></a>&quot;&quot;&quot;</span>
+<a name="l131"><span class="ln">131  </span></a>
+<a name="l132"><span class="ln">132  </span></a><span class="s3">from </span><span class="s1">.</span><span class="s0">ttLib </span><span class="s3">import </span><span class="s0">TTFont</span><span class="s1">, </span><span class="s0">newTable</span>
+<a name="l133"><span class="ln">133  </span></a><span class="s3">from </span><span class="s1">.</span><span class="s0">ttLib</span><span class="s1">.</span><span class="s0">tables</span><span class="s1">.</span><span class="s0">_c_m_a_p </span><span class="s3">import </span><span class="s0">cmap_classes</span>
+<a name="l134"><span class="ln">134  </span></a><span class="s3">from </span><span class="s1">.</span><span class="s0">ttLib</span><span class="s1">.</span><span class="s0">tables</span><span class="s1">.</span><span class="s0">_g_l_y_f </span><span class="s3">import </span><span class="s0">flagCubic</span>
+<a name="l135"><span class="ln">135  </span></a><span class="s3">from </span><span class="s1">.</span><span class="s0">ttLib</span><span class="s1">.</span><span class="s0">tables</span><span class="s1">.</span><span class="s0">O_S_2f_2 </span><span class="s3">import </span><span class="s0">Panose</span>
+<a name="l136"><span class="ln">136  </span></a><span class="s3">from </span><span class="s1">.</span><span class="s0">misc</span><span class="s1">.</span><span class="s0">timeTools </span><span class="s3">import </span><span class="s0">timestampNow</span>
+<a name="l137"><span class="ln">137  </span></a><span class="s3">import </span><span class="s0">struct</span>
+<a name="l138"><span class="ln">138  </span></a><span class="s3">from </span><span class="s0">collections </span><span class="s3">import </span><span class="s0">OrderedDict</span>
+<a name="l139"><span class="ln">139  </span></a>
+<a name="l140"><span class="ln">140  </span></a>
+<a name="l141"><span class="ln">141  </span></a><span class="s0">_headDefaults </span><span class="s1">= </span><span class="s0">dict</span><span class="s1">(</span>
+<a name="l142"><span class="ln">142  </span></a>    <span class="s0">tableVersion</span><span class="s1">=</span><span class="s4">1.0</span><span class="s1">,</span>
+<a name="l143"><span class="ln">143  </span></a>    <span class="s0">fontRevision</span><span class="s1">=</span><span class="s4">1.0</span><span class="s1">,</span>
+<a name="l144"><span class="ln">144  </span></a>    <span class="s0">checkSumAdjustment</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l145"><span class="ln">145  </span></a>    <span class="s0">magicNumber</span><span class="s1">=</span><span class="s4">0x5F0F3CF5</span><span class="s1">,</span>
+<a name="l146"><span class="ln">146  </span></a>    <span class="s0">flags</span><span class="s1">=</span><span class="s4">0x0003</span><span class="s1">,</span>
+<a name="l147"><span class="ln">147  </span></a>    <span class="s0">unitsPerEm</span><span class="s1">=</span><span class="s4">1000</span><span class="s1">,</span>
+<a name="l148"><span class="ln">148  </span></a>    <span class="s0">created</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l149"><span class="ln">149  </span></a>    <span class="s0">modified</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l150"><span class="ln">150  </span></a>    <span class="s0">xMin</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l151"><span class="ln">151  </span></a>    <span class="s0">yMin</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l152"><span class="ln">152  </span></a>    <span class="s0">xMax</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l153"><span class="ln">153  </span></a>    <span class="s0">yMax</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l154"><span class="ln">154  </span></a>    <span class="s0">macStyle</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l155"><span class="ln">155  </span></a>    <span class="s0">lowestRecPPEM</span><span class="s1">=</span><span class="s4">3</span><span class="s1">,</span>
+<a name="l156"><span class="ln">156  </span></a>    <span class="s0">fontDirectionHint</span><span class="s1">=</span><span class="s4">2</span><span class="s1">,</span>
+<a name="l157"><span class="ln">157  </span></a>    <span class="s0">indexToLocFormat</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l158"><span class="ln">158  </span></a>    <span class="s0">glyphDataFormat</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l159"><span class="ln">159  </span></a><span class="s1">)</span>
+<a name="l160"><span class="ln">160  </span></a>
+<a name="l161"><span class="ln">161  </span></a><span class="s0">_maxpDefaultsTTF </span><span class="s1">= </span><span class="s0">dict</span><span class="s1">(</span>
+<a name="l162"><span class="ln">162  </span></a>    <span class="s0">tableVersion</span><span class="s1">=</span><span class="s4">0x00010000</span><span class="s1">,</span>
+<a name="l163"><span class="ln">163  </span></a>    <span class="s0">numGlyphs</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l164"><span class="ln">164  </span></a>    <span class="s0">maxPoints</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l165"><span class="ln">165  </span></a>    <span class="s0">maxContours</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l166"><span class="ln">166  </span></a>    <span class="s0">maxCompositePoints</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l167"><span class="ln">167  </span></a>    <span class="s0">maxCompositeContours</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l168"><span class="ln">168  </span></a>    <span class="s0">maxZones</span><span class="s1">=</span><span class="s4">2</span><span class="s1">,</span>
+<a name="l169"><span class="ln">169  </span></a>    <span class="s0">maxTwilightPoints</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l170"><span class="ln">170  </span></a>    <span class="s0">maxStorage</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l171"><span class="ln">171  </span></a>    <span class="s0">maxFunctionDefs</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l172"><span class="ln">172  </span></a>    <span class="s0">maxInstructionDefs</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l173"><span class="ln">173  </span></a>    <span class="s0">maxStackElements</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l174"><span class="ln">174  </span></a>    <span class="s0">maxSizeOfInstructions</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l175"><span class="ln">175  </span></a>    <span class="s0">maxComponentElements</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l176"><span class="ln">176  </span></a>    <span class="s0">maxComponentDepth</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l177"><span class="ln">177  </span></a><span class="s1">)</span>
+<a name="l178"><span class="ln">178  </span></a><span class="s0">_maxpDefaultsOTF </span><span class="s1">= </span><span class="s0">dict</span><span class="s1">(</span>
+<a name="l179"><span class="ln">179  </span></a>    <span class="s0">tableVersion</span><span class="s1">=</span><span class="s4">0x00005000</span><span class="s1">,</span>
+<a name="l180"><span class="ln">180  </span></a>    <span class="s0">numGlyphs</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l181"><span class="ln">181  </span></a><span class="s1">)</span>
+<a name="l182"><span class="ln">182  </span></a>
+<a name="l183"><span class="ln">183  </span></a><span class="s0">_postDefaults </span><span class="s1">= </span><span class="s0">dict</span><span class="s1">(</span>
+<a name="l184"><span class="ln">184  </span></a>    <span class="s0">formatType</span><span class="s1">=</span><span class="s4">3.0</span><span class="s1">,</span>
+<a name="l185"><span class="ln">185  </span></a>    <span class="s0">italicAngle</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l186"><span class="ln">186  </span></a>    <span class="s0">underlinePosition</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l187"><span class="ln">187  </span></a>    <span class="s0">underlineThickness</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l188"><span class="ln">188  </span></a>    <span class="s0">isFixedPitch</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l189"><span class="ln">189  </span></a>    <span class="s0">minMemType42</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l190"><span class="ln">190  </span></a>    <span class="s0">maxMemType42</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l191"><span class="ln">191  </span></a>    <span class="s0">minMemType1</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l192"><span class="ln">192  </span></a>    <span class="s0">maxMemType1</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l193"><span class="ln">193  </span></a><span class="s1">)</span>
+<a name="l194"><span class="ln">194  </span></a>
+<a name="l195"><span class="ln">195  </span></a><span class="s0">_hheaDefaults </span><span class="s1">= </span><span class="s0">dict</span><span class="s1">(</span>
+<a name="l196"><span class="ln">196  </span></a>    <span class="s0">tableVersion</span><span class="s1">=</span><span class="s4">0x00010000</span><span class="s1">,</span>
+<a name="l197"><span class="ln">197  </span></a>    <span class="s0">ascent</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l198"><span class="ln">198  </span></a>    <span class="s0">descent</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l199"><span class="ln">199  </span></a>    <span class="s0">lineGap</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l200"><span class="ln">200  </span></a>    <span class="s0">advanceWidthMax</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l201"><span class="ln">201  </span></a>    <span class="s0">minLeftSideBearing</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l202"><span class="ln">202  </span></a>    <span class="s0">minRightSideBearing</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l203"><span class="ln">203  </span></a>    <span class="s0">xMaxExtent</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l204"><span class="ln">204  </span></a>    <span class="s0">caretSlopeRise</span><span class="s1">=</span><span class="s4">1</span><span class="s1">,</span>
+<a name="l205"><span class="ln">205  </span></a>    <span class="s0">caretSlopeRun</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l206"><span class="ln">206  </span></a>    <span class="s0">caretOffset</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l207"><span class="ln">207  </span></a>    <span class="s0">reserved0</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l208"><span class="ln">208  </span></a>    <span class="s0">reserved1</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l209"><span class="ln">209  </span></a>    <span class="s0">reserved2</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l210"><span class="ln">210  </span></a>    <span class="s0">reserved3</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l211"><span class="ln">211  </span></a>    <span class="s0">metricDataFormat</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l212"><span class="ln">212  </span></a>    <span class="s0">numberOfHMetrics</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l213"><span class="ln">213  </span></a><span class="s1">)</span>
+<a name="l214"><span class="ln">214  </span></a>
+<a name="l215"><span class="ln">215  </span></a><span class="s0">_vheaDefaults </span><span class="s1">= </span><span class="s0">dict</span><span class="s1">(</span>
+<a name="l216"><span class="ln">216  </span></a>    <span class="s0">tableVersion</span><span class="s1">=</span><span class="s4">0x00010000</span><span class="s1">,</span>
+<a name="l217"><span class="ln">217  </span></a>    <span class="s0">ascent</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l218"><span class="ln">218  </span></a>    <span class="s0">descent</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l219"><span class="ln">219  </span></a>    <span class="s0">lineGap</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l220"><span class="ln">220  </span></a>    <span class="s0">advanceHeightMax</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l221"><span class="ln">221  </span></a>    <span class="s0">minTopSideBearing</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l222"><span class="ln">222  </span></a>    <span class="s0">minBottomSideBearing</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l223"><span class="ln">223  </span></a>    <span class="s0">yMaxExtent</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l224"><span class="ln">224  </span></a>    <span class="s0">caretSlopeRise</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l225"><span class="ln">225  </span></a>    <span class="s0">caretSlopeRun</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l226"><span class="ln">226  </span></a>    <span class="s0">reserved0</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l227"><span class="ln">227  </span></a>    <span class="s0">reserved1</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l228"><span class="ln">228  </span></a>    <span class="s0">reserved2</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l229"><span class="ln">229  </span></a>    <span class="s0">reserved3</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l230"><span class="ln">230  </span></a>    <span class="s0">reserved4</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l231"><span class="ln">231  </span></a>    <span class="s0">metricDataFormat</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l232"><span class="ln">232  </span></a>    <span class="s0">numberOfVMetrics</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l233"><span class="ln">233  </span></a><span class="s1">)</span>
+<a name="l234"><span class="ln">234  </span></a>
+<a name="l235"><span class="ln">235  </span></a><span class="s0">_nameIDs </span><span class="s1">= </span><span class="s0">dict</span><span class="s1">(</span>
+<a name="l236"><span class="ln">236  </span></a>    <span class="s0">copyright</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l237"><span class="ln">237  </span></a>    <span class="s0">familyName</span><span class="s1">=</span><span class="s4">1</span><span class="s1">,</span>
+<a name="l238"><span class="ln">238  </span></a>    <span class="s0">styleName</span><span class="s1">=</span><span class="s4">2</span><span class="s1">,</span>
+<a name="l239"><span class="ln">239  </span></a>    <span class="s0">uniqueFontIdentifier</span><span class="s1">=</span><span class="s4">3</span><span class="s1">,</span>
+<a name="l240"><span class="ln">240  </span></a>    <span class="s0">fullName</span><span class="s1">=</span><span class="s4">4</span><span class="s1">,</span>
+<a name="l241"><span class="ln">241  </span></a>    <span class="s0">version</span><span class="s1">=</span><span class="s4">5</span><span class="s1">,</span>
+<a name="l242"><span class="ln">242  </span></a>    <span class="s0">psName</span><span class="s1">=</span><span class="s4">6</span><span class="s1">,</span>
+<a name="l243"><span class="ln">243  </span></a>    <span class="s0">trademark</span><span class="s1">=</span><span class="s4">7</span><span class="s1">,</span>
+<a name="l244"><span class="ln">244  </span></a>    <span class="s0">manufacturer</span><span class="s1">=</span><span class="s4">8</span><span class="s1">,</span>
+<a name="l245"><span class="ln">245  </span></a>    <span class="s0">designer</span><span class="s1">=</span><span class="s4">9</span><span class="s1">,</span>
+<a name="l246"><span class="ln">246  </span></a>    <span class="s0">description</span><span class="s1">=</span><span class="s4">10</span><span class="s1">,</span>
+<a name="l247"><span class="ln">247  </span></a>    <span class="s0">vendorURL</span><span class="s1">=</span><span class="s4">11</span><span class="s1">,</span>
+<a name="l248"><span class="ln">248  </span></a>    <span class="s0">designerURL</span><span class="s1">=</span><span class="s4">12</span><span class="s1">,</span>
+<a name="l249"><span class="ln">249  </span></a>    <span class="s0">licenseDescription</span><span class="s1">=</span><span class="s4">13</span><span class="s1">,</span>
+<a name="l250"><span class="ln">250  </span></a>    <span class="s0">licenseInfoURL</span><span class="s1">=</span><span class="s4">14</span><span class="s1">,</span>
+<a name="l251"><span class="ln">251  </span></a>    <span class="s5"># reserved = 15,</span>
+<a name="l252"><span class="ln">252  </span></a>    <span class="s0">typographicFamily</span><span class="s1">=</span><span class="s4">16</span><span class="s1">,</span>
+<a name="l253"><span class="ln">253  </span></a>    <span class="s0">typographicSubfamily</span><span class="s1">=</span><span class="s4">17</span><span class="s1">,</span>
+<a name="l254"><span class="ln">254  </span></a>    <span class="s0">compatibleFullName</span><span class="s1">=</span><span class="s4">18</span><span class="s1">,</span>
+<a name="l255"><span class="ln">255  </span></a>    <span class="s0">sampleText</span><span class="s1">=</span><span class="s4">19</span><span class="s1">,</span>
+<a name="l256"><span class="ln">256  </span></a>    <span class="s0">postScriptCIDFindfontName</span><span class="s1">=</span><span class="s4">20</span><span class="s1">,</span>
+<a name="l257"><span class="ln">257  </span></a>    <span class="s0">wwsFamilyName</span><span class="s1">=</span><span class="s4">21</span><span class="s1">,</span>
+<a name="l258"><span class="ln">258  </span></a>    <span class="s0">wwsSubfamilyName</span><span class="s1">=</span><span class="s4">22</span><span class="s1">,</span>
+<a name="l259"><span class="ln">259  </span></a>    <span class="s0">lightBackgroundPalette</span><span class="s1">=</span><span class="s4">23</span><span class="s1">,</span>
+<a name="l260"><span class="ln">260  </span></a>    <span class="s0">darkBackgroundPalette</span><span class="s1">=</span><span class="s4">24</span><span class="s1">,</span>
+<a name="l261"><span class="ln">261  </span></a>    <span class="s0">variationsPostScriptNamePrefix</span><span class="s1">=</span><span class="s4">25</span><span class="s1">,</span>
+<a name="l262"><span class="ln">262  </span></a><span class="s1">)</span>
+<a name="l263"><span class="ln">263  </span></a>
+<a name="l264"><span class="ln">264  </span></a><span class="s5"># to insert in setupNameTable doc string:</span>
+<a name="l265"><span class="ln">265  </span></a><span class="s5"># print(&quot;\n&quot;.join((&quot;%s (nameID %s)&quot; % (k, v)) for k, v in sorted(_nameIDs.items(), key=lambda x: x[1])))</span>
+<a name="l266"><span class="ln">266  </span></a>
+<a name="l267"><span class="ln">267  </span></a><span class="s0">_panoseDefaults </span><span class="s1">= </span><span class="s0">Panose</span><span class="s1">()</span>
+<a name="l268"><span class="ln">268  </span></a>
+<a name="l269"><span class="ln">269  </span></a><span class="s0">_OS2Defaults </span><span class="s1">= </span><span class="s0">dict</span><span class="s1">(</span>
+<a name="l270"><span class="ln">270  </span></a>    <span class="s0">version</span><span class="s1">=</span><span class="s4">3</span><span class="s1">,</span>
+<a name="l271"><span class="ln">271  </span></a>    <span class="s0">xAvgCharWidth</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l272"><span class="ln">272  </span></a>    <span class="s0">usWeightClass</span><span class="s1">=</span><span class="s4">400</span><span class="s1">,</span>
+<a name="l273"><span class="ln">273  </span></a>    <span class="s0">usWidthClass</span><span class="s1">=</span><span class="s4">5</span><span class="s1">,</span>
+<a name="l274"><span class="ln">274  </span></a>    <span class="s0">fsType</span><span class="s1">=</span><span class="s4">0x0004</span><span class="s1">,  </span><span class="s5"># default: Preview &amp; Print embedding</span>
+<a name="l275"><span class="ln">275  </span></a>    <span class="s0">ySubscriptXSize</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l276"><span class="ln">276  </span></a>    <span class="s0">ySubscriptYSize</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l277"><span class="ln">277  </span></a>    <span class="s0">ySubscriptXOffset</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l278"><span class="ln">278  </span></a>    <span class="s0">ySubscriptYOffset</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l279"><span class="ln">279  </span></a>    <span class="s0">ySuperscriptXSize</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l280"><span class="ln">280  </span></a>    <span class="s0">ySuperscriptYSize</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l281"><span class="ln">281  </span></a>    <span class="s0">ySuperscriptXOffset</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l282"><span class="ln">282  </span></a>    <span class="s0">ySuperscriptYOffset</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l283"><span class="ln">283  </span></a>    <span class="s0">yStrikeoutSize</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l284"><span class="ln">284  </span></a>    <span class="s0">yStrikeoutPosition</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l285"><span class="ln">285  </span></a>    <span class="s0">sFamilyClass</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l286"><span class="ln">286  </span></a>    <span class="s0">panose</span><span class="s1">=</span><span class="s0">_panoseDefaults</span><span class="s1">,</span>
+<a name="l287"><span class="ln">287  </span></a>    <span class="s0">ulUnicodeRange1</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l288"><span class="ln">288  </span></a>    <span class="s0">ulUnicodeRange2</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l289"><span class="ln">289  </span></a>    <span class="s0">ulUnicodeRange3</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l290"><span class="ln">290  </span></a>    <span class="s0">ulUnicodeRange4</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l291"><span class="ln">291  </span></a>    <span class="s0">achVendID</span><span class="s1">=</span><span class="s2">&quot;????&quot;</span><span class="s1">,</span>
+<a name="l292"><span class="ln">292  </span></a>    <span class="s0">fsSelection</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l293"><span class="ln">293  </span></a>    <span class="s0">usFirstCharIndex</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l294"><span class="ln">294  </span></a>    <span class="s0">usLastCharIndex</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l295"><span class="ln">295  </span></a>    <span class="s0">sTypoAscender</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l296"><span class="ln">296  </span></a>    <span class="s0">sTypoDescender</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l297"><span class="ln">297  </span></a>    <span class="s0">sTypoLineGap</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l298"><span class="ln">298  </span></a>    <span class="s0">usWinAscent</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l299"><span class="ln">299  </span></a>    <span class="s0">usWinDescent</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l300"><span class="ln">300  </span></a>    <span class="s0">ulCodePageRange1</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l301"><span class="ln">301  </span></a>    <span class="s0">ulCodePageRange2</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l302"><span class="ln">302  </span></a>    <span class="s0">sxHeight</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l303"><span class="ln">303  </span></a>    <span class="s0">sCapHeight</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l304"><span class="ln">304  </span></a>    <span class="s0">usDefaultChar</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,  </span><span class="s5"># .notdef</span>
+<a name="l305"><span class="ln">305  </span></a>    <span class="s0">usBreakChar</span><span class="s1">=</span><span class="s4">32</span><span class="s1">,  </span><span class="s5"># space</span>
+<a name="l306"><span class="ln">306  </span></a>    <span class="s0">usMaxContext</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l307"><span class="ln">307  </span></a>    <span class="s0">usLowerOpticalPointSize</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l308"><span class="ln">308  </span></a>    <span class="s0">usUpperOpticalPointSize</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l309"><span class="ln">309  </span></a><span class="s1">)</span>
+<a name="l310"><span class="ln">310  </span></a>
+<a name="l311"><span class="ln">311  </span></a>
+<a name="l312"><span class="ln">312  </span></a><span class="s3">class </span><span class="s0">FontBuilder</span><span class="s1">(</span><span class="s0">object</span><span class="s1">):</span>
+<a name="l313"><span class="ln">313  </span></a>    <span class="s3">def </span><span class="s0">__init__</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">unitsPerEm</span><span class="s1">=</span><span class="s3">None</span><span class="s1">, </span><span class="s0">font</span><span class="s1">=</span><span class="s3">None</span><span class="s1">, </span><span class="s0">isTTF</span><span class="s1">=</span><span class="s3">True</span><span class="s1">, </span><span class="s0">glyphDataFormat</span><span class="s1">=</span><span class="s4">0</span><span class="s1">):</span>
+<a name="l314"><span class="ln">314  </span></a>        <span class="s6">&quot;&quot;&quot;Initialize a FontBuilder instance. 
+<a name="l315"><span class="ln">315  </span></a> 
+<a name="l316"><span class="ln">316  </span></a>        If the `font` argument is not given, a new `TTFont` will be 
+<a name="l317"><span class="ln">317  </span></a>        constructed, and `unitsPerEm` must be given. If `isTTF` is True, 
+<a name="l318"><span class="ln">318  </span></a>        the font will be a glyf-based TTF; if `isTTF` is False it will be 
+<a name="l319"><span class="ln">319  </span></a>        a CFF-based OTF. 
+<a name="l320"><span class="ln">320  </span></a> 
+<a name="l321"><span class="ln">321  </span></a>        The `glyphDataFormat` argument corresponds to the `head` table field 
+<a name="l322"><span class="ln">322  </span></a>        that defines the format of the TrueType `glyf` table (default=0). 
+<a name="l323"><span class="ln">323  </span></a>        TrueType glyphs historically can only contain quadratic splines and static 
+<a name="l324"><span class="ln">324  </span></a>        components, but there's a proposal to add support for cubic Bezier curves as well 
+<a name="l325"><span class="ln">325  </span></a>        as variable composites/components at 
+<a name="l326"><span class="ln">326  </span></a>        https://github.com/harfbuzz/boring-expansion-spec/blob/main/glyf1.md 
+<a name="l327"><span class="ln">327  </span></a>        You can experiment with the new features by setting `glyphDataFormat` to 1. 
+<a name="l328"><span class="ln">328  </span></a>        A ValueError is raised if `glyphDataFormat` is left at 0 but glyphs are added 
+<a name="l329"><span class="ln">329  </span></a>        that contain cubic splines or varcomposites. This is to prevent accidentally 
+<a name="l330"><span class="ln">330  </span></a>        creating fonts that are incompatible with existing TrueType implementations. 
+<a name="l331"><span class="ln">331  </span></a> 
+<a name="l332"><span class="ln">332  </span></a>        If `font` is given, it must be a `TTFont` instance and `unitsPerEm` 
+<a name="l333"><span class="ln">333  </span></a>        must _not_ be given. The `isTTF` and `glyphDataFormat` arguments will be ignored. 
+<a name="l334"><span class="ln">334  </span></a>        &quot;&quot;&quot;</span>
+<a name="l335"><span class="ln">335  </span></a>        <span class="s3">if </span><span class="s0">font </span><span class="s3">is None</span><span class="s1">:</span>
+<a name="l336"><span class="ln">336  </span></a>            <span class="s0">self</span><span class="s1">.</span><span class="s0">font </span><span class="s1">= </span><span class="s0">TTFont</span><span class="s1">(</span><span class="s0">recalcTimestamp</span><span class="s1">=</span><span class="s3">False</span><span class="s1">)</span>
+<a name="l337"><span class="ln">337  </span></a>            <span class="s0">self</span><span class="s1">.</span><span class="s0">isTTF </span><span class="s1">= </span><span class="s0">isTTF</span>
+<a name="l338"><span class="ln">338  </span></a>            <span class="s0">now </span><span class="s1">= </span><span class="s0">timestampNow</span><span class="s1">()</span>
+<a name="l339"><span class="ln">339  </span></a>            <span class="s3">assert </span><span class="s0">unitsPerEm </span><span class="s3">is not None</span>
+<a name="l340"><span class="ln">340  </span></a>            <span class="s0">self</span><span class="s1">.</span><span class="s0">setupHead</span><span class="s1">(</span>
+<a name="l341"><span class="ln">341  </span></a>                <span class="s0">unitsPerEm</span><span class="s1">=</span><span class="s0">unitsPerEm</span><span class="s1">,</span>
+<a name="l342"><span class="ln">342  </span></a>                <span class="s0">created</span><span class="s1">=</span><span class="s0">now</span><span class="s1">,</span>
+<a name="l343"><span class="ln">343  </span></a>                <span class="s0">modified</span><span class="s1">=</span><span class="s0">now</span><span class="s1">,</span>
+<a name="l344"><span class="ln">344  </span></a>                <span class="s0">glyphDataFormat</span><span class="s1">=</span><span class="s0">glyphDataFormat</span><span class="s1">,</span>
+<a name="l345"><span class="ln">345  </span></a>            <span class="s1">)</span>
+<a name="l346"><span class="ln">346  </span></a>            <span class="s0">self</span><span class="s1">.</span><span class="s0">setupMaxp</span><span class="s1">()</span>
+<a name="l347"><span class="ln">347  </span></a>        <span class="s3">else</span><span class="s1">:</span>
+<a name="l348"><span class="ln">348  </span></a>            <span class="s3">assert </span><span class="s0">unitsPerEm </span><span class="s3">is None</span>
+<a name="l349"><span class="ln">349  </span></a>            <span class="s0">self</span><span class="s1">.</span><span class="s0">font </span><span class="s1">= </span><span class="s0">font</span>
+<a name="l350"><span class="ln">350  </span></a>            <span class="s0">self</span><span class="s1">.</span><span class="s0">isTTF </span><span class="s1">= </span><span class="s2">&quot;glyf&quot; </span><span class="s3">in </span><span class="s0">font</span>
+<a name="l351"><span class="ln">351  </span></a>
+<a name="l352"><span class="ln">352  </span></a>    <span class="s3">def </span><span class="s0">save</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">file</span><span class="s1">):</span>
+<a name="l353"><span class="ln">353  </span></a>        <span class="s6">&quot;&quot;&quot;Save the font. The 'file' argument can be either a pathname or a 
+<a name="l354"><span class="ln">354  </span></a>        writable file object. 
+<a name="l355"><span class="ln">355  </span></a>        &quot;&quot;&quot;</span>
+<a name="l356"><span class="ln">356  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">.</span><span class="s0">save</span><span class="s1">(</span><span class="s0">file</span><span class="s1">)</span>
+<a name="l357"><span class="ln">357  </span></a>
+<a name="l358"><span class="ln">358  </span></a>    <span class="s3">def </span><span class="s0">_initTableWithValues</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">tableTag</span><span class="s1">, </span><span class="s0">defaults</span><span class="s1">, </span><span class="s0">values</span><span class="s1">):</span>
+<a name="l359"><span class="ln">359  </span></a>        <span class="s0">table </span><span class="s1">= </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s0">tableTag</span><span class="s1">] = </span><span class="s0">newTable</span><span class="s1">(</span><span class="s0">tableTag</span><span class="s1">)</span>
+<a name="l360"><span class="ln">360  </span></a>        <span class="s3">for </span><span class="s0">k</span><span class="s1">, </span><span class="s0">v </span><span class="s3">in </span><span class="s0">defaults</span><span class="s1">.</span><span class="s0">items</span><span class="s1">():</span>
+<a name="l361"><span class="ln">361  </span></a>            <span class="s0">setattr</span><span class="s1">(</span><span class="s0">table</span><span class="s1">, </span><span class="s0">k</span><span class="s1">, </span><span class="s0">v</span><span class="s1">)</span>
+<a name="l362"><span class="ln">362  </span></a>        <span class="s3">for </span><span class="s0">k</span><span class="s1">, </span><span class="s0">v </span><span class="s3">in </span><span class="s0">values</span><span class="s1">.</span><span class="s0">items</span><span class="s1">():</span>
+<a name="l363"><span class="ln">363  </span></a>            <span class="s0">setattr</span><span class="s1">(</span><span class="s0">table</span><span class="s1">, </span><span class="s0">k</span><span class="s1">, </span><span class="s0">v</span><span class="s1">)</span>
+<a name="l364"><span class="ln">364  </span></a>        <span class="s3">return </span><span class="s0">table</span>
+<a name="l365"><span class="ln">365  </span></a>
+<a name="l366"><span class="ln">366  </span></a>    <span class="s3">def </span><span class="s0">_updateTableWithValues</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">tableTag</span><span class="s1">, </span><span class="s0">values</span><span class="s1">):</span>
+<a name="l367"><span class="ln">367  </span></a>        <span class="s0">table </span><span class="s1">= </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s0">tableTag</span><span class="s1">]</span>
+<a name="l368"><span class="ln">368  </span></a>        <span class="s3">for </span><span class="s0">k</span><span class="s1">, </span><span class="s0">v </span><span class="s3">in </span><span class="s0">values</span><span class="s1">.</span><span class="s0">items</span><span class="s1">():</span>
+<a name="l369"><span class="ln">369  </span></a>            <span class="s0">setattr</span><span class="s1">(</span><span class="s0">table</span><span class="s1">, </span><span class="s0">k</span><span class="s1">, </span><span class="s0">v</span><span class="s1">)</span>
+<a name="l370"><span class="ln">370  </span></a>
+<a name="l371"><span class="ln">371  </span></a>    <span class="s3">def </span><span class="s0">setupHead</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, **</span><span class="s0">values</span><span class="s1">):</span>
+<a name="l372"><span class="ln">372  </span></a>        <span class="s6">&quot;&quot;&quot;Create a new `head` table and initialize it with default values, 
+<a name="l373"><span class="ln">373  </span></a>        which can be overridden by keyword arguments. 
+<a name="l374"><span class="ln">374  </span></a>        &quot;&quot;&quot;</span>
+<a name="l375"><span class="ln">375  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">_initTableWithValues</span><span class="s1">(</span><span class="s2">&quot;head&quot;</span><span class="s1">, </span><span class="s0">_headDefaults</span><span class="s1">, </span><span class="s0">values</span><span class="s1">)</span>
+<a name="l376"><span class="ln">376  </span></a>
+<a name="l377"><span class="ln">377  </span></a>    <span class="s3">def </span><span class="s0">updateHead</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, **</span><span class="s0">values</span><span class="s1">):</span>
+<a name="l378"><span class="ln">378  </span></a>        <span class="s6">&quot;&quot;&quot;Update the head table with the fields and values passed as 
+<a name="l379"><span class="ln">379  </span></a>        keyword arguments. 
+<a name="l380"><span class="ln">380  </span></a>        &quot;&quot;&quot;</span>
+<a name="l381"><span class="ln">381  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">_updateTableWithValues</span><span class="s1">(</span><span class="s2">&quot;head&quot;</span><span class="s1">, </span><span class="s0">values</span><span class="s1">)</span>
+<a name="l382"><span class="ln">382  </span></a>
+<a name="l383"><span class="ln">383  </span></a>    <span class="s3">def </span><span class="s0">setupGlyphOrder</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">glyphOrder</span><span class="s1">):</span>
+<a name="l384"><span class="ln">384  </span></a>        <span class="s6">&quot;&quot;&quot;Set the glyph order for the font.&quot;&quot;&quot;</span>
+<a name="l385"><span class="ln">385  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">.</span><span class="s0">setGlyphOrder</span><span class="s1">(</span><span class="s0">glyphOrder</span><span class="s1">)</span>
+<a name="l386"><span class="ln">386  </span></a>
+<a name="l387"><span class="ln">387  </span></a>    <span class="s3">def </span><span class="s0">setupCharacterMap</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">cmapping</span><span class="s1">, </span><span class="s0">uvs</span><span class="s1">=</span><span class="s3">None</span><span class="s1">, </span><span class="s0">allowFallback</span><span class="s1">=</span><span class="s3">False</span><span class="s1">):</span>
+<a name="l388"><span class="ln">388  </span></a>        <span class="s6">&quot;&quot;&quot;Build the `cmap` table for the font. The `cmapping` argument should 
+<a name="l389"><span class="ln">389  </span></a>        be a dict mapping unicode code points as integers to glyph names. 
+<a name="l390"><span class="ln">390  </span></a> 
+<a name="l391"><span class="ln">391  </span></a>        The `uvs` argument, when passed, must be a list of tuples, describing 
+<a name="l392"><span class="ln">392  </span></a>        Unicode Variation Sequences. These tuples have three elements: 
+<a name="l393"><span class="ln">393  </span></a>            (unicodeValue, variationSelector, glyphName) 
+<a name="l394"><span class="ln">394  </span></a>        `unicodeValue` and `variationSelector` are integer code points. 
+<a name="l395"><span class="ln">395  </span></a>        `glyphName` may be None, to indicate this is the default variation. 
+<a name="l396"><span class="ln">396  </span></a>        Text processors will then use the cmap to find the glyph name. 
+<a name="l397"><span class="ln">397  </span></a>        Each Unicode Variation Sequence should be an officially supported 
+<a name="l398"><span class="ln">398  </span></a>        sequence, but this is not policed. 
+<a name="l399"><span class="ln">399  </span></a>        &quot;&quot;&quot;</span>
+<a name="l400"><span class="ln">400  </span></a>        <span class="s0">subTables </span><span class="s1">= []</span>
+<a name="l401"><span class="ln">401  </span></a>        <span class="s0">highestUnicode </span><span class="s1">= </span><span class="s0">max</span><span class="s1">(</span><span class="s0">cmapping</span><span class="s1">) </span><span class="s3">if </span><span class="s0">cmapping </span><span class="s3">else </span><span class="s4">0</span>
+<a name="l402"><span class="ln">402  </span></a>        <span class="s3">if </span><span class="s0">highestUnicode </span><span class="s1">&gt; </span><span class="s4">0xFFFF</span><span class="s1">:</span>
+<a name="l403"><span class="ln">403  </span></a>            <span class="s0">cmapping_3_1 </span><span class="s1">= </span><span class="s0">dict</span><span class="s1">((</span><span class="s0">k</span><span class="s1">, </span><span class="s0">v</span><span class="s1">) </span><span class="s3">for </span><span class="s0">k</span><span class="s1">, </span><span class="s0">v </span><span class="s3">in </span><span class="s0">cmapping</span><span class="s1">.</span><span class="s0">items</span><span class="s1">() </span><span class="s3">if </span><span class="s0">k </span><span class="s1">&lt; </span><span class="s4">0x10000</span><span class="s1">)</span>
+<a name="l404"><span class="ln">404  </span></a>            <span class="s0">subTable_3_10 </span><span class="s1">= </span><span class="s0">buildCmapSubTable</span><span class="s1">(</span><span class="s0">cmapping</span><span class="s1">, </span><span class="s4">12</span><span class="s1">, </span><span class="s4">3</span><span class="s1">, </span><span class="s4">10</span><span class="s1">)</span>
+<a name="l405"><span class="ln">405  </span></a>            <span class="s0">subTables</span><span class="s1">.</span><span class="s0">append</span><span class="s1">(</span><span class="s0">subTable_3_10</span><span class="s1">)</span>
+<a name="l406"><span class="ln">406  </span></a>        <span class="s3">else</span><span class="s1">:</span>
+<a name="l407"><span class="ln">407  </span></a>            <span class="s0">cmapping_3_1 </span><span class="s1">= </span><span class="s0">cmapping</span>
+<a name="l408"><span class="ln">408  </span></a>        <span class="s0">format </span><span class="s1">= </span><span class="s4">4</span>
+<a name="l409"><span class="ln">409  </span></a>        <span class="s0">subTable_3_1 </span><span class="s1">= </span><span class="s0">buildCmapSubTable</span><span class="s1">(</span><span class="s0">cmapping_3_1</span><span class="s1">, </span><span class="s0">format</span><span class="s1">, </span><span class="s4">3</span><span class="s1">, </span><span class="s4">1</span><span class="s1">)</span>
+<a name="l410"><span class="ln">410  </span></a>        <span class="s3">try</span><span class="s1">:</span>
+<a name="l411"><span class="ln">411  </span></a>            <span class="s0">subTable_3_1</span><span class="s1">.</span><span class="s0">compile</span><span class="s1">(</span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">)</span>
+<a name="l412"><span class="ln">412  </span></a>        <span class="s3">except </span><span class="s0">struct</span><span class="s1">.</span><span class="s0">error</span><span class="s1">:</span>
+<a name="l413"><span class="ln">413  </span></a>            <span class="s5"># format 4 overflowed, fall back to format 12</span>
+<a name="l414"><span class="ln">414  </span></a>            <span class="s3">if not </span><span class="s0">allowFallback</span><span class="s1">:</span>
+<a name="l415"><span class="ln">415  </span></a>                <span class="s3">raise </span><span class="s0">ValueError</span><span class="s1">(</span>
+<a name="l416"><span class="ln">416  </span></a>                    <span class="s2">&quot;cmap format 4 subtable overflowed; sort glyph order by unicode to fix.&quot;</span>
+<a name="l417"><span class="ln">417  </span></a>                <span class="s1">)</span>
+<a name="l418"><span class="ln">418  </span></a>            <span class="s0">format </span><span class="s1">= </span><span class="s4">12</span>
+<a name="l419"><span class="ln">419  </span></a>            <span class="s0">subTable_3_1 </span><span class="s1">= </span><span class="s0">buildCmapSubTable</span><span class="s1">(</span><span class="s0">cmapping_3_1</span><span class="s1">, </span><span class="s0">format</span><span class="s1">, </span><span class="s4">3</span><span class="s1">, </span><span class="s4">1</span><span class="s1">)</span>
+<a name="l420"><span class="ln">420  </span></a>        <span class="s0">subTables</span><span class="s1">.</span><span class="s0">append</span><span class="s1">(</span><span class="s0">subTable_3_1</span><span class="s1">)</span>
+<a name="l421"><span class="ln">421  </span></a>        <span class="s0">subTable_0_3 </span><span class="s1">= </span><span class="s0">buildCmapSubTable</span><span class="s1">(</span><span class="s0">cmapping_3_1</span><span class="s1">, </span><span class="s0">format</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">3</span><span class="s1">)</span>
+<a name="l422"><span class="ln">422  </span></a>        <span class="s0">subTables</span><span class="s1">.</span><span class="s0">append</span><span class="s1">(</span><span class="s0">subTable_0_3</span><span class="s1">)</span>
+<a name="l423"><span class="ln">423  </span></a>
+<a name="l424"><span class="ln">424  </span></a>        <span class="s3">if </span><span class="s0">uvs </span><span class="s3">is not None</span><span class="s1">:</span>
+<a name="l425"><span class="ln">425  </span></a>            <span class="s0">uvsDict </span><span class="s1">= {}</span>
+<a name="l426"><span class="ln">426  </span></a>            <span class="s3">for </span><span class="s0">unicodeValue</span><span class="s1">, </span><span class="s0">variationSelector</span><span class="s1">, </span><span class="s0">glyphName </span><span class="s3">in </span><span class="s0">uvs</span><span class="s1">:</span>
+<a name="l427"><span class="ln">427  </span></a>                <span class="s3">if </span><span class="s0">cmapping</span><span class="s1">.</span><span class="s0">get</span><span class="s1">(</span><span class="s0">unicodeValue</span><span class="s1">) == </span><span class="s0">glyphName</span><span class="s1">:</span>
+<a name="l428"><span class="ln">428  </span></a>                    <span class="s5"># this is a default variation</span>
+<a name="l429"><span class="ln">429  </span></a>                    <span class="s0">glyphName </span><span class="s1">= </span><span class="s3">None</span>
+<a name="l430"><span class="ln">430  </span></a>                <span class="s3">if </span><span class="s0">variationSelector </span><span class="s3">not in </span><span class="s0">uvsDict</span><span class="s1">:</span>
+<a name="l431"><span class="ln">431  </span></a>                    <span class="s0">uvsDict</span><span class="s1">[</span><span class="s0">variationSelector</span><span class="s1">] = []</span>
+<a name="l432"><span class="ln">432  </span></a>                <span class="s0">uvsDict</span><span class="s1">[</span><span class="s0">variationSelector</span><span class="s1">].</span><span class="s0">append</span><span class="s1">((</span><span class="s0">unicodeValue</span><span class="s1">, </span><span class="s0">glyphName</span><span class="s1">))</span>
+<a name="l433"><span class="ln">433  </span></a>            <span class="s0">uvsSubTable </span><span class="s1">= </span><span class="s0">buildCmapSubTable</span><span class="s1">({}, </span><span class="s4">14</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">5</span><span class="s1">)</span>
+<a name="l434"><span class="ln">434  </span></a>            <span class="s0">uvsSubTable</span><span class="s1">.</span><span class="s0">uvsDict </span><span class="s1">= </span><span class="s0">uvsDict</span>
+<a name="l435"><span class="ln">435  </span></a>            <span class="s0">subTables</span><span class="s1">.</span><span class="s0">append</span><span class="s1">(</span><span class="s0">uvsSubTable</span><span class="s1">)</span>
+<a name="l436"><span class="ln">436  </span></a>
+<a name="l437"><span class="ln">437  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;cmap&quot;</span><span class="s1">] = </span><span class="s0">newTable</span><span class="s1">(</span><span class="s2">&quot;cmap&quot;</span><span class="s1">)</span>
+<a name="l438"><span class="ln">438  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;cmap&quot;</span><span class="s1">].</span><span class="s0">tableVersion </span><span class="s1">= </span><span class="s4">0</span>
+<a name="l439"><span class="ln">439  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;cmap&quot;</span><span class="s1">].</span><span class="s0">tables </span><span class="s1">= </span><span class="s0">subTables</span>
+<a name="l440"><span class="ln">440  </span></a>
+<a name="l441"><span class="ln">441  </span></a>    <span class="s3">def </span><span class="s0">setupNameTable</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">nameStrings</span><span class="s1">, </span><span class="s0">windows</span><span class="s1">=</span><span class="s3">True</span><span class="s1">, </span><span class="s0">mac</span><span class="s1">=</span><span class="s3">True</span><span class="s1">):</span>
+<a name="l442"><span class="ln">442  </span></a>        <span class="s6">&quot;&quot;&quot;Create the `name` table for the font. The `nameStrings` argument must 
+<a name="l443"><span class="ln">443  </span></a>        be a dict, mapping nameIDs or descriptive names for the nameIDs to name 
+<a name="l444"><span class="ln">444  </span></a>        record values. A value is either a string, or a dict, mapping language codes 
+<a name="l445"><span class="ln">445  </span></a>        to strings, to allow localized name table entries. 
+<a name="l446"><span class="ln">446  </span></a> 
+<a name="l447"><span class="ln">447  </span></a>        By default, both Windows (platformID=3) and Macintosh (platformID=1) name 
+<a name="l448"><span class="ln">448  </span></a>        records are added, unless any of `windows` or `mac` arguments is False. 
+<a name="l449"><span class="ln">449  </span></a> 
+<a name="l450"><span class="ln">450  </span></a>        The following descriptive names are available for nameIDs: 
+<a name="l451"><span class="ln">451  </span></a> 
+<a name="l452"><span class="ln">452  </span></a>            copyright (nameID 0) 
+<a name="l453"><span class="ln">453  </span></a>            familyName (nameID 1) 
+<a name="l454"><span class="ln">454  </span></a>            styleName (nameID 2) 
+<a name="l455"><span class="ln">455  </span></a>            uniqueFontIdentifier (nameID 3) 
+<a name="l456"><span class="ln">456  </span></a>            fullName (nameID 4) 
+<a name="l457"><span class="ln">457  </span></a>            version (nameID 5) 
+<a name="l458"><span class="ln">458  </span></a>            psName (nameID 6) 
+<a name="l459"><span class="ln">459  </span></a>            trademark (nameID 7) 
+<a name="l460"><span class="ln">460  </span></a>            manufacturer (nameID 8) 
+<a name="l461"><span class="ln">461  </span></a>            designer (nameID 9) 
+<a name="l462"><span class="ln">462  </span></a>            description (nameID 10) 
+<a name="l463"><span class="ln">463  </span></a>            vendorURL (nameID 11) 
+<a name="l464"><span class="ln">464  </span></a>            designerURL (nameID 12) 
+<a name="l465"><span class="ln">465  </span></a>            licenseDescription (nameID 13) 
+<a name="l466"><span class="ln">466  </span></a>            licenseInfoURL (nameID 14) 
+<a name="l467"><span class="ln">467  </span></a>            typographicFamily (nameID 16) 
+<a name="l468"><span class="ln">468  </span></a>            typographicSubfamily (nameID 17) 
+<a name="l469"><span class="ln">469  </span></a>            compatibleFullName (nameID 18) 
+<a name="l470"><span class="ln">470  </span></a>            sampleText (nameID 19) 
+<a name="l471"><span class="ln">471  </span></a>            postScriptCIDFindfontName (nameID 20) 
+<a name="l472"><span class="ln">472  </span></a>            wwsFamilyName (nameID 21) 
+<a name="l473"><span class="ln">473  </span></a>            wwsSubfamilyName (nameID 22) 
+<a name="l474"><span class="ln">474  </span></a>            lightBackgroundPalette (nameID 23) 
+<a name="l475"><span class="ln">475  </span></a>            darkBackgroundPalette (nameID 24) 
+<a name="l476"><span class="ln">476  </span></a>            variationsPostScriptNamePrefix (nameID 25) 
+<a name="l477"><span class="ln">477  </span></a>        &quot;&quot;&quot;</span>
+<a name="l478"><span class="ln">478  </span></a>        <span class="s0">nameTable </span><span class="s1">= </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;name&quot;</span><span class="s1">] = </span><span class="s0">newTable</span><span class="s1">(</span><span class="s2">&quot;name&quot;</span><span class="s1">)</span>
+<a name="l479"><span class="ln">479  </span></a>        <span class="s0">nameTable</span><span class="s1">.</span><span class="s0">names </span><span class="s1">= []</span>
+<a name="l480"><span class="ln">480  </span></a>
+<a name="l481"><span class="ln">481  </span></a>        <span class="s3">for </span><span class="s0">nameName</span><span class="s1">, </span><span class="s0">nameValue </span><span class="s3">in </span><span class="s0">nameStrings</span><span class="s1">.</span><span class="s0">items</span><span class="s1">():</span>
+<a name="l482"><span class="ln">482  </span></a>            <span class="s3">if </span><span class="s0">isinstance</span><span class="s1">(</span><span class="s0">nameName</span><span class="s1">, </span><span class="s0">int</span><span class="s1">):</span>
+<a name="l483"><span class="ln">483  </span></a>                <span class="s0">nameID </span><span class="s1">= </span><span class="s0">nameName</span>
+<a name="l484"><span class="ln">484  </span></a>            <span class="s3">else</span><span class="s1">:</span>
+<a name="l485"><span class="ln">485  </span></a>                <span class="s0">nameID </span><span class="s1">= </span><span class="s0">_nameIDs</span><span class="s1">[</span><span class="s0">nameName</span><span class="s1">]</span>
+<a name="l486"><span class="ln">486  </span></a>            <span class="s3">if </span><span class="s0">isinstance</span><span class="s1">(</span><span class="s0">nameValue</span><span class="s1">, </span><span class="s0">str</span><span class="s1">):</span>
+<a name="l487"><span class="ln">487  </span></a>                <span class="s0">nameValue </span><span class="s1">= </span><span class="s0">dict</span><span class="s1">(</span><span class="s0">en</span><span class="s1">=</span><span class="s0">nameValue</span><span class="s1">)</span>
+<a name="l488"><span class="ln">488  </span></a>            <span class="s0">nameTable</span><span class="s1">.</span><span class="s0">addMultilingualName</span><span class="s1">(</span>
+<a name="l489"><span class="ln">489  </span></a>                <span class="s0">nameValue</span><span class="s1">, </span><span class="s0">ttFont</span><span class="s1">=</span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">, </span><span class="s0">nameID</span><span class="s1">=</span><span class="s0">nameID</span><span class="s1">, </span><span class="s0">windows</span><span class="s1">=</span><span class="s0">windows</span><span class="s1">, </span><span class="s0">mac</span><span class="s1">=</span><span class="s0">mac</span>
+<a name="l490"><span class="ln">490  </span></a>            <span class="s1">)</span>
+<a name="l491"><span class="ln">491  </span></a>
+<a name="l492"><span class="ln">492  </span></a>    <span class="s3">def </span><span class="s0">setupOS2</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, **</span><span class="s0">values</span><span class="s1">):</span>
+<a name="l493"><span class="ln">493  </span></a>        <span class="s6">&quot;&quot;&quot;Create a new `OS/2` table and initialize it with default values, 
+<a name="l494"><span class="ln">494  </span></a>        which can be overridden by keyword arguments. 
+<a name="l495"><span class="ln">495  </span></a>        &quot;&quot;&quot;</span>
+<a name="l496"><span class="ln">496  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">_initTableWithValues</span><span class="s1">(</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s0">_OS2Defaults</span><span class="s1">, </span><span class="s0">values</span><span class="s1">)</span>
+<a name="l497"><span class="ln">497  </span></a>        <span class="s3">if </span><span class="s2">&quot;xAvgCharWidth&quot; </span><span class="s3">not in </span><span class="s0">values</span><span class="s1">:</span>
+<a name="l498"><span class="ln">498  </span></a>            <span class="s3">assert </span><span class="s1">(</span>
+<a name="l499"><span class="ln">499  </span></a>                <span class="s2">&quot;hmtx&quot; </span><span class="s3">in </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span>
+<a name="l500"><span class="ln">500  </span></a>            <span class="s1">), </span><span class="s2">&quot;the 'hmtx' table must be setup before the 'OS/2' table&quot;</span>
+<a name="l501"><span class="ln">501  </span></a>            <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">].</span><span class="s0">recalcAvgCharWidth</span><span class="s1">(</span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">)</span>
+<a name="l502"><span class="ln">502  </span></a>        <span class="s3">if not </span><span class="s1">(</span>
+<a name="l503"><span class="ln">503  </span></a>            <span class="s2">&quot;ulUnicodeRange1&quot; </span><span class="s3">in </span><span class="s0">values</span>
+<a name="l504"><span class="ln">504  </span></a>            <span class="s3">or </span><span class="s2">&quot;ulUnicodeRange2&quot; </span><span class="s3">in </span><span class="s0">values</span>
+<a name="l505"><span class="ln">505  </span></a>            <span class="s3">or </span><span class="s2">&quot;ulUnicodeRange3&quot; </span><span class="s3">in </span><span class="s0">values</span>
+<a name="l506"><span class="ln">506  </span></a>            <span class="s3">or </span><span class="s2">&quot;ulUnicodeRange3&quot; </span><span class="s3">in </span><span class="s0">values</span>
+<a name="l507"><span class="ln">507  </span></a>        <span class="s1">):</span>
+<a name="l508"><span class="ln">508  </span></a>            <span class="s3">assert </span><span class="s1">(</span>
+<a name="l509"><span class="ln">509  </span></a>                <span class="s2">&quot;cmap&quot; </span><span class="s3">in </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span>
+<a name="l510"><span class="ln">510  </span></a>            <span class="s1">), </span><span class="s2">&quot;the 'cmap' table must be setup before the 'OS/2' table&quot;</span>
+<a name="l511"><span class="ln">511  </span></a>            <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">].</span><span class="s0">recalcUnicodeRanges</span><span class="s1">(</span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">)</span>
+<a name="l512"><span class="ln">512  </span></a>
+<a name="l513"><span class="ln">513  </span></a>    <span class="s3">def </span><span class="s0">setupCFF</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">psName</span><span class="s1">, </span><span class="s0">fontInfo</span><span class="s1">, </span><span class="s0">charStringsDict</span><span class="s1">, </span><span class="s0">privateDict</span><span class="s1">):</span>
+<a name="l514"><span class="ln">514  </span></a>        <span class="s3">from </span><span class="s1">.</span><span class="s0">cffLib </span><span class="s3">import </span><span class="s1">(</span>
+<a name="l515"><span class="ln">515  </span></a>            <span class="s0">CFFFontSet</span><span class="s1">,</span>
+<a name="l516"><span class="ln">516  </span></a>            <span class="s0">TopDictIndex</span><span class="s1">,</span>
+<a name="l517"><span class="ln">517  </span></a>            <span class="s0">TopDict</span><span class="s1">,</span>
+<a name="l518"><span class="ln">518  </span></a>            <span class="s0">CharStrings</span><span class="s1">,</span>
+<a name="l519"><span class="ln">519  </span></a>            <span class="s0">GlobalSubrsIndex</span><span class="s1">,</span>
+<a name="l520"><span class="ln">520  </span></a>            <span class="s0">PrivateDict</span><span class="s1">,</span>
+<a name="l521"><span class="ln">521  </span></a>        <span class="s1">)</span>
+<a name="l522"><span class="ln">522  </span></a>
+<a name="l523"><span class="ln">523  </span></a>        <span class="s3">assert not </span><span class="s0">self</span><span class="s1">.</span><span class="s0">isTTF</span>
+<a name="l524"><span class="ln">524  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">.</span><span class="s0">sfntVersion </span><span class="s1">= </span><span class="s2">&quot;OTTO&quot;</span>
+<a name="l525"><span class="ln">525  </span></a>        <span class="s0">fontSet </span><span class="s1">= </span><span class="s0">CFFFontSet</span><span class="s1">()</span>
+<a name="l526"><span class="ln">526  </span></a>        <span class="s0">fontSet</span><span class="s1">.</span><span class="s0">major </span><span class="s1">= </span><span class="s4">1</span>
+<a name="l527"><span class="ln">527  </span></a>        <span class="s0">fontSet</span><span class="s1">.</span><span class="s0">minor </span><span class="s1">= </span><span class="s4">0</span>
+<a name="l528"><span class="ln">528  </span></a>        <span class="s0">fontSet</span><span class="s1">.</span><span class="s0">otFont </span><span class="s1">= </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span>
+<a name="l529"><span class="ln">529  </span></a>        <span class="s0">fontSet</span><span class="s1">.</span><span class="s0">fontNames </span><span class="s1">= [</span><span class="s0">psName</span><span class="s1">]</span>
+<a name="l530"><span class="ln">530  </span></a>        <span class="s0">fontSet</span><span class="s1">.</span><span class="s0">topDictIndex </span><span class="s1">= </span><span class="s0">TopDictIndex</span><span class="s1">()</span>
+<a name="l531"><span class="ln">531  </span></a>
+<a name="l532"><span class="ln">532  </span></a>        <span class="s0">globalSubrs </span><span class="s1">= </span><span class="s0">GlobalSubrsIndex</span><span class="s1">()</span>
+<a name="l533"><span class="ln">533  </span></a>        <span class="s0">fontSet</span><span class="s1">.</span><span class="s0">GlobalSubrs </span><span class="s1">= </span><span class="s0">globalSubrs</span>
+<a name="l534"><span class="ln">534  </span></a>        <span class="s0">private </span><span class="s1">= </span><span class="s0">PrivateDict</span><span class="s1">()</span>
+<a name="l535"><span class="ln">535  </span></a>        <span class="s3">for </span><span class="s0">key</span><span class="s1">, </span><span class="s0">value </span><span class="s3">in </span><span class="s0">privateDict</span><span class="s1">.</span><span class="s0">items</span><span class="s1">():</span>
+<a name="l536"><span class="ln">536  </span></a>            <span class="s0">setattr</span><span class="s1">(</span><span class="s0">private</span><span class="s1">, </span><span class="s0">key</span><span class="s1">, </span><span class="s0">value</span><span class="s1">)</span>
+<a name="l537"><span class="ln">537  </span></a>        <span class="s0">fdSelect </span><span class="s1">= </span><span class="s3">None</span>
+<a name="l538"><span class="ln">538  </span></a>        <span class="s0">fdArray </span><span class="s1">= </span><span class="s3">None</span>
+<a name="l539"><span class="ln">539  </span></a>
+<a name="l540"><span class="ln">540  </span></a>        <span class="s0">topDict </span><span class="s1">= </span><span class="s0">TopDict</span><span class="s1">()</span>
+<a name="l541"><span class="ln">541  </span></a>        <span class="s0">topDict</span><span class="s1">.</span><span class="s0">charset </span><span class="s1">= </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">.</span><span class="s0">getGlyphOrder</span><span class="s1">()</span>
+<a name="l542"><span class="ln">542  </span></a>        <span class="s0">topDict</span><span class="s1">.</span><span class="s0">Private </span><span class="s1">= </span><span class="s0">private</span>
+<a name="l543"><span class="ln">543  </span></a>        <span class="s0">topDict</span><span class="s1">.</span><span class="s0">GlobalSubrs </span><span class="s1">= </span><span class="s0">fontSet</span><span class="s1">.</span><span class="s0">GlobalSubrs</span>
+<a name="l544"><span class="ln">544  </span></a>        <span class="s3">for </span><span class="s0">key</span><span class="s1">, </span><span class="s0">value </span><span class="s3">in </span><span class="s0">fontInfo</span><span class="s1">.</span><span class="s0">items</span><span class="s1">():</span>
+<a name="l545"><span class="ln">545  </span></a>            <span class="s0">setattr</span><span class="s1">(</span><span class="s0">topDict</span><span class="s1">, </span><span class="s0">key</span><span class="s1">, </span><span class="s0">value</span><span class="s1">)</span>
+<a name="l546"><span class="ln">546  </span></a>        <span class="s3">if </span><span class="s2">&quot;FontMatrix&quot; </span><span class="s3">not in </span><span class="s0">fontInfo</span><span class="s1">:</span>
+<a name="l547"><span class="ln">547  </span></a>            <span class="s0">scale </span><span class="s1">= </span><span class="s4">1 </span><span class="s1">/ </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;head&quot;</span><span class="s1">].</span><span class="s0">unitsPerEm</span>
+<a name="l548"><span class="ln">548  </span></a>            <span class="s0">topDict</span><span class="s1">.</span><span class="s0">FontMatrix </span><span class="s1">= [</span><span class="s0">scale</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s0">scale</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s1">]</span>
+<a name="l549"><span class="ln">549  </span></a>
+<a name="l550"><span class="ln">550  </span></a>        <span class="s0">charStrings </span><span class="s1">= </span><span class="s0">CharStrings</span><span class="s1">(</span>
+<a name="l551"><span class="ln">551  </span></a>            <span class="s3">None</span><span class="s1">, </span><span class="s0">topDict</span><span class="s1">.</span><span class="s0">charset</span><span class="s1">, </span><span class="s0">globalSubrs</span><span class="s1">, </span><span class="s0">private</span><span class="s1">, </span><span class="s0">fdSelect</span><span class="s1">, </span><span class="s0">fdArray</span>
+<a name="l552"><span class="ln">552  </span></a>        <span class="s1">)</span>
+<a name="l553"><span class="ln">553  </span></a>        <span class="s3">for </span><span class="s0">glyphName</span><span class="s1">, </span><span class="s0">charString </span><span class="s3">in </span><span class="s0">charStringsDict</span><span class="s1">.</span><span class="s0">items</span><span class="s1">():</span>
+<a name="l554"><span class="ln">554  </span></a>            <span class="s0">charString</span><span class="s1">.</span><span class="s0">private </span><span class="s1">= </span><span class="s0">private</span>
+<a name="l555"><span class="ln">555  </span></a>            <span class="s0">charString</span><span class="s1">.</span><span class="s0">globalSubrs </span><span class="s1">= </span><span class="s0">globalSubrs</span>
+<a name="l556"><span class="ln">556  </span></a>            <span class="s0">charStrings</span><span class="s1">[</span><span class="s0">glyphName</span><span class="s1">] = </span><span class="s0">charString</span>
+<a name="l557"><span class="ln">557  </span></a>        <span class="s0">topDict</span><span class="s1">.</span><span class="s0">CharStrings </span><span class="s1">= </span><span class="s0">charStrings</span>
+<a name="l558"><span class="ln">558  </span></a>
+<a name="l559"><span class="ln">559  </span></a>        <span class="s0">fontSet</span><span class="s1">.</span><span class="s0">topDictIndex</span><span class="s1">.</span><span class="s0">append</span><span class="s1">(</span><span class="s0">topDict</span><span class="s1">)</span>
+<a name="l560"><span class="ln">560  </span></a>
+<a name="l561"><span class="ln">561  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;CFF &quot;</span><span class="s1">] = </span><span class="s0">newTable</span><span class="s1">(</span><span class="s2">&quot;CFF &quot;</span><span class="s1">)</span>
+<a name="l562"><span class="ln">562  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;CFF &quot;</span><span class="s1">].</span><span class="s0">cff </span><span class="s1">= </span><span class="s0">fontSet</span>
+<a name="l563"><span class="ln">563  </span></a>
+<a name="l564"><span class="ln">564  </span></a>    <span class="s3">def </span><span class="s0">setupCFF2</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">charStringsDict</span><span class="s1">, </span><span class="s0">fdArrayList</span><span class="s1">=</span><span class="s3">None</span><span class="s1">, </span><span class="s0">regions</span><span class="s1">=</span><span class="s3">None</span><span class="s1">):</span>
+<a name="l565"><span class="ln">565  </span></a>        <span class="s3">from </span><span class="s1">.</span><span class="s0">cffLib </span><span class="s3">import </span><span class="s1">(</span>
+<a name="l566"><span class="ln">566  </span></a>            <span class="s0">CFFFontSet</span><span class="s1">,</span>
+<a name="l567"><span class="ln">567  </span></a>            <span class="s0">TopDictIndex</span><span class="s1">,</span>
+<a name="l568"><span class="ln">568  </span></a>            <span class="s0">TopDict</span><span class="s1">,</span>
+<a name="l569"><span class="ln">569  </span></a>            <span class="s0">CharStrings</span><span class="s1">,</span>
+<a name="l570"><span class="ln">570  </span></a>            <span class="s0">GlobalSubrsIndex</span><span class="s1">,</span>
+<a name="l571"><span class="ln">571  </span></a>            <span class="s0">PrivateDict</span><span class="s1">,</span>
+<a name="l572"><span class="ln">572  </span></a>            <span class="s0">FDArrayIndex</span><span class="s1">,</span>
+<a name="l573"><span class="ln">573  </span></a>            <span class="s0">FontDict</span><span class="s1">,</span>
+<a name="l574"><span class="ln">574  </span></a>        <span class="s1">)</span>
+<a name="l575"><span class="ln">575  </span></a>
+<a name="l576"><span class="ln">576  </span></a>        <span class="s3">assert not </span><span class="s0">self</span><span class="s1">.</span><span class="s0">isTTF</span>
+<a name="l577"><span class="ln">577  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">.</span><span class="s0">sfntVersion </span><span class="s1">= </span><span class="s2">&quot;OTTO&quot;</span>
+<a name="l578"><span class="ln">578  </span></a>        <span class="s0">fontSet </span><span class="s1">= </span><span class="s0">CFFFontSet</span><span class="s1">()</span>
+<a name="l579"><span class="ln">579  </span></a>        <span class="s0">fontSet</span><span class="s1">.</span><span class="s0">major </span><span class="s1">= </span><span class="s4">2</span>
+<a name="l580"><span class="ln">580  </span></a>        <span class="s0">fontSet</span><span class="s1">.</span><span class="s0">minor </span><span class="s1">= </span><span class="s4">0</span>
+<a name="l581"><span class="ln">581  </span></a>
+<a name="l582"><span class="ln">582  </span></a>        <span class="s0">cff2GetGlyphOrder </span><span class="s1">= </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">.</span><span class="s0">getGlyphOrder</span>
+<a name="l583"><span class="ln">583  </span></a>        <span class="s0">fontSet</span><span class="s1">.</span><span class="s0">topDictIndex </span><span class="s1">= </span><span class="s0">TopDictIndex</span><span class="s1">(</span><span class="s3">None</span><span class="s1">, </span><span class="s0">cff2GetGlyphOrder</span><span class="s1">, </span><span class="s3">None</span><span class="s1">)</span>
+<a name="l584"><span class="ln">584  </span></a>
+<a name="l585"><span class="ln">585  </span></a>        <span class="s0">globalSubrs </span><span class="s1">= </span><span class="s0">GlobalSubrsIndex</span><span class="s1">()</span>
+<a name="l586"><span class="ln">586  </span></a>        <span class="s0">fontSet</span><span class="s1">.</span><span class="s0">GlobalSubrs </span><span class="s1">= </span><span class="s0">globalSubrs</span>
+<a name="l587"><span class="ln">587  </span></a>
+<a name="l588"><span class="ln">588  </span></a>        <span class="s3">if </span><span class="s0">fdArrayList </span><span class="s3">is None</span><span class="s1">:</span>
+<a name="l589"><span class="ln">589  </span></a>            <span class="s0">fdArrayList </span><span class="s1">= [{}]</span>
+<a name="l590"><span class="ln">590  </span></a>        <span class="s0">fdSelect </span><span class="s1">= </span><span class="s3">None</span>
+<a name="l591"><span class="ln">591  </span></a>        <span class="s0">fdArray </span><span class="s1">= </span><span class="s0">FDArrayIndex</span><span class="s1">()</span>
+<a name="l592"><span class="ln">592  </span></a>        <span class="s0">fdArray</span><span class="s1">.</span><span class="s0">strings </span><span class="s1">= </span><span class="s3">None</span>
+<a name="l593"><span class="ln">593  </span></a>        <span class="s0">fdArray</span><span class="s1">.</span><span class="s0">GlobalSubrs </span><span class="s1">= </span><span class="s0">globalSubrs</span>
+<a name="l594"><span class="ln">594  </span></a>        <span class="s3">for </span><span class="s0">privateDict </span><span class="s3">in </span><span class="s0">fdArrayList</span><span class="s1">:</span>
+<a name="l595"><span class="ln">595  </span></a>            <span class="s0">fontDict </span><span class="s1">= </span><span class="s0">FontDict</span><span class="s1">()</span>
+<a name="l596"><span class="ln">596  </span></a>            <span class="s0">fontDict</span><span class="s1">.</span><span class="s0">setCFF2</span><span class="s1">(</span><span class="s3">True</span><span class="s1">)</span>
+<a name="l597"><span class="ln">597  </span></a>            <span class="s0">private </span><span class="s1">= </span><span class="s0">PrivateDict</span><span class="s1">()</span>
+<a name="l598"><span class="ln">598  </span></a>            <span class="s3">for </span><span class="s0">key</span><span class="s1">, </span><span class="s0">value </span><span class="s3">in </span><span class="s0">privateDict</span><span class="s1">.</span><span class="s0">items</span><span class="s1">():</span>
+<a name="l599"><span class="ln">599  </span></a>                <span class="s0">setattr</span><span class="s1">(</span><span class="s0">private</span><span class="s1">, </span><span class="s0">key</span><span class="s1">, </span><span class="s0">value</span><span class="s1">)</span>
+<a name="l600"><span class="ln">600  </span></a>            <span class="s0">fontDict</span><span class="s1">.</span><span class="s0">Private </span><span class="s1">= </span><span class="s0">private</span>
+<a name="l601"><span class="ln">601  </span></a>            <span class="s0">fdArray</span><span class="s1">.</span><span class="s0">append</span><span class="s1">(</span><span class="s0">fontDict</span><span class="s1">)</span>
+<a name="l602"><span class="ln">602  </span></a>
+<a name="l603"><span class="ln">603  </span></a>        <span class="s0">topDict </span><span class="s1">= </span><span class="s0">TopDict</span><span class="s1">()</span>
+<a name="l604"><span class="ln">604  </span></a>        <span class="s0">topDict</span><span class="s1">.</span><span class="s0">cff2GetGlyphOrder </span><span class="s1">= </span><span class="s0">cff2GetGlyphOrder</span>
+<a name="l605"><span class="ln">605  </span></a>        <span class="s0">topDict</span><span class="s1">.</span><span class="s0">FDArray </span><span class="s1">= </span><span class="s0">fdArray</span>
+<a name="l606"><span class="ln">606  </span></a>        <span class="s0">scale </span><span class="s1">= </span><span class="s4">1 </span><span class="s1">/ </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;head&quot;</span><span class="s1">].</span><span class="s0">unitsPerEm</span>
+<a name="l607"><span class="ln">607  </span></a>        <span class="s0">topDict</span><span class="s1">.</span><span class="s0">FontMatrix </span><span class="s1">= [</span><span class="s0">scale</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s0">scale</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s1">]</span>
+<a name="l608"><span class="ln">608  </span></a>
+<a name="l609"><span class="ln">609  </span></a>        <span class="s0">private </span><span class="s1">= </span><span class="s0">fdArray</span><span class="s1">[</span><span class="s4">0</span><span class="s1">].</span><span class="s0">Private</span>
+<a name="l610"><span class="ln">610  </span></a>        <span class="s0">charStrings </span><span class="s1">= </span><span class="s0">CharStrings</span><span class="s1">(</span><span class="s3">None</span><span class="s1">, </span><span class="s3">None</span><span class="s1">, </span><span class="s0">globalSubrs</span><span class="s1">, </span><span class="s0">private</span><span class="s1">, </span><span class="s0">fdSelect</span><span class="s1">, </span><span class="s0">fdArray</span><span class="s1">)</span>
+<a name="l611"><span class="ln">611  </span></a>        <span class="s3">for </span><span class="s0">glyphName</span><span class="s1">, </span><span class="s0">charString </span><span class="s3">in </span><span class="s0">charStringsDict</span><span class="s1">.</span><span class="s0">items</span><span class="s1">():</span>
+<a name="l612"><span class="ln">612  </span></a>            <span class="s0">charString</span><span class="s1">.</span><span class="s0">private </span><span class="s1">= </span><span class="s0">private</span>
+<a name="l613"><span class="ln">613  </span></a>            <span class="s0">charString</span><span class="s1">.</span><span class="s0">globalSubrs </span><span class="s1">= </span><span class="s0">globalSubrs</span>
+<a name="l614"><span class="ln">614  </span></a>            <span class="s0">charStrings</span><span class="s1">[</span><span class="s0">glyphName</span><span class="s1">] = </span><span class="s0">charString</span>
+<a name="l615"><span class="ln">615  </span></a>        <span class="s0">topDict</span><span class="s1">.</span><span class="s0">CharStrings </span><span class="s1">= </span><span class="s0">charStrings</span>
+<a name="l616"><span class="ln">616  </span></a>
+<a name="l617"><span class="ln">617  </span></a>        <span class="s0">fontSet</span><span class="s1">.</span><span class="s0">topDictIndex</span><span class="s1">.</span><span class="s0">append</span><span class="s1">(</span><span class="s0">topDict</span><span class="s1">)</span>
+<a name="l618"><span class="ln">618  </span></a>
+<a name="l619"><span class="ln">619  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;CFF2&quot;</span><span class="s1">] = </span><span class="s0">newTable</span><span class="s1">(</span><span class="s2">&quot;CFF2&quot;</span><span class="s1">)</span>
+<a name="l620"><span class="ln">620  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;CFF2&quot;</span><span class="s1">].</span><span class="s0">cff </span><span class="s1">= </span><span class="s0">fontSet</span>
+<a name="l621"><span class="ln">621  </span></a>
+<a name="l622"><span class="ln">622  </span></a>        <span class="s3">if </span><span class="s0">regions</span><span class="s1">:</span>
+<a name="l623"><span class="ln">623  </span></a>            <span class="s0">self</span><span class="s1">.</span><span class="s0">setupCFF2Regions</span><span class="s1">(</span><span class="s0">regions</span><span class="s1">)</span>
+<a name="l624"><span class="ln">624  </span></a>
+<a name="l625"><span class="ln">625  </span></a>    <span class="s3">def </span><span class="s0">setupCFF2Regions</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">regions</span><span class="s1">):</span>
+<a name="l626"><span class="ln">626  </span></a>        <span class="s3">from </span><span class="s1">.</span><span class="s0">varLib</span><span class="s1">.</span><span class="s0">builder </span><span class="s3">import </span><span class="s0">buildVarRegionList</span><span class="s1">, </span><span class="s0">buildVarData</span><span class="s1">, </span><span class="s0">buildVarStore</span>
+<a name="l627"><span class="ln">627  </span></a>        <span class="s3">from </span><span class="s1">.</span><span class="s0">cffLib </span><span class="s3">import </span><span class="s0">VarStoreData</span>
+<a name="l628"><span class="ln">628  </span></a>
+<a name="l629"><span class="ln">629  </span></a>        <span class="s3">assert </span><span class="s2">&quot;fvar&quot; </span><span class="s3">in </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">, </span><span class="s2">&quot;fvar must to be set up first&quot;</span>
+<a name="l630"><span class="ln">630  </span></a>        <span class="s3">assert </span><span class="s2">&quot;CFF2&quot; </span><span class="s3">in </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">, </span><span class="s2">&quot;CFF2 must to be set up first&quot;</span>
+<a name="l631"><span class="ln">631  </span></a>        <span class="s0">axisTags </span><span class="s1">= [</span><span class="s0">a</span><span class="s1">.</span><span class="s0">axisTag </span><span class="s3">for </span><span class="s0">a </span><span class="s3">in </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;fvar&quot;</span><span class="s1">].</span><span class="s0">axes</span><span class="s1">]</span>
+<a name="l632"><span class="ln">632  </span></a>        <span class="s0">varRegionList </span><span class="s1">= </span><span class="s0">buildVarRegionList</span><span class="s1">(</span><span class="s0">regions</span><span class="s1">, </span><span class="s0">axisTags</span><span class="s1">)</span>
+<a name="l633"><span class="ln">633  </span></a>        <span class="s0">varData </span><span class="s1">= </span><span class="s0">buildVarData</span><span class="s1">(</span><span class="s0">list</span><span class="s1">(</span><span class="s0">range</span><span class="s1">(</span><span class="s0">len</span><span class="s1">(</span><span class="s0">regions</span><span class="s1">))), </span><span class="s3">None</span><span class="s1">, </span><span class="s0">optimize</span><span class="s1">=</span><span class="s3">False</span><span class="s1">)</span>
+<a name="l634"><span class="ln">634  </span></a>        <span class="s0">varStore </span><span class="s1">= </span><span class="s0">buildVarStore</span><span class="s1">(</span><span class="s0">varRegionList</span><span class="s1">, [</span><span class="s0">varData</span><span class="s1">])</span>
+<a name="l635"><span class="ln">635  </span></a>        <span class="s0">vstore </span><span class="s1">= </span><span class="s0">VarStoreData</span><span class="s1">(</span><span class="s0">otVarStore</span><span class="s1">=</span><span class="s0">varStore</span><span class="s1">)</span>
+<a name="l636"><span class="ln">636  </span></a>        <span class="s0">topDict </span><span class="s1">= </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;CFF2&quot;</span><span class="s1">].</span><span class="s0">cff</span><span class="s1">.</span><span class="s0">topDictIndex</span><span class="s1">[</span><span class="s4">0</span><span class="s1">]</span>
+<a name="l637"><span class="ln">637  </span></a>        <span class="s0">topDict</span><span class="s1">.</span><span class="s0">VarStore </span><span class="s1">= </span><span class="s0">vstore</span>
+<a name="l638"><span class="ln">638  </span></a>        <span class="s3">for </span><span class="s0">fontDict </span><span class="s3">in </span><span class="s0">topDict</span><span class="s1">.</span><span class="s0">FDArray</span><span class="s1">:</span>
+<a name="l639"><span class="ln">639  </span></a>            <span class="s0">fontDict</span><span class="s1">.</span><span class="s0">Private</span><span class="s1">.</span><span class="s0">vstore </span><span class="s1">= </span><span class="s0">vstore</span>
+<a name="l640"><span class="ln">640  </span></a>
+<a name="l641"><span class="ln">641  </span></a>    <span class="s3">def </span><span class="s0">setupGlyf</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">glyphs</span><span class="s1">, </span><span class="s0">calcGlyphBounds</span><span class="s1">=</span><span class="s3">True</span><span class="s1">, </span><span class="s0">validateGlyphFormat</span><span class="s1">=</span><span class="s3">True</span><span class="s1">):</span>
+<a name="l642"><span class="ln">642  </span></a>        <span class="s6">&quot;&quot;&quot;Create the `glyf` table from a dict, that maps glyph names 
+<a name="l643"><span class="ln">643  </span></a>        to `fontTools.ttLib.tables._g_l_y_f.Glyph` objects, for example 
+<a name="l644"><span class="ln">644  </span></a>        as made by `fontTools.pens.ttGlyphPen.TTGlyphPen`. 
+<a name="l645"><span class="ln">645  </span></a> 
+<a name="l646"><span class="ln">646  </span></a>        If `calcGlyphBounds` is True, the bounds of all glyphs will be 
+<a name="l647"><span class="ln">647  </span></a>        calculated. Only pass False if your glyph objects already have 
+<a name="l648"><span class="ln">648  </span></a>        their bounding box values set. 
+<a name="l649"><span class="ln">649  </span></a> 
+<a name="l650"><span class="ln">650  </span></a>        If `validateGlyphFormat` is True, raise ValueError if any of the glyphs contains 
+<a name="l651"><span class="ln">651  </span></a>        cubic curves or is a variable composite but head.glyphDataFormat=0. 
+<a name="l652"><span class="ln">652  </span></a>        Set it to False to skip the check if you know in advance all the glyphs are 
+<a name="l653"><span class="ln">653  </span></a>        compatible with the specified glyphDataFormat. 
+<a name="l654"><span class="ln">654  </span></a>        &quot;&quot;&quot;</span>
+<a name="l655"><span class="ln">655  </span></a>        <span class="s3">assert </span><span class="s0">self</span><span class="s1">.</span><span class="s0">isTTF</span>
+<a name="l656"><span class="ln">656  </span></a>
+<a name="l657"><span class="ln">657  </span></a>        <span class="s3">if </span><span class="s0">validateGlyphFormat </span><span class="s3">and </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;head&quot;</span><span class="s1">].</span><span class="s0">glyphDataFormat </span><span class="s1">== </span><span class="s4">0</span><span class="s1">:</span>
+<a name="l658"><span class="ln">658  </span></a>            <span class="s3">for </span><span class="s0">name</span><span class="s1">, </span><span class="s0">g </span><span class="s3">in </span><span class="s0">glyphs</span><span class="s1">.</span><span class="s0">items</span><span class="s1">():</span>
+<a name="l659"><span class="ln">659  </span></a>                <span class="s3">if </span><span class="s0">g</span><span class="s1">.</span><span class="s0">numberOfContours </span><span class="s1">&gt; </span><span class="s4">0 </span><span class="s3">and </span><span class="s0">any</span><span class="s1">(</span><span class="s0">f </span><span class="s1">&amp; </span><span class="s0">flagCubic </span><span class="s3">for </span><span class="s0">f </span><span class="s3">in </span><span class="s0">g</span><span class="s1">.</span><span class="s0">flags</span><span class="s1">):</span>
+<a name="l660"><span class="ln">660  </span></a>                    <span class="s3">raise </span><span class="s0">ValueError</span><span class="s1">(</span>
+<a name="l661"><span class="ln">661  </span></a>                        <span class="s2">f&quot;Glyph </span><span class="s3">{</span><span class="s0">name</span><span class="s3">!r} </span><span class="s2">has cubic Bezier outlines, but glyphDataFormat=0; &quot;</span>
+<a name="l662"><span class="ln">662  </span></a>                        <span class="s2">&quot;either convert to quadratics with cu2qu or set glyphDataFormat=1.&quot;</span>
+<a name="l663"><span class="ln">663  </span></a>                    <span class="s1">)</span>
+<a name="l664"><span class="ln">664  </span></a>
+<a name="l665"><span class="ln">665  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;loca&quot;</span><span class="s1">] = </span><span class="s0">newTable</span><span class="s1">(</span><span class="s2">&quot;loca&quot;</span><span class="s1">)</span>
+<a name="l666"><span class="ln">666  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;glyf&quot;</span><span class="s1">] = </span><span class="s0">newTable</span><span class="s1">(</span><span class="s2">&quot;glyf&quot;</span><span class="s1">)</span>
+<a name="l667"><span class="ln">667  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;glyf&quot;</span><span class="s1">].</span><span class="s0">glyphs </span><span class="s1">= </span><span class="s0">glyphs</span>
+<a name="l668"><span class="ln">668  </span></a>        <span class="s3">if </span><span class="s0">hasattr</span><span class="s1">(</span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">, </span><span class="s2">&quot;glyphOrder&quot;</span><span class="s1">):</span>
+<a name="l669"><span class="ln">669  </span></a>            <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;glyf&quot;</span><span class="s1">].</span><span class="s0">glyphOrder </span><span class="s1">= </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">.</span><span class="s0">glyphOrder</span>
+<a name="l670"><span class="ln">670  </span></a>        <span class="s3">if </span><span class="s0">calcGlyphBounds</span><span class="s1">:</span>
+<a name="l671"><span class="ln">671  </span></a>            <span class="s0">self</span><span class="s1">.</span><span class="s0">calcGlyphBounds</span><span class="s1">()</span>
+<a name="l672"><span class="ln">672  </span></a>
+<a name="l673"><span class="ln">673  </span></a>    <span class="s3">def </span><span class="s0">setupFvar</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">axes</span><span class="s1">, </span><span class="s0">instances</span><span class="s1">):</span>
+<a name="l674"><span class="ln">674  </span></a>        <span class="s6">&quot;&quot;&quot;Adds an font variations table to the font. 
+<a name="l675"><span class="ln">675  </span></a> 
+<a name="l676"><span class="ln">676  </span></a>        Args: 
+<a name="l677"><span class="ln">677  </span></a>            axes (list): See below. 
+<a name="l678"><span class="ln">678  </span></a>            instances (list): See below. 
+<a name="l679"><span class="ln">679  </span></a> 
+<a name="l680"><span class="ln">680  </span></a>        ``axes`` should be a list of axes, with each axis either supplied as 
+<a name="l681"><span class="ln">681  </span></a>        a py:class:`.designspaceLib.AxisDescriptor` object, or a tuple in the 
+<a name="l682"><span class="ln">682  </span></a>        format ```tupletag, minValue, defaultValue, maxValue, name``. 
+<a name="l683"><span class="ln">683  </span></a>        The ``name`` is either a string, or a dict, mapping language codes 
+<a name="l684"><span class="ln">684  </span></a>        to strings, to allow localized name table entries. 
+<a name="l685"><span class="ln">685  </span></a> 
+<a name="l686"><span class="ln">686  </span></a>        ```instances`` should be a list of instances, with each instance either 
+<a name="l687"><span class="ln">687  </span></a>        supplied as a py:class:`.designspaceLib.InstanceDescriptor` object, or a 
+<a name="l688"><span class="ln">688  </span></a>        dict with keys ``location`` (mapping of axis tags to float values), 
+<a name="l689"><span class="ln">689  </span></a>        ``stylename`` and (optionally) ``postscriptfontname``. 
+<a name="l690"><span class="ln">690  </span></a>        The ``stylename`` is either a string, or a dict, mapping language codes 
+<a name="l691"><span class="ln">691  </span></a>        to strings, to allow localized name table entries. 
+<a name="l692"><span class="ln">692  </span></a>        &quot;&quot;&quot;</span>
+<a name="l693"><span class="ln">693  </span></a>
+<a name="l694"><span class="ln">694  </span></a>        <span class="s0">addFvar</span><span class="s1">(</span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">, </span><span class="s0">axes</span><span class="s1">, </span><span class="s0">instances</span><span class="s1">)</span>
+<a name="l695"><span class="ln">695  </span></a>
+<a name="l696"><span class="ln">696  </span></a>    <span class="s3">def </span><span class="s0">setupAvar</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">axes</span><span class="s1">, </span><span class="s0">mappings</span><span class="s1">=</span><span class="s3">None</span><span class="s1">):</span>
+<a name="l697"><span class="ln">697  </span></a>        <span class="s6">&quot;&quot;&quot;Adds an axis variations table to the font. 
+<a name="l698"><span class="ln">698  </span></a> 
+<a name="l699"><span class="ln">699  </span></a>        Args: 
+<a name="l700"><span class="ln">700  </span></a>            axes (list): A list of py:class:`.designspaceLib.AxisDescriptor` objects. 
+<a name="l701"><span class="ln">701  </span></a>        &quot;&quot;&quot;</span>
+<a name="l702"><span class="ln">702  </span></a>        <span class="s3">from </span><span class="s1">.</span><span class="s0">varLib </span><span class="s3">import </span><span class="s0">_add_avar</span>
+<a name="l703"><span class="ln">703  </span></a>
+<a name="l704"><span class="ln">704  </span></a>        <span class="s3">if </span><span class="s2">&quot;fvar&quot; </span><span class="s3">not in </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">:</span>
+<a name="l705"><span class="ln">705  </span></a>            <span class="s3">raise </span><span class="s0">KeyError</span><span class="s1">(</span><span class="s2">&quot;'fvar' table is missing; can't add 'avar'.&quot;</span><span class="s1">)</span>
+<a name="l706"><span class="ln">706  </span></a>
+<a name="l707"><span class="ln">707  </span></a>        <span class="s0">axisTags </span><span class="s1">= [</span><span class="s0">axis</span><span class="s1">.</span><span class="s0">axisTag </span><span class="s3">for </span><span class="s0">axis </span><span class="s3">in </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;fvar&quot;</span><span class="s1">].</span><span class="s0">axes</span><span class="s1">]</span>
+<a name="l708"><span class="ln">708  </span></a>        <span class="s0">axes </span><span class="s1">= </span><span class="s0">OrderedDict</span><span class="s1">(</span><span class="s0">enumerate</span><span class="s1">(</span><span class="s0">axes</span><span class="s1">))  </span><span class="s5"># Only values are used</span>
+<a name="l709"><span class="ln">709  </span></a>        <span class="s0">_add_avar</span><span class="s1">(</span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">, </span><span class="s0">axes</span><span class="s1">, </span><span class="s0">mappings</span><span class="s1">, </span><span class="s0">axisTags</span><span class="s1">)</span>
+<a name="l710"><span class="ln">710  </span></a>
+<a name="l711"><span class="ln">711  </span></a>    <span class="s3">def </span><span class="s0">setupGvar</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">variations</span><span class="s1">):</span>
+<a name="l712"><span class="ln">712  </span></a>        <span class="s0">gvar </span><span class="s1">= </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;gvar&quot;</span><span class="s1">] = </span><span class="s0">newTable</span><span class="s1">(</span><span class="s2">&quot;gvar&quot;</span><span class="s1">)</span>
+<a name="l713"><span class="ln">713  </span></a>        <span class="s0">gvar</span><span class="s1">.</span><span class="s0">version </span><span class="s1">= </span><span class="s4">1</span>
+<a name="l714"><span class="ln">714  </span></a>        <span class="s0">gvar</span><span class="s1">.</span><span class="s0">reserved </span><span class="s1">= </span><span class="s4">0</span>
+<a name="l715"><span class="ln">715  </span></a>        <span class="s0">gvar</span><span class="s1">.</span><span class="s0">variations </span><span class="s1">= </span><span class="s0">variations</span>
+<a name="l716"><span class="ln">716  </span></a>
+<a name="l717"><span class="ln">717  </span></a>    <span class="s3">def </span><span class="s0">calcGlyphBounds</span><span class="s1">(</span><span class="s0">self</span><span class="s1">):</span>
+<a name="l718"><span class="ln">718  </span></a>        <span class="s6">&quot;&quot;&quot;Calculate the bounding boxes of all glyphs in the `glyf` table. 
+<a name="l719"><span class="ln">719  </span></a>        This is usually not called explicitly by client code. 
+<a name="l720"><span class="ln">720  </span></a>        &quot;&quot;&quot;</span>
+<a name="l721"><span class="ln">721  </span></a>        <span class="s0">glyphTable </span><span class="s1">= </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;glyf&quot;</span><span class="s1">]</span>
+<a name="l722"><span class="ln">722  </span></a>        <span class="s3">for </span><span class="s0">glyph </span><span class="s3">in </span><span class="s0">glyphTable</span><span class="s1">.</span><span class="s0">glyphs</span><span class="s1">.</span><span class="s0">values</span><span class="s1">():</span>
+<a name="l723"><span class="ln">723  </span></a>            <span class="s0">glyph</span><span class="s1">.</span><span class="s0">recalcBounds</span><span class="s1">(</span><span class="s0">glyphTable</span><span class="s1">)</span>
+<a name="l724"><span class="ln">724  </span></a>
+<a name="l725"><span class="ln">725  </span></a>    <span class="s3">def </span><span class="s0">setupHorizontalMetrics</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">metrics</span><span class="s1">):</span>
+<a name="l726"><span class="ln">726  </span></a>        <span class="s6">&quot;&quot;&quot;Create a new `hmtx` table, for horizontal metrics. 
+<a name="l727"><span class="ln">727  </span></a> 
+<a name="l728"><span class="ln">728  </span></a>        The `metrics` argument must be a dict, mapping glyph names to 
+<a name="l729"><span class="ln">729  </span></a>        `(width, leftSidebearing)` tuples. 
+<a name="l730"><span class="ln">730  </span></a>        &quot;&quot;&quot;</span>
+<a name="l731"><span class="ln">731  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">setupMetrics</span><span class="s1">(</span><span class="s2">&quot;hmtx&quot;</span><span class="s1">, </span><span class="s0">metrics</span><span class="s1">)</span>
+<a name="l732"><span class="ln">732  </span></a>
+<a name="l733"><span class="ln">733  </span></a>    <span class="s3">def </span><span class="s0">setupVerticalMetrics</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">metrics</span><span class="s1">):</span>
+<a name="l734"><span class="ln">734  </span></a>        <span class="s6">&quot;&quot;&quot;Create a new `vmtx` table, for horizontal metrics. 
+<a name="l735"><span class="ln">735  </span></a> 
+<a name="l736"><span class="ln">736  </span></a>        The `metrics` argument must be a dict, mapping glyph names to 
+<a name="l737"><span class="ln">737  </span></a>        `(height, topSidebearing)` tuples. 
+<a name="l738"><span class="ln">738  </span></a>        &quot;&quot;&quot;</span>
+<a name="l739"><span class="ln">739  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">setupMetrics</span><span class="s1">(</span><span class="s2">&quot;vmtx&quot;</span><span class="s1">, </span><span class="s0">metrics</span><span class="s1">)</span>
+<a name="l740"><span class="ln">740  </span></a>
+<a name="l741"><span class="ln">741  </span></a>    <span class="s3">def </span><span class="s0">setupMetrics</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">tableTag</span><span class="s1">, </span><span class="s0">metrics</span><span class="s1">):</span>
+<a name="l742"><span class="ln">742  </span></a>        <span class="s6">&quot;&quot;&quot;See `setupHorizontalMetrics()` and `setupVerticalMetrics()`.&quot;&quot;&quot;</span>
+<a name="l743"><span class="ln">743  </span></a>        <span class="s3">assert </span><span class="s0">tableTag </span><span class="s3">in </span><span class="s1">(</span><span class="s2">&quot;hmtx&quot;</span><span class="s1">, </span><span class="s2">&quot;vmtx&quot;</span><span class="s1">)</span>
+<a name="l744"><span class="ln">744  </span></a>        <span class="s0">mtxTable </span><span class="s1">= </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s0">tableTag</span><span class="s1">] = </span><span class="s0">newTable</span><span class="s1">(</span><span class="s0">tableTag</span><span class="s1">)</span>
+<a name="l745"><span class="ln">745  </span></a>        <span class="s0">roundedMetrics </span><span class="s1">= {}</span>
+<a name="l746"><span class="ln">746  </span></a>        <span class="s3">for </span><span class="s0">gn </span><span class="s3">in </span><span class="s0">metrics</span><span class="s1">:</span>
+<a name="l747"><span class="ln">747  </span></a>            <span class="s0">w</span><span class="s1">, </span><span class="s0">lsb </span><span class="s1">= </span><span class="s0">metrics</span><span class="s1">[</span><span class="s0">gn</span><span class="s1">]</span>
+<a name="l748"><span class="ln">748  </span></a>            <span class="s0">roundedMetrics</span><span class="s1">[</span><span class="s0">gn</span><span class="s1">] = </span><span class="s0">int</span><span class="s1">(</span><span class="s0">round</span><span class="s1">(</span><span class="s0">w</span><span class="s1">)), </span><span class="s0">int</span><span class="s1">(</span><span class="s0">round</span><span class="s1">(</span><span class="s0">lsb</span><span class="s1">))</span>
+<a name="l749"><span class="ln">749  </span></a>        <span class="s0">mtxTable</span><span class="s1">.</span><span class="s0">metrics </span><span class="s1">= </span><span class="s0">roundedMetrics</span>
+<a name="l750"><span class="ln">750  </span></a>
+<a name="l751"><span class="ln">751  </span></a>    <span class="s3">def </span><span class="s0">setupHorizontalHeader</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, **</span><span class="s0">values</span><span class="s1">):</span>
+<a name="l752"><span class="ln">752  </span></a>        <span class="s6">&quot;&quot;&quot;Create a new `hhea` table initialize it with default values, 
+<a name="l753"><span class="ln">753  </span></a>        which can be overridden by keyword arguments. 
+<a name="l754"><span class="ln">754  </span></a>        &quot;&quot;&quot;</span>
+<a name="l755"><span class="ln">755  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">_initTableWithValues</span><span class="s1">(</span><span class="s2">&quot;hhea&quot;</span><span class="s1">, </span><span class="s0">_hheaDefaults</span><span class="s1">, </span><span class="s0">values</span><span class="s1">)</span>
+<a name="l756"><span class="ln">756  </span></a>
+<a name="l757"><span class="ln">757  </span></a>    <span class="s3">def </span><span class="s0">setupVerticalHeader</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, **</span><span class="s0">values</span><span class="s1">):</span>
+<a name="l758"><span class="ln">758  </span></a>        <span class="s6">&quot;&quot;&quot;Create a new `vhea` table initialize it with default values, 
+<a name="l759"><span class="ln">759  </span></a>        which can be overridden by keyword arguments. 
+<a name="l760"><span class="ln">760  </span></a>        &quot;&quot;&quot;</span>
+<a name="l761"><span class="ln">761  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">_initTableWithValues</span><span class="s1">(</span><span class="s2">&quot;vhea&quot;</span><span class="s1">, </span><span class="s0">_vheaDefaults</span><span class="s1">, </span><span class="s0">values</span><span class="s1">)</span>
+<a name="l762"><span class="ln">762  </span></a>
+<a name="l763"><span class="ln">763  </span></a>    <span class="s3">def </span><span class="s0">setupVerticalOrigins</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">verticalOrigins</span><span class="s1">, </span><span class="s0">defaultVerticalOrigin</span><span class="s1">=</span><span class="s3">None</span><span class="s1">):</span>
+<a name="l764"><span class="ln">764  </span></a>        <span class="s6">&quot;&quot;&quot;Create a new `VORG` table. The `verticalOrigins` argument must be 
+<a name="l765"><span class="ln">765  </span></a>        a dict, mapping glyph names to vertical origin values. 
+<a name="l766"><span class="ln">766  </span></a> 
+<a name="l767"><span class="ln">767  </span></a>        The `defaultVerticalOrigin` argument should be the most common vertical 
+<a name="l768"><span class="ln">768  </span></a>        origin value. If omitted, this value will be derived from the actual 
+<a name="l769"><span class="ln">769  </span></a>        values in the `verticalOrigins` argument. 
+<a name="l770"><span class="ln">770  </span></a>        &quot;&quot;&quot;</span>
+<a name="l771"><span class="ln">771  </span></a>        <span class="s3">if </span><span class="s0">defaultVerticalOrigin </span><span class="s3">is None</span><span class="s1">:</span>
+<a name="l772"><span class="ln">772  </span></a>            <span class="s5"># find the most frequent vorg value</span>
+<a name="l773"><span class="ln">773  </span></a>            <span class="s0">bag </span><span class="s1">= {}</span>
+<a name="l774"><span class="ln">774  </span></a>            <span class="s3">for </span><span class="s0">gn </span><span class="s3">in </span><span class="s0">verticalOrigins</span><span class="s1">:</span>
+<a name="l775"><span class="ln">775  </span></a>                <span class="s0">vorg </span><span class="s1">= </span><span class="s0">verticalOrigins</span><span class="s1">[</span><span class="s0">gn</span><span class="s1">]</span>
+<a name="l776"><span class="ln">776  </span></a>                <span class="s3">if </span><span class="s0">vorg </span><span class="s3">not in </span><span class="s0">bag</span><span class="s1">:</span>
+<a name="l777"><span class="ln">777  </span></a>                    <span class="s0">bag</span><span class="s1">[</span><span class="s0">vorg</span><span class="s1">] = </span><span class="s4">1</span>
+<a name="l778"><span class="ln">778  </span></a>                <span class="s3">else</span><span class="s1">:</span>
+<a name="l779"><span class="ln">779  </span></a>                    <span class="s0">bag</span><span class="s1">[</span><span class="s0">vorg</span><span class="s1">] += </span><span class="s4">1</span>
+<a name="l780"><span class="ln">780  </span></a>            <span class="s0">defaultVerticalOrigin </span><span class="s1">= </span><span class="s0">sorted</span><span class="s1">(</span>
+<a name="l781"><span class="ln">781  </span></a>                <span class="s0">bag</span><span class="s1">, </span><span class="s0">key</span><span class="s1">=</span><span class="s3">lambda </span><span class="s0">vorg</span><span class="s1">: </span><span class="s0">bag</span><span class="s1">[</span><span class="s0">vorg</span><span class="s1">], </span><span class="s0">reverse</span><span class="s1">=</span><span class="s3">True</span>
+<a name="l782"><span class="ln">782  </span></a>            <span class="s1">)[</span><span class="s4">0</span><span class="s1">]</span>
+<a name="l783"><span class="ln">783  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">_initTableWithValues</span><span class="s1">(</span>
+<a name="l784"><span class="ln">784  </span></a>            <span class="s2">&quot;VORG&quot;</span><span class="s1">,</span>
+<a name="l785"><span class="ln">785  </span></a>            <span class="s1">{},</span>
+<a name="l786"><span class="ln">786  </span></a>            <span class="s0">dict</span><span class="s1">(</span><span class="s0">VOriginRecords</span><span class="s1">={}, </span><span class="s0">defaultVertOriginY</span><span class="s1">=</span><span class="s0">defaultVerticalOrigin</span><span class="s1">),</span>
+<a name="l787"><span class="ln">787  </span></a>        <span class="s1">)</span>
+<a name="l788"><span class="ln">788  </span></a>        <span class="s0">vorgTable </span><span class="s1">= </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;VORG&quot;</span><span class="s1">]</span>
+<a name="l789"><span class="ln">789  </span></a>        <span class="s0">vorgTable</span><span class="s1">.</span><span class="s0">majorVersion </span><span class="s1">= </span><span class="s4">1</span>
+<a name="l790"><span class="ln">790  </span></a>        <span class="s0">vorgTable</span><span class="s1">.</span><span class="s0">minorVersion </span><span class="s1">= </span><span class="s4">0</span>
+<a name="l791"><span class="ln">791  </span></a>        <span class="s3">for </span><span class="s0">gn </span><span class="s3">in </span><span class="s0">verticalOrigins</span><span class="s1">:</span>
+<a name="l792"><span class="ln">792  </span></a>            <span class="s0">vorgTable</span><span class="s1">[</span><span class="s0">gn</span><span class="s1">] = </span><span class="s0">verticalOrigins</span><span class="s1">[</span><span class="s0">gn</span><span class="s1">]</span>
+<a name="l793"><span class="ln">793  </span></a>
+<a name="l794"><span class="ln">794  </span></a>    <span class="s3">def </span><span class="s0">setupPost</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">keepGlyphNames</span><span class="s1">=</span><span class="s3">True</span><span class="s1">, **</span><span class="s0">values</span><span class="s1">):</span>
+<a name="l795"><span class="ln">795  </span></a>        <span class="s6">&quot;&quot;&quot;Create a new `post` table and initialize it with default values, 
+<a name="l796"><span class="ln">796  </span></a>        which can be overridden by keyword arguments. 
+<a name="l797"><span class="ln">797  </span></a>        &quot;&quot;&quot;</span>
+<a name="l798"><span class="ln">798  </span></a>        <span class="s0">isCFF2 </span><span class="s1">= </span><span class="s2">&quot;CFF2&quot; </span><span class="s3">in </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span>
+<a name="l799"><span class="ln">799  </span></a>        <span class="s0">postTable </span><span class="s1">= </span><span class="s0">self</span><span class="s1">.</span><span class="s0">_initTableWithValues</span><span class="s1">(</span><span class="s2">&quot;post&quot;</span><span class="s1">, </span><span class="s0">_postDefaults</span><span class="s1">, </span><span class="s0">values</span><span class="s1">)</span>
+<a name="l800"><span class="ln">800  </span></a>        <span class="s3">if </span><span class="s1">(</span><span class="s0">self</span><span class="s1">.</span><span class="s0">isTTF </span><span class="s3">or </span><span class="s0">isCFF2</span><span class="s1">) </span><span class="s3">and </span><span class="s0">keepGlyphNames</span><span class="s1">:</span>
+<a name="l801"><span class="ln">801  </span></a>            <span class="s0">postTable</span><span class="s1">.</span><span class="s0">formatType </span><span class="s1">= </span><span class="s4">2.0</span>
+<a name="l802"><span class="ln">802  </span></a>            <span class="s0">postTable</span><span class="s1">.</span><span class="s0">extraNames </span><span class="s1">= []</span>
+<a name="l803"><span class="ln">803  </span></a>            <span class="s0">postTable</span><span class="s1">.</span><span class="s0">mapping </span><span class="s1">= {}</span>
+<a name="l804"><span class="ln">804  </span></a>        <span class="s3">else</span><span class="s1">:</span>
+<a name="l805"><span class="ln">805  </span></a>            <span class="s0">postTable</span><span class="s1">.</span><span class="s0">formatType </span><span class="s1">= </span><span class="s4">3.0</span>
+<a name="l806"><span class="ln">806  </span></a>
+<a name="l807"><span class="ln">807  </span></a>    <span class="s3">def </span><span class="s0">setupMaxp</span><span class="s1">(</span><span class="s0">self</span><span class="s1">):</span>
+<a name="l808"><span class="ln">808  </span></a>        <span class="s6">&quot;&quot;&quot;Create a new `maxp` table. This is called implicitly by FontBuilder 
+<a name="l809"><span class="ln">809  </span></a>        itself and is usually not called by client code. 
+<a name="l810"><span class="ln">810  </span></a>        &quot;&quot;&quot;</span>
+<a name="l811"><span class="ln">811  </span></a>        <span class="s3">if </span><span class="s0">self</span><span class="s1">.</span><span class="s0">isTTF</span><span class="s1">:</span>
+<a name="l812"><span class="ln">812  </span></a>            <span class="s0">defaults </span><span class="s1">= </span><span class="s0">_maxpDefaultsTTF</span>
+<a name="l813"><span class="ln">813  </span></a>        <span class="s3">else</span><span class="s1">:</span>
+<a name="l814"><span class="ln">814  </span></a>            <span class="s0">defaults </span><span class="s1">= </span><span class="s0">_maxpDefaultsOTF</span>
+<a name="l815"><span class="ln">815  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">_initTableWithValues</span><span class="s1">(</span><span class="s2">&quot;maxp&quot;</span><span class="s1">, </span><span class="s0">defaults</span><span class="s1">, {})</span>
+<a name="l816"><span class="ln">816  </span></a>
+<a name="l817"><span class="ln">817  </span></a>    <span class="s3">def </span><span class="s0">setupDummyDSIG</span><span class="s1">(</span><span class="s0">self</span><span class="s1">):</span>
+<a name="l818"><span class="ln">818  </span></a>        <span class="s6">&quot;&quot;&quot;This adds an empty DSIG table to the font to make some MS applications 
+<a name="l819"><span class="ln">819  </span></a>        happy. This does not properly sign the font. 
+<a name="l820"><span class="ln">820  </span></a>        &quot;&quot;&quot;</span>
+<a name="l821"><span class="ln">821  </span></a>        <span class="s0">values </span><span class="s1">= </span><span class="s0">dict</span><span class="s1">(</span>
+<a name="l822"><span class="ln">822  </span></a>            <span class="s0">ulVersion</span><span class="s1">=</span><span class="s4">1</span><span class="s1">,</span>
+<a name="l823"><span class="ln">823  </span></a>            <span class="s0">usFlag</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l824"><span class="ln">824  </span></a>            <span class="s0">usNumSigs</span><span class="s1">=</span><span class="s4">0</span><span class="s1">,</span>
+<a name="l825"><span class="ln">825  </span></a>            <span class="s0">signatureRecords</span><span class="s1">=[],</span>
+<a name="l826"><span class="ln">826  </span></a>        <span class="s1">)</span>
+<a name="l827"><span class="ln">827  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">_initTableWithValues</span><span class="s1">(</span><span class="s2">&quot;DSIG&quot;</span><span class="s1">, {}, </span><span class="s0">values</span><span class="s1">)</span>
+<a name="l828"><span class="ln">828  </span></a>
+<a name="l829"><span class="ln">829  </span></a>    <span class="s3">def </span><span class="s0">addOpenTypeFeatures</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">features</span><span class="s1">, </span><span class="s0">filename</span><span class="s1">=</span><span class="s3">None</span><span class="s1">, </span><span class="s0">tables</span><span class="s1">=</span><span class="s3">None</span><span class="s1">, </span><span class="s0">debug</span><span class="s1">=</span><span class="s3">False</span><span class="s1">):</span>
+<a name="l830"><span class="ln">830  </span></a>        <span class="s6">&quot;&quot;&quot;Add OpenType features to the font from a string containing 
+<a name="l831"><span class="ln">831  </span></a>        Feature File syntax. 
+<a name="l832"><span class="ln">832  </span></a> 
+<a name="l833"><span class="ln">833  </span></a>        The `filename` argument is used in error messages and to determine 
+<a name="l834"><span class="ln">834  </span></a>        where to look for &quot;include&quot; files. 
+<a name="l835"><span class="ln">835  </span></a> 
+<a name="l836"><span class="ln">836  </span></a>        The optional `tables` argument can be a list of OTL tables tags to 
+<a name="l837"><span class="ln">837  </span></a>        build, allowing the caller to only build selected OTL tables. See 
+<a name="l838"><span class="ln">838  </span></a>        `fontTools.feaLib` for details. 
+<a name="l839"><span class="ln">839  </span></a> 
+<a name="l840"><span class="ln">840  </span></a>        The optional `debug` argument controls whether to add source debugging 
+<a name="l841"><span class="ln">841  </span></a>        information to the font in the `Debg` table. 
+<a name="l842"><span class="ln">842  </span></a>        &quot;&quot;&quot;</span>
+<a name="l843"><span class="ln">843  </span></a>        <span class="s3">from </span><span class="s1">.</span><span class="s0">feaLib</span><span class="s1">.</span><span class="s0">builder </span><span class="s3">import </span><span class="s0">addOpenTypeFeaturesFromString</span>
+<a name="l844"><span class="ln">844  </span></a>
+<a name="l845"><span class="ln">845  </span></a>        <span class="s0">addOpenTypeFeaturesFromString</span><span class="s1">(</span>
+<a name="l846"><span class="ln">846  </span></a>            <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">, </span><span class="s0">features</span><span class="s1">, </span><span class="s0">filename</span><span class="s1">=</span><span class="s0">filename</span><span class="s1">, </span><span class="s0">tables</span><span class="s1">=</span><span class="s0">tables</span><span class="s1">, </span><span class="s0">debug</span><span class="s1">=</span><span class="s0">debug</span>
+<a name="l847"><span class="ln">847  </span></a>        <span class="s1">)</span>
+<a name="l848"><span class="ln">848  </span></a>
+<a name="l849"><span class="ln">849  </span></a>    <span class="s3">def </span><span class="s0">addFeatureVariations</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">conditionalSubstitutions</span><span class="s1">, </span><span class="s0">featureTag</span><span class="s1">=</span><span class="s2">&quot;rvrn&quot;</span><span class="s1">):</span>
+<a name="l850"><span class="ln">850  </span></a>        <span class="s6">&quot;&quot;&quot;Add conditional substitutions to a Variable Font. 
+<a name="l851"><span class="ln">851  </span></a> 
+<a name="l852"><span class="ln">852  </span></a>        See `fontTools.varLib.featureVars.addFeatureVariations`. 
+<a name="l853"><span class="ln">853  </span></a>        &quot;&quot;&quot;</span>
+<a name="l854"><span class="ln">854  </span></a>        <span class="s3">from </span><span class="s1">.</span><span class="s0">varLib </span><span class="s3">import </span><span class="s0">featureVars</span>
+<a name="l855"><span class="ln">855  </span></a>
+<a name="l856"><span class="ln">856  </span></a>        <span class="s3">if </span><span class="s2">&quot;fvar&quot; </span><span class="s3">not in </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">:</span>
+<a name="l857"><span class="ln">857  </span></a>            <span class="s3">raise </span><span class="s0">KeyError</span><span class="s1">(</span><span class="s2">&quot;'fvar' table is missing; can't add FeatureVariations.&quot;</span><span class="s1">)</span>
+<a name="l858"><span class="ln">858  </span></a>
+<a name="l859"><span class="ln">859  </span></a>        <span class="s0">featureVars</span><span class="s1">.</span><span class="s0">addFeatureVariations</span><span class="s1">(</span>
+<a name="l860"><span class="ln">860  </span></a>            <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">, </span><span class="s0">conditionalSubstitutions</span><span class="s1">, </span><span class="s0">featureTag</span><span class="s1">=</span><span class="s0">featureTag</span>
+<a name="l861"><span class="ln">861  </span></a>        <span class="s1">)</span>
+<a name="l862"><span class="ln">862  </span></a>
+<a name="l863"><span class="ln">863  </span></a>    <span class="s3">def </span><span class="s0">setupCOLR</span><span class="s1">(</span>
+<a name="l864"><span class="ln">864  </span></a>        <span class="s0">self</span><span class="s1">,</span>
+<a name="l865"><span class="ln">865  </span></a>        <span class="s0">colorLayers</span><span class="s1">,</span>
+<a name="l866"><span class="ln">866  </span></a>        <span class="s0">version</span><span class="s1">=</span><span class="s3">None</span><span class="s1">,</span>
+<a name="l867"><span class="ln">867  </span></a>        <span class="s0">varStore</span><span class="s1">=</span><span class="s3">None</span><span class="s1">,</span>
+<a name="l868"><span class="ln">868  </span></a>        <span class="s0">varIndexMap</span><span class="s1">=</span><span class="s3">None</span><span class="s1">,</span>
+<a name="l869"><span class="ln">869  </span></a>        <span class="s0">clipBoxes</span><span class="s1">=</span><span class="s3">None</span><span class="s1">,</span>
+<a name="l870"><span class="ln">870  </span></a>        <span class="s0">allowLayerReuse</span><span class="s1">=</span><span class="s3">True</span><span class="s1">,</span>
+<a name="l871"><span class="ln">871  </span></a>    <span class="s1">):</span>
+<a name="l872"><span class="ln">872  </span></a>        <span class="s6">&quot;&quot;&quot;Build new COLR table using color layers dictionary. 
+<a name="l873"><span class="ln">873  </span></a> 
+<a name="l874"><span class="ln">874  </span></a>        Cf. `fontTools.colorLib.builder.buildCOLR`. 
+<a name="l875"><span class="ln">875  </span></a>        &quot;&quot;&quot;</span>
+<a name="l876"><span class="ln">876  </span></a>        <span class="s3">from </span><span class="s0">fontTools</span><span class="s1">.</span><span class="s0">colorLib</span><span class="s1">.</span><span class="s0">builder </span><span class="s3">import </span><span class="s0">buildCOLR</span>
+<a name="l877"><span class="ln">877  </span></a>
+<a name="l878"><span class="ln">878  </span></a>        <span class="s0">glyphMap </span><span class="s1">= </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">.</span><span class="s0">getReverseGlyphMap</span><span class="s1">()</span>
+<a name="l879"><span class="ln">879  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;COLR&quot;</span><span class="s1">] = </span><span class="s0">buildCOLR</span><span class="s1">(</span>
+<a name="l880"><span class="ln">880  </span></a>            <span class="s0">colorLayers</span><span class="s1">,</span>
+<a name="l881"><span class="ln">881  </span></a>            <span class="s0">version</span><span class="s1">=</span><span class="s0">version</span><span class="s1">,</span>
+<a name="l882"><span class="ln">882  </span></a>            <span class="s0">glyphMap</span><span class="s1">=</span><span class="s0">glyphMap</span><span class="s1">,</span>
+<a name="l883"><span class="ln">883  </span></a>            <span class="s0">varStore</span><span class="s1">=</span><span class="s0">varStore</span><span class="s1">,</span>
+<a name="l884"><span class="ln">884  </span></a>            <span class="s0">varIndexMap</span><span class="s1">=</span><span class="s0">varIndexMap</span><span class="s1">,</span>
+<a name="l885"><span class="ln">885  </span></a>            <span class="s0">clipBoxes</span><span class="s1">=</span><span class="s0">clipBoxes</span><span class="s1">,</span>
+<a name="l886"><span class="ln">886  </span></a>            <span class="s0">allowLayerReuse</span><span class="s1">=</span><span class="s0">allowLayerReuse</span><span class="s1">,</span>
+<a name="l887"><span class="ln">887  </span></a>        <span class="s1">)</span>
+<a name="l888"><span class="ln">888  </span></a>
+<a name="l889"><span class="ln">889  </span></a>    <span class="s3">def </span><span class="s0">setupCPAL</span><span class="s1">(</span>
+<a name="l890"><span class="ln">890  </span></a>        <span class="s0">self</span><span class="s1">,</span>
+<a name="l891"><span class="ln">891  </span></a>        <span class="s0">palettes</span><span class="s1">,</span>
+<a name="l892"><span class="ln">892  </span></a>        <span class="s0">paletteTypes</span><span class="s1">=</span><span class="s3">None</span><span class="s1">,</span>
+<a name="l893"><span class="ln">893  </span></a>        <span class="s0">paletteLabels</span><span class="s1">=</span><span class="s3">None</span><span class="s1">,</span>
+<a name="l894"><span class="ln">894  </span></a>        <span class="s0">paletteEntryLabels</span><span class="s1">=</span><span class="s3">None</span><span class="s1">,</span>
+<a name="l895"><span class="ln">895  </span></a>    <span class="s1">):</span>
+<a name="l896"><span class="ln">896  </span></a>        <span class="s6">&quot;&quot;&quot;Build new CPAL table using list of palettes. 
+<a name="l897"><span class="ln">897  </span></a> 
+<a name="l898"><span class="ln">898  </span></a>        Optionally build CPAL v1 table using paletteTypes, paletteLabels and 
+<a name="l899"><span class="ln">899  </span></a>        paletteEntryLabels. 
+<a name="l900"><span class="ln">900  </span></a> 
+<a name="l901"><span class="ln">901  </span></a>        Cf. `fontTools.colorLib.builder.buildCPAL`. 
+<a name="l902"><span class="ln">902  </span></a>        &quot;&quot;&quot;</span>
+<a name="l903"><span class="ln">903  </span></a>        <span class="s3">from </span><span class="s0">fontTools</span><span class="s1">.</span><span class="s0">colorLib</span><span class="s1">.</span><span class="s0">builder </span><span class="s3">import </span><span class="s0">buildCPAL</span>
+<a name="l904"><span class="ln">904  </span></a>
+<a name="l905"><span class="ln">905  </span></a>        <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;CPAL&quot;</span><span class="s1">] = </span><span class="s0">buildCPAL</span><span class="s1">(</span>
+<a name="l906"><span class="ln">906  </span></a>            <span class="s0">palettes</span><span class="s1">,</span>
+<a name="l907"><span class="ln">907  </span></a>            <span class="s0">paletteTypes</span><span class="s1">=</span><span class="s0">paletteTypes</span><span class="s1">,</span>
+<a name="l908"><span class="ln">908  </span></a>            <span class="s0">paletteLabels</span><span class="s1">=</span><span class="s0">paletteLabels</span><span class="s1">,</span>
+<a name="l909"><span class="ln">909  </span></a>            <span class="s0">paletteEntryLabels</span><span class="s1">=</span><span class="s0">paletteEntryLabels</span><span class="s1">,</span>
+<a name="l910"><span class="ln">910  </span></a>            <span class="s0">nameTable</span><span class="s1">=</span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">.</span><span class="s0">get</span><span class="s1">(</span><span class="s2">&quot;name&quot;</span><span class="s1">),</span>
+<a name="l911"><span class="ln">911  </span></a>        <span class="s1">)</span>
+<a name="l912"><span class="ln">912  </span></a>
+<a name="l913"><span class="ln">913  </span></a>    <span class="s3">def </span><span class="s0">setupStat</span><span class="s1">(</span><span class="s0">self</span><span class="s1">, </span><span class="s0">axes</span><span class="s1">, </span><span class="s0">locations</span><span class="s1">=</span><span class="s3">None</span><span class="s1">, </span><span class="s0">elidedFallbackName</span><span class="s1">=</span><span class="s4">2</span><span class="s1">):</span>
+<a name="l914"><span class="ln">914  </span></a>        <span class="s6">&quot;&quot;&quot;Build a new 'STAT' table. 
+<a name="l915"><span class="ln">915  </span></a> 
+<a name="l916"><span class="ln">916  </span></a>        See `fontTools.otlLib.builder.buildStatTable` for details about 
+<a name="l917"><span class="ln">917  </span></a>        the arguments. 
+<a name="l918"><span class="ln">918  </span></a>        &quot;&quot;&quot;</span>
+<a name="l919"><span class="ln">919  </span></a>        <span class="s3">from </span><span class="s1">.</span><span class="s0">otlLib</span><span class="s1">.</span><span class="s0">builder </span><span class="s3">import </span><span class="s0">buildStatTable</span>
+<a name="l920"><span class="ln">920  </span></a>
+<a name="l921"><span class="ln">921  </span></a>        <span class="s3">assert </span><span class="s2">&quot;name&quot; </span><span class="s3">in </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">, </span><span class="s2">&quot;name must to be set up first&quot;</span>
+<a name="l922"><span class="ln">922  </span></a>
+<a name="l923"><span class="ln">923  </span></a>        <span class="s0">buildStatTable</span><span class="s1">(</span>
+<a name="l924"><span class="ln">924  </span></a>            <span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">,</span>
+<a name="l925"><span class="ln">925  </span></a>            <span class="s0">axes</span><span class="s1">,</span>
+<a name="l926"><span class="ln">926  </span></a>            <span class="s0">locations</span><span class="s1">,</span>
+<a name="l927"><span class="ln">927  </span></a>            <span class="s0">elidedFallbackName</span><span class="s1">,</span>
+<a name="l928"><span class="ln">928  </span></a>            <span class="s0">macNames</span><span class="s1">=</span><span class="s0">any</span><span class="s1">(</span><span class="s0">nr</span><span class="s1">.</span><span class="s0">platformID </span><span class="s1">== </span><span class="s4">1 </span><span class="s3">for </span><span class="s0">nr </span><span class="s3">in </span><span class="s0">self</span><span class="s1">.</span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;name&quot;</span><span class="s1">].</span><span class="s0">names</span><span class="s1">),</span>
+<a name="l929"><span class="ln">929  </span></a>        <span class="s1">)</span>
+<a name="l930"><span class="ln">930  </span></a>
+<a name="l931"><span class="ln">931  </span></a>
+<a name="l932"><span class="ln">932  </span></a><span class="s3">def </span><span class="s0">buildCmapSubTable</span><span class="s1">(</span><span class="s0">cmapping</span><span class="s1">, </span><span class="s0">format</span><span class="s1">, </span><span class="s0">platformID</span><span class="s1">, </span><span class="s0">platEncID</span><span class="s1">):</span>
+<a name="l933"><span class="ln">933  </span></a>    <span class="s0">subTable </span><span class="s1">= </span><span class="s0">cmap_classes</span><span class="s1">[</span><span class="s0">format</span><span class="s1">](</span><span class="s0">format</span><span class="s1">)</span>
+<a name="l934"><span class="ln">934  </span></a>    <span class="s0">subTable</span><span class="s1">.</span><span class="s0">cmap </span><span class="s1">= </span><span class="s0">cmapping</span>
+<a name="l935"><span class="ln">935  </span></a>    <span class="s0">subTable</span><span class="s1">.</span><span class="s0">platformID </span><span class="s1">= </span><span class="s0">platformID</span>
+<a name="l936"><span class="ln">936  </span></a>    <span class="s0">subTable</span><span class="s1">.</span><span class="s0">platEncID </span><span class="s1">= </span><span class="s0">platEncID</span>
+<a name="l937"><span class="ln">937  </span></a>    <span class="s0">subTable</span><span class="s1">.</span><span class="s0">language </span><span class="s1">= </span><span class="s4">0</span>
+<a name="l938"><span class="ln">938  </span></a>    <span class="s3">return </span><span class="s0">subTable</span>
+<a name="l939"><span class="ln">939  </span></a>
+<a name="l940"><span class="ln">940  </span></a>
+<a name="l941"><span class="ln">941  </span></a><span class="s3">def </span><span class="s0">addFvar</span><span class="s1">(</span><span class="s0">font</span><span class="s1">, </span><span class="s0">axes</span><span class="s1">, </span><span class="s0">instances</span><span class="s1">):</span>
+<a name="l942"><span class="ln">942  </span></a>    <span class="s3">from </span><span class="s1">.</span><span class="s0">ttLib</span><span class="s1">.</span><span class="s0">tables</span><span class="s1">.</span><span class="s0">_f_v_a_r </span><span class="s3">import </span><span class="s0">Axis</span><span class="s1">, </span><span class="s0">NamedInstance</span>
+<a name="l943"><span class="ln">943  </span></a>
+<a name="l944"><span class="ln">944  </span></a>    <span class="s3">assert </span><span class="s0">axes</span>
+<a name="l945"><span class="ln">945  </span></a>
+<a name="l946"><span class="ln">946  </span></a>    <span class="s0">fvar </span><span class="s1">= </span><span class="s0">newTable</span><span class="s1">(</span><span class="s2">&quot;fvar&quot;</span><span class="s1">)</span>
+<a name="l947"><span class="ln">947  </span></a>    <span class="s0">nameTable </span><span class="s1">= </span><span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;name&quot;</span><span class="s1">]</span>
+<a name="l948"><span class="ln">948  </span></a>
+<a name="l949"><span class="ln">949  </span></a>    <span class="s5"># if there are not currently any mac names don't add them here, that's inconsistent</span>
+<a name="l950"><span class="ln">950  </span></a>    <span class="s5"># https://github.com/fonttools/fonttools/issues/683</span>
+<a name="l951"><span class="ln">951  </span></a>    <span class="s0">macNames </span><span class="s1">= </span><span class="s0">any</span><span class="s1">(</span><span class="s0">nr</span><span class="s1">.</span><span class="s0">platformID </span><span class="s1">== </span><span class="s4">1 </span><span class="s3">for </span><span class="s0">nr </span><span class="s3">in </span><span class="s0">getattr</span><span class="s1">(</span><span class="s0">nameTable</span><span class="s1">, </span><span class="s2">&quot;names&quot;</span><span class="s1">, ()))</span>
+<a name="l952"><span class="ln">952  </span></a>
+<a name="l953"><span class="ln">953  </span></a>    <span class="s5"># we have all the best ways to express mac names</span>
+<a name="l954"><span class="ln">954  </span></a>    <span class="s0">platforms </span><span class="s1">= ((</span><span class="s4">3</span><span class="s1">, </span><span class="s4">1</span><span class="s1">, </span><span class="s4">0x409</span><span class="s1">),)</span>
+<a name="l955"><span class="ln">955  </span></a>    <span class="s3">if </span><span class="s0">macNames</span><span class="s1">:</span>
+<a name="l956"><span class="ln">956  </span></a>        <span class="s0">platforms </span><span class="s1">= ((</span><span class="s4">1</span><span class="s1">, </span><span class="s4">0</span><span class="s1">, </span><span class="s4">0</span><span class="s1">),) + </span><span class="s0">platforms</span>
+<a name="l957"><span class="ln">957  </span></a>
+<a name="l958"><span class="ln">958  </span></a>    <span class="s3">for </span><span class="s0">axis_def </span><span class="s3">in </span><span class="s0">axes</span><span class="s1">:</span>
+<a name="l959"><span class="ln">959  </span></a>        <span class="s0">axis </span><span class="s1">= </span><span class="s0">Axis</span><span class="s1">()</span>
+<a name="l960"><span class="ln">960  </span></a>
+<a name="l961"><span class="ln">961  </span></a>        <span class="s3">if </span><span class="s0">isinstance</span><span class="s1">(</span><span class="s0">axis_def</span><span class="s1">, </span><span class="s0">tuple</span><span class="s1">):</span>
+<a name="l962"><span class="ln">962  </span></a>            <span class="s1">(</span>
+<a name="l963"><span class="ln">963  </span></a>                <span class="s0">axis</span><span class="s1">.</span><span class="s0">axisTag</span><span class="s1">,</span>
+<a name="l964"><span class="ln">964  </span></a>                <span class="s0">axis</span><span class="s1">.</span><span class="s0">minValue</span><span class="s1">,</span>
+<a name="l965"><span class="ln">965  </span></a>                <span class="s0">axis</span><span class="s1">.</span><span class="s0">defaultValue</span><span class="s1">,</span>
+<a name="l966"><span class="ln">966  </span></a>                <span class="s0">axis</span><span class="s1">.</span><span class="s0">maxValue</span><span class="s1">,</span>
+<a name="l967"><span class="ln">967  </span></a>                <span class="s0">name</span><span class="s1">,</span>
+<a name="l968"><span class="ln">968  </span></a>            <span class="s1">) = </span><span class="s0">axis_def</span>
+<a name="l969"><span class="ln">969  </span></a>        <span class="s3">else</span><span class="s1">:</span>
+<a name="l970"><span class="ln">970  </span></a>            <span class="s1">(</span><span class="s0">axis</span><span class="s1">.</span><span class="s0">axisTag</span><span class="s1">, </span><span class="s0">axis</span><span class="s1">.</span><span class="s0">minValue</span><span class="s1">, </span><span class="s0">axis</span><span class="s1">.</span><span class="s0">defaultValue</span><span class="s1">, </span><span class="s0">axis</span><span class="s1">.</span><span class="s0">maxValue</span><span class="s1">, </span><span class="s0">name</span><span class="s1">) = (</span>
+<a name="l971"><span class="ln">971  </span></a>                <span class="s0">axis_def</span><span class="s1">.</span><span class="s0">tag</span><span class="s1">,</span>
+<a name="l972"><span class="ln">972  </span></a>                <span class="s0">axis_def</span><span class="s1">.</span><span class="s0">minimum</span><span class="s1">,</span>
+<a name="l973"><span class="ln">973  </span></a>                <span class="s0">axis_def</span><span class="s1">.</span><span class="s0">default</span><span class="s1">,</span>
+<a name="l974"><span class="ln">974  </span></a>                <span class="s0">axis_def</span><span class="s1">.</span><span class="s0">maximum</span><span class="s1">,</span>
+<a name="l975"><span class="ln">975  </span></a>                <span class="s0">axis_def</span><span class="s1">.</span><span class="s0">name</span><span class="s1">,</span>
+<a name="l976"><span class="ln">976  </span></a>            <span class="s1">)</span>
+<a name="l977"><span class="ln">977  </span></a>            <span class="s3">if </span><span class="s0">axis_def</span><span class="s1">.</span><span class="s0">hidden</span><span class="s1">:</span>
+<a name="l978"><span class="ln">978  </span></a>                <span class="s0">axis</span><span class="s1">.</span><span class="s0">flags </span><span class="s1">= </span><span class="s4">0x0001  </span><span class="s5"># HIDDEN_AXIS</span>
+<a name="l979"><span class="ln">979  </span></a>
+<a name="l980"><span class="ln">980  </span></a>        <span class="s3">if </span><span class="s0">isinstance</span><span class="s1">(</span><span class="s0">name</span><span class="s1">, </span><span class="s0">str</span><span class="s1">):</span>
+<a name="l981"><span class="ln">981  </span></a>            <span class="s0">name </span><span class="s1">= </span><span class="s0">dict</span><span class="s1">(</span><span class="s0">en</span><span class="s1">=</span><span class="s0">name</span><span class="s1">)</span>
+<a name="l982"><span class="ln">982  </span></a>
+<a name="l983"><span class="ln">983  </span></a>        <span class="s0">axis</span><span class="s1">.</span><span class="s0">axisNameID </span><span class="s1">= </span><span class="s0">nameTable</span><span class="s1">.</span><span class="s0">addMultilingualName</span><span class="s1">(</span><span class="s0">name</span><span class="s1">, </span><span class="s0">ttFont</span><span class="s1">=</span><span class="s0">font</span><span class="s1">, </span><span class="s0">mac</span><span class="s1">=</span><span class="s0">macNames</span><span class="s1">)</span>
+<a name="l984"><span class="ln">984  </span></a>        <span class="s0">fvar</span><span class="s1">.</span><span class="s0">axes</span><span class="s1">.</span><span class="s0">append</span><span class="s1">(</span><span class="s0">axis</span><span class="s1">)</span>
+<a name="l985"><span class="ln">985  </span></a>
+<a name="l986"><span class="ln">986  </span></a>    <span class="s3">for </span><span class="s0">instance </span><span class="s3">in </span><span class="s0">instances</span><span class="s1">:</span>
+<a name="l987"><span class="ln">987  </span></a>        <span class="s3">if </span><span class="s0">isinstance</span><span class="s1">(</span><span class="s0">instance</span><span class="s1">, </span><span class="s0">dict</span><span class="s1">):</span>
+<a name="l988"><span class="ln">988  </span></a>            <span class="s0">coordinates </span><span class="s1">= </span><span class="s0">instance</span><span class="s1">[</span><span class="s2">&quot;location&quot;</span><span class="s1">]</span>
+<a name="l989"><span class="ln">989  </span></a>            <span class="s0">name </span><span class="s1">= </span><span class="s0">instance</span><span class="s1">[</span><span class="s2">&quot;stylename&quot;</span><span class="s1">]</span>
+<a name="l990"><span class="ln">990  </span></a>            <span class="s0">psname </span><span class="s1">= </span><span class="s0">instance</span><span class="s1">.</span><span class="s0">get</span><span class="s1">(</span><span class="s2">&quot;postscriptfontname&quot;</span><span class="s1">)</span>
+<a name="l991"><span class="ln">991  </span></a>        <span class="s3">else</span><span class="s1">:</span>
+<a name="l992"><span class="ln">992  </span></a>            <span class="s0">coordinates </span><span class="s1">= </span><span class="s0">instance</span><span class="s1">.</span><span class="s0">location</span>
+<a name="l993"><span class="ln">993  </span></a>            <span class="s0">name </span><span class="s1">= </span><span class="s0">instance</span><span class="s1">.</span><span class="s0">localisedStyleName </span><span class="s3">or </span><span class="s0">instance</span><span class="s1">.</span><span class="s0">styleName</span>
+<a name="l994"><span class="ln">994  </span></a>            <span class="s0">psname </span><span class="s1">= </span><span class="s0">instance</span><span class="s1">.</span><span class="s0">postScriptFontName</span>
+<a name="l995"><span class="ln">995  </span></a>
+<a name="l996"><span class="ln">996  </span></a>        <span class="s3">if </span><span class="s0">isinstance</span><span class="s1">(</span><span class="s0">name</span><span class="s1">, </span><span class="s0">str</span><span class="s1">):</span>
+<a name="l997"><span class="ln">997  </span></a>            <span class="s0">name </span><span class="s1">= </span><span class="s0">dict</span><span class="s1">(</span><span class="s0">en</span><span class="s1">=</span><span class="s0">name</span><span class="s1">)</span>
+<a name="l998"><span class="ln">998  </span></a>
+<a name="l999"><span class="ln">999  </span></a>        <span class="s0">inst </span><span class="s1">= </span><span class="s0">NamedInstance</span><span class="s1">()</span>
+<a name="l1000"><span class="ln">1000 </span></a>        <span class="s0">inst</span><span class="s1">.</span><span class="s0">subfamilyNameID </span><span class="s1">= </span><span class="s0">nameTable</span><span class="s1">.</span><span class="s0">addMultilingualName</span><span class="s1">(</span>
+<a name="l1001"><span class="ln">1001 </span></a>            <span class="s0">name</span><span class="s1">, </span><span class="s0">ttFont</span><span class="s1">=</span><span class="s0">font</span><span class="s1">, </span><span class="s0">mac</span><span class="s1">=</span><span class="s0">macNames</span>
+<a name="l1002"><span class="ln">1002 </span></a>        <span class="s1">)</span>
+<a name="l1003"><span class="ln">1003 </span></a>        <span class="s3">if </span><span class="s0">psname </span><span class="s3">is not None</span><span class="s1">:</span>
+<a name="l1004"><span class="ln">1004 </span></a>            <span class="s0">inst</span><span class="s1">.</span><span class="s0">postscriptNameID </span><span class="s1">= </span><span class="s0">nameTable</span><span class="s1">.</span><span class="s0">addName</span><span class="s1">(</span><span class="s0">psname</span><span class="s1">, </span><span class="s0">platforms</span><span class="s1">=</span><span class="s0">platforms</span><span class="s1">)</span>
+<a name="l1005"><span class="ln">1005 </span></a>        <span class="s0">inst</span><span class="s1">.</span><span class="s0">coordinates </span><span class="s1">= </span><span class="s0">coordinates</span>
+<a name="l1006"><span class="ln">1006 </span></a>        <span class="s0">fvar</span><span class="s1">.</span><span class="s0">instances</span><span class="s1">.</span><span class="s0">append</span><span class="s1">(</span><span class="s0">inst</span><span class="s1">)</span>
+<a name="l1007"><span class="ln">1007 </span></a>
+<a name="l1008"><span class="ln">1008 </span></a>    <span class="s0">font</span><span class="s1">[</span><span class="s2">&quot;fvar&quot;</span><span class="s1">] = </span><span class="s0">fvar</span>
+<a name="l1009"><span class="ln">1009 </span></a></pre>
+</body>
+</html>

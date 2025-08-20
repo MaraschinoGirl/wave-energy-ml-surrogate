@@ -1,0 +1,147 @@
+<html>
+<head>
+<title>paraiso_light.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+paraiso_light.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>    pygments.styles.paraiso_light 
+<a name="l3"><span class="ln">3    </span></a>    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+<a name="l4"><span class="ln">4    </span></a> 
+<a name="l5"><span class="ln">5    </span></a>    Paraíso (Light) by Jan T. Sott 
+<a name="l6"><span class="ln">6    </span></a> 
+<a name="l7"><span class="ln">7    </span></a>    Pygments template by Jan T. Sott (https://github.com/idleberg) 
+<a name="l8"><span class="ln">8    </span></a>    Created with Base16 Builder by Chris Kempson 
+<a name="l9"><span class="ln">9    </span></a>    (https://github.com/chriskempson/base16-builder). 
+<a name="l10"><span class="ln">10   </span></a> 
+<a name="l11"><span class="ln">11   </span></a>    :copyright: Copyright 2006-2025 by the Pygments team, see AUTHORS. 
+<a name="l12"><span class="ln">12   </span></a>    :license: BSD, see LICENSE for details. 
+<a name="l13"><span class="ln">13   </span></a>&quot;&quot;&quot;</span>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">style </span><span class="s2">import </span><span class="s1">Style</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">token </span><span class="s2">import </span><span class="s1">Keyword</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">, </span><span class="s1">String</span><span class="s3">, </span><span class="s1">Error</span><span class="s3">, </span><span class="s1">Text</span><span class="s3">, </span><span class="s1">\</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s1">Number</span><span class="s3">, </span><span class="s1">Operator</span><span class="s3">, </span><span class="s1">Generic</span><span class="s3">, </span><span class="s1">Whitespace</span><span class="s3">, </span><span class="s1">Punctuation</span><span class="s3">, </span><span class="s1">Other</span><span class="s3">, </span><span class="s1">Literal</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s1">__all__ </span><span class="s3">= [</span><span class="s4">'ParaisoLightStyle'</span><span class="s3">]</span>
+<a name="l21"><span class="ln">21   </span></a>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a><span class="s1">BACKGROUND </span><span class="s3">= </span><span class="s4">&quot;#e7e9db&quot;</span>
+<a name="l24"><span class="ln">24   </span></a><span class="s1">CURRENT_LINE </span><span class="s3">= </span><span class="s4">&quot;#b9b6b0&quot;</span>
+<a name="l25"><span class="ln">25   </span></a><span class="s1">SELECTION </span><span class="s3">= </span><span class="s4">&quot;#a39e9b&quot;</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s1">FOREGROUND </span><span class="s3">= </span><span class="s4">&quot;#2f1e2e&quot;</span>
+<a name="l27"><span class="ln">27   </span></a><span class="s1">COMMENT </span><span class="s3">= </span><span class="s4">&quot;#8d8687&quot;</span>
+<a name="l28"><span class="ln">28   </span></a><span class="s1">RED </span><span class="s3">= </span><span class="s4">&quot;#ef6155&quot;</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s1">ORANGE </span><span class="s3">= </span><span class="s4">&quot;#f99b15&quot;</span>
+<a name="l30"><span class="ln">30   </span></a><span class="s1">YELLOW </span><span class="s3">= </span><span class="s4">&quot;#fec418&quot;</span>
+<a name="l31"><span class="ln">31   </span></a><span class="s1">GREEN </span><span class="s3">= </span><span class="s4">&quot;#48b685&quot;</span>
+<a name="l32"><span class="ln">32   </span></a><span class="s1">AQUA </span><span class="s3">= </span><span class="s4">&quot;#5bc4bf&quot;</span>
+<a name="l33"><span class="ln">33   </span></a><span class="s1">BLUE </span><span class="s3">= </span><span class="s4">&quot;#06b6ef&quot;</span>
+<a name="l34"><span class="ln">34   </span></a><span class="s1">PURPLE </span><span class="s3">= </span><span class="s4">&quot;#815ba4&quot;</span>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a><span class="s2">class </span><span class="s1">ParaisoLightStyle</span><span class="s3">(</span><span class="s1">Style</span><span class="s3">):</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s1">name </span><span class="s3">= </span><span class="s4">'paraiso-light'</span>
+<a name="l39"><span class="ln">39   </span></a>    
+<a name="l40"><span class="ln">40   </span></a>    <span class="s1">background_color </span><span class="s3">= </span><span class="s1">BACKGROUND</span>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s1">highlight_color </span><span class="s3">= </span><span class="s1">SELECTION</span>
+<a name="l42"><span class="ln">42   </span></a>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s1">styles </span><span class="s3">= {</span>
+<a name="l44"><span class="ln">44   </span></a>        <span class="s5"># No corresponding class for the following:</span>
+<a name="l45"><span class="ln">45   </span></a>        <span class="s1">Text</span><span class="s3">:                      </span><span class="s1">FOREGROUND</span><span class="s3">,  </span><span class="s5"># class:  ''</span>
+<a name="l46"><span class="ln">46   </span></a>        <span class="s1">Whitespace</span><span class="s3">:                </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 'w'</span>
+<a name="l47"><span class="ln">47   </span></a>        <span class="s1">Error</span><span class="s3">:                     </span><span class="s1">RED</span><span class="s3">,         </span><span class="s5"># class: 'err'</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s1">Other</span><span class="s3">:                     </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class 'x'</span>
+<a name="l49"><span class="ln">49   </span></a>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s1">Comment</span><span class="s3">:                   </span><span class="s1">COMMENT</span><span class="s3">,   </span><span class="s5"># class: 'c'</span>
+<a name="l51"><span class="ln">51   </span></a>        <span class="s1">Comment</span><span class="s3">.</span><span class="s1">Multiline</span><span class="s3">:         </span><span class="s4">&quot;&quot;</span><span class="s3">,        </span><span class="s5"># class: 'cm'</span>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s1">Comment</span><span class="s3">.</span><span class="s1">Preproc</span><span class="s3">:           </span><span class="s4">&quot;&quot;</span><span class="s3">,        </span><span class="s5"># class: 'cp'</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s1">Comment</span><span class="s3">.</span><span class="s1">Single</span><span class="s3">:            </span><span class="s4">&quot;&quot;</span><span class="s3">,        </span><span class="s5"># class: 'c1'</span>
+<a name="l54"><span class="ln">54   </span></a>        <span class="s1">Comment</span><span class="s3">.</span><span class="s1">Special</span><span class="s3">:           </span><span class="s4">&quot;&quot;</span><span class="s3">,        </span><span class="s5"># class: 'cs'</span>
+<a name="l55"><span class="ln">55   </span></a>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s1">Keyword</span><span class="s3">:                   </span><span class="s1">PURPLE</span><span class="s3">,    </span><span class="s5"># class: 'k'</span>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Constant</span><span class="s3">:          </span><span class="s4">&quot;&quot;</span><span class="s3">,        </span><span class="s5"># class: 'kc'</span>
+<a name="l58"><span class="ln">58   </span></a>        <span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Declaration</span><span class="s3">:       </span><span class="s4">&quot;&quot;</span><span class="s3">,        </span><span class="s5"># class: 'kd'</span>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Namespace</span><span class="s3">:         </span><span class="s1">AQUA</span><span class="s3">,      </span><span class="s5"># class: 'kn'</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Pseudo</span><span class="s3">:            </span><span class="s4">&quot;&quot;</span><span class="s3">,        </span><span class="s5"># class: 'kp'</span>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Reserved</span><span class="s3">:          </span><span class="s4">&quot;&quot;</span><span class="s3">,        </span><span class="s5"># class: 'kr'</span>
+<a name="l62"><span class="ln">62   </span></a>        <span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Type</span><span class="s3">:              </span><span class="s1">YELLOW</span><span class="s3">,    </span><span class="s5"># class: 'kt'</span>
+<a name="l63"><span class="ln">63   </span></a>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s1">Operator</span><span class="s3">:                  </span><span class="s1">AQUA</span><span class="s3">,      </span><span class="s5"># class: 'o'</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s1">Operator</span><span class="s3">.</span><span class="s1">Word</span><span class="s3">:             </span><span class="s4">&quot;&quot;</span><span class="s3">,        </span><span class="s5"># class: 'ow' - like keywords</span>
+<a name="l66"><span class="ln">66   </span></a>
+<a name="l67"><span class="ln">67   </span></a>        <span class="s1">Punctuation</span><span class="s3">:               </span><span class="s1">FOREGROUND</span><span class="s3">,  </span><span class="s5"># class: 'p'</span>
+<a name="l68"><span class="ln">68   </span></a>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s1">Name</span><span class="s3">:                      </span><span class="s1">FOREGROUND</span><span class="s3">,  </span><span class="s5"># class: 'n'</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Attribute</span><span class="s3">:            </span><span class="s1">BLUE</span><span class="s3">,        </span><span class="s5"># class: 'na' - to be revised</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Builtin</span><span class="s3">:              </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 'nb'</span>
+<a name="l72"><span class="ln">72   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Builtin</span><span class="s3">.</span><span class="s1">Pseudo</span><span class="s3">:       </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 'bp'</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Class</span><span class="s3">:                </span><span class="s1">YELLOW</span><span class="s3">,      </span><span class="s5"># class: 'nc' - to be revised</span>
+<a name="l74"><span class="ln">74   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Constant</span><span class="s3">:             </span><span class="s1">RED</span><span class="s3">,         </span><span class="s5"># class: 'no' - to be revised</span>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Decorator</span><span class="s3">:            </span><span class="s1">AQUA</span><span class="s3">,        </span><span class="s5"># class: 'nd' - to be revised</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Entity</span><span class="s3">:               </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 'ni'</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Exception</span><span class="s3">:            </span><span class="s1">RED</span><span class="s3">,         </span><span class="s5"># class: 'ne'</span>
+<a name="l78"><span class="ln">78   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Function</span><span class="s3">:             </span><span class="s1">BLUE</span><span class="s3">,        </span><span class="s5"># class: 'nf'</span>
+<a name="l79"><span class="ln">79   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Property</span><span class="s3">:             </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 'py'</span>
+<a name="l80"><span class="ln">80   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Label</span><span class="s3">:                </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 'nl'</span>
+<a name="l81"><span class="ln">81   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Namespace</span><span class="s3">:            </span><span class="s1">YELLOW</span><span class="s3">,      </span><span class="s5"># class: 'nn' - to be revised</span>
+<a name="l82"><span class="ln">82   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Other</span><span class="s3">:                </span><span class="s1">BLUE</span><span class="s3">,        </span><span class="s5"># class: 'nx'</span>
+<a name="l83"><span class="ln">83   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Tag</span><span class="s3">:                  </span><span class="s1">AQUA</span><span class="s3">,        </span><span class="s5"># class: 'nt' - like a keyword</span>
+<a name="l84"><span class="ln">84   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">:             </span><span class="s1">RED</span><span class="s3">,         </span><span class="s5"># class: 'nv' - to be revised</span>
+<a name="l85"><span class="ln">85   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">.</span><span class="s1">Class</span><span class="s3">:       </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 'vc' - to be revised</span>
+<a name="l86"><span class="ln">86   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">.</span><span class="s1">Global</span><span class="s3">:      </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 'vg' - to be revised</span>
+<a name="l87"><span class="ln">87   </span></a>        <span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">.</span><span class="s1">Instance</span><span class="s3">:    </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 'vi' - to be revised</span>
+<a name="l88"><span class="ln">88   </span></a>
+<a name="l89"><span class="ln">89   </span></a>        <span class="s1">Number</span><span class="s3">:                    </span><span class="s1">ORANGE</span><span class="s3">,    </span><span class="s5"># class: 'm'</span>
+<a name="l90"><span class="ln">90   </span></a>        <span class="s1">Number</span><span class="s3">.</span><span class="s1">Float</span><span class="s3">:              </span><span class="s4">&quot;&quot;</span><span class="s3">,        </span><span class="s5"># class: 'mf'</span>
+<a name="l91"><span class="ln">91   </span></a>        <span class="s1">Number</span><span class="s3">.</span><span class="s1">Hex</span><span class="s3">:                </span><span class="s4">&quot;&quot;</span><span class="s3">,        </span><span class="s5"># class: 'mh'</span>
+<a name="l92"><span class="ln">92   </span></a>        <span class="s1">Number</span><span class="s3">.</span><span class="s1">Integer</span><span class="s3">:            </span><span class="s4">&quot;&quot;</span><span class="s3">,        </span><span class="s5"># class: 'mi'</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s1">Number</span><span class="s3">.</span><span class="s1">Integer</span><span class="s3">.</span><span class="s1">Long</span><span class="s3">:       </span><span class="s4">&quot;&quot;</span><span class="s3">,        </span><span class="s5"># class: 'il'</span>
+<a name="l94"><span class="ln">94   </span></a>        <span class="s1">Number</span><span class="s3">.</span><span class="s1">Oct</span><span class="s3">:                </span><span class="s4">&quot;&quot;</span><span class="s3">,        </span><span class="s5"># class: 'mo'</span>
+<a name="l95"><span class="ln">95   </span></a>
+<a name="l96"><span class="ln">96   </span></a>        <span class="s1">Literal</span><span class="s3">:                   </span><span class="s1">ORANGE</span><span class="s3">,    </span><span class="s5"># class: 'l'</span>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s1">Literal</span><span class="s3">.</span><span class="s1">Date</span><span class="s3">:              </span><span class="s1">GREEN</span><span class="s3">,     </span><span class="s5"># class: 'ld'</span>
+<a name="l98"><span class="ln">98   </span></a>
+<a name="l99"><span class="ln">99   </span></a>        <span class="s1">String</span><span class="s3">:                    </span><span class="s1">GREEN</span><span class="s3">,       </span><span class="s5"># class: 's'</span>
+<a name="l100"><span class="ln">100  </span></a>        <span class="s1">String</span><span class="s3">.</span><span class="s1">Backtick</span><span class="s3">:           </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 'sb'</span>
+<a name="l101"><span class="ln">101  </span></a>        <span class="s1">String</span><span class="s3">.</span><span class="s1">Char</span><span class="s3">:               </span><span class="s1">FOREGROUND</span><span class="s3">,  </span><span class="s5"># class: 'sc'</span>
+<a name="l102"><span class="ln">102  </span></a>        <span class="s1">String</span><span class="s3">.</span><span class="s1">Doc</span><span class="s3">:                </span><span class="s1">COMMENT</span><span class="s3">,     </span><span class="s5"># class: 'sd' - like a comment</span>
+<a name="l103"><span class="ln">103  </span></a>        <span class="s1">String</span><span class="s3">.</span><span class="s1">Double</span><span class="s3">:             </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 's2'</span>
+<a name="l104"><span class="ln">104  </span></a>        <span class="s1">String</span><span class="s3">.</span><span class="s1">Escape</span><span class="s3">:             </span><span class="s1">ORANGE</span><span class="s3">,      </span><span class="s5"># class: 'se'</span>
+<a name="l105"><span class="ln">105  </span></a>        <span class="s1">String</span><span class="s3">.</span><span class="s1">Heredoc</span><span class="s3">:            </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 'sh'</span>
+<a name="l106"><span class="ln">106  </span></a>        <span class="s1">String</span><span class="s3">.</span><span class="s1">Interpol</span><span class="s3">:           </span><span class="s1">ORANGE</span><span class="s3">,      </span><span class="s5"># class: 'si'</span>
+<a name="l107"><span class="ln">107  </span></a>        <span class="s1">String</span><span class="s3">.</span><span class="s1">Other</span><span class="s3">:              </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 'sx'</span>
+<a name="l108"><span class="ln">108  </span></a>        <span class="s1">String</span><span class="s3">.</span><span class="s1">Regex</span><span class="s3">:              </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 'sr'</span>
+<a name="l109"><span class="ln">109  </span></a>        <span class="s1">String</span><span class="s3">.</span><span class="s1">Single</span><span class="s3">:             </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 's1'</span>
+<a name="l110"><span class="ln">110  </span></a>        <span class="s1">String</span><span class="s3">.</span><span class="s1">Symbol</span><span class="s3">:             </span><span class="s4">&quot;&quot;</span><span class="s3">,          </span><span class="s5"># class: 'ss'</span>
+<a name="l111"><span class="ln">111  </span></a>
+<a name="l112"><span class="ln">112  </span></a>        <span class="s1">Generic</span><span class="s3">:                   </span><span class="s4">&quot;&quot;</span><span class="s3">,                    </span><span class="s5"># class: 'g'</span>
+<a name="l113"><span class="ln">113  </span></a>        <span class="s1">Generic</span><span class="s3">.</span><span class="s1">Deleted</span><span class="s3">:           </span><span class="s1">RED</span><span class="s3">,                   </span><span class="s5"># class: 'gd',</span>
+<a name="l114"><span class="ln">114  </span></a>        <span class="s1">Generic</span><span class="s3">.</span><span class="s1">Emph</span><span class="s3">:              </span><span class="s4">&quot;italic&quot;</span><span class="s3">,              </span><span class="s5"># class: 'ge'</span>
+<a name="l115"><span class="ln">115  </span></a>        <span class="s1">Generic</span><span class="s3">.</span><span class="s1">Error</span><span class="s3">:             </span><span class="s4">&quot;&quot;</span><span class="s3">,                    </span><span class="s5"># class: 'gr'</span>
+<a name="l116"><span class="ln">116  </span></a>        <span class="s1">Generic</span><span class="s3">.</span><span class="s1">Heading</span><span class="s3">:           </span><span class="s4">&quot;bold &quot; </span><span class="s3">+ </span><span class="s1">FOREGROUND</span><span class="s3">,  </span><span class="s5"># class: 'gh'</span>
+<a name="l117"><span class="ln">117  </span></a>        <span class="s1">Generic</span><span class="s3">.</span><span class="s1">Inserted</span><span class="s3">:          </span><span class="s1">GREEN</span><span class="s3">,                 </span><span class="s5"># class: 'gi'</span>
+<a name="l118"><span class="ln">118  </span></a>        <span class="s1">Generic</span><span class="s3">.</span><span class="s1">Output</span><span class="s3">:            </span><span class="s4">&quot;&quot;</span><span class="s3">,                    </span><span class="s5"># class: 'go'</span>
+<a name="l119"><span class="ln">119  </span></a>        <span class="s1">Generic</span><span class="s3">.</span><span class="s1">Prompt</span><span class="s3">:            </span><span class="s4">&quot;bold &quot; </span><span class="s3">+ </span><span class="s1">COMMENT</span><span class="s3">,     </span><span class="s5"># class: 'gp'</span>
+<a name="l120"><span class="ln">120  </span></a>        <span class="s1">Generic</span><span class="s3">.</span><span class="s1">Strong</span><span class="s3">:            </span><span class="s4">&quot;bold&quot;</span><span class="s3">,                </span><span class="s5"># class: 'gs'</span>
+<a name="l121"><span class="ln">121  </span></a>        <span class="s1">Generic</span><span class="s3">.</span><span class="s1">EmphStrong</span><span class="s3">:        </span><span class="s4">&quot;bold italic&quot;</span><span class="s3">,         </span><span class="s5"># class: 'ges'</span>
+<a name="l122"><span class="ln">122  </span></a>        <span class="s1">Generic</span><span class="s3">.</span><span class="s1">Subheading</span><span class="s3">:        </span><span class="s4">&quot;bold &quot; </span><span class="s3">+ </span><span class="s1">AQUA</span><span class="s3">,        </span><span class="s5"># class: 'gu'</span>
+<a name="l123"><span class="ln">123  </span></a>        <span class="s1">Generic</span><span class="s3">.</span><span class="s1">Traceback</span><span class="s3">:         </span><span class="s4">&quot;&quot;</span><span class="s3">,                    </span><span class="s5"># class: 'gt'</span>
+<a name="l124"><span class="ln">124  </span></a>    <span class="s3">}</span>
+<a name="l125"><span class="ln">125  </span></a></pre>
+</body>
+</html>

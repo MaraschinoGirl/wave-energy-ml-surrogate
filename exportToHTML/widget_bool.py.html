@@ -1,0 +1,133 @@
+<html>
+<head>
+<title>widget_bool.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+widget_bool.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Copyright (c) Jupyter Development Team.</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># Distributed under the terms of the Modified BSD License.</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">&quot;&quot;&quot;Bool class. 
+<a name="l5"><span class="ln">5    </span></a> 
+<a name="l6"><span class="ln">6    </span></a>Represents a boolean using a widget. 
+<a name="l7"><span class="ln">7    </span></a>&quot;&quot;&quot;</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">widget_description </span><span class="s3">import </span><span class="s1">DescriptionStyle</span><span class="s4">, </span><span class="s1">DescriptionWidget</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">widget_core </span><span class="s3">import </span><span class="s1">CoreWidget</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">valuewidget </span><span class="s3">import </span><span class="s1">ValueWidget</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">widget </span><span class="s3">import </span><span class="s1">register</span><span class="s4">, </span><span class="s1">widget_serialization</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">trait_types </span><span class="s3">import </span><span class="s1">Color</span><span class="s4">, </span><span class="s1">InstanceDict</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s3">from </span><span class="s1">traitlets </span><span class="s3">import </span><span class="s1">Unicode</span><span class="s4">, </span><span class="s1">Bool</span><span class="s4">, </span><span class="s1">CaselessStrEnum</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s4">@</span><span class="s1">register</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s3">class </span><span class="s1">CheckboxStyle</span><span class="s4">(</span><span class="s1">DescriptionStyle</span><span class="s4">, </span><span class="s1">CoreWidget</span><span class="s4">):</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s2">&quot;&quot;&quot;Checkbox widget style.&quot;&quot;&quot;</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s1">_model_name </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s5">'CheckboxStyleModel'</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s1">background </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s3">None</span><span class="s4">, </span><span class="s1">allow_none</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;Background specifications.&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a><span class="s4">@</span><span class="s1">register</span>
+<a name="l25"><span class="ln">25   </span></a><span class="s3">class </span><span class="s1">ToggleButtonStyle</span><span class="s4">(</span><span class="s1">DescriptionStyle</span><span class="s4">, </span><span class="s1">CoreWidget</span><span class="s4">):</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s2">&quot;&quot;&quot;ToggleButton widget style.&quot;&quot;&quot;</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s1">_model_name </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s5">'ToggleButtonStyleModel'</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s1">font_family </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s3">None</span><span class="s4">, </span><span class="s1">allow_none</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;Toggle button text font family.&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s1">font_size </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s3">None</span><span class="s4">, </span><span class="s1">allow_none</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;Toggle button text font size.&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s1">font_style </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s3">None</span><span class="s4">, </span><span class="s1">allow_none</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;Toggle button text font style.&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s1">font_variant </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s3">None</span><span class="s4">, </span><span class="s1">allow_none</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;Toggle button text font variant.&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">font_weight </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s3">None</span><span class="s4">, </span><span class="s1">allow_none</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;Toggle button text font weight.&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s1">text_color </span><span class="s4">= </span><span class="s1">Color</span><span class="s4">(</span><span class="s3">None</span><span class="s4">, </span><span class="s1">allow_none</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;Toggle button text color&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s1">text_decoration </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s3">None</span><span class="s4">, </span><span class="s1">allow_none</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;Toggle button text decoration.&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a><span class="s3">class </span><span class="s1">_Bool</span><span class="s4">(</span><span class="s1">DescriptionWidget</span><span class="s4">, </span><span class="s1">ValueWidget</span><span class="s4">, </span><span class="s1">CoreWidget</span><span class="s4">):</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s2">&quot;&quot;&quot;A base class for creating widgets that represent booleans.&quot;&quot;&quot;</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s1">value </span><span class="s4">= </span><span class="s1">Bool</span><span class="s4">(</span><span class="s3">False</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;Bool value&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s1">disabled </span><span class="s4">= </span><span class="s1">Bool</span><span class="s4">(</span><span class="s3">False</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;Enable or disable user changes.&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l41"><span class="ln">41   </span></a>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s3">def </span><span class="s1">__init__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">value</span><span class="s4">=</span><span class="s3">None</span><span class="s4">, **</span><span class="s1">kwargs</span><span class="s4">):</span>
+<a name="l43"><span class="ln">43   </span></a>        <span class="s3">if </span><span class="s1">value </span><span class="s3">is not None</span><span class="s4">:</span>
+<a name="l44"><span class="ln">44   </span></a>            <span class="s1">kwargs</span><span class="s4">[</span><span class="s5">'value'</span><span class="s4">] = </span><span class="s1">value</span>
+<a name="l45"><span class="ln">45   </span></a>        <span class="s1">super</span><span class="s4">().</span><span class="s1">__init__</span><span class="s4">(**</span><span class="s1">kwargs</span><span class="s4">)</span>
+<a name="l46"><span class="ln">46   </span></a>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s1">_model_name </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s5">'BoolModel'</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l48"><span class="ln">48   </span></a>
+<a name="l49"><span class="ln">49   </span></a>
+<a name="l50"><span class="ln">50   </span></a><span class="s4">@</span><span class="s1">register</span>
+<a name="l51"><span class="ln">51   </span></a><span class="s3">class </span><span class="s1">Checkbox</span><span class="s4">(</span><span class="s1">_Bool</span><span class="s4">):</span>
+<a name="l52"><span class="ln">52   </span></a>    <span class="s2">&quot;&quot;&quot;Displays a boolean `value` in the form of a checkbox. 
+<a name="l53"><span class="ln">53   </span></a> 
+<a name="l54"><span class="ln">54   </span></a>    Parameters 
+<a name="l55"><span class="ln">55   </span></a>    ---------- 
+<a name="l56"><span class="ln">56   </span></a>    value : {True,False} 
+<a name="l57"><span class="ln">57   </span></a>        value of the checkbox: True-checked, False-unchecked 
+<a name="l58"><span class="ln">58   </span></a>    description : str 
+<a name="l59"><span class="ln">59   </span></a>        description displayed next to the checkbox 
+<a name="l60"><span class="ln">60   </span></a>    indent : {True,False} 
+<a name="l61"><span class="ln">61   </span></a>        indent the control to align with other controls with a description. The style.description_width attribute controls this width for consistence with other controls. 
+<a name="l62"><span class="ln">62   </span></a>    &quot;&quot;&quot;</span>
+<a name="l63"><span class="ln">63   </span></a>    <span class="s1">_view_name </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s5">'CheckboxView'</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l64"><span class="ln">64   </span></a>    <span class="s1">_model_name </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s5">'CheckboxModel'</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l65"><span class="ln">65   </span></a>    <span class="s1">indent </span><span class="s4">= </span><span class="s1">Bool</span><span class="s4">(</span><span class="s3">True</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;Indent the control to align with other controls with a description.&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l66"><span class="ln">66   </span></a>    <span class="s1">style </span><span class="s4">= </span><span class="s1">InstanceDict</span><span class="s4">(</span><span class="s1">CheckboxStyle</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;Styling customizations&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, **</span><span class="s1">widget_serialization</span><span class="s4">)</span>
+<a name="l67"><span class="ln">67   </span></a>
+<a name="l68"><span class="ln">68   </span></a>
+<a name="l69"><span class="ln">69   </span></a>
+<a name="l70"><span class="ln">70   </span></a><span class="s4">@</span><span class="s1">register</span>
+<a name="l71"><span class="ln">71   </span></a><span class="s3">class </span><span class="s1">ToggleButton</span><span class="s4">(</span><span class="s1">_Bool</span><span class="s4">):</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s2">&quot;&quot;&quot;Displays a boolean `value` in the form of a toggle button. 
+<a name="l73"><span class="ln">73   </span></a> 
+<a name="l74"><span class="ln">74   </span></a>    Parameters 
+<a name="l75"><span class="ln">75   </span></a>    ---------- 
+<a name="l76"><span class="ln">76   </span></a>    value : {True,False} 
+<a name="l77"><span class="ln">77   </span></a>        value of the toggle button: True-pressed, False-unpressed 
+<a name="l78"><span class="ln">78   </span></a>    description : str 
+<a name="l79"><span class="ln">79   </span></a>        description displayed on the button 
+<a name="l80"><span class="ln">80   </span></a>    icon: str 
+<a name="l81"><span class="ln">81   </span></a>        font-awesome icon name 
+<a name="l82"><span class="ln">82   </span></a>    style: instance of DescriptionStyle 
+<a name="l83"><span class="ln">83   </span></a>        styling customizations 
+<a name="l84"><span class="ln">84   </span></a>    button_style: enum 
+<a name="l85"><span class="ln">85   </span></a>        button predefined styling 
+<a name="l86"><span class="ln">86   </span></a>    &quot;&quot;&quot;</span>
+<a name="l87"><span class="ln">87   </span></a>    <span class="s1">_view_name </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s5">'ToggleButtonView'</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l88"><span class="ln">88   </span></a>    <span class="s1">_model_name </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s5">'ToggleButtonModel'</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l89"><span class="ln">89   </span></a>
+<a name="l90"><span class="ln">90   </span></a>    <span class="s1">icon </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s5">''</span><span class="s4">, </span><span class="s1">help</span><span class="s4">= </span><span class="s5">&quot;Font-awesome icon.&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l91"><span class="ln">91   </span></a>
+<a name="l92"><span class="ln">92   </span></a>    <span class="s1">button_style </span><span class="s4">= </span><span class="s1">CaselessStrEnum</span><span class="s4">(</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s1">values</span><span class="s4">=[</span><span class="s5">'primary'</span><span class="s4">, </span><span class="s5">'success'</span><span class="s4">, </span><span class="s5">'info'</span><span class="s4">, </span><span class="s5">'warning'</span><span class="s4">, </span><span class="s5">'danger'</span><span class="s4">, </span><span class="s5">''</span><span class="s4">], </span><span class="s1">default_value</span><span class="s4">=</span><span class="s5">''</span><span class="s4">,</span>
+<a name="l94"><span class="ln">94   </span></a>        <span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;&quot;&quot;Use a predefined styling for the button.&quot;&quot;&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l95"><span class="ln">95   </span></a>    <span class="s1">style </span><span class="s4">= </span><span class="s1">InstanceDict</span><span class="s4">(</span><span class="s1">ToggleButtonStyle</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;Styling customizations&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, **</span><span class="s1">widget_serialization</span><span class="s4">)</span>
+<a name="l96"><span class="ln">96   </span></a>
+<a name="l97"><span class="ln">97   </span></a>
+<a name="l98"><span class="ln">98   </span></a><span class="s4">@</span><span class="s1">register</span>
+<a name="l99"><span class="ln">99   </span></a><span class="s3">class </span><span class="s1">Valid</span><span class="s4">(</span><span class="s1">_Bool</span><span class="s4">):</span>
+<a name="l100"><span class="ln">100  </span></a>    <span class="s2">&quot;&quot;&quot;Displays a boolean `value` in the form of a green check (True / valid) 
+<a name="l101"><span class="ln">101  </span></a>    or a red cross (False / invalid). 
+<a name="l102"><span class="ln">102  </span></a> 
+<a name="l103"><span class="ln">103  </span></a>    Parameters 
+<a name="l104"><span class="ln">104  </span></a>    ---------- 
+<a name="l105"><span class="ln">105  </span></a>    value: {True,False} 
+<a name="l106"><span class="ln">106  </span></a>        value of the Valid widget 
+<a name="l107"><span class="ln">107  </span></a>    &quot;&quot;&quot;</span>
+<a name="l108"><span class="ln">108  </span></a>    <span class="s1">readout </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s5">'Invalid'</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;Message displayed when the value is False&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l109"><span class="ln">109  </span></a>    <span class="s1">_view_name </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s5">'ValidView'</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l110"><span class="ln">110  </span></a>    <span class="s1">_model_name </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span><span class="s5">'ValidModel'</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">sync</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l111"><span class="ln">111  </span></a></pre>
+</body>
+</html>

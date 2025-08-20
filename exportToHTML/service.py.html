@@ -1,0 +1,237 @@
+<html>
+<head>
+<title>service.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #cf8e6d;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+service.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Protocol Buffers - Google's data interchange format</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># Copyright 2008 Google Inc.  All rights reserved.</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">#</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0"># Use of this source code is governed by a BSD-style</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0"># license that can be found in the LICENSE file or at</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0"># https://developers.google.com/open-source/licenses/bsd</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a><span class="s2">&quot;&quot;&quot;DEPRECATED:  Declares the RPC service interfaces. 
+<a name="l9"><span class="ln">9    </span></a> 
+<a name="l10"><span class="ln">10   </span></a>This module declares the abstract interfaces underlying proto2 RPC 
+<a name="l11"><span class="ln">11   </span></a>services.  These are intended to be independent of any particular RPC 
+<a name="l12"><span class="ln">12   </span></a>implementation, so that proto2 services can be used on top of a variety 
+<a name="l13"><span class="ln">13   </span></a>of implementations.  Starting with version 2.3.0, RPC implementations should 
+<a name="l14"><span class="ln">14   </span></a>not try to build on these, but should instead provide code generator plugins 
+<a name="l15"><span class="ln">15   </span></a>which generate code specific to the particular RPC implementation.  This way 
+<a name="l16"><span class="ln">16   </span></a>the generated code can be more appropriate for the implementation in use 
+<a name="l17"><span class="ln">17   </span></a>and can avoid unnecessary layers of indirection. 
+<a name="l18"><span class="ln">18   </span></a>&quot;&quot;&quot;</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s1">__author__ </span><span class="s3">= </span><span class="s4">'petar@google.com (Petar Petrov)'</span>
+<a name="l21"><span class="ln">21   </span></a>
+<a name="l22"><span class="ln">22   </span></a><span class="s5">import </span><span class="s1">warnings</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a><span class="s1">warnings</span><span class="s3">.</span><span class="s1">warn</span><span class="s3">(</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s4">'google.protobuf.service module is deprecated. RPC implementations '</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s4">'should provide code generator plugins which generate code specific to '</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s4">'the RPC implementation. service.py will be removed in Jan 2025'</span><span class="s3">,</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s1">stacklevel</span><span class="s3">=</span><span class="s6">2</span><span class="s3">,</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s3">)</span>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a><span class="s5">class </span><span class="s1">RpcException</span><span class="s3">(</span><span class="s1">Exception</span><span class="s3">):</span>
+<a name="l32"><span class="ln">32   </span></a>  <span class="s2">&quot;&quot;&quot;Exception raised on failed blocking RPC method call.&quot;&quot;&quot;</span>
+<a name="l33"><span class="ln">33   </span></a>  <span class="s5">pass</span>
+<a name="l34"><span class="ln">34   </span></a>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a><span class="s5">class </span><span class="s1">Service</span><span class="s3">(</span><span class="s1">object</span><span class="s3">):</span>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a>  <span class="s2">&quot;&quot;&quot;Abstract base interface for protocol-buffer-based RPC services. 
+<a name="l39"><span class="ln">39   </span></a> 
+<a name="l40"><span class="ln">40   </span></a>  Services themselves are abstract classes (implemented either by servers or as 
+<a name="l41"><span class="ln">41   </span></a>  stubs), but they subclass this base interface. The methods of this 
+<a name="l42"><span class="ln">42   </span></a>  interface can be used to call the methods of the service without knowing 
+<a name="l43"><span class="ln">43   </span></a>  its exact type at compile time (analogous to the Message interface). 
+<a name="l44"><span class="ln">44   </span></a>  &quot;&quot;&quot;</span>
+<a name="l45"><span class="ln">45   </span></a>
+<a name="l46"><span class="ln">46   </span></a>  <span class="s5">def </span><span class="s1">GetDescriptor</span><span class="s3">():</span>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s2">&quot;&quot;&quot;Retrieves this service's descriptor.&quot;&quot;&quot;</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s5">raise </span><span class="s1">NotImplementedError</span>
+<a name="l49"><span class="ln">49   </span></a>
+<a name="l50"><span class="ln">50   </span></a>  <span class="s5">def </span><span class="s1">CallMethod</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">method_descriptor</span><span class="s3">, </span><span class="s1">rpc_controller</span><span class="s3">,</span>
+<a name="l51"><span class="ln">51   </span></a>                 <span class="s1">request</span><span class="s3">, </span><span class="s1">done</span><span class="s3">):</span>
+<a name="l52"><span class="ln">52   </span></a>    <span class="s2">&quot;&quot;&quot;Calls a method of the service specified by method_descriptor. 
+<a name="l53"><span class="ln">53   </span></a> 
+<a name="l54"><span class="ln">54   </span></a>    If &quot;done&quot; is None then the call is blocking and the response 
+<a name="l55"><span class="ln">55   </span></a>    message will be returned directly.  Otherwise the call is asynchronous 
+<a name="l56"><span class="ln">56   </span></a>    and &quot;done&quot; will later be called with the response value. 
+<a name="l57"><span class="ln">57   </span></a> 
+<a name="l58"><span class="ln">58   </span></a>    In the blocking case, RpcException will be raised on error. 
+<a name="l59"><span class="ln">59   </span></a> 
+<a name="l60"><span class="ln">60   </span></a>    Preconditions: 
+<a name="l61"><span class="ln">61   </span></a> 
+<a name="l62"><span class="ln">62   </span></a>    * method_descriptor.service == GetDescriptor 
+<a name="l63"><span class="ln">63   </span></a>    * request is of the exact same classes as returned by 
+<a name="l64"><span class="ln">64   </span></a>      GetRequestClass(method). 
+<a name="l65"><span class="ln">65   </span></a>    * After the call has started, the request must not be modified. 
+<a name="l66"><span class="ln">66   </span></a>    * &quot;rpc_controller&quot; is of the correct type for the RPC implementation being 
+<a name="l67"><span class="ln">67   </span></a>      used by this Service.  For stubs, the &quot;correct type&quot; depends on the 
+<a name="l68"><span class="ln">68   </span></a>      RpcChannel which the stub is using. 
+<a name="l69"><span class="ln">69   </span></a> 
+<a name="l70"><span class="ln">70   </span></a>    Postconditions: 
+<a name="l71"><span class="ln">71   </span></a> 
+<a name="l72"><span class="ln">72   </span></a>    * &quot;done&quot; will be called when the method is complete.  This may be 
+<a name="l73"><span class="ln">73   </span></a>      before CallMethod() returns or it may be at some point in the future. 
+<a name="l74"><span class="ln">74   </span></a>    * If the RPC failed, the response value passed to &quot;done&quot; will be None. 
+<a name="l75"><span class="ln">75   </span></a>      Further details about the failure can be found by querying the 
+<a name="l76"><span class="ln">76   </span></a>      RpcController. 
+<a name="l77"><span class="ln">77   </span></a>    &quot;&quot;&quot;</span>
+<a name="l78"><span class="ln">78   </span></a>    <span class="s5">raise </span><span class="s1">NotImplementedError</span>
+<a name="l79"><span class="ln">79   </span></a>
+<a name="l80"><span class="ln">80   </span></a>  <span class="s5">def </span><span class="s1">GetRequestClass</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">method_descriptor</span><span class="s3">):</span>
+<a name="l81"><span class="ln">81   </span></a>    <span class="s2">&quot;&quot;&quot;Returns the class of the request message for the specified method. 
+<a name="l82"><span class="ln">82   </span></a> 
+<a name="l83"><span class="ln">83   </span></a>    CallMethod() requires that the request is of a particular subclass of 
+<a name="l84"><span class="ln">84   </span></a>    Message. GetRequestClass() gets the default instance of this required 
+<a name="l85"><span class="ln">85   </span></a>    type. 
+<a name="l86"><span class="ln">86   </span></a> 
+<a name="l87"><span class="ln">87   </span></a>    Example: 
+<a name="l88"><span class="ln">88   </span></a>      method = service.GetDescriptor().FindMethodByName(&quot;Foo&quot;) 
+<a name="l89"><span class="ln">89   </span></a>      request = stub.GetRequestClass(method)() 
+<a name="l90"><span class="ln">90   </span></a>      request.ParseFromString(input) 
+<a name="l91"><span class="ln">91   </span></a>      service.CallMethod(method, request, callback) 
+<a name="l92"><span class="ln">92   </span></a>    &quot;&quot;&quot;</span>
+<a name="l93"><span class="ln">93   </span></a>    <span class="s5">raise </span><span class="s1">NotImplementedError</span>
+<a name="l94"><span class="ln">94   </span></a>
+<a name="l95"><span class="ln">95   </span></a>  <span class="s5">def </span><span class="s1">GetResponseClass</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">method_descriptor</span><span class="s3">):</span>
+<a name="l96"><span class="ln">96   </span></a>    <span class="s2">&quot;&quot;&quot;Returns the class of the response message for the specified method. 
+<a name="l97"><span class="ln">97   </span></a> 
+<a name="l98"><span class="ln">98   </span></a>    This method isn't really needed, as the RpcChannel's CallMethod constructs 
+<a name="l99"><span class="ln">99   </span></a>    the response protocol message. It's provided anyway in case it is useful 
+<a name="l100"><span class="ln">100  </span></a>    for the caller to know the response type in advance. 
+<a name="l101"><span class="ln">101  </span></a>    &quot;&quot;&quot;</span>
+<a name="l102"><span class="ln">102  </span></a>    <span class="s5">raise </span><span class="s1">NotImplementedError</span>
+<a name="l103"><span class="ln">103  </span></a>
+<a name="l104"><span class="ln">104  </span></a>
+<a name="l105"><span class="ln">105  </span></a><span class="s5">class </span><span class="s1">RpcController</span><span class="s3">(</span><span class="s1">object</span><span class="s3">):</span>
+<a name="l106"><span class="ln">106  </span></a>
+<a name="l107"><span class="ln">107  </span></a>  <span class="s2">&quot;&quot;&quot;An RpcController mediates a single method call. 
+<a name="l108"><span class="ln">108  </span></a> 
+<a name="l109"><span class="ln">109  </span></a>  The primary purpose of the controller is to provide a way to manipulate 
+<a name="l110"><span class="ln">110  </span></a>  settings specific to the RPC implementation and to find out about RPC-level 
+<a name="l111"><span class="ln">111  </span></a>  errors. The methods provided by the RpcController interface are intended 
+<a name="l112"><span class="ln">112  </span></a>  to be a &quot;least common denominator&quot; set of features which we expect all 
+<a name="l113"><span class="ln">113  </span></a>  implementations to support.  Specific implementations may provide more 
+<a name="l114"><span class="ln">114  </span></a>  advanced features (e.g. deadline propagation). 
+<a name="l115"><span class="ln">115  </span></a>  &quot;&quot;&quot;</span>
+<a name="l116"><span class="ln">116  </span></a>
+<a name="l117"><span class="ln">117  </span></a>  <span class="s0"># Client-side methods below</span>
+<a name="l118"><span class="ln">118  </span></a>
+<a name="l119"><span class="ln">119  </span></a>  <span class="s5">def </span><span class="s1">Reset</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l120"><span class="ln">120  </span></a>    <span class="s2">&quot;&quot;&quot;Resets the RpcController to its initial state. 
+<a name="l121"><span class="ln">121  </span></a> 
+<a name="l122"><span class="ln">122  </span></a>    After the RpcController has been reset, it may be reused in 
+<a name="l123"><span class="ln">123  </span></a>    a new call. Must not be called while an RPC is in progress. 
+<a name="l124"><span class="ln">124  </span></a>    &quot;&quot;&quot;</span>
+<a name="l125"><span class="ln">125  </span></a>    <span class="s5">raise </span><span class="s1">NotImplementedError</span>
+<a name="l126"><span class="ln">126  </span></a>
+<a name="l127"><span class="ln">127  </span></a>  <span class="s5">def </span><span class="s1">Failed</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l128"><span class="ln">128  </span></a>    <span class="s2">&quot;&quot;&quot;Returns true if the call failed. 
+<a name="l129"><span class="ln">129  </span></a> 
+<a name="l130"><span class="ln">130  </span></a>    After a call has finished, returns true if the call failed.  The possible 
+<a name="l131"><span class="ln">131  </span></a>    reasons for failure depend on the RPC implementation.  Failed() must not 
+<a name="l132"><span class="ln">132  </span></a>    be called before a call has finished.  If Failed() returns true, the 
+<a name="l133"><span class="ln">133  </span></a>    contents of the response message are undefined. 
+<a name="l134"><span class="ln">134  </span></a>    &quot;&quot;&quot;</span>
+<a name="l135"><span class="ln">135  </span></a>    <span class="s5">raise </span><span class="s1">NotImplementedError</span>
+<a name="l136"><span class="ln">136  </span></a>
+<a name="l137"><span class="ln">137  </span></a>  <span class="s5">def </span><span class="s1">ErrorText</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l138"><span class="ln">138  </span></a>    <span class="s2">&quot;&quot;&quot;If Failed is true, returns a human-readable description of the error.&quot;&quot;&quot;</span>
+<a name="l139"><span class="ln">139  </span></a>    <span class="s5">raise </span><span class="s1">NotImplementedError</span>
+<a name="l140"><span class="ln">140  </span></a>
+<a name="l141"><span class="ln">141  </span></a>  <span class="s5">def </span><span class="s1">StartCancel</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l142"><span class="ln">142  </span></a>    <span class="s2">&quot;&quot;&quot;Initiate cancellation. 
+<a name="l143"><span class="ln">143  </span></a> 
+<a name="l144"><span class="ln">144  </span></a>    Advises the RPC system that the caller desires that the RPC call be 
+<a name="l145"><span class="ln">145  </span></a>    canceled.  The RPC system may cancel it immediately, may wait awhile and 
+<a name="l146"><span class="ln">146  </span></a>    then cancel it, or may not even cancel the call at all.  If the call is 
+<a name="l147"><span class="ln">147  </span></a>    canceled, the &quot;done&quot; callback will still be called and the RpcController 
+<a name="l148"><span class="ln">148  </span></a>    will indicate that the call failed at that time. 
+<a name="l149"><span class="ln">149  </span></a>    &quot;&quot;&quot;</span>
+<a name="l150"><span class="ln">150  </span></a>    <span class="s5">raise </span><span class="s1">NotImplementedError</span>
+<a name="l151"><span class="ln">151  </span></a>
+<a name="l152"><span class="ln">152  </span></a>  <span class="s0"># Server-side methods below</span>
+<a name="l153"><span class="ln">153  </span></a>
+<a name="l154"><span class="ln">154  </span></a>  <span class="s5">def </span><span class="s1">SetFailed</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">reason</span><span class="s3">):</span>
+<a name="l155"><span class="ln">155  </span></a>    <span class="s2">&quot;&quot;&quot;Sets a failure reason. 
+<a name="l156"><span class="ln">156  </span></a> 
+<a name="l157"><span class="ln">157  </span></a>    Causes Failed() to return true on the client side.  &quot;reason&quot; will be 
+<a name="l158"><span class="ln">158  </span></a>    incorporated into the message returned by ErrorText().  If you find 
+<a name="l159"><span class="ln">159  </span></a>    you need to return machine-readable information about failures, you 
+<a name="l160"><span class="ln">160  </span></a>    should incorporate it into your response protocol buffer and should 
+<a name="l161"><span class="ln">161  </span></a>    NOT call SetFailed(). 
+<a name="l162"><span class="ln">162  </span></a>    &quot;&quot;&quot;</span>
+<a name="l163"><span class="ln">163  </span></a>    <span class="s5">raise </span><span class="s1">NotImplementedError</span>
+<a name="l164"><span class="ln">164  </span></a>
+<a name="l165"><span class="ln">165  </span></a>  <span class="s5">def </span><span class="s1">IsCanceled</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l166"><span class="ln">166  </span></a>    <span class="s2">&quot;&quot;&quot;Checks if the client cancelled the RPC. 
+<a name="l167"><span class="ln">167  </span></a> 
+<a name="l168"><span class="ln">168  </span></a>    If true, indicates that the client canceled the RPC, so the server may 
+<a name="l169"><span class="ln">169  </span></a>    as well give up on replying to it.  The server should still call the 
+<a name="l170"><span class="ln">170  </span></a>    final &quot;done&quot; callback. 
+<a name="l171"><span class="ln">171  </span></a>    &quot;&quot;&quot;</span>
+<a name="l172"><span class="ln">172  </span></a>    <span class="s5">raise </span><span class="s1">NotImplementedError</span>
+<a name="l173"><span class="ln">173  </span></a>
+<a name="l174"><span class="ln">174  </span></a>  <span class="s5">def </span><span class="s1">NotifyOnCancel</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">callback</span><span class="s3">):</span>
+<a name="l175"><span class="ln">175  </span></a>    <span class="s2">&quot;&quot;&quot;Sets a callback to invoke on cancel. 
+<a name="l176"><span class="ln">176  </span></a> 
+<a name="l177"><span class="ln">177  </span></a>    Asks that the given callback be called when the RPC is canceled.  The 
+<a name="l178"><span class="ln">178  </span></a>    callback will always be called exactly once.  If the RPC completes without 
+<a name="l179"><span class="ln">179  </span></a>    being canceled, the callback will be called after completion.  If the RPC 
+<a name="l180"><span class="ln">180  </span></a>    has already been canceled when NotifyOnCancel() is called, the callback 
+<a name="l181"><span class="ln">181  </span></a>    will be called immediately. 
+<a name="l182"><span class="ln">182  </span></a> 
+<a name="l183"><span class="ln">183  </span></a>    NotifyOnCancel() must be called no more than once per request. 
+<a name="l184"><span class="ln">184  </span></a>    &quot;&quot;&quot;</span>
+<a name="l185"><span class="ln">185  </span></a>    <span class="s5">raise </span><span class="s1">NotImplementedError</span>
+<a name="l186"><span class="ln">186  </span></a>
+<a name="l187"><span class="ln">187  </span></a>
+<a name="l188"><span class="ln">188  </span></a><span class="s5">class </span><span class="s1">RpcChannel</span><span class="s3">(</span><span class="s1">object</span><span class="s3">):</span>
+<a name="l189"><span class="ln">189  </span></a>
+<a name="l190"><span class="ln">190  </span></a>  <span class="s2">&quot;&quot;&quot;Abstract interface for an RPC channel. 
+<a name="l191"><span class="ln">191  </span></a> 
+<a name="l192"><span class="ln">192  </span></a>  An RpcChannel represents a communication line to a service which can be used 
+<a name="l193"><span class="ln">193  </span></a>  to call that service's methods.  The service may be running on another 
+<a name="l194"><span class="ln">194  </span></a>  machine. Normally, you should not use an RpcChannel directly, but instead 
+<a name="l195"><span class="ln">195  </span></a>  construct a stub {@link Service} wrapping it.  Example: 
+<a name="l196"><span class="ln">196  </span></a> 
+<a name="l197"><span class="ln">197  </span></a>  Example: 
+<a name="l198"><span class="ln">198  </span></a>    RpcChannel channel = rpcImpl.Channel(&quot;remotehost.example.com:1234&quot;) 
+<a name="l199"><span class="ln">199  </span></a>    RpcController controller = rpcImpl.Controller() 
+<a name="l200"><span class="ln">200  </span></a>    MyService service = MyService_Stub(channel) 
+<a name="l201"><span class="ln">201  </span></a>    service.MyMethod(controller, request, callback) 
+<a name="l202"><span class="ln">202  </span></a>  &quot;&quot;&quot;</span>
+<a name="l203"><span class="ln">203  </span></a>
+<a name="l204"><span class="ln">204  </span></a>  <span class="s5">def </span><span class="s1">CallMethod</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">method_descriptor</span><span class="s3">, </span><span class="s1">rpc_controller</span><span class="s3">,</span>
+<a name="l205"><span class="ln">205  </span></a>                 <span class="s1">request</span><span class="s3">, </span><span class="s1">response_class</span><span class="s3">, </span><span class="s1">done</span><span class="s3">):</span>
+<a name="l206"><span class="ln">206  </span></a>    <span class="s2">&quot;&quot;&quot;Calls the method identified by the descriptor. 
+<a name="l207"><span class="ln">207  </span></a> 
+<a name="l208"><span class="ln">208  </span></a>    Call the given method of the remote service.  The signature of this 
+<a name="l209"><span class="ln">209  </span></a>    procedure looks the same as Service.CallMethod(), but the requirements 
+<a name="l210"><span class="ln">210  </span></a>    are less strict in one important way:  the request object doesn't have to 
+<a name="l211"><span class="ln">211  </span></a>    be of any specific class as long as its descriptor is method.input_type. 
+<a name="l212"><span class="ln">212  </span></a>    &quot;&quot;&quot;</span>
+<a name="l213"><span class="ln">213  </span></a>    <span class="s5">raise </span><span class="s1">NotImplementedError</span>
+<a name="l214"><span class="ln">214  </span></a></pre>
+</body>
+</html>

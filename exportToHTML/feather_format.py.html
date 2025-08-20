@@ -1,0 +1,166 @@
+<html>
+<head>
+<title>feather_format.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+feather_format.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; feather-format compat &quot;&quot;&quot;</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s2">from </span><span class="s1">__future__ </span><span class="s2">import </span><span class="s1">annotations</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">from </span><span class="s1">typing </span><span class="s2">import </span><span class="s3">(</span>
+<a name="l5"><span class="ln">5    </span></a>    <span class="s1">TYPE_CHECKING</span><span class="s3">,</span>
+<a name="l6"><span class="ln">6    </span></a>    <span class="s1">Any</span><span class="s3">,</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s3">)</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">_config </span><span class="s2">import </span><span class="s1">using_pyarrow_string_dtype</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">_libs </span><span class="s2">import </span><span class="s1">lib</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">compat</span><span class="s3">.</span><span class="s1">_optional </span><span class="s2">import </span><span class="s1">import_optional_dependency</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">util</span><span class="s3">.</span><span class="s1">_decorators </span><span class="s2">import </span><span class="s1">doc</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">util</span><span class="s3">.</span><span class="s1">_validators </span><span class="s2">import </span><span class="s1">check_dtype_backend</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a><span class="s2">import </span><span class="s1">pandas </span><span class="s2">as </span><span class="s1">pd</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">api </span><span class="s2">import </span><span class="s1">DataFrame</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">shared_docs </span><span class="s2">import </span><span class="s1">_shared_docs</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">io</span><span class="s3">.</span><span class="s1">_util </span><span class="s2">import </span><span class="s1">arrow_string_types_mapper</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">io</span><span class="s3">.</span><span class="s1">common </span><span class="s2">import </span><span class="s1">get_handle</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a><span class="s2">if </span><span class="s1">TYPE_CHECKING</span><span class="s3">:</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s2">from </span><span class="s1">collections</span><span class="s3">.</span><span class="s1">abc </span><span class="s2">import </span><span class="s3">(</span>
+<a name="l25"><span class="ln">25   </span></a>        <span class="s1">Hashable</span><span class="s3">,</span>
+<a name="l26"><span class="ln">26   </span></a>        <span class="s1">Sequence</span><span class="s3">,</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s3">)</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">_typing </span><span class="s2">import </span><span class="s3">(</span>
+<a name="l30"><span class="ln">30   </span></a>        <span class="s1">DtypeBackend</span><span class="s3">,</span>
+<a name="l31"><span class="ln">31   </span></a>        <span class="s1">FilePath</span><span class="s3">,</span>
+<a name="l32"><span class="ln">32   </span></a>        <span class="s1">ReadBuffer</span><span class="s3">,</span>
+<a name="l33"><span class="ln">33   </span></a>        <span class="s1">StorageOptions</span><span class="s3">,</span>
+<a name="l34"><span class="ln">34   </span></a>        <span class="s1">WriteBuffer</span><span class="s3">,</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s3">)</span>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a><span class="s3">@</span><span class="s1">doc</span><span class="s3">(</span><span class="s1">storage_options</span><span class="s3">=</span><span class="s1">_shared_docs</span><span class="s3">[</span><span class="s4">&quot;storage_options&quot;</span><span class="s3">])</span>
+<a name="l39"><span class="ln">39   </span></a><span class="s2">def </span><span class="s1">to_feather</span><span class="s3">(</span>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s1">df</span><span class="s3">: </span><span class="s1">DataFrame</span><span class="s3">,</span>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s1">path</span><span class="s3">: </span><span class="s1">FilePath </span><span class="s3">| </span><span class="s1">WriteBuffer</span><span class="s3">[</span><span class="s1">bytes</span><span class="s3">],</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s1">storage_options</span><span class="s3">: </span><span class="s1">StorageOptions </span><span class="s3">| </span><span class="s2">None </span><span class="s3">= </span><span class="s2">None</span><span class="s3">,</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s3">**</span><span class="s1">kwargs</span><span class="s3">: </span><span class="s1">Any</span><span class="s3">,</span>
+<a name="l44"><span class="ln">44   </span></a><span class="s3">) </span><span class="s1">-&gt; </span><span class="s2">None</span><span class="s3">:</span>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l46"><span class="ln">46   </span></a>    Write a DataFrame to the binary Feather format. 
+<a name="l47"><span class="ln">47   </span></a> 
+<a name="l48"><span class="ln">48   </span></a>    Parameters 
+<a name="l49"><span class="ln">49   </span></a>    ---------- 
+<a name="l50"><span class="ln">50   </span></a>    df : DataFrame 
+<a name="l51"><span class="ln">51   </span></a>    path : str, path object, or file-like object 
+<a name="l52"><span class="ln">52   </span></a>    {storage_options} 
+<a name="l53"><span class="ln">53   </span></a>    **kwargs : 
+<a name="l54"><span class="ln">54   </span></a>        Additional keywords passed to `pyarrow.feather.write_feather`. 
+<a name="l55"><span class="ln">55   </span></a> 
+<a name="l56"><span class="ln">56   </span></a>    &quot;&quot;&quot;</span>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s1">import_optional_dependency</span><span class="s3">(</span><span class="s4">&quot;pyarrow&quot;</span><span class="s3">)</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s2">from </span><span class="s1">pyarrow </span><span class="s2">import </span><span class="s1">feather</span>
+<a name="l59"><span class="ln">59   </span></a>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s2">if not </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">df</span><span class="s3">, </span><span class="s1">DataFrame</span><span class="s3">):</span>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s4">&quot;feather only support IO with DataFrames&quot;</span><span class="s3">)</span>
+<a name="l62"><span class="ln">62   </span></a>
+<a name="l63"><span class="ln">63   </span></a>    <span class="s2">with </span><span class="s1">get_handle</span><span class="s3">(</span>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s1">path</span><span class="s3">, </span><span class="s4">&quot;wb&quot;</span><span class="s3">, </span><span class="s1">storage_options</span><span class="s3">=</span><span class="s1">storage_options</span><span class="s3">, </span><span class="s1">is_text</span><span class="s3">=</span><span class="s2">False</span>
+<a name="l65"><span class="ln">65   </span></a>    <span class="s3">) </span><span class="s2">as </span><span class="s1">handles</span><span class="s3">:</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s1">feather</span><span class="s3">.</span><span class="s1">write_feather</span><span class="s3">(</span><span class="s1">df</span><span class="s3">, </span><span class="s1">handles</span><span class="s3">.</span><span class="s1">handle</span><span class="s3">, **</span><span class="s1">kwargs</span><span class="s3">)</span>
+<a name="l67"><span class="ln">67   </span></a>
+<a name="l68"><span class="ln">68   </span></a>
+<a name="l69"><span class="ln">69   </span></a><span class="s3">@</span><span class="s1">doc</span><span class="s3">(</span><span class="s1">storage_options</span><span class="s3">=</span><span class="s1">_shared_docs</span><span class="s3">[</span><span class="s4">&quot;storage_options&quot;</span><span class="s3">])</span>
+<a name="l70"><span class="ln">70   </span></a><span class="s2">def </span><span class="s1">read_feather</span><span class="s3">(</span>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s1">path</span><span class="s3">: </span><span class="s1">FilePath </span><span class="s3">| </span><span class="s1">ReadBuffer</span><span class="s3">[</span><span class="s1">bytes</span><span class="s3">],</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s1">columns</span><span class="s3">: </span><span class="s1">Sequence</span><span class="s3">[</span><span class="s1">Hashable</span><span class="s3">] | </span><span class="s2">None </span><span class="s3">= </span><span class="s2">None</span><span class="s3">,</span>
+<a name="l73"><span class="ln">73   </span></a>    <span class="s1">use_threads</span><span class="s3">: </span><span class="s1">bool </span><span class="s3">= </span><span class="s2">True</span><span class="s3">,</span>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s1">storage_options</span><span class="s3">: </span><span class="s1">StorageOptions </span><span class="s3">| </span><span class="s2">None </span><span class="s3">= </span><span class="s2">None</span><span class="s3">,</span>
+<a name="l75"><span class="ln">75   </span></a>    <span class="s1">dtype_backend</span><span class="s3">: </span><span class="s1">DtypeBackend </span><span class="s3">| </span><span class="s1">lib</span><span class="s3">.</span><span class="s1">NoDefault </span><span class="s3">= </span><span class="s1">lib</span><span class="s3">.</span><span class="s1">no_default</span><span class="s3">,</span>
+<a name="l76"><span class="ln">76   </span></a><span class="s3">) </span><span class="s1">-&gt; DataFrame</span><span class="s3">:</span>
+<a name="l77"><span class="ln">77   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l78"><span class="ln">78   </span></a>    Load a feather-format object from the file path. 
+<a name="l79"><span class="ln">79   </span></a> 
+<a name="l80"><span class="ln">80   </span></a>    Parameters 
+<a name="l81"><span class="ln">81   </span></a>    ---------- 
+<a name="l82"><span class="ln">82   </span></a>    path : str, path object, or file-like object 
+<a name="l83"><span class="ln">83   </span></a>        String, path object (implementing ``os.PathLike[str]``), or file-like 
+<a name="l84"><span class="ln">84   </span></a>        object implementing a binary ``read()`` function. The string could be a URL. 
+<a name="l85"><span class="ln">85   </span></a>        Valid URL schemes include http, ftp, s3, and file. For file URLs, a host is 
+<a name="l86"><span class="ln">86   </span></a>        expected. A local file could be: ``file://localhost/path/to/table.feather``. 
+<a name="l87"><span class="ln">87   </span></a>    columns : sequence, default None 
+<a name="l88"><span class="ln">88   </span></a>        If not provided, all columns are read. 
+<a name="l89"><span class="ln">89   </span></a>    use_threads : bool, default True 
+<a name="l90"><span class="ln">90   </span></a>        Whether to parallelize reading using multiple threads. 
+<a name="l91"><span class="ln">91   </span></a>    {storage_options} 
+<a name="l92"><span class="ln">92   </span></a> 
+<a name="l93"><span class="ln">93   </span></a>    dtype_backend : {{'numpy_nullable', 'pyarrow'}}, default 'numpy_nullable' 
+<a name="l94"><span class="ln">94   </span></a>        Back-end data type applied to the resultant :class:`DataFrame` 
+<a name="l95"><span class="ln">95   </span></a>        (still experimental). Behaviour is as follows: 
+<a name="l96"><span class="ln">96   </span></a> 
+<a name="l97"><span class="ln">97   </span></a>        * ``&quot;numpy_nullable&quot;``: returns nullable-dtype-backed :class:`DataFrame` 
+<a name="l98"><span class="ln">98   </span></a>          (default). 
+<a name="l99"><span class="ln">99   </span></a>        * ``&quot;pyarrow&quot;``: returns pyarrow-backed nullable :class:`ArrowDtype` 
+<a name="l100"><span class="ln">100  </span></a>          DataFrame. 
+<a name="l101"><span class="ln">101  </span></a> 
+<a name="l102"><span class="ln">102  </span></a>        .. versionadded:: 2.0 
+<a name="l103"><span class="ln">103  </span></a> 
+<a name="l104"><span class="ln">104  </span></a>    Returns 
+<a name="l105"><span class="ln">105  </span></a>    ------- 
+<a name="l106"><span class="ln">106  </span></a>    type of object stored in file 
+<a name="l107"><span class="ln">107  </span></a> 
+<a name="l108"><span class="ln">108  </span></a>    Examples 
+<a name="l109"><span class="ln">109  </span></a>    -------- 
+<a name="l110"><span class="ln">110  </span></a>    &gt;&gt;&gt; df = pd.read_feather(&quot;path/to/file.feather&quot;)  # doctest: +SKIP 
+<a name="l111"><span class="ln">111  </span></a>    &quot;&quot;&quot;</span>
+<a name="l112"><span class="ln">112  </span></a>    <span class="s1">import_optional_dependency</span><span class="s3">(</span><span class="s4">&quot;pyarrow&quot;</span><span class="s3">)</span>
+<a name="l113"><span class="ln">113  </span></a>    <span class="s2">from </span><span class="s1">pyarrow </span><span class="s2">import </span><span class="s1">feather</span>
+<a name="l114"><span class="ln">114  </span></a>
+<a name="l115"><span class="ln">115  </span></a>    <span class="s5"># import utils to register the pyarrow extension types</span>
+<a name="l116"><span class="ln">116  </span></a>    <span class="s2">import </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">core</span><span class="s3">.</span><span class="s1">arrays</span><span class="s3">.</span><span class="s1">arrow</span><span class="s3">.</span><span class="s1">extension_types  </span><span class="s5"># pyright: ignore[reportUnusedImport] # noqa: F401</span>
+<a name="l117"><span class="ln">117  </span></a>
+<a name="l118"><span class="ln">118  </span></a>    <span class="s1">check_dtype_backend</span><span class="s3">(</span><span class="s1">dtype_backend</span><span class="s3">)</span>
+<a name="l119"><span class="ln">119  </span></a>
+<a name="l120"><span class="ln">120  </span></a>    <span class="s2">with </span><span class="s1">get_handle</span><span class="s3">(</span>
+<a name="l121"><span class="ln">121  </span></a>        <span class="s1">path</span><span class="s3">, </span><span class="s4">&quot;rb&quot;</span><span class="s3">, </span><span class="s1">storage_options</span><span class="s3">=</span><span class="s1">storage_options</span><span class="s3">, </span><span class="s1">is_text</span><span class="s3">=</span><span class="s2">False</span>
+<a name="l122"><span class="ln">122  </span></a>    <span class="s3">) </span><span class="s2">as </span><span class="s1">handles</span><span class="s3">:</span>
+<a name="l123"><span class="ln">123  </span></a>        <span class="s2">if </span><span class="s1">dtype_backend </span><span class="s2">is </span><span class="s1">lib</span><span class="s3">.</span><span class="s1">no_default </span><span class="s2">and not </span><span class="s1">using_pyarrow_string_dtype</span><span class="s3">():</span>
+<a name="l124"><span class="ln">124  </span></a>            <span class="s2">return </span><span class="s1">feather</span><span class="s3">.</span><span class="s1">read_feather</span><span class="s3">(</span>
+<a name="l125"><span class="ln">125  </span></a>                <span class="s1">handles</span><span class="s3">.</span><span class="s1">handle</span><span class="s3">, </span><span class="s1">columns</span><span class="s3">=</span><span class="s1">columns</span><span class="s3">, </span><span class="s1">use_threads</span><span class="s3">=</span><span class="s1">bool</span><span class="s3">(</span><span class="s1">use_threads</span><span class="s3">)</span>
+<a name="l126"><span class="ln">126  </span></a>            <span class="s3">)</span>
+<a name="l127"><span class="ln">127  </span></a>
+<a name="l128"><span class="ln">128  </span></a>        <span class="s1">pa_table </span><span class="s3">= </span><span class="s1">feather</span><span class="s3">.</span><span class="s1">read_table</span><span class="s3">(</span>
+<a name="l129"><span class="ln">129  </span></a>            <span class="s1">handles</span><span class="s3">.</span><span class="s1">handle</span><span class="s3">, </span><span class="s1">columns</span><span class="s3">=</span><span class="s1">columns</span><span class="s3">, </span><span class="s1">use_threads</span><span class="s3">=</span><span class="s1">bool</span><span class="s3">(</span><span class="s1">use_threads</span><span class="s3">)</span>
+<a name="l130"><span class="ln">130  </span></a>        <span class="s3">)</span>
+<a name="l131"><span class="ln">131  </span></a>
+<a name="l132"><span class="ln">132  </span></a>        <span class="s2">if </span><span class="s1">dtype_backend </span><span class="s3">== </span><span class="s4">&quot;numpy_nullable&quot;</span><span class="s3">:</span>
+<a name="l133"><span class="ln">133  </span></a>            <span class="s2">from </span><span class="s1">pandas</span><span class="s3">.</span><span class="s1">io</span><span class="s3">.</span><span class="s1">_util </span><span class="s2">import </span><span class="s1">_arrow_dtype_mapping</span>
+<a name="l134"><span class="ln">134  </span></a>
+<a name="l135"><span class="ln">135  </span></a>            <span class="s2">return </span><span class="s1">pa_table</span><span class="s3">.</span><span class="s1">to_pandas</span><span class="s3">(</span><span class="s1">types_mapper</span><span class="s3">=</span><span class="s1">_arrow_dtype_mapping</span><span class="s3">().</span><span class="s1">get</span><span class="s3">)</span>
+<a name="l136"><span class="ln">136  </span></a>
+<a name="l137"><span class="ln">137  </span></a>        <span class="s2">elif </span><span class="s1">dtype_backend </span><span class="s3">== </span><span class="s4">&quot;pyarrow&quot;</span><span class="s3">:</span>
+<a name="l138"><span class="ln">138  </span></a>            <span class="s2">return </span><span class="s1">pa_table</span><span class="s3">.</span><span class="s1">to_pandas</span><span class="s3">(</span><span class="s1">types_mapper</span><span class="s3">=</span><span class="s1">pd</span><span class="s3">.</span><span class="s1">ArrowDtype</span><span class="s3">)</span>
+<a name="l139"><span class="ln">139  </span></a>
+<a name="l140"><span class="ln">140  </span></a>        <span class="s2">elif </span><span class="s1">using_pyarrow_string_dtype</span><span class="s3">():</span>
+<a name="l141"><span class="ln">141  </span></a>            <span class="s2">return </span><span class="s1">pa_table</span><span class="s3">.</span><span class="s1">to_pandas</span><span class="s3">(</span><span class="s1">types_mapper</span><span class="s3">=</span><span class="s1">arrow_string_types_mapper</span><span class="s3">())</span>
+<a name="l142"><span class="ln">142  </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l143"><span class="ln">143  </span></a>            <span class="s2">raise </span><span class="s1">NotImplementedError</span>
+<a name="l144"><span class="ln">144  </span></a></pre>
+</body>
+</html>

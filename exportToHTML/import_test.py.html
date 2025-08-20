@@ -1,0 +1,88 @@
+<html>
+<head>
+<title>import_test.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #a5c261;}
+.s5 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+import_test.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># flake8: noqa</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s2">import </span><span class="s1">subprocess</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s2">import </span><span class="s1">sys</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">import </span><span class="s1">unittest</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s1">_import_everything </span><span class="s3">= </span><span class="s4">b&quot;&quot;&quot; 
+<a name="l7"><span class="ln">7    </span></a># The event loop is not fork-safe, and it's easy to initialize an asyncio.Future 
+<a name="l8"><span class="ln">8    </span></a># at startup, which in turn creates the default event loop and prevents forking. 
+<a name="l9"><span class="ln">9    </span></a># Explicitly disallow the default event loop so that an error will be raised 
+<a name="l10"><span class="ln">10   </span></a># if something tries to touch it. 
+<a name="l11"><span class="ln">11   </span></a>import asyncio 
+<a name="l12"><span class="ln">12   </span></a>asyncio.set_event_loop(None) 
+<a name="l13"><span class="ln">13   </span></a> 
+<a name="l14"><span class="ln">14   </span></a>import importlib 
+<a name="l15"><span class="ln">15   </span></a>import tornado 
+<a name="l16"><span class="ln">16   </span></a> 
+<a name="l17"><span class="ln">17   </span></a>for mod in tornado.__all__: 
+<a name="l18"><span class="ln">18   </span></a>    if mod == &quot;curl_httpclient&quot;: 
+<a name="l19"><span class="ln">19   </span></a>        # This module has extra dependencies; skip it if they're not installed. 
+<a name="l20"><span class="ln">20   </span></a>        try: 
+<a name="l21"><span class="ln">21   </span></a>            import pycurl 
+<a name="l22"><span class="ln">22   </span></a>        except ImportError: 
+<a name="l23"><span class="ln">23   </span></a>            continue 
+<a name="l24"><span class="ln">24   </span></a>    importlib.import_module(f&quot;tornado.{mod}&quot;) 
+<a name="l25"><span class="ln">25   </span></a>&quot;&quot;&quot;</span>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a><span class="s1">_import_lazy </span><span class="s3">= </span><span class="s4">b&quot;&quot;&quot; 
+<a name="l28"><span class="ln">28   </span></a>import sys 
+<a name="l29"><span class="ln">29   </span></a>import tornado 
+<a name="l30"><span class="ln">30   </span></a> 
+<a name="l31"><span class="ln">31   </span></a>if &quot;tornado.web&quot; in sys.modules: 
+<a name="l32"><span class="ln">32   </span></a>    raise Exception(&quot;unexpected eager import&quot;) 
+<a name="l33"><span class="ln">33   </span></a> 
+<a name="l34"><span class="ln">34   </span></a># Trigger a lazy import by referring to something in a submodule. 
+<a name="l35"><span class="ln">35   </span></a>tornado.web.RequestHandler 
+<a name="l36"><span class="ln">36   </span></a> 
+<a name="l37"><span class="ln">37   </span></a>if &quot;tornado.web&quot; not in sys.modules: 
+<a name="l38"><span class="ln">38   </span></a>    raise Exception(&quot;lazy import did not update sys.modules&quot;) 
+<a name="l39"><span class="ln">39   </span></a>&quot;&quot;&quot;</span>
+<a name="l40"><span class="ln">40   </span></a>
+<a name="l41"><span class="ln">41   </span></a>
+<a name="l42"><span class="ln">42   </span></a><span class="s2">class </span><span class="s1">ImportTest</span><span class="s3">(</span><span class="s1">unittest</span><span class="s3">.</span><span class="s1">TestCase</span><span class="s3">):</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s2">def </span><span class="s1">test_import_everything</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l44"><span class="ln">44   </span></a>        <span class="s0"># Test that all Tornado modules can be imported without side effects,</span>
+<a name="l45"><span class="ln">45   </span></a>        <span class="s0"># specifically without initializing the default asyncio event loop.</span>
+<a name="l46"><span class="ln">46   </span></a>        <span class="s0"># Since we can't tell which modules may have already beein imported</span>
+<a name="l47"><span class="ln">47   </span></a>        <span class="s0"># in our process, do it in a subprocess for a clean slate.</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s1">proc </span><span class="s3">= </span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">Popen</span><span class="s3">([</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">executable</span><span class="s3">], </span><span class="s1">stdin</span><span class="s3">=</span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">PIPE</span><span class="s3">)</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s1">proc</span><span class="s3">.</span><span class="s1">communicate</span><span class="s3">(</span><span class="s1">_import_everything</span><span class="s3">)</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">assertEqual</span><span class="s3">(</span><span class="s1">proc</span><span class="s3">.</span><span class="s1">returncode</span><span class="s3">, </span><span class="s5">0</span><span class="s3">)</span>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a>    <span class="s2">def </span><span class="s1">test_lazy_import</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s0"># Test that submodules can be referenced lazily after &quot;import tornado&quot;</span>
+<a name="l54"><span class="ln">54   </span></a>        <span class="s1">proc </span><span class="s3">= </span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">Popen</span><span class="s3">([</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">executable</span><span class="s3">], </span><span class="s1">stdin</span><span class="s3">=</span><span class="s1">subprocess</span><span class="s3">.</span><span class="s1">PIPE</span><span class="s3">)</span>
+<a name="l55"><span class="ln">55   </span></a>        <span class="s1">proc</span><span class="s3">.</span><span class="s1">communicate</span><span class="s3">(</span><span class="s1">_import_lazy</span><span class="s3">)</span>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">assertEqual</span><span class="s3">(</span><span class="s1">proc</span><span class="s3">.</span><span class="s1">returncode</span><span class="s3">, </span><span class="s5">0</span><span class="s3">)</span>
+<a name="l57"><span class="ln">57   </span></a>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s2">def </span><span class="s1">test_import_aliases</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s0"># Ensure we don't delete formerly-documented aliases accidentally.</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s2">import </span><span class="s1">tornado</span>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s2">import </span><span class="s1">asyncio</span>
+<a name="l62"><span class="ln">62   </span></a>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">assertIs</span><span class="s3">(</span><span class="s1">tornado</span><span class="s3">.</span><span class="s1">ioloop</span><span class="s3">.</span><span class="s1">TimeoutError</span><span class="s3">, </span><span class="s1">tornado</span><span class="s3">.</span><span class="s1">util</span><span class="s3">.</span><span class="s1">TimeoutError</span><span class="s3">)</span>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">assertIs</span><span class="s3">(</span><span class="s1">tornado</span><span class="s3">.</span><span class="s1">gen</span><span class="s3">.</span><span class="s1">TimeoutError</span><span class="s3">, </span><span class="s1">tornado</span><span class="s3">.</span><span class="s1">util</span><span class="s3">.</span><span class="s1">TimeoutError</span><span class="s3">)</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">assertIs</span><span class="s3">(</span><span class="s1">tornado</span><span class="s3">.</span><span class="s1">util</span><span class="s3">.</span><span class="s1">TimeoutError</span><span class="s3">, </span><span class="s1">asyncio</span><span class="s3">.</span><span class="s1">TimeoutError</span><span class="s3">)</span>
+<a name="l66"><span class="ln">66   </span></a></pre>
+</body>
+</html>

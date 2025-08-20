@@ -1,0 +1,265 @@
+C:\Users\lesle\PycharmProjects\WAVE_IRP_PROJECT\venv\Scripts\python.exe C:\Users\lesle\PycharmProjects\WAVE_IRP_PROJECT\main.py 
+ Scikit-learn version in use: 1.6.1
+2025-04-18 18:43:22.691980: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-04-18 18:43:23.829043: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+Test Set Metrics (Perth): {'MAE': 0.015894934132743666, 'RMSE': np.float64(0.02039948503686632), 'R2': 0.9837597415107115}
+Generalization Metrics (Sydney): {'MAE': 0.34971644947627206, 'RMSE': np.float64(0.35663935454926554), 'R2': -5.63208476366665}
+Filtered X_lstm shape: (2727, 10, 15)
+Top LSTM input features based on XGBoost:
+qW
+Y26
+Y86
+X98
+Y9
+Y84
+MeanWEC_DistanceFromOrigin
+X94
+Power3
+Y67
+Y90
+Y100
+X65
+Power33
+X28
+ X_lstm shape: (2727, 10, 15)
+ y_lstm sample: [1.         0.53846154 0.61538462 0.61538462 0.69230769 0.92307692
+ 0.76923077 1.         1.         0.84615385]
+ One input sample (X_lstm[0]):
+ [[9.23076923e-01 2.00000000e+02 1.23742000e+03 1.14608000e+03
+  2.00000000e+02 1.11210000e+03 1.09457529e+03 5.46080000e+02
+  2.58750372e-01 8.74760000e+02 1.23742000e+03 1.31210000e+03
+  4.00000000e+02 2.31514299e-01 1.40000000e+03]
+ [8.46153846e-01 4.37380000e+02 1.03738000e+03 7.46040000e+02
+  0.00000000e+00 1.11197000e+03 1.08249827e+03 3.46040000e+02
+  1.92438600e-01 8.74790000e+02 1.23738000e+03 1.31197000e+03
+  4.00000000e+02 1.67892030e-01 3.24300000e+01]
+ [1.00000000e+00 2.00000000e+02 1.23750000e+03 9.45980000e+02
+  0.00000000e+00 1.11215000e+03 1.10242009e+03 5.45980000e+02
+  2.86168300e-01 8.74950000e+02 1.23750000e+03 1.31215000e+03
+  8.00000000e+02 3.75438723e-01 1.40000000e+03]
+ [9.23076923e-01 2.37410000e+02 1.23741000e+03 1.14609000e+03
+  0.00000000e+00 1.31190000e+03 1.10744792e+03 9.46090000e+02
+  1.70743166e-01 1.07476000e+03 1.23741000e+03 1.31190000e+03
+  2.00000000e+02 4.46303616e-01 8.32350000e+02]
+ [9.23076923e-01 2.37520000e+02 1.23752000e+03 1.14595000e+03
+  0.00000000e+00 1.11216000e+03 1.04087388e+03 5.45950000e+02
+  2.27495351e-01 6.74990000e+02 1.23752000e+03 1.31216000e+03
+  1.40000000e+03 3.28979517e-01 8.32460000e+02]
+ [7.69230769e-01 2.37500000e+02 1.03750000e+03 1.34600000e+03
+  0.00000000e+00 1.11228000e+03 1.09446401e+03 9.46000000e+02
+  1.35360887e-01 8.75010000e+02 1.23750000e+03 1.31228000e+03
+  1.20000000e+03 9.77776544e-01 8.32280000e+02]
+ [8.46153846e-01 4.00000000e+02 1.30000000e+03 1.05000000e+03
+  0.00000000e+00 1.25000000e+03 1.13800308e+03 5.50000000e+02
+  1.80113702e-01 7.50000000e+02 1.25000000e+03 1.40000000e+03
+  8.00000000e+02 2.29466293e-01 1.05000000e+03]
+ [1.00000000e+00 2.37500000e+02 1.23750000e+03 1.14618000e+03
+  0.00000000e+00 1.40000000e+03 1.15690784e+03 9.46180000e+02
+  2.35202882e-01 1.07502000e+03 1.23750000e+03 1.31220000e+03
+  2.00000000e+02 9.38188463e-01 6.32430000e+02]
+ [9.23076923e-01 2.37570000e+02 1.23757000e+03 1.14600000e+03
+  0.00000000e+00 1.11221000e+03 1.02136433e+03 7.46000000e+02
+  2.60868794e-01 8.75050000e+02 1.23757000e+03 1.31221000e+03
+  4.00000000e+02 5.56685922e-01 6.32140000e+02]
+ [1.00000000e+00 2.37450000e+02 1.23745000e+03 9.46120000e+02
+  0.00000000e+00 1.31215000e+03 1.02285978e+03 7.46120000e+02
+  2.76594595e-01 8.74860000e+02 1.23745000e+03 1.31215000e+03
+  6.00000000e+02 9.66428978e-01 8.32290000e+02]]
+2025-04-18 18:47:43.533128: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+Epoch 1/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 4s 20ms/step - loss: 0.1174 - mae: 0.3948 - val_loss: 0.0136 - val_mae: 0.1370
+Epoch 2/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0203 - mae: 0.1631 - val_loss: 0.0144 - val_mae: 0.1414
+Epoch 3/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0177 - mae: 0.1527 - val_loss: 0.0130 - val_mae: 0.1345
+Epoch 4/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0164 - mae: 0.1484 - val_loss: 0.0155 - val_mae: 0.1471
+Epoch 5/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0154 - mae: 0.1441 - val_loss: 0.0129 - val_mae: 0.1362
+Epoch 6/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0158 - mae: 0.1476 - val_loss: 0.0126 - val_mae: 0.1337
+Epoch 7/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0144 - mae: 0.1419 - val_loss: 0.0138 - val_mae: 0.1411
+Epoch 8/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0148 - mae: 0.1425 - val_loss: 0.0133 - val_mae: 0.1386
+Epoch 9/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0150 - mae: 0.1448 - val_loss: 0.0136 - val_mae: 0.1390
+Epoch 10/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0142 - mae: 0.1398 - val_loss: 0.0132 - val_mae: 0.1382
+Epoch 11/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0150 - mae: 0.1438 - val_loss: 0.0126 - val_mae: 0.1339
+Epoch 12/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 15ms/step - loss: 0.0138 - mae: 0.1385 - val_loss: 0.0128 - val_mae: 0.1344
+Epoch 13/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0141 - mae: 0.1419 - val_loss: 0.0148 - val_mae: 0.1445
+Epoch 14/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0136 - mae: 0.1390 - val_loss: 0.0130 - val_mae: 0.1375
+Epoch 15/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0138 - mae: 0.1382 - val_loss: 0.0126 - val_mae: 0.1347
+Epoch 16/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0136 - mae: 0.1393 - val_loss: 0.0155 - val_mae: 0.1464
+Epoch 17/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 15ms/step - loss: 0.0132 - mae: 0.1370 - val_loss: 0.0126 - val_mae: 0.1339
+Epoch 18/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0139 - mae: 0.1395 - val_loss: 0.0124 - val_mae: 0.1329
+Epoch 19/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0133 - mae: 0.1355 - val_loss: 0.0146 - val_mae: 0.1436
+Epoch 20/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0139 - mae: 0.1398 - val_loss: 0.0137 - val_mae: 0.1400
+Epoch 21/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0124 - mae: 0.1332 - val_loss: 0.0125 - val_mae: 0.1331
+Epoch 22/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0138 - mae: 0.1388 - val_loss: 0.0125 - val_mae: 0.1326
+Epoch 23/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0139 - mae: 0.1403 - val_loss: 0.0125 - val_mae: 0.1328
+Epoch 24/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0134 - mae: 0.1377 - val_loss: 0.0130 - val_mae: 0.1330
+Epoch 25/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0136 - mae: 0.1371 - val_loss: 0.0130 - val_mae: 0.1368
+Epoch 26/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0139 - mae: 0.1416 - val_loss: 0.0128 - val_mae: 0.1359
+Epoch 27/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 15ms/step - loss: 0.0128 - mae: 0.1345 - val_loss: 0.0129 - val_mae: 0.1363
+Epoch 28/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0130 - mae: 0.1372 - val_loss: 0.0123 - val_mae: 0.1324
+Epoch 29/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0132 - mae: 0.1380 - val_loss: 0.0122 - val_mae: 0.1319
+Epoch 30/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0131 - mae: 0.1360 - val_loss: 0.0124 - val_mae: 0.1330
+Epoch 31/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0130 - mae: 0.1357 - val_loss: 0.0140 - val_mae: 0.1412
+Epoch 32/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 15ms/step - loss: 0.0145 - mae: 0.1423 - val_loss: 0.0130 - val_mae: 0.1371
+Epoch 33/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0132 - mae: 0.1374 - val_loss: 0.0128 - val_mae: 0.1359
+Epoch 34/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0131 - mae: 0.1360 - val_loss: 0.0125 - val_mae: 0.1340
+Epoch 35/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0133 - mae: 0.1379 - val_loss: 0.0126 - val_mae: 0.1348
+Epoch 36/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0129 - mae: 0.1352 - val_loss: 0.0124 - val_mae: 0.1323
+Epoch 37/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0130 - mae: 0.1353 - val_loss: 0.0128 - val_mae: 0.1358
+Epoch 38/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0130 - mae: 0.1366 - val_loss: 0.0126 - val_mae: 0.1344
+Epoch 39/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0130 - mae: 0.1368 - val_loss: 0.0129 - val_mae: 0.1366
+Epoch 40/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0137 - mae: 0.1419 - val_loss: 0.0126 - val_mae: 0.1343
+Epoch 41/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0132 - mae: 0.1377 - val_loss: 0.0126 - val_mae: 0.1348
+Epoch 42/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0131 - mae: 0.1358 - val_loss: 0.0132 - val_mae: 0.1381
+Epoch 43/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0125 - mae: 0.1343 - val_loss: 0.0125 - val_mae: 0.1342
+Epoch 44/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 15ms/step - loss: 0.0130 - mae: 0.1372 - val_loss: 0.0136 - val_mae: 0.1398
+Epoch 44: early stopping
+Restoring model weights from the end of the best epoch: 29.
+ Final LSTM training loss: 0.01307
+ Final LSTM validation loss: 0.01360
+39/39 ━━━━━━━━━━━━━━━━━━━━ 1s 11ms/step
+Predicted qW → Min: 0.4657, Max: 0.9319, Std: 0.0385
+
+LSTM Performance (Sydney qW):
+MAE: 0.3522711924200923
+RMSE: 0.3659865429455976
+R2: -14.739610118221618
+39/39 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step
+Predicted qW → Min: 0.4657, Max: 0.9319, Std: 0.0385
+
+ Generalization (Sydney) with LSTM-inferred qW:
+{'MAE': 0.11798411142611315, 'RMSE': np.float64(0.14238896088025055), 'R2': -0.05716841502795078}
+
+ Baseline Model Comparisons (Perth Test Set):
+
+Linear Regression:
+{'MAE': 2.2463521390216625e-07, 'RMSE': np.float64(2.9662153314113564e-06), 'R2': 0.999999999656632}
+
+ Random Forest:
+{'MAE': 0.01578027561130398, 'RMSE': np.float64(0.019424873504085012), 'R2': 0.9852744702461013}
+
+ Benchmarking Runtime...
+XGBoost Training Time: 2.6168 seconds
+Epoch 1/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 4s 20ms/step - loss: 0.0566 - mae: 0.2684 - val_loss: 0.0147 - val_mae: 0.1393
+Epoch 2/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0206 - mae: 0.1631 - val_loss: 0.0136 - val_mae: 0.1339
+Epoch 3/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0181 - mae: 0.1555 - val_loss: 0.0130 - val_mae: 0.1332
+Epoch 4/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0164 - mae: 0.1501 - val_loss: 0.0138 - val_mae: 0.1347
+Epoch 5/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0158 - mae: 0.1455 - val_loss: 0.0131 - val_mae: 0.1327
+Epoch 6/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0152 - mae: 0.1436 - val_loss: 0.0125 - val_mae: 0.1329
+Epoch 7/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0146 - mae: 0.1419 - val_loss: 0.0123 - val_mae: 0.1324
+Epoch 8/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0148 - mae: 0.1441 - val_loss: 0.0125 - val_mae: 0.1316
+Epoch 9/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0147 - mae: 0.1418 - val_loss: 0.0123 - val_mae: 0.1320
+Epoch 10/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0140 - mae: 0.1383 - val_loss: 0.0124 - val_mae: 0.1313
+Epoch 11/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 15ms/step - loss: 0.0147 - mae: 0.1431 - val_loss: 0.0128 - val_mae: 0.1346
+Epoch 12/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0142 - mae: 0.1419 - val_loss: 0.0127 - val_mae: 0.1334
+Epoch 13/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 15ms/step - loss: 0.0142 - mae: 0.1397 - val_loss: 0.0127 - val_mae: 0.1327
+Epoch 14/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0131 - mae: 0.1356 - val_loss: 0.0129 - val_mae: 0.1348
+Epoch 15/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0137 - mae: 0.1393 - val_loss: 0.0128 - val_mae: 0.1339
+Epoch 16/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0135 - mae: 0.1375 - val_loss: 0.0126 - val_mae: 0.1339
+Epoch 17/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0139 - mae: 0.1391 - val_loss: 0.0125 - val_mae: 0.1325
+Epoch 18/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0137 - mae: 0.1398 - val_loss: 0.0126 - val_mae: 0.1332
+Epoch 19/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0132 - mae: 0.1364 - val_loss: 0.0127 - val_mae: 0.1348
+Epoch 20/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0136 - mae: 0.1394 - val_loss: 0.0125 - val_mae: 0.1334
+Epoch 21/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0133 - mae: 0.1370 - val_loss: 0.0124 - val_mae: 0.1328
+Epoch 22/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0125 - mae: 0.1339 - val_loss: 0.0124 - val_mae: 0.1325
+Epoch 23/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0135 - mae: 0.1384 - val_loss: 0.0123 - val_mae: 0.1319
+Epoch 24/100
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - loss: 0.0133 - mae: 0.1362 - val_loss: 0.0128 - val_mae: 0.1355
+Epoch 24: early stopping
+Restoring model weights from the end of the best epoch: 9.
+LSTM Training Time: 27.3025 seconds
+Random Forest Training Time: 46.2030 seconds
+Dummy EA Time (1000 iterations): 0.0993 seconds
+
+ RQ3: Transfer Learning - Fine-Tuning XGBoost on small Sydney subset...
+ Fine-tuned XGBoost on Sydney (20% of data):
+{'MAE': 0.023323603078616743, 'RMSE': np.float64(0.033749538954886235), 'R2': 0.9394802950344933}
+C:\Users\lesle\PycharmProjects\WAVE_IRP_PROJECT\src\visuals.py:58: FutureWarning: 
+
+Passing `palette` without assigning `hue` is deprecated and will be removed in v0.14.0. Assign the `y` variable to `hue` and set `legend=False` for the same effect.
+
+  ax = sns.barplot(
+C:\Users\lesle\PycharmProjects\WAVE_IRP_PROJECT\src\visuals.py:65: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
+  ax.set_yticklabels(ax.get_yticklabels(), rotation=0, ha='right', fontsize=10)
+
+XGBoost Performance Delta (Real vs. Inferred qW):
+Metric   Real qW  Inferred qW   Δ (Abs)  Δ (%)
+   MAE  0.349716     0.117984 -0.231732 -66.26
+  RMSE  0.356639     0.142389 -0.214250 -60.07
+    R2 -5.632085    -0.057168  5.574916 -98.98
+86/86 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step
+Predicted qW → Min: 0.5310, Max: 1.0309, Std: 0.0160
+
+LSTM Performance (on Perth Training Set):
+{'MAE': 0.13476656569448903, 'RMSE': np.float64(0.16147722948769636), 'R2': -0.01042382606062775}
+Train Pred Stats:
+Min: 0.5310, Max: 1.0309, Std: 0.0160
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step 
+Predicted qW → Min: 0.6765, Max: 1.0309, Std: 0.0254
+
+Process finished with exit code 0

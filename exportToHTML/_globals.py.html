@@ -1,0 +1,119 @@
+<html>
+<head>
+<title>_globals.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_globals.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>Module defining global singleton classes. 
+<a name="l3"><span class="ln">3    </span></a> 
+<a name="l4"><span class="ln">4    </span></a>This module raises a RuntimeError if an attempt to reload it is made. In that 
+<a name="l5"><span class="ln">5    </span></a>way the identities of the classes defined here are fixed and will remain so 
+<a name="l6"><span class="ln">6    </span></a>even if numpy itself is reloaded. In particular, a function like the following 
+<a name="l7"><span class="ln">7    </span></a>will still work correctly after numpy is reloaded:: 
+<a name="l8"><span class="ln">8    </span></a> 
+<a name="l9"><span class="ln">9    </span></a>    def foo(arg=np._NoValue): 
+<a name="l10"><span class="ln">10   </span></a>        if arg is np._NoValue: 
+<a name="l11"><span class="ln">11   </span></a>            ... 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>That was not the case when the singleton classes were defined in the numpy 
+<a name="l14"><span class="ln">14   </span></a>``__init__.py`` file. See gh-7844 for a discussion of the reload problem that 
+<a name="l15"><span class="ln">15   </span></a>motivated this module. 
+<a name="l16"><span class="ln">16   </span></a> 
+<a name="l17"><span class="ln">17   </span></a>&quot;&quot;&quot;</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s2">import </span><span class="s1">enum</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s2">from </span><span class="s3">.</span><span class="s1">_utils </span><span class="s2">import </span><span class="s1">set_module </span><span class="s2">as </span><span class="s1">_set_module</span>
+<a name="l21"><span class="ln">21   </span></a>
+<a name="l22"><span class="ln">22   </span></a><span class="s1">__all__ </span><span class="s3">= [</span><span class="s4">'_NoValue'</span><span class="s3">, </span><span class="s4">'_CopyMode'</span><span class="s3">]</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a><span class="s5"># Disallow reloading this module so as to preserve the identities of the</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s5"># classes defined here.</span>
+<a name="l27"><span class="ln">27   </span></a><span class="s2">if </span><span class="s4">'_is_loaded' </span><span class="s2">in </span><span class="s1">globals</span><span class="s3">():</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s2">raise </span><span class="s1">RuntimeError</span><span class="s3">(</span><span class="s4">'Reloading numpy._globals is not allowed'</span><span class="s3">)</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s1">_is_loaded </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a><span class="s2">class </span><span class="s1">_NoValueType</span><span class="s3">:</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s0">&quot;&quot;&quot;Special keyword value. 
+<a name="l34"><span class="ln">34   </span></a> 
+<a name="l35"><span class="ln">35   </span></a>    The instance of this class may be used as the default value assigned to a 
+<a name="l36"><span class="ln">36   </span></a>    keyword if no other obvious default (e.g., `None`) is suitable, 
+<a name="l37"><span class="ln">37   </span></a> 
+<a name="l38"><span class="ln">38   </span></a>    Common reasons for using this keyword are: 
+<a name="l39"><span class="ln">39   </span></a> 
+<a name="l40"><span class="ln">40   </span></a>    - A new keyword is added to a function, and that function forwards its 
+<a name="l41"><span class="ln">41   </span></a>      inputs to another function or method which can be defined outside of 
+<a name="l42"><span class="ln">42   </span></a>      NumPy. For example, ``np.std(x)`` calls ``x.std``, so when a ``keepdims`` 
+<a name="l43"><span class="ln">43   </span></a>      keyword was added that could only be forwarded if the user explicitly 
+<a name="l44"><span class="ln">44   </span></a>      specified ``keepdims``; downstream array libraries may not have added 
+<a name="l45"><span class="ln">45   </span></a>      the same keyword, so adding ``x.std(..., keepdims=keepdims)`` 
+<a name="l46"><span class="ln">46   </span></a>      unconditionally could have broken previously working code. 
+<a name="l47"><span class="ln">47   </span></a>    - A keyword is being deprecated, and a deprecation warning must only be 
+<a name="l48"><span class="ln">48   </span></a>      emitted when the keyword is used. 
+<a name="l49"><span class="ln">49   </span></a> 
+<a name="l50"><span class="ln">50   </span></a>    &quot;&quot;&quot;</span>
+<a name="l51"><span class="ln">51   </span></a>    <span class="s1">__instance </span><span class="s3">= </span><span class="s2">None</span>
+<a name="l52"><span class="ln">52   </span></a>    <span class="s2">def </span><span class="s1">__new__</span><span class="s3">(</span><span class="s1">cls</span><span class="s3">):</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s5"># ensure that only one instance exists</span>
+<a name="l54"><span class="ln">54   </span></a>        <span class="s2">if not </span><span class="s1">cls</span><span class="s3">.</span><span class="s1">__instance</span><span class="s3">:</span>
+<a name="l55"><span class="ln">55   </span></a>            <span class="s1">cls</span><span class="s3">.</span><span class="s1">__instance </span><span class="s3">= </span><span class="s1">super</span><span class="s3">().</span><span class="s1">__new__</span><span class="s3">(</span><span class="s1">cls</span><span class="s3">)</span>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s2">return </span><span class="s1">cls</span><span class="s3">.</span><span class="s1">__instance</span>
+<a name="l57"><span class="ln">57   </span></a>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s2">def </span><span class="s1">__repr__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s2">return </span><span class="s4">&quot;&lt;no value&gt;&quot;</span>
+<a name="l60"><span class="ln">60   </span></a>
+<a name="l61"><span class="ln">61   </span></a>
+<a name="l62"><span class="ln">62   </span></a><span class="s1">_NoValue </span><span class="s3">= </span><span class="s1">_NoValueType</span><span class="s3">()</span>
+<a name="l63"><span class="ln">63   </span></a>
+<a name="l64"><span class="ln">64   </span></a>
+<a name="l65"><span class="ln">65   </span></a><span class="s3">@</span><span class="s1">_set_module</span><span class="s3">(</span><span class="s4">&quot;numpy&quot;</span><span class="s3">)</span>
+<a name="l66"><span class="ln">66   </span></a><span class="s2">class </span><span class="s1">_CopyMode</span><span class="s3">(</span><span class="s1">enum</span><span class="s3">.</span><span class="s1">Enum</span><span class="s3">):</span>
+<a name="l67"><span class="ln">67   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l68"><span class="ln">68   </span></a>    An enumeration for the copy modes supported 
+<a name="l69"><span class="ln">69   </span></a>    by numpy.copy() and numpy.array(). The following three modes are supported, 
+<a name="l70"><span class="ln">70   </span></a> 
+<a name="l71"><span class="ln">71   </span></a>    - ALWAYS: This means that a deep copy of the input 
+<a name="l72"><span class="ln">72   </span></a>              array will always be taken. 
+<a name="l73"><span class="ln">73   </span></a>    - IF_NEEDED: This means that a deep copy of the input 
+<a name="l74"><span class="ln">74   </span></a>                 array will be taken only if necessary. 
+<a name="l75"><span class="ln">75   </span></a>    - NEVER: This means that the deep copy will never be taken. 
+<a name="l76"><span class="ln">76   </span></a>             If a copy cannot be avoided then a `ValueError` will be 
+<a name="l77"><span class="ln">77   </span></a>             raised. 
+<a name="l78"><span class="ln">78   </span></a> 
+<a name="l79"><span class="ln">79   </span></a>    Note that the buffer-protocol could in theory do copies.  NumPy currently 
+<a name="l80"><span class="ln">80   </span></a>    assumes an object exporting the buffer protocol will never do this. 
+<a name="l81"><span class="ln">81   </span></a>    &quot;&quot;&quot;</span>
+<a name="l82"><span class="ln">82   </span></a>
+<a name="l83"><span class="ln">83   </span></a>    <span class="s1">ALWAYS </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l84"><span class="ln">84   </span></a>    <span class="s1">NEVER </span><span class="s3">= </span><span class="s2">False</span>
+<a name="l85"><span class="ln">85   </span></a>    <span class="s1">IF_NEEDED </span><span class="s3">= </span><span class="s6">2</span>
+<a name="l86"><span class="ln">86   </span></a>
+<a name="l87"><span class="ln">87   </span></a>    <span class="s2">def </span><span class="s1">__bool__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l88"><span class="ln">88   </span></a>        <span class="s5"># For backwards compatibility</span>
+<a name="l89"><span class="ln">89   </span></a>        <span class="s2">if </span><span class="s1">self </span><span class="s3">== </span><span class="s1">_CopyMode</span><span class="s3">.</span><span class="s1">ALWAYS</span><span class="s3">:</span>
+<a name="l90"><span class="ln">90   </span></a>            <span class="s2">return True</span>
+<a name="l91"><span class="ln">91   </span></a>
+<a name="l92"><span class="ln">92   </span></a>        <span class="s2">if </span><span class="s1">self </span><span class="s3">== </span><span class="s1">_CopyMode</span><span class="s3">.</span><span class="s1">NEVER</span><span class="s3">:</span>
+<a name="l93"><span class="ln">93   </span></a>            <span class="s2">return False</span>
+<a name="l94"><span class="ln">94   </span></a>
+<a name="l95"><span class="ln">95   </span></a>        <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s4">f&quot;</span><span class="s2">{</span><span class="s1">self</span><span class="s2">} </span><span class="s4">is neither True nor False.&quot;</span><span class="s3">)</span>
+<a name="l96"><span class="ln">96   </span></a></pre>
+</body>
+</html>

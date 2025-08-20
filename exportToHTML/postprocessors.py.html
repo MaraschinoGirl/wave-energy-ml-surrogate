@@ -1,0 +1,155 @@
+<html>
+<head>
+<title>postprocessors.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+postprocessors.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Python Markdown</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0"># A Python implementation of John Gruber's Markdown.</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s0"># Documentation: https://python-markdown.github.io/</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0"># GitHub: https://github.com/Python-Markdown/markdown/</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0"># PyPI: https://pypi.org/project/Markdown/</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s0"># Started by Manfred Stienstra (http://www.dwerg.net/).</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0"># Maintained for a few years by Yuri Takhteyev (http://www.freewisdom.org).</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s0"># Currently maintained by Waylan Limberg (https://github.com/waylan),</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0"># Dmitry Shachnev (https://github.com/mitya57) and Isaac Muse (https://github.com/facelessuser).</span>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a><span class="s0"># Copyright 2007-2023 The Python Markdown Project (v. 1.7 and later)</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s0"># Copyright 2004, 2005, 2006 Yuri Takhteyev (v. 0.2-1.6b)</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s0"># Copyright 2004 Manfred Stienstra (the original version)</span>
+<a name="l17"><span class="ln">17   </span></a>
+<a name="l18"><span class="ln">18   </span></a><span class="s0"># License: BSD (see LICENSE.md for details).</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s2">&quot;&quot;&quot; 
+<a name="l21"><span class="ln">21   </span></a> 
+<a name="l22"><span class="ln">22   </span></a>Post-processors run on the text of the entire document after is has been serialized into a string. 
+<a name="l23"><span class="ln">23   </span></a>Postprocessors should be used to work with the text just before output. Usually, they are used add 
+<a name="l24"><span class="ln">24   </span></a>back sections that were extracted in a preprocessor, fix up outgoing encodings, or wrap the whole 
+<a name="l25"><span class="ln">25   </span></a>document. 
+<a name="l26"><span class="ln">26   </span></a> 
+<a name="l27"><span class="ln">27   </span></a>&quot;&quot;&quot;</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a><span class="s3">from </span><span class="s1">__future__ </span><span class="s3">import </span><span class="s1">annotations</span>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a><span class="s3">from </span><span class="s1">typing </span><span class="s3">import </span><span class="s1">TYPE_CHECKING</span><span class="s4">, </span><span class="s1">Any</span>
+<a name="l32"><span class="ln">32   </span></a><span class="s3">from </span><span class="s4">. </span><span class="s3">import </span><span class="s1">util</span>
+<a name="l33"><span class="ln">33   </span></a><span class="s3">import </span><span class="s1">re</span>
+<a name="l34"><span class="ln">34   </span></a>
+<a name="l35"><span class="ln">35   </span></a><span class="s3">if </span><span class="s1">TYPE_CHECKING</span><span class="s4">:  </span><span class="s0"># pragma: no cover</span>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s3">from </span><span class="s1">markdown </span><span class="s3">import </span><span class="s1">Markdown</span>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a>
+<a name="l39"><span class="ln">39   </span></a><span class="s3">def </span><span class="s1">build_postprocessors</span><span class="s4">(</span><span class="s1">md</span><span class="s4">: </span><span class="s1">Markdown</span><span class="s4">, **</span><span class="s1">kwargs</span><span class="s4">: </span><span class="s1">Any</span><span class="s4">) </span><span class="s1">-&gt; util</span><span class="s4">.</span><span class="s1">Registry</span><span class="s4">[</span><span class="s1">Postprocessor</span><span class="s4">]:</span>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s2">&quot;&quot;&quot; Build the default postprocessors for Markdown. &quot;&quot;&quot;</span>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s1">postprocessors </span><span class="s4">= </span><span class="s1">util</span><span class="s4">.</span><span class="s1">Registry</span><span class="s4">()</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s1">postprocessors</span><span class="s4">.</span><span class="s1">register</span><span class="s4">(</span><span class="s1">RawHtmlPostprocessor</span><span class="s4">(</span><span class="s1">md</span><span class="s4">), </span><span class="s5">'raw_html'</span><span class="s4">, </span><span class="s6">30</span><span class="s4">)</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s1">postprocessors</span><span class="s4">.</span><span class="s1">register</span><span class="s4">(</span><span class="s1">AndSubstitutePostprocessor</span><span class="s4">(), </span><span class="s5">'amp_substitute'</span><span class="s4">, </span><span class="s6">20</span><span class="s4">)</span>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s3">return </span><span class="s1">postprocessors</span>
+<a name="l45"><span class="ln">45   </span></a>
+<a name="l46"><span class="ln">46   </span></a>
+<a name="l47"><span class="ln">47   </span></a><span class="s3">class </span><span class="s1">Postprocessor</span><span class="s4">(</span><span class="s1">util</span><span class="s4">.</span><span class="s1">Processor</span><span class="s4">):</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s2">&quot;&quot;&quot; 
+<a name="l49"><span class="ln">49   </span></a>    Postprocessors are run after the ElementTree it converted back into text. 
+<a name="l50"><span class="ln">50   </span></a> 
+<a name="l51"><span class="ln">51   </span></a>    Each Postprocessor implements a `run` method that takes a pointer to a 
+<a name="l52"><span class="ln">52   </span></a>    text string, modifies it as necessary and returns a text string. 
+<a name="l53"><span class="ln">53   </span></a> 
+<a name="l54"><span class="ln">54   </span></a>    Postprocessors must extend `Postprocessor`. 
+<a name="l55"><span class="ln">55   </span></a> 
+<a name="l56"><span class="ln">56   </span></a>    &quot;&quot;&quot;</span>
+<a name="l57"><span class="ln">57   </span></a>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s3">def </span><span class="s1">run</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">text</span><span class="s4">: </span><span class="s1">str</span><span class="s4">) </span><span class="s1">-&gt; str</span><span class="s4">:</span>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s2">&quot;&quot;&quot; 
+<a name="l60"><span class="ln">60   </span></a>        Subclasses of `Postprocessor` should implement a `run` method, which 
+<a name="l61"><span class="ln">61   </span></a>        takes the html document as a single text string and returns a 
+<a name="l62"><span class="ln">62   </span></a>        (possibly modified) string. 
+<a name="l63"><span class="ln">63   </span></a> 
+<a name="l64"><span class="ln">64   </span></a>        &quot;&quot;&quot;</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s3">pass  </span><span class="s0"># pragma: no cover</span>
+<a name="l66"><span class="ln">66   </span></a>
+<a name="l67"><span class="ln">67   </span></a>
+<a name="l68"><span class="ln">68   </span></a><span class="s3">class </span><span class="s1">RawHtmlPostprocessor</span><span class="s4">(</span><span class="s1">Postprocessor</span><span class="s4">):</span>
+<a name="l69"><span class="ln">69   </span></a>    <span class="s2">&quot;&quot;&quot; Restore raw html to the document. &quot;&quot;&quot;</span>
+<a name="l70"><span class="ln">70   </span></a>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s1">BLOCK_LEVEL_REGEX </span><span class="s4">= </span><span class="s1">re</span><span class="s4">.</span><span class="s1">compile</span><span class="s4">(</span><span class="s5">r'^\&lt;\/?([^ &gt;]+)'</span><span class="s4">)</span>
+<a name="l72"><span class="ln">72   </span></a>
+<a name="l73"><span class="ln">73   </span></a>    <span class="s3">def </span><span class="s1">run</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">text</span><span class="s4">: </span><span class="s1">str</span><span class="s4">) </span><span class="s1">-&gt; str</span><span class="s4">:</span>
+<a name="l74"><span class="ln">74   </span></a>        <span class="s2">&quot;&quot;&quot; Iterate over html stash and restore html. &quot;&quot;&quot;</span>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s3">def </span><span class="s1">substitute_match</span><span class="s4">(</span><span class="s1">m</span><span class="s4">: </span><span class="s1">re</span><span class="s4">.</span><span class="s1">Match</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]) </span><span class="s1">-&gt; str</span><span class="s4">:</span>
+<a name="l76"><span class="ln">76   </span></a>            <span class="s3">if </span><span class="s1">key </span><span class="s4">:= </span><span class="s1">m</span><span class="s4">.</span><span class="s1">group</span><span class="s4">(</span><span class="s6">1</span><span class="s4">):</span>
+<a name="l77"><span class="ln">77   </span></a>                <span class="s1">wrapped </span><span class="s4">= </span><span class="s3">True</span>
+<a name="l78"><span class="ln">78   </span></a>            <span class="s3">else</span><span class="s4">:</span>
+<a name="l79"><span class="ln">79   </span></a>                <span class="s1">key </span><span class="s4">= </span><span class="s1">m</span><span class="s4">.</span><span class="s1">group</span><span class="s4">(</span><span class="s6">2</span><span class="s4">)</span>
+<a name="l80"><span class="ln">80   </span></a>                <span class="s1">wrapped </span><span class="s4">= </span><span class="s3">False</span>
+<a name="l81"><span class="ln">81   </span></a>            <span class="s3">if </span><span class="s4">(</span><span class="s1">key </span><span class="s4">:= </span><span class="s1">int</span><span class="s4">(</span><span class="s1">key</span><span class="s4">)) &gt;= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">md</span><span class="s4">.</span><span class="s1">htmlStash</span><span class="s4">.</span><span class="s1">html_counter</span><span class="s4">:</span>
+<a name="l82"><span class="ln">82   </span></a>                <span class="s3">return </span><span class="s1">m</span><span class="s4">.</span><span class="s1">group</span><span class="s4">(</span><span class="s6">0</span><span class="s4">)</span>
+<a name="l83"><span class="ln">83   </span></a>            <span class="s1">html </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">stash_to_string</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">md</span><span class="s4">.</span><span class="s1">htmlStash</span><span class="s4">.</span><span class="s1">rawHtmlBlocks</span><span class="s4">[</span><span class="s1">key</span><span class="s4">])</span>
+<a name="l84"><span class="ln">84   </span></a>            <span class="s3">if not </span><span class="s1">wrapped </span><span class="s3">or </span><span class="s1">self</span><span class="s4">.</span><span class="s1">isblocklevel</span><span class="s4">(</span><span class="s1">html</span><span class="s4">):</span>
+<a name="l85"><span class="ln">85   </span></a>                <span class="s3">return </span><span class="s1">pattern</span><span class="s4">.</span><span class="s1">sub</span><span class="s4">(</span><span class="s1">substitute_match</span><span class="s4">, </span><span class="s1">html</span><span class="s4">)</span>
+<a name="l86"><span class="ln">86   </span></a>            <span class="s3">return </span><span class="s1">pattern</span><span class="s4">.</span><span class="s1">sub</span><span class="s4">(</span><span class="s1">substitute_match</span><span class="s4">, </span><span class="s5">f&quot;&lt;p&gt;</span><span class="s3">{</span><span class="s1">html</span><span class="s3">}</span><span class="s5">&lt;/p&gt;&quot;</span><span class="s4">)</span>
+<a name="l87"><span class="ln">87   </span></a>
+<a name="l88"><span class="ln">88   </span></a>        <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">md</span><span class="s4">.</span><span class="s1">htmlStash</span><span class="s4">.</span><span class="s1">html_counter</span><span class="s4">:</span>
+<a name="l89"><span class="ln">89   </span></a>            <span class="s1">base_placeholder </span><span class="s4">= </span><span class="s1">util</span><span class="s4">.</span><span class="s1">HTML_PLACEHOLDER </span><span class="s4">% </span><span class="s5">r'([0-9]+)'</span>
+<a name="l90"><span class="ln">90   </span></a>            <span class="s1">pattern </span><span class="s4">= </span><span class="s1">re</span><span class="s4">.</span><span class="s1">compile</span><span class="s4">(</span><span class="s5">f'&lt;p&gt;</span><span class="s3">{ </span><span class="s1">base_placeholder </span><span class="s3">}</span><span class="s5">&lt;/p&gt;|</span><span class="s3">{ </span><span class="s1">base_placeholder </span><span class="s3">}</span><span class="s5">'</span><span class="s4">)</span>
+<a name="l91"><span class="ln">91   </span></a>            <span class="s3">return </span><span class="s1">pattern</span><span class="s4">.</span><span class="s1">sub</span><span class="s4">(</span><span class="s1">substitute_match</span><span class="s4">, </span><span class="s1">text</span><span class="s4">)</span>
+<a name="l92"><span class="ln">92   </span></a>        <span class="s3">else</span><span class="s4">:</span>
+<a name="l93"><span class="ln">93   </span></a>            <span class="s3">return </span><span class="s1">text</span>
+<a name="l94"><span class="ln">94   </span></a>
+<a name="l95"><span class="ln">95   </span></a>    <span class="s3">def </span><span class="s1">isblocklevel</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">html</span><span class="s4">: </span><span class="s1">str</span><span class="s4">) </span><span class="s1">-&gt; bool</span><span class="s4">:</span>
+<a name="l96"><span class="ln">96   </span></a>        <span class="s2">&quot;&quot;&quot; Check is block of HTML is block-level. &quot;&quot;&quot;</span>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s1">m </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">BLOCK_LEVEL_REGEX</span><span class="s4">.</span><span class="s1">match</span><span class="s4">(</span><span class="s1">html</span><span class="s4">)</span>
+<a name="l98"><span class="ln">98   </span></a>        <span class="s3">if </span><span class="s1">m</span><span class="s4">:</span>
+<a name="l99"><span class="ln">99   </span></a>            <span class="s3">if </span><span class="s1">m</span><span class="s4">.</span><span class="s1">group</span><span class="s4">(</span><span class="s6">1</span><span class="s4">)[</span><span class="s6">0</span><span class="s4">] </span><span class="s3">in </span><span class="s4">(</span><span class="s5">'!'</span><span class="s4">, </span><span class="s5">'?'</span><span class="s4">, </span><span class="s5">'@'</span><span class="s4">, </span><span class="s5">'%'</span><span class="s4">):</span>
+<a name="l100"><span class="ln">100  </span></a>                <span class="s0"># Comment, PHP etc...</span>
+<a name="l101"><span class="ln">101  </span></a>                <span class="s3">return True</span>
+<a name="l102"><span class="ln">102  </span></a>            <span class="s3">return </span><span class="s1">self</span><span class="s4">.</span><span class="s1">md</span><span class="s4">.</span><span class="s1">is_block_level</span><span class="s4">(</span><span class="s1">m</span><span class="s4">.</span><span class="s1">group</span><span class="s4">(</span><span class="s6">1</span><span class="s4">))</span>
+<a name="l103"><span class="ln">103  </span></a>        <span class="s3">return False</span>
+<a name="l104"><span class="ln">104  </span></a>
+<a name="l105"><span class="ln">105  </span></a>    <span class="s3">def </span><span class="s1">stash_to_string</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">text</span><span class="s4">: </span><span class="s1">str</span><span class="s4">) </span><span class="s1">-&gt; str</span><span class="s4">:</span>
+<a name="l106"><span class="ln">106  </span></a>        <span class="s2">&quot;&quot;&quot; Convert a stashed object to a string. &quot;&quot;&quot;</span>
+<a name="l107"><span class="ln">107  </span></a>        <span class="s3">return </span><span class="s1">str</span><span class="s4">(</span><span class="s1">text</span><span class="s4">)</span>
+<a name="l108"><span class="ln">108  </span></a>
+<a name="l109"><span class="ln">109  </span></a>
+<a name="l110"><span class="ln">110  </span></a><span class="s3">class </span><span class="s1">AndSubstitutePostprocessor</span><span class="s4">(</span><span class="s1">Postprocessor</span><span class="s4">):</span>
+<a name="l111"><span class="ln">111  </span></a>    <span class="s2">&quot;&quot;&quot; Restore valid entities &quot;&quot;&quot;</span>
+<a name="l112"><span class="ln">112  </span></a>
+<a name="l113"><span class="ln">113  </span></a>    <span class="s3">def </span><span class="s1">run</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">text</span><span class="s4">: </span><span class="s1">str</span><span class="s4">) </span><span class="s1">-&gt; str</span><span class="s4">:</span>
+<a name="l114"><span class="ln">114  </span></a>        <span class="s1">text </span><span class="s4">= </span><span class="s1">text</span><span class="s4">.</span><span class="s1">replace</span><span class="s4">(</span><span class="s1">util</span><span class="s4">.</span><span class="s1">AMP_SUBSTITUTE</span><span class="s4">, </span><span class="s5">&quot;&amp;&quot;</span><span class="s4">)</span>
+<a name="l115"><span class="ln">115  </span></a>        <span class="s3">return </span><span class="s1">text</span>
+<a name="l116"><span class="ln">116  </span></a>
+<a name="l117"><span class="ln">117  </span></a>
+<a name="l118"><span class="ln">118  </span></a><span class="s4">@</span><span class="s1">util</span><span class="s4">.</span><span class="s1">deprecated</span><span class="s4">(</span>
+<a name="l119"><span class="ln">119  </span></a>    <span class="s5">&quot;This class is deprecated and will be removed in the future; &quot;</span>
+<a name="l120"><span class="ln">120  </span></a>    <span class="s5">&quot;use [`UnescapeTreeprocessor`][markdown.treeprocessors.UnescapeTreeprocessor] instead.&quot;</span>
+<a name="l121"><span class="ln">121  </span></a><span class="s4">)</span>
+<a name="l122"><span class="ln">122  </span></a><span class="s3">class </span><span class="s1">UnescapePostprocessor</span><span class="s4">(</span><span class="s1">Postprocessor</span><span class="s4">):</span>
+<a name="l123"><span class="ln">123  </span></a>    <span class="s2">&quot;&quot;&quot; Restore escaped chars. &quot;&quot;&quot;</span>
+<a name="l124"><span class="ln">124  </span></a>
+<a name="l125"><span class="ln">125  </span></a>    <span class="s1">RE </span><span class="s4">= </span><span class="s1">re</span><span class="s4">.</span><span class="s1">compile</span><span class="s4">(</span><span class="s5">r'{}(\d+){}'</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span><span class="s1">util</span><span class="s4">.</span><span class="s1">STX</span><span class="s4">, </span><span class="s1">util</span><span class="s4">.</span><span class="s1">ETX</span><span class="s4">))</span>
+<a name="l126"><span class="ln">126  </span></a>
+<a name="l127"><span class="ln">127  </span></a>    <span class="s3">def </span><span class="s1">unescape</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">m</span><span class="s4">: </span><span class="s1">re</span><span class="s4">.</span><span class="s1">Match</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]) </span><span class="s1">-&gt; str</span><span class="s4">:</span>
+<a name="l128"><span class="ln">128  </span></a>        <span class="s3">return </span><span class="s1">chr</span><span class="s4">(</span><span class="s1">int</span><span class="s4">(</span><span class="s1">m</span><span class="s4">.</span><span class="s1">group</span><span class="s4">(</span><span class="s6">1</span><span class="s4">)))</span>
+<a name="l129"><span class="ln">129  </span></a>
+<a name="l130"><span class="ln">130  </span></a>    <span class="s3">def </span><span class="s1">run</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">text</span><span class="s4">: </span><span class="s1">str</span><span class="s4">) </span><span class="s1">-&gt; str</span><span class="s4">:</span>
+<a name="l131"><span class="ln">131  </span></a>        <span class="s3">return </span><span class="s1">self</span><span class="s4">.</span><span class="s1">RE</span><span class="s4">.</span><span class="s1">sub</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">unescape</span><span class="s4">, </span><span class="s1">text</span><span class="s4">)</span>
+<a name="l132"><span class="ln">132  </span></a></pre>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<html>
+<head>
+<title>Testpys.sct</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Testpys.sct</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&lt;scriptlet&gt;</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">&lt;Registration</span>
+<a name="l4"><span class="ln">4    </span></a>  <span class="s0">Description=&quot;TestPys&quot;</span>
+<a name="l5"><span class="ln">5    </span></a>  <span class="s0">ProgID=&quot;TestPys.Scriptlet&quot;</span>
+<a name="l6"><span class="ln">6    </span></a>  <span class="s0">Version=&quot;1&quot;</span>
+<a name="l7"><span class="ln">7    </span></a>  <span class="s0">ClassID=&quot;{2eeb6080-cd58-11d1-b81e-00a0240b2fef}&quot;&gt;</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a>  <span class="s0">&lt;SCRIPT LANGUAGE=&quot;VBScript&quot;&gt;</span>
+<a name="l10"><span class="ln">10   </span></a>	<span class="s0">Function Register()</span>
+<a name="l11"><span class="ln">11   </span></a>		<span class="s0">Msgbox &quot;Scriptlet 'Test' registered.&quot;</span>
+<a name="l12"><span class="ln">12   </span></a>	<span class="s0">End Function</span>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a>	<span class="s0">Function Unregister()</span>
+<a name="l15"><span class="ln">15   </span></a>		<span class="s0">Msgbox &quot;Scriptlet 'Test' unregistered.&quot;</span>
+<a name="l16"><span class="ln">16   </span></a>	<span class="s0">End Function</span>
+<a name="l17"><span class="ln">17   </span></a>   <span class="s0">&lt;/SCRIPT&gt;</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s0">&lt;/Registration&gt;</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s0">&lt;implements id=Automation type=Automation&gt;</span>
+<a name="l21"><span class="ln">21   </span></a>  <span class="s0">&lt;property name=PyProp1&gt;</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s0">&lt;get/&gt;</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s0">&lt;put/&gt;</span>
+<a name="l24"><span class="ln">24   </span></a>  <span class="s0">&lt;/property&gt;</span>
+<a name="l25"><span class="ln">25   </span></a>  <span class="s0">&lt;property name=PyProp2&gt;</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s0">&lt;get/&gt;</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s0">&lt;put/&gt;</span>
+<a name="l28"><span class="ln">28   </span></a>  <span class="s0">&lt;/property&gt;</span>
+<a name="l29"><span class="ln">29   </span></a>  <span class="s0">&lt;method name=PyMethod1&gt;</span>
+<a name="l30"><span class="ln">30   </span></a>  <span class="s0">&lt;/method&gt;</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a>  <span class="s0">&lt;method name=PyMethod2&gt;</span>
+<a name="l33"><span class="ln">33   </span></a>  <span class="s0">&lt;/method&gt;</span>
+<a name="l34"><span class="ln">34   </span></a><span class="s0">&lt;/implements&gt;</span>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a><span class="s0">&lt;script language=python&gt;</span>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a><span class="s0">PyProp1 = &quot;PyScript Property1&quot;;</span>
+<a name="l39"><span class="ln">39   </span></a><span class="s0">PyProp2 = &quot;PyScript Property2&quot;;</span>
+<a name="l40"><span class="ln">40   </span></a>
+<a name="l41"><span class="ln">41   </span></a><span class="s0">def get_PyProp1():</span>
+<a name="l42"><span class="ln">42   </span></a>  <span class="s0">return PyProp1</span>
+<a name="l43"><span class="ln">43   </span></a>
+<a name="l44"><span class="ln">44   </span></a><span class="s0">def put_PyProp1(newValue):</span>
+<a name="l45"><span class="ln">45   </span></a>  <span class="s0">global PyProp1</span>
+<a name="l46"><span class="ln">46   </span></a>  <span class="s0">PyProp1 = newValue</span>
+<a name="l47"><span class="ln">47   </span></a>
+<a name="l48"><span class="ln">48   </span></a><span class="s0">def get_PyProp2():</span>
+<a name="l49"><span class="ln">49   </span></a>  <span class="s0">return PyProp2</span>
+<a name="l50"><span class="ln">50   </span></a>
+<a name="l51"><span class="ln">51   </span></a><span class="s0">def put_PyProp2(newValue):</span>
+<a name="l52"><span class="ln">52   </span></a>  <span class="s0">global PyProp2</span>
+<a name="l53"><span class="ln">53   </span></a>  <span class="s0">PyProp2 = newValue</span>
+<a name="l54"><span class="ln">54   </span></a>
+<a name="l55"><span class="ln">55   </span></a><span class="s0">def PyMethod1():</span>
+<a name="l56"><span class="ln">56   </span></a>  <span class="s0">return &quot;PyMethod1 called&quot;</span>
+<a name="l57"><span class="ln">57   </span></a>
+<a name="l58"><span class="ln">58   </span></a><span class="s0">def PyMethod2():</span>
+<a name="l59"><span class="ln">59   </span></a>  <span class="s0">return &quot;PyMethod2 called&quot;</span>
+<a name="l60"><span class="ln">60   </span></a>
+<a name="l61"><span class="ln">61   </span></a><span class="s0">&lt;/script&gt;</span>
+<a name="l62"><span class="ln">62   </span></a>
+<a name="l63"><span class="ln">63   </span></a><span class="s0">&lt;/scriptlet&gt;</span>
+<a name="l64"><span class="ln">64   </span></a></pre>
+</body>
+</html>

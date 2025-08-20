@@ -1,0 +1,763 @@
+<html>
+<head>
+<title>PyWinTypes.h</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #cf8e6d;}
+.s2 { color: #7a7e85;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+.s5 { color: #c77dbb;}
+.s6 { color: #0da19e;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+PyWinTypes.h</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a>
+<a name="l2"><span class="ln">2    </span></a><span class="s1">#ifndef </span><span class="s0">__PYWINTYPES_H__</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s1">#define </span><span class="s0">__PYWINTYPES_H__</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s2">// If building under a GCC, tweak what we need.</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s1">#if </span><span class="s0">defined(__GNUC__) &amp;&amp; defined(_POSIX_C_SOURCE)</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">// python.h complains if _POSIX_C_SOURCE is already defined</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s1">#undef </span><span class="s0">_POSIX_C_SOURCE</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s1">#endif</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s2">// windows rpc.h defines &quot;small&quot; as &quot;char&quot; which breaks Python's accu.h,</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">// so we undefine it before including python.</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s1">#ifdef </span><span class="s0">small</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s1">#undef </span><span class="s0">small</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s1">#endif</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s1">#include </span><span class="s3">&quot;Python.h&quot;</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s1">#include </span><span class="s3">&quot;structmember.h&quot;</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s1">#include </span><span class="s3">&quot;windows.h&quot;</span>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a><span class="s2">// Helpers for our modules.</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s2">// Some macros to help the pywin32 modules co-exist in py2x and py3k.</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s2">// Creates and initializes local variables called 'module' and 'dict'.</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a><span class="s2">// Maybe these should all be removed - they existed to help in the py2-&gt;3</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s2">// transition.</span>
+<a name="l27"><span class="ln">27   </span></a><span class="s2">// On one hand: the code would be cleaner if they were all just re-inlined?</span>
+<a name="l28"><span class="ln">28   </span></a><span class="s2">// On the other: high confidence everything uses the exact same patterns?</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s2">// (Regardless, *some*, eg, PYWIN_MODULE_INIT_RETURN_* should be re-inlined!)</span>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a><span class="s2">// Use to define the function itself (ie, its name, linkage, params)</span>
+<a name="l32"><span class="ln">32   </span></a><span class="s1">#define </span><span class="s0">PYWIN_MODULE_INIT_FUNC(module_name) </span><span class="s1">extern </span><span class="s3">&quot;C&quot; </span><span class="s0">__declspec(dllexport) PyObject *PyInit_##module_name(</span><span class="s1">void</span><span class="s0">)</span>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a><span class="s2">// If the module needs to early-exit on an error condition.</span>
+<a name="l35"><span class="ln">35   </span></a><span class="s1">#define </span><span class="s0">PYWIN_MODULE_INIT_RETURN_ERROR </span><span class="s1">return </span><span class="s0">NULL</span>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a><span class="s2">// When the module has successfully initialized.</span>
+<a name="l38"><span class="ln">38   </span></a><span class="s1">#define </span><span class="s0">PYWIN_MODULE_INIT_RETURN_SUCCESS </span><span class="s1">return </span><span class="s0">module</span>
+<a name="l39"><span class="ln">39   </span></a>
+<a name="l40"><span class="ln">40   </span></a><span class="s2">// To setup the module object itself and the module's dictionary.</span>
+<a name="l41"><span class="ln">41   </span></a><span class="s1">#define </span><span class="s0">PYWIN_MODULE_INIT_PREPARE(module_name, functions, docstring)                                        \</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s0">PyObject *dict, *module;                                                                                \</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s1">static </span><span class="s0">PyModuleDef module_name##_def = {PyModuleDef_HEAD_INIT, #module_name, docstring, -</span><span class="s4">1</span><span class="s0">, functions}; \</span>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s1">if </span><span class="s0">(PyWinGlobals_Ensure() == -</span><span class="s4">1</span><span class="s0">)                                                                        \</span>
+<a name="l45"><span class="ln">45   </span></a>        <span class="s1">return </span><span class="s0">NULL;                                                                                        \</span>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s1">if </span><span class="s0">(!(module = PyModule_Create(&amp;module_name##_def)))                                                    \</span>
+<a name="l47"><span class="ln">47   </span></a>        <span class="s1">return </span><span class="s0">NULL;                                                                                        \</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s1">if </span><span class="s0">(!(dict = PyModule_GetDict(module)))                                                                 \</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s1">return </span><span class="s0">NULL;</span>
+<a name="l50"><span class="ln">50   </span></a>
+<a name="l51"><span class="ln">51   </span></a><span class="s2">// Helpers for our types.</span>
+<a name="l52"><span class="ln">52   </span></a><span class="s2">// Macro to handle PyObject layout changes in Py3k</span>
+<a name="l53"><span class="ln">53   </span></a><span class="s1">#define </span><span class="s0">PYWIN_OBJECT_HEAD PyVarObject_HEAD_INIT(NULL, </span><span class="s4">0</span><span class="s0">)</span>
+<a name="l54"><span class="ln">54   </span></a>
+<a name="l55"><span class="ln">55   </span></a><span class="s2">/* Attribute names are passed as Unicode in Py3k, so use a macro to 
+<a name="l56"><span class="ln">56   </span></a>    switch between string and unicode conversion.  This function is not 
+<a name="l57"><span class="ln">57   </span></a>    documented, but is used extensively in the Python codebase itself, 
+<a name="l58"><span class="ln">58   </span></a>    so it's reasonable to assume it won't disappear anytime soon. 
+<a name="l59"><span class="ln">59   </span></a>*/</span>
+<a name="l60"><span class="ln">60   </span></a><span class="s1">#define </span><span class="s0">PYWIN_ATTR_CONVERT (</span><span class="s1">char </span><span class="s0">*)_PyUnicode_AsString</span>
+<a name="l61"><span class="ln">61   </span></a>
+<a name="l62"><span class="ln">62   </span></a><span class="s1">typedef </span><span class="s0">Py_ssize_t Py_hash_t;</span>
+<a name="l63"><span class="ln">63   </span></a>
+<a name="l64"><span class="ln">64   </span></a><span class="s2">// This only enables runtime checks in debug builds - so we use</span>
+<a name="l65"><span class="ln">65   </span></a><span class="s2">// our own so we can enable it always should we desire...</span>
+<a name="l66"><span class="ln">66   </span></a><span class="s1">#define </span><span class="s0">PyWin_SAFE_DOWNCAST Py_SAFE_DOWNCAST</span>
+<a name="l67"><span class="ln">67   </span></a>
+<a name="l68"><span class="ln">68   </span></a><span class="s2">// Lars: for WAVEFORMATEX</span>
+<a name="l69"><span class="ln">69   </span></a><span class="s1">#include </span><span class="s3">&quot;mmsystem.h&quot;</span>
+<a name="l70"><span class="ln">70   </span></a>
+<a name="l71"><span class="ln">71   </span></a><span class="s1">#ifdef </span><span class="s0">BUILD_PYWINTYPES</span>
+<a name="l72"><span class="ln">72   </span></a><span class="s2">/* We are building pywintypesXX.dll */</span>
+<a name="l73"><span class="ln">73   </span></a><span class="s1">#define </span><span class="s0">PYWINTYPES_EXPORT __declspec(dllexport)</span>
+<a name="l74"><span class="ln">74   </span></a><span class="s1">#else</span>
+<a name="l75"><span class="ln">75   </span></a><span class="s2">/* This module uses pywintypesXX.dll */</span>
+<a name="l76"><span class="ln">76   </span></a><span class="s1">#define </span><span class="s0">PYWINTYPES_EXPORT __declspec(dllimport)</span>
+<a name="l77"><span class="ln">77   </span></a><span class="s1">#if </span><span class="s0">defined(_MSC_VER)</span>
+<a name="l78"><span class="ln">78   </span></a><span class="s1">#if </span><span class="s0">defined(DEBUG) || defined(_DEBUG)</span>
+<a name="l79"><span class="ln">79   </span></a><span class="s0">#pragma comment(lib, </span><span class="s3">&quot;pywintypes_d.lib&quot;</span><span class="s0">)</span>
+<a name="l80"><span class="ln">80   </span></a><span class="s1">#else</span>
+<a name="l81"><span class="ln">81   </span></a><span class="s0">#pragma comment(lib, </span><span class="s3">&quot;pywintypes.lib&quot;</span><span class="s0">)</span>
+<a name="l82"><span class="ln">82   </span></a><span class="s1">#endif  </span><span class="s2">// DEBUG/_DEBUG</span>
+<a name="l83"><span class="ln">83   </span></a><span class="s1">#endif  </span><span class="s2">// _MSC_VER</span>
+<a name="l84"><span class="ln">84   </span></a><span class="s1">#endif  </span><span class="s2">// BUILD_PYWINTYPES</span>
+<a name="l85"><span class="ln">85   </span></a>
+<a name="l86"><span class="ln">86   </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT HMODULE PyWin_GetOrLoadLibraryHandle(</span><span class="s1">const char </span><span class="s0">*name);</span>
+<a name="l87"><span class="ln">87   </span></a>
+<a name="l88"><span class="ln">88   </span></a><span class="s2">// Py3k uses memoryview object in place of buffer, and we don't yet.</span>
+<a name="l89"><span class="ln">89   </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT PyObject *PyBuffer_New(Py_ssize_t size);</span>
+<a name="l90"><span class="ln">90   </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT PyObject *PyBuffer_FromMemory(</span><span class="s1">void </span><span class="s0">*buf, Py_ssize_t size);</span>
+<a name="l91"><span class="ln">91   </span></a>
+<a name="l92"><span class="ln">92   </span></a><span class="s2">// Formats a python traceback into a character string - result must be free()ed</span>
+<a name="l93"><span class="ln">93   </span></a><span class="s0">PYWINTYPES_EXPORT WCHAR *GetPythonTraceback(PyObject *exc_type, PyObject *exc_value, PyObject *exc_tb);</span>
+<a name="l94"><span class="ln">94   </span></a>
+<a name="l95"><span class="ln">95   </span></a><span class="s1">#include </span><span class="s0">&lt;tchar.h&gt;</span>
+<a name="l96"><span class="ln">96   </span></a><span class="s2">/* 
+<a name="l97"><span class="ln">97   </span></a>** Error/Exception handling 
+<a name="l98"><span class="ln">98   </span></a>*/</span>
+<a name="l99"><span class="ln">99   </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinExc_ApiError;</span>
+<a name="l100"><span class="ln">100  </span></a><span class="s2">// Register a Windows DLL that contains the messages in the specified range.</span>
+<a name="l101"><span class="ln">101  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT BOOL PyWin_RegisterErrorMessageModule(DWORD first, DWORD last, HINSTANCE hmod);</span>
+<a name="l102"><span class="ln">102  </span></a><span class="s2">// Get the previously registered hmodule for an error code.</span>
+<a name="l103"><span class="ln">103  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT HINSTANCE PyWin_GetErrorMessageModule(DWORD err);</span>
+<a name="l104"><span class="ln">104  </span></a>
+<a name="l105"><span class="ln">105  </span></a><span class="s2">/* A global function that sets an API style error (ie, (code, fn, errTest)) */</span>
+<a name="l106"><span class="ln">106  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWin_SetAPIError(</span><span class="s1">char </span><span class="s0">*fnName, </span><span class="s1">long </span><span class="s0">err = ERROR_SUCCESS);</span>
+<a name="l107"><span class="ln">107  </span></a>
+<a name="l108"><span class="ln">108  </span></a><span class="s2">// A PyWin_SetAPIError variant that returns None (Py_None) on success.</span>
+<a name="l109"><span class="ln">109  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWin_SetAPIErrorOrReturnNone(</span><span class="s1">char </span><span class="s0">*fnName, </span><span class="s1">long </span><span class="s0">err = ERROR_SUCCESS);</span>
+<a name="l110"><span class="ln">110  </span></a>
+<a name="l111"><span class="ln">111  </span></a><span class="s2">/* Basic COM Exception handling.  The main COM exception object 
+<a name="l112"><span class="ln">112  </span></a>   is actually defined here.  However, the most useful functions 
+<a name="l113"><span class="ln">113  </span></a>   for raising the exception are still in the COM package.  Therefore, 
+<a name="l114"><span class="ln">114  </span></a>   you can use the fn below to raise a basic COM exception - no fancy error 
+<a name="l115"><span class="ln">115  </span></a>   messages available, just the HRESULT.  It will, however, _be_ a COM 
+<a name="l116"><span class="ln">116  </span></a>   exception, and therefore trappable like any other COM exception 
+<a name="l117"><span class="ln">117  </span></a>*/</span>
+<a name="l118"><span class="ln">118  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinExc_COMError;</span>
+<a name="l119"><span class="ln">119  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWin_SetBasicCOMError(HRESULT hr);</span>
+<a name="l120"><span class="ln">120  </span></a>
+<a name="l121"><span class="ln">121  </span></a><span class="s2">// *************</span>
+<a name="l122"><span class="ln">122  </span></a><span class="s2">// strings, which are a bit of a mess!</span>
+<a name="l123"><span class="ln">123  </span></a><span class="s2">//</span>
+<a name="l124"><span class="ln">124  </span></a><span class="s2">// This has gone from Python 2 ascii-only, to Py2+Py3k ascii-or-unicode, to Python 3 unicode-only,</span>
+<a name="l125"><span class="ln">125  </span></a><span class="s2">// - this baggage means some strange APIs which convert to and from &quot;char *&quot; in various ways.</span>
+<a name="l126"><span class="ln">126  </span></a><span class="s2">//</span>
+<a name="l127"><span class="ln">127  </span></a><span class="s2">// A sizes/lengths are reported as a `DWORD` rather than a `Py_ssize_t`, that's what the callers</span>
+<a name="l128"><span class="ln">128  </span></a><span class="s2">// need. `Py_ssize_t` used as the &quot;in&quot; type.</span>
+<a name="l129"><span class="ln">129  </span></a><span class="s2">// (We also use this for UINT and ULONG, all of which are 32bit unsigned ints.)</span>
+<a name="l130"><span class="ln">130  </span></a>
+<a name="l131"><span class="ln">131  </span></a><span class="s2">// Sometimes we need to downcast from a ssize_t to a DWORD</span>
+<a name="l132"><span class="ln">132  </span></a><span class="s5">inline </span><span class="s1">bool </span><span class="s0">PyWin_is_ssize_dword(Py_ssize_t val) { </span><span class="s1">return </span><span class="s0">val &lt;= MAXDWORD; }</span>
+<a name="l133"><span class="ln">133  </span></a>
+<a name="l134"><span class="ln">134  </span></a><span class="s1">#define </span><span class="s0">PYWIN_CHECK_SSIZE_DWORD(val, failResult)                           \</span>
+<a name="l135"><span class="ln">135  </span></a>    <span class="s1">if </span><span class="s0">(!PyWin_is_ssize_dword(val)) {                                      \</span>
+<a name="l136"><span class="ln">136  </span></a>        <span class="s0">PyErr_SetString(PyExc_ValueError, </span><span class="s3">&quot;value is larger than a DWORD&quot;</span><span class="s0">); \</span>
+<a name="l137"><span class="ln">137  </span></a>        <span class="s1">return </span><span class="s0">failResult;                                                 \</span>
+<a name="l138"><span class="ln">138  </span></a>    <span class="s0">}</span>
+<a name="l139"><span class="ln">139  </span></a>
+<a name="l140"><span class="ln">140  </span></a><span class="s2">// Almost all of these are roughly identical! But start with BSTR</span>
+<a name="l141"><span class="ln">141  </span></a><span class="s2">// Given a PyObject (string, Unicode, etc) create a &quot;BSTR&quot; with the value</span>
+<a name="l142"><span class="ln">142  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsBstr(PyObject *stringObject, BSTR *pResult, BOOL bNoneOK = FALSE,</span>
+<a name="l143"><span class="ln">143  </span></a>                                          <span class="s0">DWORD *pResultLen = NULL);</span>
+<a name="l144"><span class="ln">144  </span></a><span class="s2">// And free it when finished.</span>
+<a name="l145"><span class="ln">145  </span></a><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWinObject_FreeBstr(BSTR pResult);</span>
+<a name="l146"><span class="ln">146  </span></a>
+<a name="l147"><span class="ln">147  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromBstr(</span><span class="s1">const </span><span class="s0">BSTR bstr, BOOL takeOwnership = FALSE);</span>
+<a name="l148"><span class="ln">148  </span></a>
+<a name="l149"><span class="ln">149  </span></a><span class="s2">// Given a string or Unicode object, get WCHAR characters.</span>
+<a name="l150"><span class="ln">150  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsWCHAR(PyObject *stringObject, WCHAR **pResult, BOOL bNoneOK = FALSE,</span>
+<a name="l151"><span class="ln">151  </span></a>                                           <span class="s0">DWORD *pResultLen = NULL);</span>
+<a name="l152"><span class="ln">152  </span></a><span class="s2">// And free it when finished.</span>
+<a name="l153"><span class="ln">153  </span></a><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWinObject_FreeWCHAR(WCHAR *pResult);</span>
+<a name="l154"><span class="ln">154  </span></a>
+<a name="l155"><span class="ln">155  </span></a><span class="s5">inline </span><span class="s0">BOOL PyWinObject_AsWCHAR(PyObject *stringObject, </span><span class="s1">unsigned short </span><span class="s0">**pResult, BOOL bNoneOK = FALSE,</span>
+<a name="l156"><span class="ln">156  </span></a>                                <span class="s0">DWORD *pResultLen = NULL)</span>
+<a name="l157"><span class="ln">157  </span></a><span class="s0">{</span>
+<a name="l158"><span class="ln">158  </span></a>    <span class="s1">return </span><span class="s0">PyWinObject_AsWCHAR(stringObject, (WCHAR **)pResult, bNoneOK, pResultLen);</span>
+<a name="l159"><span class="ln">159  </span></a><span class="s0">}</span>
+<a name="l160"><span class="ln">160  </span></a><span class="s5">inline </span><span class="s1">void </span><span class="s0">PyWinObject_FreeWCHAR(</span><span class="s1">unsigned short </span><span class="s0">*pResult) { PyWinObject_FreeWCHAR((WCHAR *)pResult); }</span>
+<a name="l161"><span class="ln">161  </span></a>
+<a name="l162"><span class="ln">162  </span></a><span class="s2">// A bit unfortunate, but used when we logically want a &quot;string&quot; but only have</span>
+<a name="l163"><span class="ln">163  </span></a><span class="s2">// a &quot;char *&quot; to put it in.</span>
+<a name="l164"><span class="ln">164  </span></a><span class="s2">// * accepts bytes but boesn't try to accept buffer-like objects.</span>
+<a name="l165"><span class="ln">165  </span></a><span class="s2">// * accepts unicode objects and converts via the code-page.</span>
+<a name="l166"><span class="ln">166  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsChars(PyObject *stringObject, </span><span class="s1">char </span><span class="s0">**pResult, BOOL bNoneOK = FALSE,</span>
+<a name="l167"><span class="ln">167  </span></a>                                           <span class="s0">DWORD *pResultLen = NULL);</span>
+<a name="l168"><span class="ln">168  </span></a><span class="s2">// And free it when finished.</span>
+<a name="l169"><span class="ln">169  </span></a><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWinObject_FreeChars(</span><span class="s1">char </span><span class="s0">*pResult);</span>
+<a name="l170"><span class="ln">170  </span></a>
+<a name="l171"><span class="ln">171  </span></a><span class="s2">// Automatically freed WCHAR that can be used anywhere WCHAR * is required</span>
+<a name="l172"><span class="ln">172  </span></a><span class="s5">class </span><span class="s0">TmpWCHAR {</span>
+<a name="l173"><span class="ln">173  </span></a>   <span class="s5">public</span><span class="s0">:</span>
+<a name="l174"><span class="ln">174  </span></a>    <span class="s0">WCHAR *tmp;         </span><span class="s2">// (NULL after conversion error)</span>
+<a name="l175"><span class="ln">175  </span></a>    <span class="s0">Py_ssize_t length;  </span><span class="s2">// only set after successful auto-conversion; w/o trailing \0</span>
+<a name="l176"><span class="ln">176  </span></a>    <span class="s0">PyObject *u;        </span><span class="s2">// auxiliary slot for u2w()</span>
+<a name="l177"><span class="ln">177  </span></a>
+<a name="l178"><span class="ln">178  </span></a>    <span class="s0">TmpWCHAR() { tmp = NULL; }</span>
+<a name="l179"><span class="ln">179  </span></a>    <span class="s0">TmpWCHAR(WCHAR *t) { tmp = t; }</span>
+<a name="l180"><span class="ln">180  </span></a>    <span class="s0">TmpWCHAR(PyObject *ob) : tmp(NULL) { *</span><span class="s5">this </span><span class="s0">= ob; }</span>
+<a name="l181"><span class="ln">181  </span></a>    <span class="s0">WCHAR *u2w() { </span><span class="s1">return </span><span class="s0">*</span><span class="s5">this </span><span class="s0">= u; }</span>
+<a name="l182"><span class="ln">182  </span></a>    <span class="s0">WCHAR *</span><span class="s5">operator</span><span class="s0">=(PyObject *ob)</span>
+<a name="l183"><span class="ln">183  </span></a>    <span class="s0">{</span>
+<a name="l184"><span class="ln">184  </span></a>        <span class="s1">if </span><span class="s0">(tmp)</span>
+<a name="l185"><span class="ln">185  </span></a>            <span class="s0">PyMem_Free(tmp);</span>
+<a name="l186"><span class="ln">186  </span></a>        <span class="s1">if </span><span class="s0">(ob == NULL)</span>
+<a name="l187"><span class="ln">187  </span></a>            <span class="s0">tmp = NULL;  </span><span class="s2">// (exception already has been set in this case)</span>
+<a name="l188"><span class="ln">188  </span></a>        <span class="s1">else</span>
+<a name="l189"><span class="ln">189  </span></a>            <span class="s0">tmp = PyUnicode_AsWideCharString(ob, &amp;length);</span>
+<a name="l190"><span class="ln">190  </span></a>        <span class="s1">return </span><span class="s0">tmp;</span>
+<a name="l191"><span class="ln">191  </span></a>    <span class="s0">}</span>
+<a name="l192"><span class="ln">192  </span></a>    <span class="s0">WCHAR *</span><span class="s5">operator</span><span class="s0">=(WCHAR *t)</span>
+<a name="l193"><span class="ln">193  </span></a>    <span class="s0">{</span>
+<a name="l194"><span class="ln">194  </span></a>        <span class="s1">if </span><span class="s0">(tmp)</span>
+<a name="l195"><span class="ln">195  </span></a>            <span class="s0">PyMem_Free(tmp);</span>
+<a name="l196"><span class="ln">196  </span></a>        <span class="s0">tmp = t;</span>
+<a name="l197"><span class="ln">197  </span></a>        <span class="s1">return </span><span class="s0">t;</span>
+<a name="l198"><span class="ln">198  </span></a>    <span class="s0">}</span>
+<a name="l199"><span class="ln">199  </span></a>    <span class="s0">WCHAR **</span><span class="s5">operator</span><span class="s0">&amp;() { </span><span class="s1">return </span><span class="s0">&amp;tmp; }</span>
+<a name="l200"><span class="ln">200  </span></a>    <span class="s0">boolean </span><span class="s5">operator</span><span class="s0">==(WCHAR *t) { </span><span class="s1">return </span><span class="s0">tmp == t; }</span>
+<a name="l201"><span class="ln">201  </span></a>    <span class="s5">operator </span><span class="s0">WCHAR *() { </span><span class="s1">return </span><span class="s0">tmp; }</span>
+<a name="l202"><span class="ln">202  </span></a>    <span class="s0">~TmpWCHAR()</span>
+<a name="l203"><span class="ln">203  </span></a>    <span class="s0">{</span>
+<a name="l204"><span class="ln">204  </span></a>        <span class="s1">if </span><span class="s0">(tmp)</span>
+<a name="l205"><span class="ln">205  </span></a>            <span class="s0">PyMem_Free(tmp);</span>
+<a name="l206"><span class="ln">206  </span></a>    <span class="s0">}</span>
+<a name="l207"><span class="ln">207  </span></a>
+<a name="l208"><span class="ln">208  </span></a>   <span class="s5">private</span><span class="s0">:</span>
+<a name="l209"><span class="ln">209  </span></a>    <span class="s2">// Block unwanted copy construction</span>
+<a name="l210"><span class="ln">210  </span></a>    <span class="s0">TmpWCHAR(</span><span class="s1">const </span><span class="s0">TmpWCHAR &amp;o);                   </span><span class="s2">// = delete;</span>
+<a name="l211"><span class="ln">211  </span></a>    <span class="s1">const </span><span class="s0">TmpWCHAR &amp;</span><span class="s5">operator</span><span class="s0">=(</span><span class="s1">const </span><span class="s0">TmpWCHAR &amp;o);  </span><span class="s2">// = delete;</span>
+<a name="l212"><span class="ln">212  </span></a><span class="s0">};</span>
+<a name="l213"><span class="ln">213  </span></a>
+<a name="l214"><span class="ln">214  </span></a><span class="s2">// More string helpers - how many do we need?</span>
+<a name="l215"><span class="ln">215  </span></a><span class="s2">// A couple which should die or be modernized and have some `char *` vs `wchar_t *` confusion.</span>
+<a name="l216"><span class="ln">216  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinCoreString_FromString(</span><span class="s1">const char </span><span class="s0">*str, Py_ssize_t len = (Py_ssize_t)-</span><span class="s4">1</span><span class="s0">);</span>
+<a name="l217"><span class="ln">217  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinCoreString_FromString(</span><span class="s1">const </span><span class="s0">WCHAR *str, Py_ssize_t len = (Py_ssize_t)-</span><span class="s4">1</span><span class="s0">);</span>
+<a name="l218"><span class="ln">218  </span></a>
+<a name="l219"><span class="ln">219  </span></a><span class="s1">#define </span><span class="s0">PyWinObject_FromWCHAR PyWinObject_FromOLECHAR</span>
+<a name="l220"><span class="ln">220  </span></a>
+<a name="l221"><span class="ln">221  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromOLECHAR(</span><span class="s1">const </span><span class="s0">OLECHAR *str);</span>
+<a name="l222"><span class="ln">222  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromOLECHAR(</span><span class="s1">const </span><span class="s0">OLECHAR *str, Py_ssize_t numChars);</span>
+<a name="l223"><span class="ln">223  </span></a>
+<a name="l224"><span class="ln">224  </span></a><span class="s1">#define </span><span class="s0">PyWinObject_AsTCHAR PyWinObject_AsWCHAR</span>
+<a name="l225"><span class="ln">225  </span></a><span class="s1">#define </span><span class="s0">PyWinObject_FreeTCHAR PyWinObject_FreeWCHAR</span>
+<a name="l226"><span class="ln">226  </span></a><span class="s1">#define </span><span class="s0">PyWinObject_FromTCHAR PyWinObject_FromOLECHAR</span>
+<a name="l227"><span class="ln">227  </span></a>
+<a name="l228"><span class="ln">228  </span></a><span class="s2">// String support for buffers allocated via CoTaskMemAlloc and CoTaskMemFree</span>
+<a name="l229"><span class="ln">229  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsTaskAllocatedWCHAR(PyObject *stringObject, WCHAR **ppResult, BOOL bNoneOK = FALSE);</span>
+<a name="l230"><span class="ln">230  </span></a><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWinObject_FreeTaskAllocatedWCHAR(WCHAR *str);</span>
+<a name="l231"><span class="ln">231  </span></a>
+<a name="l232"><span class="ln">232  </span></a><span class="s2">// Copy null terminated string with same allocator as PyWinObject_AsWCHAR, etc</span>
+<a name="l233"><span class="ln">233  </span></a><span class="s2">// ? wot?</span>
+<a name="l234"><span class="ln">234  </span></a><span class="s0">PYWINTYPES_EXPORT WCHAR *PyWin_CopyString(</span><span class="s1">const </span><span class="s0">WCHAR *input);</span>
+<a name="l235"><span class="ln">235  </span></a><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">char </span><span class="s0">*PyWin_CopyString(</span><span class="s1">const char </span><span class="s0">*input);</span>
+<a name="l236"><span class="ln">236  </span></a>
+<a name="l237"><span class="ln">237  </span></a><span class="s2">// Some helpers for arrays of strings.</span>
+<a name="l238"><span class="ln">238  </span></a><span class="s2">//</span>
+<a name="l239"><span class="ln">239  </span></a><span class="s2">// Converts a series of consecutive null terminated strings into a list</span>
+<a name="l240"><span class="ln">240  </span></a><span class="s2">// ??? wot?</span>
+<a name="l241"><span class="ln">241  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromMultipleString(WCHAR *multistring);</span>
+<a name="l242"><span class="ln">242  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromMultipleString(</span><span class="s1">char </span><span class="s0">*multistring);</span>
+<a name="l243"><span class="ln">243  </span></a><span class="s2">// Converts a sequence of str/unicode objects into a series of consecutive null-terminated</span>
+<a name="l244"><span class="ln">244  </span></a><span class="s2">//  wide character strings with extra terminating null</span>
+<a name="l245"><span class="ln">245  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsMultipleString(PyObject *ob, WCHAR **pmultistring, BOOL bNoneOK = TRUE,</span>
+<a name="l246"><span class="ln">246  </span></a>                                                    <span class="s0">DWORD *chars_returned = NULL);</span>
+<a name="l247"><span class="ln">247  </span></a><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWinObject_FreeMultipleString(WCHAR *pmultistring);</span>
+<a name="l248"><span class="ln">248  </span></a>
+<a name="l249"><span class="ln">249  </span></a><span class="s2">// Convert a sequence of strings to an array of WCHAR pointers</span>
+<a name="l250"><span class="ln">250  </span></a><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWinObject_FreeWCHARArray(LPWSTR *wchars, DWORD str_cnt);</span>
+<a name="l251"><span class="ln">251  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsWCHARArray(PyObject *str_seq, LPWSTR **wchars, DWORD *str_cnt,</span>
+<a name="l252"><span class="ln">252  </span></a>                                                <span class="s0">BOOL bNoneOK = FALSE);</span>
+<a name="l253"><span class="ln">253  </span></a>
+<a name="l254"><span class="ln">254  </span></a><span class="s2">// Convert a sequence of string or unicode objects to an array of char *</span>
+<a name="l255"><span class="ln">255  </span></a><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWinObject_FreeCharArray(</span><span class="s1">char </span><span class="s0">**pchars, DWORD str_cnt);</span>
+<a name="l256"><span class="ln">256  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsCharArray(PyObject *str_seq, </span><span class="s1">char </span><span class="s0">***pchars, DWORD *str_cnt, BOOL bNoneOK = FALSE);</span>
+<a name="l257"><span class="ln">257  </span></a>
+<a name="l258"><span class="ln">258  </span></a><span class="s2">// Bytes/Buffer helpers.</span>
+<a name="l259"><span class="ln">259  </span></a><span class="s2">// replacement for PyWinObject_AsReadBuffer and PyWinObject_AsWriteBuffer</span>
+<a name="l260"><span class="ln">260  </span></a><span class="s5">class </span><span class="s0">PYWINTYPES_EXPORT PyWinBufferView {</span>
+<a name="l261"><span class="ln">261  </span></a>   <span class="s5">public</span><span class="s0">:</span>
+<a name="l262"><span class="ln">262  </span></a>    <span class="s0">PyWinBufferView() { m_view.obj = NULL; }</span>
+<a name="l263"><span class="ln">263  </span></a>    <span class="s0">PyWinBufferView(PyObject *ob, </span><span class="s1">bool </span><span class="s0">bWrite = </span><span class="s1">false</span><span class="s0">, </span><span class="s1">bool </span><span class="s0">bNoneOk = </span><span class="s1">false</span><span class="s0">)</span>
+<a name="l264"><span class="ln">264  </span></a>    <span class="s0">{</span>
+<a name="l265"><span class="ln">265  </span></a>        <span class="s0">m_view.obj = NULL;</span>
+<a name="l266"><span class="ln">266  </span></a>        <span class="s0">init(ob, bWrite, bNoneOk);</span>
+<a name="l267"><span class="ln">267  </span></a>    <span class="s0">}</span>
+<a name="l268"><span class="ln">268  </span></a>    <span class="s0">~PyWinBufferView() { release(); }</span>
+<a name="l269"><span class="ln">269  </span></a>    <span class="s1">bool </span><span class="s0">init(PyObject *ob, </span><span class="s1">bool </span><span class="s0">bWrite = </span><span class="s1">false</span><span class="s0">, </span><span class="s1">bool </span><span class="s0">bNoneOk = </span><span class="s1">false</span><span class="s0">);</span>
+<a name="l270"><span class="ln">270  </span></a>    <span class="s1">void </span><span class="s0">release()</span>
+<a name="l271"><span class="ln">271  </span></a>    <span class="s0">{</span>
+<a name="l272"><span class="ln">272  </span></a>        <span class="s1">if </span><span class="s0">(m_view.obj != NULL &amp;&amp; m_view.obj != Py_None) {</span>
+<a name="l273"><span class="ln">273  </span></a>            <span class="s0">PyBuffer_Release(&amp;m_view);  </span><span class="s2">// sets view-&gt;obj = NULL</span>
+<a name="l274"><span class="ln">274  </span></a>        <span class="s0">}</span>
+<a name="l275"><span class="ln">275  </span></a>    <span class="s0">}</span>
+<a name="l276"><span class="ln">276  </span></a>    <span class="s1">bool </span><span class="s0">ok() { </span><span class="s1">return </span><span class="s0">m_view.obj != NULL; }</span>
+<a name="l277"><span class="ln">277  </span></a>    <span class="s1">void </span><span class="s0">*ptr() { </span><span class="s1">return </span><span class="s0">m_view.buf; }</span>
+<a name="l278"><span class="ln">278  </span></a>    <span class="s0">DWORD len() { </span><span class="s1">return </span><span class="s5">static_cast</span><span class="s0">&lt;DWORD&gt;(m_view.len); }</span>
+<a name="l279"><span class="ln">279  </span></a>
+<a name="l280"><span class="ln">280  </span></a>   <span class="s5">private</span><span class="s0">:</span>
+<a name="l281"><span class="ln">281  </span></a>    <span class="s0">Py_buffer m_view;</span>
+<a name="l282"><span class="ln">282  </span></a>
+<a name="l283"><span class="ln">283  </span></a>    <span class="s2">// don't copy objects and don't use C++ &gt;= 11 -&gt; not implemented private</span>
+<a name="l284"><span class="ln">284  </span></a>    <span class="s2">// copy ctor and assignment operator</span>
+<a name="l285"><span class="ln">285  </span></a>    <span class="s0">PyWinBufferView(</span><span class="s1">const </span><span class="s0">PyWinBufferView &amp;src);</span>
+<a name="l286"><span class="ln">286  </span></a>    <span class="s0">PyWinBufferView &amp;</span><span class="s5">operator</span><span class="s0">=(PyWinBufferView </span><span class="s1">const </span><span class="s0">&amp;);</span>
+<a name="l287"><span class="ln">287  </span></a><span class="s0">};</span>
+<a name="l288"><span class="ln">288  </span></a>
+<a name="l289"><span class="ln">289  </span></a><span class="s2">// For 64-bit python compatibility, convert sequence to tuple and check length fits in a DWORD</span>
+<a name="l290"><span class="ln">290  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinSequence_Tuple(PyObject *obseq, DWORD *len);</span>
+<a name="l291"><span class="ln">291  </span></a>
+<a name="l292"><span class="ln">292  </span></a><span class="s2">// Pointers.</span>
+<a name="l293"><span class="ln">293  </span></a><span class="s2">// Substitute for Python's inconsistent PyLong_AsVoidPtr</span>
+<a name="l294"><span class="ln">294  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinLong_AsVoidPtr(PyObject *ob, </span><span class="s1">void </span><span class="s0">**pptr);</span>
+<a name="l295"><span class="ln">295  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinLong_FromVoidPtr(</span><span class="s1">const void </span><span class="s0">*ptr);</span>
+<a name="l296"><span class="ln">296  </span></a>
+<a name="l297"><span class="ln">297  </span></a><span class="s2">/* 
+<a name="l298"><span class="ln">298  </span></a>** LARGE_INTEGER objects 
+<a name="l299"><span class="ln">299  </span></a>*/</span>
+<a name="l300"><span class="ln">300  </span></a><span class="s2">// AsLARGE_INTEGER takes either int or long</span>
+<a name="l301"><span class="ln">301  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsLARGE_INTEGER(PyObject *ob, LARGE_INTEGER *pResult);</span>
+<a name="l302"><span class="ln">302  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsULARGE_INTEGER(PyObject *ob, ULARGE_INTEGER *pResult);</span>
+<a name="l303"><span class="ln">303  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromLARGE_INTEGER(</span><span class="s1">const </span><span class="s0">LARGE_INTEGER &amp;val);</span>
+<a name="l304"><span class="ln">304  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromULARGE_INTEGER(</span><span class="s1">const </span><span class="s0">ULARGE_INTEGER &amp;val);</span>
+<a name="l305"><span class="ln">305  </span></a><span class="s2">// Helpers that take a Py_LONG_LONG, but (a) have pywin32 consistent signatures</span>
+<a name="l306"><span class="ln">306  </span></a><span class="s2">// and (b) handle int *and* long (where Python only starts doing that in the</span>
+<a name="l307"><span class="ln">307  </span></a><span class="s2">// PyLong_* APIs post 2.4)</span>
+<a name="l308"><span class="ln">308  </span></a><span class="s2">// We also happen to know a LARGE_INTEGER is an __int64, so do it the easy way</span>
+<a name="l309"><span class="ln">309  </span></a><span class="s1">#define </span><span class="s0">PyWinObject_AsPY_LONG_LONG(ob, pResult) PyWinObject_AsLARGE_INTEGER((ob), (LARGE_INTEGER *)(pResult))</span>
+<a name="l310"><span class="ln">310  </span></a><span class="s1">#define </span><span class="s0">PyWinObject_AsUPY_LONG_LONG(ob, pResult) PyWinObject_AsULARGE_INTEGER((ob), (ULARGE_INTEGER *)(pResult))</span>
+<a name="l311"><span class="ln">311  </span></a><span class="s1">#define </span><span class="s0">PyWinObject_FromPY_LONG_LONG(val) PyWinObject_FromLARGE_INTEGER((LARGE_INTEGER)val)</span>
+<a name="l312"><span class="ln">312  </span></a><span class="s1">#define </span><span class="s0">PyWinObject_FromUPY_LONG_LONG(val) PyWinObject_FromULARGE_INTEGER((ULARGE_INTEGER)val)</span>
+<a name="l313"><span class="ln">313  </span></a>
+<a name="l314"><span class="ln">314  </span></a><span class="s2">// A DWORD_PTR and ULONG_PTR appear to mean &quot;integer long enough to hold a pointer&quot;</span>
+<a name="l315"><span class="ln">315  </span></a><span class="s2">// It is *not* actually a pointer (but is the same size as a pointer)</span>
+<a name="l316"><span class="ln">316  </span></a><span class="s5">inline </span><span class="s0">PyObject *PyWinObject_FromULONG_PTR(ULONG_PTR v) { </span><span class="s1">return </span><span class="s0">PyWinLong_FromVoidPtr((</span><span class="s1">void </span><span class="s0">*)v); }</span>
+<a name="l317"><span class="ln">317  </span></a><span class="s5">inline </span><span class="s0">BOOL PyWinLong_AsULONG_PTR(PyObject *ob, ULONG_PTR *r) { </span><span class="s1">return </span><span class="s0">PyWinLong_AsVoidPtr(ob, (</span><span class="s1">void </span><span class="s0">**)r); }</span>
+<a name="l318"><span class="ln">318  </span></a>
+<a name="l319"><span class="ln">319  </span></a><span class="s5">inline </span><span class="s0">PyObject *PyWinObject_FromDWORD_PTR(DWORD_PTR v) { </span><span class="s1">return </span><span class="s0">PyLong_FromVoidPtr((</span><span class="s1">void </span><span class="s0">*)v); }</span>
+<a name="l320"><span class="ln">320  </span></a><span class="s5">inline </span><span class="s0">BOOL PyWinLong_AsDWORD_PTR(PyObject *ob, DWORD_PTR *r) { </span><span class="s1">return </span><span class="s0">PyWinLong_AsVoidPtr(ob, (</span><span class="s1">void </span><span class="s0">**)r); }</span>
+<a name="l321"><span class="ln">321  </span></a>
+<a name="l322"><span class="ln">322  </span></a><span class="s2">/* 
+<a name="l323"><span class="ln">323  </span></a>** OVERLAPPED Object and API 
+<a name="l324"><span class="ln">324  </span></a>*/</span>
+<a name="l325"><span class="ln">325  </span></a><span class="s5">class </span><span class="s0">PyOVERLAPPED;                                      </span><span class="s2">// forward declare</span>
+<a name="l326"><span class="ln">326  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT PyTypeObject PyOVERLAPPEDType;  </span><span class="s2">// the Type for PyOVERLAPPED</span>
+<a name="l327"><span class="ln">327  </span></a><span class="s1">#define </span><span class="s0">PyOVERLAPPED_Check(ob) ((ob)</span><span class="s6">-&gt;</span><span class="s0">ob_type == &amp;PyOVERLAPPEDType)</span>
+<a name="l328"><span class="ln">328  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsOVERLAPPED(PyObject *ob, OVERLAPPED **ppOverlapped, BOOL bNoneOK = TRUE);</span>
+<a name="l329"><span class="ln">329  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsPyOVERLAPPED(PyObject *ob, PyOVERLAPPED **ppOverlapped, BOOL bNoneOK = TRUE);</span>
+<a name="l330"><span class="ln">330  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromOVERLAPPED(</span><span class="s1">const </span><span class="s0">OVERLAPPED *pOverlapped);</span>
+<a name="l331"><span class="ln">331  </span></a>
+<a name="l332"><span class="ln">332  </span></a><span class="s2">// A global function that can work as a module method for making an OVERLAPPED object.</span>
+<a name="l333"><span class="ln">333  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinMethod_NewOVERLAPPED(PyObject *self, PyObject *args);</span>
+<a name="l334"><span class="ln">334  </span></a>
+<a name="l335"><span class="ln">335  </span></a><span class="s1">#ifndef </span><span class="s0">NO_PYWINTYPES_IID</span>
+<a name="l336"><span class="ln">336  </span></a><span class="s2">/* 
+<a name="l337"><span class="ln">337  </span></a>** IID/GUID support 
+<a name="l338"><span class="ln">338  </span></a>*/</span>
+<a name="l339"><span class="ln">339  </span></a>
+<a name="l340"><span class="ln">340  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT PyTypeObject PyIIDType;  </span><span class="s2">// the Type for PyIID</span>
+<a name="l341"><span class="ln">341  </span></a><span class="s1">#define </span><span class="s0">PyIID_Check(ob) ((ob)</span><span class="s6">-&gt;</span><span class="s0">ob_type == &amp;PyIIDType)</span>
+<a name="l342"><span class="ln">342  </span></a>
+<a name="l343"><span class="ln">343  </span></a><span class="s2">// Given an object repring a CLSID (either PyIID or string), fill the CLSID.</span>
+<a name="l344"><span class="ln">344  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsIID(PyObject *obCLSID, CLSID *clsid);</span>
+<a name="l345"><span class="ln">345  </span></a>
+<a name="l346"><span class="ln">346  </span></a><span class="s2">// return a native PyIID object representing an IID</span>
+<a name="l347"><span class="ln">347  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromIID(</span><span class="s1">const </span><span class="s0">IID &amp;riid);</span>
+<a name="l348"><span class="ln">348  </span></a>
+<a name="l349"><span class="ln">349  </span></a><span class="s2">// return a string/Unicode object representing an IID</span>
+<a name="l350"><span class="ln">350  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinCoreString_FromIID(</span><span class="s1">const </span><span class="s0">IID &amp;riid);</span>
+<a name="l351"><span class="ln">351  </span></a>
+<a name="l352"><span class="ln">352  </span></a><span class="s2">// A global function that can work as a module method for making an IID object.</span>
+<a name="l353"><span class="ln">353  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinMethod_NewIID(PyObject *self, PyObject *args);</span>
+<a name="l354"><span class="ln">354  </span></a><span class="s1">#endif </span><span class="s2">/*NO_PYWINTYPES_IID */</span>
+<a name="l355"><span class="ln">355  </span></a>
+<a name="l356"><span class="ln">356  </span></a><span class="s2">/* 
+<a name="l357"><span class="ln">357  </span></a>** TIME support 
+<a name="l358"><span class="ln">358  </span></a>** 
+<a name="l359"><span class="ln">359  </span></a>** We use a subclass of the builtin datetime. 
+<a name="l360"><span class="ln">360  </span></a>*/</span>
+<a name="l361"><span class="ln">361  </span></a>
+<a name="l362"><span class="ln">362  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromSYSTEMTIME(</span><span class="s1">const </span><span class="s0">SYSTEMTIME &amp;t);</span>
+<a name="l363"><span class="ln">363  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromFILETIME(</span><span class="s1">const </span><span class="s0">FILETIME &amp;t);</span>
+<a name="l364"><span class="ln">364  </span></a>
+<a name="l365"><span class="ln">365  </span></a><span class="s2">// Converts a TimeStamp, which is in 100 nanosecond units like a FILETIME</span>
+<a name="l366"><span class="ln">366  </span></a><span class="s2">// TimeStamp is actually defined as a LARGE_INTEGER, so this function will also</span>
+<a name="l367"><span class="ln">367  </span></a><span class="s2">// accept Windows security &quot;TimeStamp&quot; objects directly - however, we use a</span>
+<a name="l368"><span class="ln">368  </span></a><span class="s2">// LARGE_INTEGER prototype to avoid pulling in the windows security headers.</span>
+<a name="l369"><span class="ln">369  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromTimeStamp(</span><span class="s1">const </span><span class="s0">LARGE_INTEGER &amp;t);</span>
+<a name="l370"><span class="ln">370  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinTimeObject_Fromtime_t(time_t t);</span>
+<a name="l371"><span class="ln">371  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromDATE(DATE t);</span>
+<a name="l372"><span class="ln">372  </span></a>
+<a name="l373"><span class="ln">373  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsDATE(PyObject *ob, DATE *pDate);</span>
+<a name="l374"><span class="ln">374  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsFILETIME(PyObject *ob, FILETIME *pDate);</span>
+<a name="l375"><span class="ln">375  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsSYSTEMTIME(PyObject *ob, SYSTEMTIME *pDate);</span>
+<a name="l376"><span class="ln">376  </span></a>
+<a name="l377"><span class="ln">377  </span></a><span class="s2">// A global function that can work as a module method for making a time object.</span>
+<a name="l378"><span class="ln">378  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinMethod_NewTime(PyObject *self, PyObject *args);</span>
+<a name="l379"><span class="ln">379  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinMethod_NewTimeStamp(PyObject *self, PyObject *args);</span>
+<a name="l380"><span class="ln">380  </span></a>
+<a name="l381"><span class="ln">381  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinTime_Check(PyObject *ob);</span>
+<a name="l382"><span class="ln">382  </span></a>
+<a name="l383"><span class="ln">383  </span></a><span class="s2">// functions to return WIN32_FIND_DATA tuples, used in shell, win32api, and win32file</span>
+<a name="l384"><span class="ln">384  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyObject_FromWIN32_FIND_DATAW(WIN32_FIND_DATAW *pData);</span>
+<a name="l385"><span class="ln">385  </span></a><span class="s1">#define </span><span class="s0">PyObject_FromWIN32_FIND_DATA PyObject_FromWIN32_FIND_DATAW</span>
+<a name="l386"><span class="ln">386  </span></a>
+<a name="l387"><span class="ln">387  </span></a><span class="s2">// POINT tuple, used in win32api_display.cpp and win32gui.i</span>
+<a name="l388"><span class="ln">388  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsPOINT(PyObject *obpoint, LPPOINT ppoint);</span>
+<a name="l389"><span class="ln">389  </span></a>
+<a name="l390"><span class="ln">390  </span></a><span class="s2">// IO_COUNTERS dict, used in win32process and win32job</span>
+<a name="l391"><span class="ln">391  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromIO_COUNTERS(PIO_COUNTERS pioc);</span>
+<a name="l392"><span class="ln">392  </span></a>
+<a name="l393"><span class="ln">393  </span></a><span class="s2">// Make an array of DWORD's from a sequence of Python ints</span>
+<a name="l394"><span class="ln">394  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsDWORDArray(PyObject *obdwords, DWORD **pdwords, DWORD *item_cnt,</span>
+<a name="l395"><span class="ln">395  </span></a>                                                <span class="s0">BOOL bNoneOk = TRUE);</span>
+<a name="l396"><span class="ln">396  </span></a>
+<a name="l397"><span class="ln">397  </span></a><span class="s2">// Conversion for resource id/name and class atom</span>
+<a name="l398"><span class="ln">398  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsResourceIdA(PyObject *ob, </span><span class="s1">char </span><span class="s0">**presource_id, BOOL bNoneOK = FALSE);</span>
+<a name="l399"><span class="ln">399  </span></a><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWinObject_FreeResourceIdA(</span><span class="s1">char </span><span class="s0">*resource_id);</span>
+<a name="l400"><span class="ln">400  </span></a>
+<a name="l401"><span class="ln">401  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsResourceId(PyObject *ob, WCHAR **presource_id, BOOL bNoneOK = FALSE);</span>
+<a name="l402"><span class="ln">402  </span></a><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWinObject_FreeResourceId(WCHAR *resource_id);</span>
+<a name="l403"><span class="ln">403  </span></a>
+<a name="l404"><span class="ln">404  </span></a><span class="s2">// WPARAM and LPARAM conversion.</span>
+<a name="l405"><span class="ln">405  </span></a><span class="s2">// Auto-freed WPARAM / LPARAM which ensure any memory referenced remains valid when a String or</span>
+<a name="l406"><span class="ln">406  </span></a><span class="s2">// Buffer object is used. Make sure the destructor is called with the GIL held.</span>
+<a name="l407"><span class="ln">407  </span></a><span class="s5">class </span><span class="s0">PyWin_PARAMHolder {</span>
+<a name="l408"><span class="ln">408  </span></a>   <span class="s5">protected</span><span class="s0">:</span>
+<a name="l409"><span class="ln">409  </span></a>    <span class="s0">WPARAM _pa;</span>
+<a name="l410"><span class="ln">410  </span></a>    <span class="s2">// Holds *either* a PyWinBufferView (which will auto-free) *or* a &quot;void *&quot; that we</span>
+<a name="l411"><span class="ln">411  </span></a>    <span class="s2">// will auto-free.</span>
+<a name="l412"><span class="ln">412  </span></a>    <span class="s1">void </span><span class="s0">*_pymem;</span>
+<a name="l413"><span class="ln">413  </span></a>    <span class="s1">void </span><span class="s0">_free()</span>
+<a name="l414"><span class="ln">414  </span></a>    <span class="s0">{</span>
+<a name="l415"><span class="ln">415  </span></a>        <span class="s1">if </span><span class="s0">(_pymem) {</span>
+<a name="l416"><span class="ln">416  </span></a>            <span class="s0">PyMem_Free(_pymem);</span>
+<a name="l417"><span class="ln">417  </span></a>            <span class="s0">_pymem = NULL;</span>
+<a name="l418"><span class="ln">418  </span></a>        <span class="s0">}</span>
+<a name="l419"><span class="ln">419  </span></a>    <span class="s0">}</span>
+<a name="l420"><span class="ln">420  </span></a>
+<a name="l421"><span class="ln">421  </span></a>   <span class="s5">public</span><span class="s0">:</span>
+<a name="l422"><span class="ln">422  </span></a>    <span class="s0">PyWinBufferView bufferView;</span>
+<a name="l423"><span class="ln">423  </span></a>
+<a name="l424"><span class="ln">424  </span></a>    <span class="s0">PyWin_PARAMHolder(WPARAM t = </span><span class="s4">0</span><span class="s0">) : _pa(t), _pymem(NULL) {}</span>
+<a name="l425"><span class="ln">425  </span></a>    <span class="s0">~PyWin_PARAMHolder() { _free(); }</span>
+<a name="l426"><span class="ln">426  </span></a>    <span class="s0">WCHAR *set_allocated(WCHAR *t)</span>
+<a name="l427"><span class="ln">427  </span></a>    <span class="s0">{</span>
+<a name="l428"><span class="ln">428  </span></a>        <span class="s0">assert(!bufferView.ok());  </span><span class="s2">// should be one or the other.</span>
+<a name="l429"><span class="ln">429  </span></a>        <span class="s0">_free();</span>
+<a name="l430"><span class="ln">430  </span></a>        <span class="s0">_pymem = t;</span>
+<a name="l431"><span class="ln">431  </span></a>        <span class="s0">_pa = (WPARAM)t;</span>
+<a name="l432"><span class="ln">432  </span></a>        <span class="s1">return </span><span class="s0">t;</span>
+<a name="l433"><span class="ln">433  </span></a>    <span class="s0">}</span>
+<a name="l434"><span class="ln">434  </span></a>    <span class="s2">// When init_buffer() fails, an appropriate Python error has been set too</span>
+<a name="l435"><span class="ln">435  </span></a>    <span class="s1">bool </span><span class="s0">init_buffer(PyObject *ob)</span>
+<a name="l436"><span class="ln">436  </span></a>    <span class="s0">{</span>
+<a name="l437"><span class="ln">437  </span></a>        <span class="s0">assert(!_pymem);  </span><span class="s2">// should be one or the other!</span>
+<a name="l438"><span class="ln">438  </span></a>        <span class="s0">_free();</span>
+<a name="l439"><span class="ln">439  </span></a>        <span class="s1">if </span><span class="s0">(!bufferView.init(ob)) {</span>
+<a name="l440"><span class="ln">440  </span></a>            <span class="s1">return false</span><span class="s0">;</span>
+<a name="l441"><span class="ln">441  </span></a>        <span class="s0">}</span>
+<a name="l442"><span class="ln">442  </span></a>        <span class="s0">_pa = (WPARAM)bufferView.ptr();</span>
+<a name="l443"><span class="ln">443  </span></a>        <span class="s1">return </span><span class="s5">true</span><span class="s0">;</span>
+<a name="l444"><span class="ln">444  </span></a>    <span class="s0">}</span>
+<a name="l445"><span class="ln">445  </span></a>
+<a name="l446"><span class="ln">446  </span></a>    <span class="s0">WPARAM </span><span class="s5">operator</span><span class="s0">=(WPARAM t) { </span><span class="s1">return </span><span class="s0">_pa = t; }</span>
+<a name="l447"><span class="ln">447  </span></a>    <span class="s5">operator </span><span class="s0">WPARAM() { </span><span class="s1">return </span><span class="s0">_pa; }</span>
+<a name="l448"><span class="ln">448  </span></a>    <span class="s5">operator </span><span class="s0">LPARAM() { </span><span class="s1">return </span><span class="s0">(LPARAM)_pa; }</span>
+<a name="l449"><span class="ln">449  </span></a><span class="s0">};</span>
+<a name="l450"><span class="ln">450  </span></a>
+<a name="l451"><span class="ln">451  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsPARAM(PyObject *ob, PyWin_PARAMHolder *pparam);</span>
+<a name="l452"><span class="ln">452  </span></a><span class="s5">inline </span><span class="s0">PyObject *PyWinObject_FromPARAM(WPARAM param) { </span><span class="s1">return </span><span class="s0">PyWinObject_FromULONG_PTR(param); }</span>
+<a name="l453"><span class="ln">453  </span></a><span class="s5">inline </span><span class="s0">PyObject *PyWinObject_FromPARAM(LPARAM param) { </span><span class="s1">return </span><span class="s0">PyWinObject_FromULONG_PTR(param); }</span>
+<a name="l454"><span class="ln">454  </span></a>
+<a name="l455"><span class="ln">455  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsSimplePARAM(PyObject *ob, WPARAM *pparam);</span>
+<a name="l456"><span class="ln">456  </span></a><span class="s5">inline </span><span class="s0">BOOL PyWinObject_AsSimplePARAM(PyObject *ob, LPARAM *pparam)</span>
+<a name="l457"><span class="ln">457  </span></a><span class="s0">{</span>
+<a name="l458"><span class="ln">458  </span></a>    <span class="s1">return </span><span class="s0">PyWinObject_AsSimplePARAM(ob, (WPARAM *)pparam);</span>
+<a name="l459"><span class="ln">459  </span></a><span class="s0">}</span>
+<a name="l460"><span class="ln">460  </span></a>
+<a name="l461"><span class="ln">461  </span></a><span class="s2">// RECT conversions</span>
+<a name="l462"><span class="ln">462  </span></a><span class="s2">// @object PyRECT|Tuple of 4 ints defining a rectangle: (left, top, right, bottom)</span>
+<a name="l463"><span class="ln">463  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsRECT(PyObject *obrect, LPRECT prect);</span>
+<a name="l464"><span class="ln">464  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromRECT(LPRECT prect);</span>
+<a name="l465"><span class="ln">465  </span></a>
+<a name="l466"><span class="ln">466  </span></a><span class="s2">/* 
+<a name="l467"><span class="ln">467  </span></a>** SECURITY_ATTRIBUTES support 
+<a name="l468"><span class="ln">468  </span></a>*/</span>
+<a name="l469"><span class="ln">469  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT PyTypeObject PySECURITY_ATTRIBUTESType;</span>
+<a name="l470"><span class="ln">470  </span></a><span class="s1">#define </span><span class="s0">PySECURITY_ATTRIBUTES_Check(ob) ((ob)</span><span class="s6">-&gt;</span><span class="s0">ob_type == &amp;PySECURITY_ATTRIBUTESType)</span>
+<a name="l471"><span class="ln">471  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT PyTypeObject PyDEVMODEWType;</span>
+<a name="l472"><span class="ln">472  </span></a>
+<a name="l473"><span class="ln">473  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinMethod_NewSECURITY_ATTRIBUTES(PyObject *self, PyObject *args);</span>
+<a name="l474"><span class="ln">474  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsSECURITY_ATTRIBUTES(PyObject *ob, SECURITY_ATTRIBUTES **ppSECURITY_ATTRIBUTES,</span>
+<a name="l475"><span class="ln">475  </span></a>                                                         <span class="s0">BOOL bNoneOK = TRUE);</span>
+<a name="l476"><span class="ln">476  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromSECURITY_ATTRIBUTES(</span><span class="s1">const </span><span class="s0">SECURITY_ATTRIBUTES &amp;sa);</span>
+<a name="l477"><span class="ln">477  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsDEVMODE(PyObject *ob, PDEVMODEW *ppDEVMODE, BOOL bNoneOK);</span>
+<a name="l478"><span class="ln">478  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromDEVMODE(PDEVMODEW);</span>
+<a name="l479"><span class="ln">479  </span></a>
+<a name="l480"><span class="ln">480  </span></a><span class="s2">/* 
+<a name="l481"><span class="ln">481  </span></a>** WAVEFORMATEX support 
+<a name="l482"><span class="ln">482  </span></a>*/</span>
+<a name="l483"><span class="ln">483  </span></a>
+<a name="l484"><span class="ln">484  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinMethod_NewWAVEFORMATEX(PyObject *self, PyObject *args);</span>
+<a name="l485"><span class="ln">485  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromWAVEFROMATEX(</span><span class="s1">const </span><span class="s0">WAVEFORMATEX &amp;wfx);</span>
+<a name="l486"><span class="ln">486  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsWAVEFORMATEX(PyObject *ob, WAVEFORMATEX **ppWAVEFORMATEX, BOOL bNoneOK = TRUE);</span>
+<a name="l487"><span class="ln">487  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT PyTypeObject PyWAVEFORMATEXType;</span>
+<a name="l488"><span class="ln">488  </span></a><span class="s1">#define </span><span class="s0">PyWAVEFORMATEX_Check(ob) ((ob)</span><span class="s6">-&gt;</span><span class="s0">ob_type == &amp;PyWAVEFORMATEXType)</span>
+<a name="l489"><span class="ln">489  </span></a>
+<a name="l490"><span class="ln">490  </span></a><span class="s2">/* 
+<a name="l491"><span class="ln">491  </span></a>** SECURITY_DESCRIPTOR support 
+<a name="l492"><span class="ln">492  </span></a>*/</span>
+<a name="l493"><span class="ln">493  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT PyTypeObject PySECURITY_DESCRIPTORType;</span>
+<a name="l494"><span class="ln">494  </span></a><span class="s1">#define </span><span class="s0">PySECURITY_DESCRIPTOR_Check(ob) ((ob)</span><span class="s6">-&gt;</span><span class="s0">ob_type == &amp;PySECURITY_DESCRIPTORType)</span>
+<a name="l495"><span class="ln">495  </span></a>
+<a name="l496"><span class="ln">496  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinMethod_NewSECURITY_DESCRIPTOR(PyObject *self, PyObject *args);</span>
+<a name="l497"><span class="ln">497  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsSECURITY_DESCRIPTOR(PyObject *ob, PSECURITY_DESCRIPTOR *ppSECURITY_DESCRIPTOR,</span>
+<a name="l498"><span class="ln">498  </span></a>                                                         <span class="s0">BOOL bNoneOK = TRUE);</span>
+<a name="l499"><span class="ln">499  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromSECURITY_DESCRIPTOR(PSECURITY_DESCRIPTOR psd);</span>
+<a name="l500"><span class="ln">500  </span></a>
+<a name="l501"><span class="ln">501  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL _MakeAbsoluteSD(PSECURITY_DESCRIPTOR psd_relative, PSECURITY_DESCRIPTOR *ppsd_absolute);</span>
+<a name="l502"><span class="ln">502  </span></a><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">FreeAbsoluteSD(PSECURITY_DESCRIPTOR psd);</span>
+<a name="l503"><span class="ln">503  </span></a>
+<a name="l504"><span class="ln">504  </span></a><span class="s2">/* 
+<a name="l505"><span class="ln">505  </span></a>** SID support 
+<a name="l506"><span class="ln">506  </span></a>*/</span>
+<a name="l507"><span class="ln">507  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT PyTypeObject PySIDType;</span>
+<a name="l508"><span class="ln">508  </span></a><span class="s1">#define </span><span class="s0">PySID_Check(ob) ((ob)</span><span class="s6">-&gt;</span><span class="s0">ob_type == &amp;PySIDType)</span>
+<a name="l509"><span class="ln">509  </span></a>
+<a name="l510"><span class="ln">510  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinMethod_NewSID(PyObject *self, PyObject *args);</span>
+<a name="l511"><span class="ln">511  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsSID(PyObject *ob, PSID *ppSID, BOOL bNoneOK = FALSE);</span>
+<a name="l512"><span class="ln">512  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromSID(PSID pSID);</span>
+<a name="l513"><span class="ln">513  </span></a>
+<a name="l514"><span class="ln">514  </span></a><span class="s2">/* 
+<a name="l515"><span class="ln">515  </span></a>** ACL support 
+<a name="l516"><span class="ln">516  </span></a>*/</span>
+<a name="l517"><span class="ln">517  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT PyTypeObject PyACLType;</span>
+<a name="l518"><span class="ln">518  </span></a><span class="s1">#define </span><span class="s0">PyACL_Check(ob) ((ob)</span><span class="s6">-&gt;</span><span class="s0">ob_type == &amp;PyACLType)</span>
+<a name="l519"><span class="ln">519  </span></a>
+<a name="l520"><span class="ln">520  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinMethod_NewACL(PyObject *self, PyObject *args);</span>
+<a name="l521"><span class="ln">521  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsACL(PyObject *ob, PACL *ppACL, BOOL bNoneOK = FALSE);</span>
+<a name="l522"><span class="ln">522  </span></a>
+<a name="l523"><span class="ln">523  </span></a><span class="s2">/* 
+<a name="l524"><span class="ln">524  </span></a>** Win32 HANDLE wrapper - any handle closable by &quot;CloseHandle()&quot; 
+<a name="l525"><span class="ln">525  </span></a>*/</span>
+<a name="l526"><span class="ln">526  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT PyTypeObject PyHANDLEType;  </span><span class="s2">// the Type for PyHANDLE</span>
+<a name="l527"><span class="ln">527  </span></a><span class="s1">#define </span><span class="s0">PyHANDLE_Check(ob) ((ob)</span><span class="s6">-&gt;</span><span class="s0">ob_type == &amp;PyHANDLEType)</span>
+<a name="l528"><span class="ln">528  </span></a>
+<a name="l529"><span class="ln">529  </span></a><span class="s2">// Convert an object to a HANDLE - None is always OK, as are ints, etc.</span>
+<a name="l530"><span class="ln">530  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsHANDLE(PyObject *ob, HANDLE *pRes);</span>
+<a name="l531"><span class="ln">531  </span></a><span class="s2">// For handles that use PyHANDLE.</span>
+<a name="l532"><span class="ln">532  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromHANDLE(HANDLE h);</span>
+<a name="l533"><span class="ln">533  </span></a><span class="s2">// For handles that aren't returned as PyHANDLE or a subclass thereof (HDC, HWND, etc).</span>
+<a name="l534"><span class="ln">534  </span></a><span class="s2">// Return as python ints or longs</span>
+<a name="l535"><span class="ln">535  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinLong_FromHANDLE(HANDLE h);</span>
+<a name="l536"><span class="ln">536  </span></a>
+<a name="l537"><span class="ln">537  </span></a><span class="s2">// A global function that can work as a module method for making a HANDLE object.</span>
+<a name="l538"><span class="ln">538  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinMethod_NewHANDLE(PyObject *self, PyObject *args);</span>
+<a name="l539"><span class="ln">539  </span></a>
+<a name="l540"><span class="ln">540  </span></a><span class="s2">// A global function that does the right thing wrt closing a &quot;handle&quot;.</span>
+<a name="l541"><span class="ln">541  </span></a><span class="s2">// The object can be either a PyHANDLE or an integer.</span>
+<a name="l542"><span class="ln">542  </span></a><span class="s2">// If result is FALSE, a Python error is all setup (cf PyHANDLE::Close(), which doesn't set the Python error)</span>
+<a name="l543"><span class="ln">543  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_CloseHANDLE(PyObject *obHandle);</span>
+<a name="l544"><span class="ln">544  </span></a>
+<a name="l545"><span class="ln">545  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsHKEY(PyObject *ob, HKEY *pRes);</span>
+<a name="l546"><span class="ln">546  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromHKEY(HKEY h);</span>
+<a name="l547"><span class="ln">547  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_CloseHKEY(PyObject *obHandle);</span>
+<a name="l548"><span class="ln">548  </span></a>
+<a name="l549"><span class="ln">549  </span></a><span class="s2">// MSG structure keeps coming up...</span>
+<a name="l550"><span class="ln">550  </span></a><span class="s0">PYWINTYPES_EXPORT BOOL PyWinObject_AsMSG(PyObject *ob, MSG *pMsg);</span>
+<a name="l551"><span class="ln">551  </span></a><span class="s0">PYWINTYPES_EXPORT PyObject *PyWinObject_FromMSG(</span><span class="s1">const </span><span class="s0">MSG *pMsg);</span>
+<a name="l552"><span class="ln">552  </span></a>
+<a name="l553"><span class="ln">553  </span></a><span class="s1">#include </span><span class="s3">&quot;winsock.h&quot;</span>
+<a name="l554"><span class="ln">554  </span></a><span class="s2">/* 
+<a name="l555"><span class="ln">555  </span></a>** SOCKET support. 
+<a name="l556"><span class="ln">556  </span></a>*/</span>
+<a name="l557"><span class="ln">557  </span></a><span class="s0">PYWINTYPES_EXPORT</span>
+<a name="l558"><span class="ln">558  </span></a><span class="s0">BOOL PySocket_AsSOCKET</span>
+<a name="l559"><span class="ln">559  </span></a>    <span class="s2">//-------------------------------------------------------------------------</span>
+<a name="l560"><span class="ln">560  </span></a>    <span class="s2">// Helper function for dealing with socket arguments.</span>
+<a name="l561"><span class="ln">561  </span></a>    <span class="s0">(PyObject *obSocket,</span>
+<a name="l562"><span class="ln">562  </span></a>     <span class="s2">// [in] Python object being converted into a SOCKET handle.</span>
+<a name="l563"><span class="ln">563  </span></a>     <span class="s0">SOCKET *ps</span>
+<a name="l564"><span class="ln">564  </span></a>     <span class="s2">// [out] Returned socket handle</span>
+<a name="l565"><span class="ln">565  </span></a>    <span class="s0">);</span>
+<a name="l566"><span class="ln">566  </span></a>
+<a name="l567"><span class="ln">567  </span></a><span class="s2">/* 
+<a name="l568"><span class="ln">568  </span></a>** Other Utilities 
+<a name="l569"><span class="ln">569  </span></a>*/</span>
+<a name="l570"><span class="ln">570  </span></a><span class="s2">// ----------------------------------------------------------------------</span>
+<a name="l571"><span class="ln">571  </span></a><span class="s2">// WARNING - NEVER EVER USE new() ON THIS CLASS</span>
+<a name="l572"><span class="ln">572  </span></a><span class="s2">// This class can be used as a local variable, typically in a Python/C</span>
+<a name="l573"><span class="ln">573  </span></a><span class="s2">// function, and can be passed whereever a TCHAR/WCHAR is expected.</span>
+<a name="l574"><span class="ln">574  </span></a><span class="s2">// Typical Usage:</span>
+<a name="l575"><span class="ln">575  </span></a><span class="s2">// PyWin_AutoFreeBstr arg;</span>
+<a name="l576"><span class="ln">576  </span></a><span class="s2">// PyArg_ParseTuple(&quot;O&quot;, &amp;obStr);</span>
+<a name="l577"><span class="ln">577  </span></a><span class="s2">// PyWinObject_AsAutoFreeBstr(obStr, &amp;arg);</span>
+<a name="l578"><span class="ln">578  </span></a><span class="s2">// CallTheFunction(arg); // Will correctly pass BSTR/OLECHAR</span>
+<a name="l579"><span class="ln">579  </span></a><span class="s2">// -- when the function goes out of scope, the string owned by &quot;arg&quot; will</span>
+<a name="l580"><span class="ln">580  </span></a><span class="s2">// -- automatically be freed.</span>
+<a name="l581"><span class="ln">581  </span></a><span class="s2">// ----------------------------------------------------------------------</span>
+<a name="l582"><span class="ln">582  </span></a><span class="s5">class </span><span class="s0">PYWINTYPES_EXPORT PyWin_AutoFreeBstr {</span>
+<a name="l583"><span class="ln">583  </span></a>   <span class="s5">public</span><span class="s0">:</span>
+<a name="l584"><span class="ln">584  </span></a>    <span class="s0">PyWin_AutoFreeBstr(BSTR bstr = NULL);</span>
+<a name="l585"><span class="ln">585  </span></a>    <span class="s0">~PyWin_AutoFreeBstr();</span>
+<a name="l586"><span class="ln">586  </span></a>    <span class="s1">void </span><span class="s0">SetBstr(BSTR bstr);</span>
+<a name="l587"><span class="ln">587  </span></a>    <span class="s5">operator </span><span class="s0">BSTR() { </span><span class="s1">return </span><span class="s0">m_bstr; }</span>
+<a name="l588"><span class="ln">588  </span></a>
+<a name="l589"><span class="ln">589  </span></a>   <span class="s5">private</span><span class="s0">:</span>
+<a name="l590"><span class="ln">590  </span></a>    <span class="s0">BSTR m_bstr;</span>
+<a name="l591"><span class="ln">591  </span></a><span class="s0">};</span>
+<a name="l592"><span class="ln">592  </span></a>
+<a name="l593"><span class="ln">593  </span></a><span class="s5">inline </span><span class="s0">BOOL PyWinObject_AsAutoFreeBstr(PyObject *stringObject, PyWin_AutoFreeBstr *pResult, BOOL bNoneOK = FALSE)</span>
+<a name="l594"><span class="ln">594  </span></a><span class="s0">{</span>
+<a name="l595"><span class="ln">595  </span></a>    <span class="s1">if </span><span class="s0">(bNoneOK &amp;&amp; stringObject == Py_None) {</span>
+<a name="l596"><span class="ln">596  </span></a>        <span class="s0">pResult</span><span class="s6">-&gt;</span><span class="s0">SetBstr(NULL);</span>
+<a name="l597"><span class="ln">597  </span></a>        <span class="s1">return </span><span class="s0">TRUE;</span>
+<a name="l598"><span class="ln">598  </span></a>    <span class="s0">}</span>
+<a name="l599"><span class="ln">599  </span></a>    <span class="s0">BSTR bs;</span>
+<a name="l600"><span class="ln">600  </span></a>    <span class="s1">if </span><span class="s0">(!PyWinObject_AsBstr(stringObject, &amp;bs, bNoneOK))</span>
+<a name="l601"><span class="ln">601  </span></a>        <span class="s1">return </span><span class="s0">FALSE;</span>
+<a name="l602"><span class="ln">602  </span></a>    <span class="s0">pResult</span><span class="s6">-&gt;</span><span class="s0">SetBstr(bs);</span>
+<a name="l603"><span class="ln">603  </span></a>    <span class="s1">return </span><span class="s0">TRUE;</span>
+<a name="l604"><span class="ln">604  </span></a><span class="s0">}</span>
+<a name="l605"><span class="ln">605  </span></a>
+<a name="l606"><span class="ln">606  </span></a><span class="s2">// ----------------------------------------------------------------------</span>
+<a name="l607"><span class="ln">607  </span></a><span class="s2">//</span>
+<a name="l608"><span class="ln">608  </span></a><span class="s2">// THREAD MANAGEMENT</span>
+<a name="l609"><span class="ln">609  </span></a><span class="s2">//</span>
+<a name="l610"><span class="ln">610  </span></a>
+<a name="l611"><span class="ln">611  </span></a><span class="s2">// ### need to rename the PYCOM_ stuff soon...</span>
+<a name="l612"><span class="ln">612  </span></a>
+<a name="l613"><span class="ln">613  </span></a><span class="s2">// We have 2 discrete locks in use (when no free-threaded is used, anyway).</span>
+<a name="l614"><span class="ln">614  </span></a><span class="s2">// The first type of lock is the global Python lock.  This is the standard lock</span>
+<a name="l615"><span class="ln">615  </span></a><span class="s2">// in use by Python, and must be used as documented by Python.  Specifically, no</span>
+<a name="l616"><span class="ln">616  </span></a><span class="s2">// 2 threads may _ever_ call _any_ Python code (including INCREF/DECREF) without</span>
+<a name="l617"><span class="ln">617  </span></a><span class="s2">// first having this thread lock.</span>
+<a name="l618"><span class="ln">618  </span></a><span class="s2">//</span>
+<a name="l619"><span class="ln">619  </span></a><span class="s2">// The second type of lock is a &quot;global framework lock&quot;.  This lock is simply a</span>
+<a name="l620"><span class="ln">620  </span></a><span class="s2">// critical section, and used whenever 2 threads of C code need access to global</span>
+<a name="l621"><span class="ln">621  </span></a><span class="s2">// data.  This is different than the Python lock - this lock is used when no Python</span>
+<a name="l622"><span class="ln">622  </span></a><span class="s2">// code can ever be called by the threads, but the C code still needs thread-safety.</span>
+<a name="l623"><span class="ln">623  </span></a>
+<a name="l624"><span class="ln">624  </span></a><span class="s2">// We also supply helper classes which make the usage of these locks a one-liner.</span>
+<a name="l625"><span class="ln">625  </span></a>
+<a name="l626"><span class="ln">626  </span></a><span class="s2">// The &quot;framework&quot; lock, implemented as a critical section.</span>
+<a name="l627"><span class="ln">627  </span></a><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWin_AcquireGlobalLock(</span><span class="s1">void</span><span class="s0">);</span>
+<a name="l628"><span class="ln">628  </span></a><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWin_ReleaseGlobalLock(</span><span class="s1">void</span><span class="s0">);</span>
+<a name="l629"><span class="ln">629  </span></a>
+<a name="l630"><span class="ln">630  </span></a><span class="s2">// Helper class for the DLL global lock.</span>
+<a name="l631"><span class="ln">631  </span></a><span class="s2">//</span>
+<a name="l632"><span class="ln">632  </span></a><span class="s2">// This class magically waits for the Win32/COM framework global lock, and releases it</span>
+<a name="l633"><span class="ln">633  </span></a><span class="s2">// when finished.</span>
+<a name="l634"><span class="ln">634  </span></a><span class="s2">// NEVER new one of these objects - only use on the stack!</span>
+<a name="l635"><span class="ln">635  </span></a><span class="s5">class </span><span class="s0">CEnterLeaveFramework {</span>
+<a name="l636"><span class="ln">636  </span></a>   <span class="s5">public</span><span class="s0">:</span>
+<a name="l637"><span class="ln">637  </span></a>    <span class="s0">CEnterLeaveFramework() { PyWin_AcquireGlobalLock(); }</span>
+<a name="l638"><span class="ln">638  </span></a>    <span class="s0">~CEnterLeaveFramework() { PyWin_ReleaseGlobalLock(); }</span>
+<a name="l639"><span class="ln">639  </span></a><span class="s0">};</span>
+<a name="l640"><span class="ln">640  </span></a>
+<a name="l641"><span class="ln">641  </span></a><span class="s2">// Python thread-lock stuff.  Free-threading patches use different semantics, but</span>
+<a name="l642"><span class="ln">642  </span></a><span class="s2">// these are abstracted away here...</span>
+<a name="l643"><span class="ln">643  </span></a><span class="s1">#ifndef </span><span class="s0">FORCE_NO_FREE_THREAD</span>
+<a name="l644"><span class="ln">644  </span></a><span class="s1">#ifdef </span><span class="s0">WITH_FREE_THREAD</span>
+<a name="l645"><span class="ln">645  </span></a><span class="s1">#define </span><span class="s0">PYCOM_USE_FREE_THREAD</span>
+<a name="l646"><span class="ln">646  </span></a><span class="s1">#endif</span>
+<a name="l647"><span class="ln">647  </span></a><span class="s1">#endif</span>
+<a name="l648"><span class="ln">648  </span></a><span class="s1">#ifdef </span><span class="s0">PYCOM_USE_FREE_THREAD</span>
+<a name="l649"><span class="ln">649  </span></a><span class="s1">#include </span><span class="s0">&lt;threadstate.h&gt;</span>
+<a name="l650"><span class="ln">650  </span></a><span class="s1">#else</span>
+<a name="l651"><span class="ln">651  </span></a><span class="s1">#include </span><span class="s0">&lt;pystate.h&gt;</span>
+<a name="l652"><span class="ln">652  </span></a><span class="s1">#endif</span>
+<a name="l653"><span class="ln">653  </span></a>
+<a name="l654"><span class="ln">654  </span></a><span class="s2">// Helper class for Enter/Leave Python</span>
+<a name="l655"><span class="ln">655  </span></a><span class="s2">//</span>
+<a name="l656"><span class="ln">656  </span></a><span class="s2">// This class magically waits for the Python global lock, and releases it</span>
+<a name="l657"><span class="ln">657  </span></a><span class="s2">// when finished.</span>
+<a name="l658"><span class="ln">658  </span></a>
+<a name="l659"><span class="ln">659  </span></a><span class="s2">// Nested invocations will deadlock, so be careful.</span>
+<a name="l660"><span class="ln">660  </span></a>
+<a name="l661"><span class="ln">661  </span></a><span class="s2">// NEVER new one of these objects - only use on the stack!</span>
+<a name="l662"><span class="ln">662  </span></a><span class="s1">#ifndef </span><span class="s0">PYCOM_USE_FREE_THREAD</span>
+<a name="l663"><span class="ln">663  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT PyInterpreterState *PyWin_InterpreterState;</span>
+<a name="l664"><span class="ln">664  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT BOOL PyWinThreadState_Ensure();</span>
+<a name="l665"><span class="ln">665  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWinThreadState_Free();</span>
+<a name="l666"><span class="ln">666  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWinThreadState_Clear();</span>
+<a name="l667"><span class="ln">667  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWinInterpreterLock_Acquire();</span>
+<a name="l668"><span class="ln">668  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWinInterpreterLock_Release();</span>
+<a name="l669"><span class="ln">669  </span></a>
+<a name="l670"><span class="ln">670  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">int </span><span class="s0">PyWinGlobals_Ensure();</span>
+<a name="l671"><span class="ln">671  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWinGlobals_Free();</span>
+<a name="l672"><span class="ln">672  </span></a><span class="s1">#else</span>
+<a name="l673"><span class="ln">673  </span></a><span class="s1">#define </span><span class="s0">PyWinThreadState_Ensure PyThreadState_Ensure</span>
+<a name="l674"><span class="ln">674  </span></a><span class="s1">#define </span><span class="s0">PyWinThreadState_Free PyThreadState_Free</span>
+<a name="l675"><span class="ln">675  </span></a><span class="s1">#define </span><span class="s0">PyWinThreadState_Clear PyThreadState_ClearExc</span>
+<a name="l676"><span class="ln">676  </span></a>
+<a name="l677"><span class="ln">677  </span></a><span class="s1">#endif</span>
+<a name="l678"><span class="ln">678  </span></a>
+<a name="l679"><span class="ln">679  </span></a><span class="s1">extern </span><span class="s0">PYWINTYPES_EXPORT </span><span class="s1">void </span><span class="s0">PyWin_MakePendingCalls();</span>
+<a name="l680"><span class="ln">680  </span></a>
+<a name="l681"><span class="ln">681  </span></a><span class="s5">class </span><span class="s0">CEnterLeavePython {</span>
+<a name="l682"><span class="ln">682  </span></a>   <span class="s5">public</span><span class="s0">:</span>
+<a name="l683"><span class="ln">683  </span></a>    <span class="s0">CEnterLeavePython() : released(TRUE) { acquire(); }</span>
+<a name="l684"><span class="ln">684  </span></a>    <span class="s1">void </span><span class="s0">acquire(</span><span class="s1">void</span><span class="s0">)</span>
+<a name="l685"><span class="ln">685  </span></a>    <span class="s0">{</span>
+<a name="l686"><span class="ln">686  </span></a>        <span class="s1">if </span><span class="s0">(!released)</span>
+<a name="l687"><span class="ln">687  </span></a>            <span class="s1">return</span><span class="s0">;</span>
+<a name="l688"><span class="ln">688  </span></a>        <span class="s0">state = PyGILState_Ensure();</span>
+<a name="l689"><span class="ln">689  </span></a>        <span class="s0">released = FALSE;</span>
+<a name="l690"><span class="ln">690  </span></a>    <span class="s0">}</span>
+<a name="l691"><span class="ln">691  </span></a>    <span class="s0">~CEnterLeavePython() { release(); }</span>
+<a name="l692"><span class="ln">692  </span></a>    <span class="s1">void </span><span class="s0">release(</span><span class="s1">void</span><span class="s0">)</span>
+<a name="l693"><span class="ln">693  </span></a>    <span class="s0">{</span>
+<a name="l694"><span class="ln">694  </span></a>        <span class="s1">if </span><span class="s0">(!released) {</span>
+<a name="l695"><span class="ln">695  </span></a>            <span class="s0">PyGILState_Release(state);</span>
+<a name="l696"><span class="ln">696  </span></a>            <span class="s0">released = TRUE;</span>
+<a name="l697"><span class="ln">697  </span></a>        <span class="s0">}</span>
+<a name="l698"><span class="ln">698  </span></a>    <span class="s0">}</span>
+<a name="l699"><span class="ln">699  </span></a>
+<a name="l700"><span class="ln">700  </span></a>   <span class="s5">private</span><span class="s0">:</span>
+<a name="l701"><span class="ln">701  </span></a>    <span class="s0">PyGILState_STATE state;</span>
+<a name="l702"><span class="ln">702  </span></a>    <span class="s0">BOOL released;</span>
+<a name="l703"><span class="ln">703  </span></a><span class="s0">};</span>
+<a name="l704"><span class="ln">704  </span></a>
+<a name="l705"><span class="ln">705  </span></a><span class="s2">// A helper for simple exception handling.</span>
+<a name="l706"><span class="ln">706  </span></a><span class="s2">// try/__try</span>
+<a name="l707"><span class="ln">707  </span></a><span class="s1">#if </span><span class="s0">defined(__MINGW32__) || defined(MAINWIN)</span>
+<a name="l708"><span class="ln">708  </span></a><span class="s1">#define </span><span class="s0">PYWINTYPES_TRY </span><span class="s5">try</span>
+<a name="l709"><span class="ln">709  </span></a><span class="s1">#else</span>
+<a name="l710"><span class="ln">710  </span></a><span class="s1">#define </span><span class="s0">PYWINTYPES_TRY __try</span>
+<a name="l711"><span class="ln">711  </span></a><span class="s1">#endif </span><span class="s2">/* MAINWIN */</span>
+<a name="l712"><span class="ln">712  </span></a>
+<a name="l713"><span class="ln">713  </span></a><span class="s2">// catch/__except</span>
+<a name="l714"><span class="ln">714  </span></a><span class="s1">#if </span><span class="s0">defined(__MINGW32__) || defined(MAINWIN)</span>
+<a name="l715"><span class="ln">715  </span></a><span class="s1">#define </span><span class="s0">PYWINTYPES_EXCEPT </span><span class="s5">catch </span><span class="s0">(...)</span>
+<a name="l716"><span class="ln">716  </span></a><span class="s1">#else</span>
+<a name="l717"><span class="ln">717  </span></a><span class="s1">#define </span><span class="s0">PYWINTYPES_EXCEPT __except (EXCEPTION_EXECUTE_HANDLER)</span>
+<a name="l718"><span class="ln">718  </span></a><span class="s1">#endif</span>
+<a name="l719"><span class="ln">719  </span></a><span class="s2">// End of exception helper macros.</span>
+<a name="l720"><span class="ln">720  </span></a>
+<a name="l721"><span class="ln">721  </span></a><span class="s2">// Class to hold a temporary reference that decrements itself</span>
+<a name="l722"><span class="ln">722  </span></a><span class="s5">class </span><span class="s0">TmpPyObject {</span>
+<a name="l723"><span class="ln">723  </span></a>   <span class="s5">public</span><span class="s0">:</span>
+<a name="l724"><span class="ln">724  </span></a>    <span class="s0">PyObject *tmp;</span>
+<a name="l725"><span class="ln">725  </span></a>    <span class="s0">TmpPyObject() { tmp = NULL; }</span>
+<a name="l726"><span class="ln">726  </span></a>    <span class="s0">TmpPyObject(PyObject *ob) { tmp = ob; }</span>
+<a name="l727"><span class="ln">727  </span></a>    <span class="s0">PyObject *</span><span class="s5">operator</span><span class="s0">=(PyObject *ob)</span>
+<a name="l728"><span class="ln">728  </span></a>    <span class="s0">{</span>
+<a name="l729"><span class="ln">729  </span></a>        <span class="s0">Py_XDECREF(tmp);</span>
+<a name="l730"><span class="ln">730  </span></a>        <span class="s0">tmp = ob;</span>
+<a name="l731"><span class="ln">731  </span></a>        <span class="s1">return </span><span class="s0">tmp;</span>
+<a name="l732"><span class="ln">732  </span></a>    <span class="s0">}</span>
+<a name="l733"><span class="ln">733  </span></a>
+<a name="l734"><span class="ln">734  </span></a>    <span class="s0">boolean </span><span class="s5">operator</span><span class="s0">==(PyObject *ob) { </span><span class="s1">return </span><span class="s0">tmp == ob; }</span>
+<a name="l735"><span class="ln">735  </span></a>    <span class="s5">operator </span><span class="s0">PyObject *() { </span><span class="s1">return </span><span class="s0">tmp; }</span>
+<a name="l736"><span class="ln">736  </span></a>    <span class="s0">~TmpPyObject() { Py_XDECREF(tmp); }</span>
+<a name="l737"><span class="ln">737  </span></a><span class="s0">};</span>
+<a name="l738"><span class="ln">738  </span></a>
+<a name="l739"><span class="ln">739  </span></a><span class="s1">#endif  </span><span class="s2">// __PYWINTYPES_H__</span>
+<a name="l740"><span class="ln">740  </span></a></pre>
+</body>
+</html>

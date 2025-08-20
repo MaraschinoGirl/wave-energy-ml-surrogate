@@ -1,0 +1,330 @@
+<html>
+<head>
+<title>verifier.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+.s6 { color: #5f826b; font-style: italic;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+verifier.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">#</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># DEPRECATED: implementation for ffi.verify()</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">#</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">import </span><span class="s1">sys</span><span class="s3">, </span><span class="s1">os</span><span class="s3">, </span><span class="s1">binascii</span><span class="s3">, </span><span class="s1">shutil</span><span class="s3">, </span><span class="s1">io</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s2">from </span><span class="s3">. </span><span class="s2">import </span><span class="s1">__version_verifier_modules__</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">from </span><span class="s3">. </span><span class="s2">import </span><span class="s1">ffiplatform</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">from </span><span class="s3">.</span><span class="s1">error </span><span class="s2">import </span><span class="s1">VerificationError</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">if </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">version_info </span><span class="s3">&gt;= (</span><span class="s4">3</span><span class="s3">, </span><span class="s4">3</span><span class="s3">):</span>
+<a name="l10"><span class="ln">10   </span></a>    <span class="s2">import </span><span class="s1">importlib</span><span class="s3">.</span><span class="s1">machinery</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s2">def </span><span class="s1">_extension_suffixes</span><span class="s3">():</span>
+<a name="l12"><span class="ln">12   </span></a>        <span class="s2">return </span><span class="s1">importlib</span><span class="s3">.</span><span class="s1">machinery</span><span class="s3">.</span><span class="s1">EXTENSION_SUFFIXES</span><span class="s3">[:]</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s2">else</span><span class="s3">:</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s2">import </span><span class="s1">imp</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s2">def </span><span class="s1">_extension_suffixes</span><span class="s3">():</span>
+<a name="l16"><span class="ln">16   </span></a>        <span class="s2">return </span><span class="s3">[</span><span class="s1">suffix </span><span class="s2">for </span><span class="s1">suffix</span><span class="s3">, </span><span class="s1">_</span><span class="s3">, </span><span class="s1">type </span><span class="s2">in </span><span class="s1">imp</span><span class="s3">.</span><span class="s1">get_suffixes</span><span class="s3">()</span>
+<a name="l17"><span class="ln">17   </span></a>                <span class="s2">if </span><span class="s1">type </span><span class="s3">== </span><span class="s1">imp</span><span class="s3">.</span><span class="s1">C_EXTENSION</span><span class="s3">]</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s2">if </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">version_info </span><span class="s3">&gt;= (</span><span class="s4">3</span><span class="s3">,):</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s1">NativeIO </span><span class="s3">= </span><span class="s1">io</span><span class="s3">.</span><span class="s1">StringIO</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s2">else</span><span class="s3">:</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s2">class </span><span class="s1">NativeIO</span><span class="s3">(</span><span class="s1">io</span><span class="s3">.</span><span class="s1">BytesIO</span><span class="s3">):</span>
+<a name="l24"><span class="ln">24   </span></a>        <span class="s2">def </span><span class="s1">write</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">s</span><span class="s3">):</span>
+<a name="l25"><span class="ln">25   </span></a>            <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">s</span><span class="s3">, </span><span class="s1">unicode</span><span class="s3">):</span>
+<a name="l26"><span class="ln">26   </span></a>                <span class="s1">s </span><span class="s3">= </span><span class="s1">s</span><span class="s3">.</span><span class="s1">encode</span><span class="s3">(</span><span class="s5">'ascii'</span><span class="s3">)</span>
+<a name="l27"><span class="ln">27   </span></a>            <span class="s1">super</span><span class="s3">(</span><span class="s1">NativeIO</span><span class="s3">, </span><span class="s1">self</span><span class="s3">).</span><span class="s1">write</span><span class="s3">(</span><span class="s1">s</span><span class="s3">)</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a>
+<a name="l30"><span class="ln">30   </span></a><span class="s2">class </span><span class="s1">Verifier</span><span class="s3">(</span><span class="s1">object</span><span class="s3">):</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">ffi</span><span class="s3">, </span><span class="s1">preamble</span><span class="s3">, </span><span class="s1">tmpdir</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">modulename</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l33"><span class="ln">33   </span></a>                 <span class="s1">ext_package</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">tag</span><span class="s3">=</span><span class="s5">''</span><span class="s3">, </span><span class="s1">force_generic_engine</span><span class="s3">=</span><span class="s2">False</span><span class="s3">,</span>
+<a name="l34"><span class="ln">34   </span></a>                 <span class="s1">source_extension</span><span class="s3">=</span><span class="s5">'.c'</span><span class="s3">, </span><span class="s1">flags</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">relative_to</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, **</span><span class="s1">kwds</span><span class="s3">):</span>
+<a name="l35"><span class="ln">35   </span></a>        <span class="s2">if </span><span class="s1">ffi</span><span class="s3">.</span><span class="s1">_parser</span><span class="s3">.</span><span class="s1">_uses_new_feature</span><span class="s3">:</span>
+<a name="l36"><span class="ln">36   </span></a>            <span class="s2">raise </span><span class="s1">VerificationError</span><span class="s3">(</span>
+<a name="l37"><span class="ln">37   </span></a>                <span class="s5">&quot;feature not supported with ffi.verify(), but only &quot;</span>
+<a name="l38"><span class="ln">38   </span></a>                <span class="s5">&quot;with ffi.set_source(): %s&quot; </span><span class="s3">% (</span><span class="s1">ffi</span><span class="s3">.</span><span class="s1">_parser</span><span class="s3">.</span><span class="s1">_uses_new_feature</span><span class="s3">,))</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">ffi </span><span class="s3">= </span><span class="s1">ffi</span>
+<a name="l40"><span class="ln">40   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">preamble </span><span class="s3">= </span><span class="s1">preamble</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s2">if not </span><span class="s1">modulename</span><span class="s3">:</span>
+<a name="l42"><span class="ln">42   </span></a>            <span class="s1">flattened_kwds </span><span class="s3">= </span><span class="s1">ffiplatform</span><span class="s3">.</span><span class="s1">flatten</span><span class="s3">(</span><span class="s1">kwds</span><span class="s3">)</span>
+<a name="l43"><span class="ln">43   </span></a>        <span class="s1">vengine_class </span><span class="s3">= </span><span class="s1">_locate_engine_class</span><span class="s3">(</span><span class="s1">ffi</span><span class="s3">, </span><span class="s1">force_generic_engine</span><span class="s3">)</span>
+<a name="l44"><span class="ln">44   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">_vengine </span><span class="s3">= </span><span class="s1">vengine_class</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+<a name="l45"><span class="ln">45   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">_vengine</span><span class="s3">.</span><span class="s1">patch_extension_kwds</span><span class="s3">(</span><span class="s1">kwds</span><span class="s3">)</span>
+<a name="l46"><span class="ln">46   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">flags </span><span class="s3">= </span><span class="s1">flags</span>
+<a name="l47"><span class="ln">47   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">kwds </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">make_relative_to</span><span class="s3">(</span><span class="s1">kwds</span><span class="s3">, </span><span class="s1">relative_to</span><span class="s3">)</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s0">#</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s2">if </span><span class="s1">modulename</span><span class="s3">:</span>
+<a name="l50"><span class="ln">50   </span></a>            <span class="s2">if </span><span class="s1">tag</span><span class="s3">:</span>
+<a name="l51"><span class="ln">51   </span></a>                <span class="s2">raise </span><span class="s1">TypeError</span><span class="s3">(</span><span class="s5">&quot;can't specify both 'modulename' and 'tag'&quot;</span><span class="s3">)</span>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l53"><span class="ln">53   </span></a>            <span class="s1">key </span><span class="s3">= </span><span class="s5">'</span><span class="s2">\x00</span><span class="s5">'</span><span class="s3">.</span><span class="s1">join</span><span class="s3">([</span><span class="s5">'%d.%d' </span><span class="s3">% </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">version_info</span><span class="s3">[:</span><span class="s4">2</span><span class="s3">],</span>
+<a name="l54"><span class="ln">54   </span></a>                               <span class="s1">__version_verifier_modules__</span><span class="s3">,</span>
+<a name="l55"><span class="ln">55   </span></a>                               <span class="s1">preamble</span><span class="s3">, </span><span class="s1">flattened_kwds</span><span class="s3">] +</span>
+<a name="l56"><span class="ln">56   </span></a>                              <span class="s1">ffi</span><span class="s3">.</span><span class="s1">_cdefsources</span><span class="s3">)</span>
+<a name="l57"><span class="ln">57   </span></a>            <span class="s2">if </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">version_info </span><span class="s3">&gt;= (</span><span class="s4">3</span><span class="s3">,):</span>
+<a name="l58"><span class="ln">58   </span></a>                <span class="s1">key </span><span class="s3">= </span><span class="s1">key</span><span class="s3">.</span><span class="s1">encode</span><span class="s3">(</span><span class="s5">'utf-8'</span><span class="s3">)</span>
+<a name="l59"><span class="ln">59   </span></a>            <span class="s1">k1 </span><span class="s3">= </span><span class="s1">hex</span><span class="s3">(</span><span class="s1">binascii</span><span class="s3">.</span><span class="s1">crc32</span><span class="s3">(</span><span class="s1">key</span><span class="s3">[</span><span class="s4">0</span><span class="s3">::</span><span class="s4">2</span><span class="s3">]) &amp; </span><span class="s4">0xffffffff</span><span class="s3">)</span>
+<a name="l60"><span class="ln">60   </span></a>            <span class="s1">k1 </span><span class="s3">= </span><span class="s1">k1</span><span class="s3">.</span><span class="s1">lstrip</span><span class="s3">(</span><span class="s5">'0x'</span><span class="s3">).</span><span class="s1">rstrip</span><span class="s3">(</span><span class="s5">'L'</span><span class="s3">)</span>
+<a name="l61"><span class="ln">61   </span></a>            <span class="s1">k2 </span><span class="s3">= </span><span class="s1">hex</span><span class="s3">(</span><span class="s1">binascii</span><span class="s3">.</span><span class="s1">crc32</span><span class="s3">(</span><span class="s1">key</span><span class="s3">[</span><span class="s4">1</span><span class="s3">::</span><span class="s4">2</span><span class="s3">]) &amp; </span><span class="s4">0xffffffff</span><span class="s3">)</span>
+<a name="l62"><span class="ln">62   </span></a>            <span class="s1">k2 </span><span class="s3">= </span><span class="s1">k2</span><span class="s3">.</span><span class="s1">lstrip</span><span class="s3">(</span><span class="s5">'0'</span><span class="s3">).</span><span class="s1">rstrip</span><span class="s3">(</span><span class="s5">'L'</span><span class="s3">)</span>
+<a name="l63"><span class="ln">63   </span></a>            <span class="s1">modulename </span><span class="s3">= </span><span class="s5">'_cffi_%s_%s%s%s' </span><span class="s3">% (</span><span class="s1">tag</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_vengine</span><span class="s3">.</span><span class="s1">_class_key</span><span class="s3">,</span>
+<a name="l64"><span class="ln">64   </span></a>                                              <span class="s1">k1</span><span class="s3">, </span><span class="s1">k2</span><span class="s3">)</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s1">suffix </span><span class="s3">= </span><span class="s1">_get_so_suffixes</span><span class="s3">()[</span><span class="s4">0</span><span class="s3">]</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">tmpdir </span><span class="s3">= </span><span class="s1">tmpdir </span><span class="s2">or </span><span class="s1">_caller_dir_pycache</span><span class="s3">()</span>
+<a name="l67"><span class="ln">67   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">sourcefilename </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">tmpdir</span><span class="s3">, </span><span class="s1">modulename </span><span class="s3">+ </span><span class="s1">source_extension</span><span class="s3">)</span>
+<a name="l68"><span class="ln">68   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">modulefilename </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">tmpdir</span><span class="s3">, </span><span class="s1">modulename </span><span class="s3">+ </span><span class="s1">suffix</span><span class="s3">)</span>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">ext_package </span><span class="s3">= </span><span class="s1">ext_package</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">_has_source </span><span class="s3">= </span><span class="s2">False</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">_has_module </span><span class="s3">= </span><span class="s2">False</span>
+<a name="l72"><span class="ln">72   </span></a>
+<a name="l73"><span class="ln">73   </span></a>    <span class="s2">def </span><span class="s1">write_source</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">file</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+<a name="l74"><span class="ln">74   </span></a>        <span class="s6">&quot;&quot;&quot;Write the C source code.  It is produced in 'self.sourcefilename', 
+<a name="l75"><span class="ln">75   </span></a>        which can be tweaked beforehand.&quot;&quot;&quot;</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s2">with </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ffi</span><span class="s3">.</span><span class="s1">_lock</span><span class="s3">:</span>
+<a name="l77"><span class="ln">77   </span></a>            <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_has_source </span><span class="s2">and </span><span class="s1">file </span><span class="s2">is None</span><span class="s3">:</span>
+<a name="l78"><span class="ln">78   </span></a>                <span class="s2">raise </span><span class="s1">VerificationError</span><span class="s3">(</span>
+<a name="l79"><span class="ln">79   </span></a>                    <span class="s5">&quot;source code already written&quot;</span><span class="s3">)</span>
+<a name="l80"><span class="ln">80   </span></a>            <span class="s1">self</span><span class="s3">.</span><span class="s1">_write_source</span><span class="s3">(</span><span class="s1">file</span><span class="s3">)</span>
+<a name="l81"><span class="ln">81   </span></a>
+<a name="l82"><span class="ln">82   </span></a>    <span class="s2">def </span><span class="s1">compile_module</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l83"><span class="ln">83   </span></a>        <span class="s6">&quot;&quot;&quot;Write the C source code (if not done already) and compile it. 
+<a name="l84"><span class="ln">84   </span></a>        This produces a dynamic link library in 'self.modulefilename'.&quot;&quot;&quot;</span>
+<a name="l85"><span class="ln">85   </span></a>        <span class="s2">with </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ffi</span><span class="s3">.</span><span class="s1">_lock</span><span class="s3">:</span>
+<a name="l86"><span class="ln">86   </span></a>            <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_has_module</span><span class="s3">:</span>
+<a name="l87"><span class="ln">87   </span></a>                <span class="s2">raise </span><span class="s1">VerificationError</span><span class="s3">(</span><span class="s5">&quot;module already compiled&quot;</span><span class="s3">)</span>
+<a name="l88"><span class="ln">88   </span></a>            <span class="s2">if not </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_has_source</span><span class="s3">:</span>
+<a name="l89"><span class="ln">89   </span></a>                <span class="s1">self</span><span class="s3">.</span><span class="s1">_write_source</span><span class="s3">()</span>
+<a name="l90"><span class="ln">90   </span></a>            <span class="s1">self</span><span class="s3">.</span><span class="s1">_compile_module</span><span class="s3">()</span>
+<a name="l91"><span class="ln">91   </span></a>
+<a name="l92"><span class="ln">92   </span></a>    <span class="s2">def </span><span class="s1">load_library</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s6">&quot;&quot;&quot;Get a C module from this Verifier instance. 
+<a name="l94"><span class="ln">94   </span></a>        Returns an instance of a FFILibrary class that behaves like the 
+<a name="l95"><span class="ln">95   </span></a>        objects returned by ffi.dlopen(), but that delegates all 
+<a name="l96"><span class="ln">96   </span></a>        operations to the C module.  If necessary, the C code is written 
+<a name="l97"><span class="ln">97   </span></a>        and compiled first. 
+<a name="l98"><span class="ln">98   </span></a>        &quot;&quot;&quot;</span>
+<a name="l99"><span class="ln">99   </span></a>        <span class="s2">with </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ffi</span><span class="s3">.</span><span class="s1">_lock</span><span class="s3">:</span>
+<a name="l100"><span class="ln">100  </span></a>            <span class="s2">if not </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_has_module</span><span class="s3">:</span>
+<a name="l101"><span class="ln">101  </span></a>                <span class="s1">self</span><span class="s3">.</span><span class="s1">_locate_module</span><span class="s3">()</span>
+<a name="l102"><span class="ln">102  </span></a>                <span class="s2">if not </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_has_module</span><span class="s3">:</span>
+<a name="l103"><span class="ln">103  </span></a>                    <span class="s2">if not </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_has_source</span><span class="s3">:</span>
+<a name="l104"><span class="ln">104  </span></a>                        <span class="s1">self</span><span class="s3">.</span><span class="s1">_write_source</span><span class="s3">()</span>
+<a name="l105"><span class="ln">105  </span></a>                    <span class="s1">self</span><span class="s3">.</span><span class="s1">_compile_module</span><span class="s3">()</span>
+<a name="l106"><span class="ln">106  </span></a>            <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_load_library</span><span class="s3">()</span>
+<a name="l107"><span class="ln">107  </span></a>
+<a name="l108"><span class="ln">108  </span></a>    <span class="s2">def </span><span class="s1">get_module_name</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l109"><span class="ln">109  </span></a>        <span class="s1">basename </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">basename</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">modulefilename</span><span class="s3">)</span>
+<a name="l110"><span class="ln">110  </span></a>        <span class="s0"># kill both the .so extension and the other .'s, as introduced</span>
+<a name="l111"><span class="ln">111  </span></a>        <span class="s0"># by Python 3: 'basename.cpython-33m.so'</span>
+<a name="l112"><span class="ln">112  </span></a>        <span class="s1">basename </span><span class="s3">= </span><span class="s1">basename</span><span class="s3">.</span><span class="s1">split</span><span class="s3">(</span><span class="s5">'.'</span><span class="s3">, </span><span class="s4">1</span><span class="s3">)[</span><span class="s4">0</span><span class="s3">]</span>
+<a name="l113"><span class="ln">113  </span></a>        <span class="s0"># and the _d added in Python 2 debug builds --- but try to be</span>
+<a name="l114"><span class="ln">114  </span></a>        <span class="s0"># conservative and not kill a legitimate _d</span>
+<a name="l115"><span class="ln">115  </span></a>        <span class="s2">if </span><span class="s1">basename</span><span class="s3">.</span><span class="s1">endswith</span><span class="s3">(</span><span class="s5">'_d'</span><span class="s3">) </span><span class="s2">and </span><span class="s1">hasattr</span><span class="s3">(</span><span class="s1">sys</span><span class="s3">, </span><span class="s5">'gettotalrefcount'</span><span class="s3">):</span>
+<a name="l116"><span class="ln">116  </span></a>            <span class="s1">basename </span><span class="s3">= </span><span class="s1">basename</span><span class="s3">[:-</span><span class="s4">2</span><span class="s3">]</span>
+<a name="l117"><span class="ln">117  </span></a>        <span class="s2">return </span><span class="s1">basename</span>
+<a name="l118"><span class="ln">118  </span></a>
+<a name="l119"><span class="ln">119  </span></a>    <span class="s2">def </span><span class="s1">get_extension</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l120"><span class="ln">120  </span></a>        <span class="s2">if not </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_has_source</span><span class="s3">:</span>
+<a name="l121"><span class="ln">121  </span></a>            <span class="s2">with </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ffi</span><span class="s3">.</span><span class="s1">_lock</span><span class="s3">:</span>
+<a name="l122"><span class="ln">122  </span></a>                <span class="s2">if not </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_has_source</span><span class="s3">:</span>
+<a name="l123"><span class="ln">123  </span></a>                    <span class="s1">self</span><span class="s3">.</span><span class="s1">_write_source</span><span class="s3">()</span>
+<a name="l124"><span class="ln">124  </span></a>        <span class="s1">sourcename </span><span class="s3">= </span><span class="s1">ffiplatform</span><span class="s3">.</span><span class="s1">maybe_relative_path</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">sourcefilename</span><span class="s3">)</span>
+<a name="l125"><span class="ln">125  </span></a>        <span class="s1">modname </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">get_module_name</span><span class="s3">()</span>
+<a name="l126"><span class="ln">126  </span></a>        <span class="s2">return </span><span class="s1">ffiplatform</span><span class="s3">.</span><span class="s1">get_extension</span><span class="s3">(</span><span class="s1">sourcename</span><span class="s3">, </span><span class="s1">modname</span><span class="s3">, **</span><span class="s1">self</span><span class="s3">.</span><span class="s1">kwds</span><span class="s3">)</span>
+<a name="l127"><span class="ln">127  </span></a>
+<a name="l128"><span class="ln">128  </span></a>    <span class="s2">def </span><span class="s1">generates_python_module</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l129"><span class="ln">129  </span></a>        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_vengine</span><span class="s3">.</span><span class="s1">_gen_python_module</span>
+<a name="l130"><span class="ln">130  </span></a>
+<a name="l131"><span class="ln">131  </span></a>    <span class="s2">def </span><span class="s1">make_relative_to</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">kwds</span><span class="s3">, </span><span class="s1">relative_to</span><span class="s3">):</span>
+<a name="l132"><span class="ln">132  </span></a>        <span class="s2">if </span><span class="s1">relative_to </span><span class="s2">and </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">dirname</span><span class="s3">(</span><span class="s1">relative_to</span><span class="s3">):</span>
+<a name="l133"><span class="ln">133  </span></a>            <span class="s1">dirname </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">dirname</span><span class="s3">(</span><span class="s1">relative_to</span><span class="s3">)</span>
+<a name="l134"><span class="ln">134  </span></a>            <span class="s1">kwds </span><span class="s3">= </span><span class="s1">kwds</span><span class="s3">.</span><span class="s1">copy</span><span class="s3">()</span>
+<a name="l135"><span class="ln">135  </span></a>            <span class="s2">for </span><span class="s1">key </span><span class="s2">in </span><span class="s1">ffiplatform</span><span class="s3">.</span><span class="s1">LIST_OF_FILE_NAMES</span><span class="s3">:</span>
+<a name="l136"><span class="ln">136  </span></a>                <span class="s2">if </span><span class="s1">key </span><span class="s2">in </span><span class="s1">kwds</span><span class="s3">:</span>
+<a name="l137"><span class="ln">137  </span></a>                    <span class="s1">lst </span><span class="s3">= </span><span class="s1">kwds</span><span class="s3">[</span><span class="s1">key</span><span class="s3">]</span>
+<a name="l138"><span class="ln">138  </span></a>                    <span class="s2">if not </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">lst</span><span class="s3">, (</span><span class="s1">list</span><span class="s3">, </span><span class="s1">tuple</span><span class="s3">)):</span>
+<a name="l139"><span class="ln">139  </span></a>                        <span class="s2">raise </span><span class="s1">TypeError</span><span class="s3">(</span><span class="s5">&quot;keyword '%s' should be a list or tuple&quot;</span>
+<a name="l140"><span class="ln">140  </span></a>                                        <span class="s3">% (</span><span class="s1">key</span><span class="s3">,))</span>
+<a name="l141"><span class="ln">141  </span></a>                    <span class="s1">lst </span><span class="s3">= [</span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">dirname</span><span class="s3">, </span><span class="s1">fn</span><span class="s3">) </span><span class="s2">for </span><span class="s1">fn </span><span class="s2">in </span><span class="s1">lst</span><span class="s3">]</span>
+<a name="l142"><span class="ln">142  </span></a>                    <span class="s1">kwds</span><span class="s3">[</span><span class="s1">key</span><span class="s3">] = </span><span class="s1">lst</span>
+<a name="l143"><span class="ln">143  </span></a>        <span class="s2">return </span><span class="s1">kwds</span>
+<a name="l144"><span class="ln">144  </span></a>
+<a name="l145"><span class="ln">145  </span></a>    <span class="s0"># ----------</span>
+<a name="l146"><span class="ln">146  </span></a>
+<a name="l147"><span class="ln">147  </span></a>    <span class="s2">def </span><span class="s1">_locate_module</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l148"><span class="ln">148  </span></a>        <span class="s2">if not </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">isfile</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">modulefilename</span><span class="s3">):</span>
+<a name="l149"><span class="ln">149  </span></a>            <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">ext_package</span><span class="s3">:</span>
+<a name="l150"><span class="ln">150  </span></a>                <span class="s2">try</span><span class="s3">:</span>
+<a name="l151"><span class="ln">151  </span></a>                    <span class="s1">pkg </span><span class="s3">= </span><span class="s1">__import__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">ext_package</span><span class="s3">, </span><span class="s2">None</span><span class="s3">, </span><span class="s2">None</span><span class="s3">, [</span><span class="s5">'__doc__'</span><span class="s3">])</span>
+<a name="l152"><span class="ln">152  </span></a>                <span class="s2">except </span><span class="s1">ImportError</span><span class="s3">:</span>
+<a name="l153"><span class="ln">153  </span></a>                    <span class="s2">return      </span><span class="s0"># cannot import the package itself, give up</span>
+<a name="l154"><span class="ln">154  </span></a>                    <span class="s0"># (e.g. it might be called differently before installation)</span>
+<a name="l155"><span class="ln">155  </span></a>                <span class="s1">path </span><span class="s3">= </span><span class="s1">pkg</span><span class="s3">.</span><span class="s1">__path__</span>
+<a name="l156"><span class="ln">156  </span></a>            <span class="s2">else</span><span class="s3">:</span>
+<a name="l157"><span class="ln">157  </span></a>                <span class="s1">path </span><span class="s3">= </span><span class="s2">None</span>
+<a name="l158"><span class="ln">158  </span></a>            <span class="s1">filename </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_vengine</span><span class="s3">.</span><span class="s1">find_module</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">get_module_name</span><span class="s3">(), </span><span class="s1">path</span><span class="s3">,</span>
+<a name="l159"><span class="ln">159  </span></a>                                                 <span class="s1">_get_so_suffixes</span><span class="s3">())</span>
+<a name="l160"><span class="ln">160  </span></a>            <span class="s2">if </span><span class="s1">filename </span><span class="s2">is None</span><span class="s3">:</span>
+<a name="l161"><span class="ln">161  </span></a>                <span class="s2">return</span>
+<a name="l162"><span class="ln">162  </span></a>            <span class="s1">self</span><span class="s3">.</span><span class="s1">modulefilename </span><span class="s3">= </span><span class="s1">filename</span>
+<a name="l163"><span class="ln">163  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">_vengine</span><span class="s3">.</span><span class="s1">collect_types</span><span class="s3">()</span>
+<a name="l164"><span class="ln">164  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">_has_module </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l165"><span class="ln">165  </span></a>
+<a name="l166"><span class="ln">166  </span></a>    <span class="s2">def </span><span class="s1">_write_source_to</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">file</span><span class="s3">):</span>
+<a name="l167"><span class="ln">167  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">_vengine</span><span class="s3">.</span><span class="s1">_f </span><span class="s3">= </span><span class="s1">file</span>
+<a name="l168"><span class="ln">168  </span></a>        <span class="s2">try</span><span class="s3">:</span>
+<a name="l169"><span class="ln">169  </span></a>            <span class="s1">self</span><span class="s3">.</span><span class="s1">_vengine</span><span class="s3">.</span><span class="s1">write_source_to_f</span><span class="s3">()</span>
+<a name="l170"><span class="ln">170  </span></a>        <span class="s2">finally</span><span class="s3">:</span>
+<a name="l171"><span class="ln">171  </span></a>            <span class="s2">del </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_vengine</span><span class="s3">.</span><span class="s1">_f</span>
+<a name="l172"><span class="ln">172  </span></a>
+<a name="l173"><span class="ln">173  </span></a>    <span class="s2">def </span><span class="s1">_write_source</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">file</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+<a name="l174"><span class="ln">174  </span></a>        <span class="s2">if </span><span class="s1">file </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l175"><span class="ln">175  </span></a>            <span class="s1">self</span><span class="s3">.</span><span class="s1">_write_source_to</span><span class="s3">(</span><span class="s1">file</span><span class="s3">)</span>
+<a name="l176"><span class="ln">176  </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l177"><span class="ln">177  </span></a>            <span class="s0"># Write our source file to an in memory file.</span>
+<a name="l178"><span class="ln">178  </span></a>            <span class="s1">f </span><span class="s3">= </span><span class="s1">NativeIO</span><span class="s3">()</span>
+<a name="l179"><span class="ln">179  </span></a>            <span class="s1">self</span><span class="s3">.</span><span class="s1">_write_source_to</span><span class="s3">(</span><span class="s1">f</span><span class="s3">)</span>
+<a name="l180"><span class="ln">180  </span></a>            <span class="s1">source_data </span><span class="s3">= </span><span class="s1">f</span><span class="s3">.</span><span class="s1">getvalue</span><span class="s3">()</span>
+<a name="l181"><span class="ln">181  </span></a>
+<a name="l182"><span class="ln">182  </span></a>            <span class="s0"># Determine if this matches the current file</span>
+<a name="l183"><span class="ln">183  </span></a>            <span class="s2">if </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">exists</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">sourcefilename</span><span class="s3">):</span>
+<a name="l184"><span class="ln">184  </span></a>                <span class="s2">with </span><span class="s1">open</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">sourcefilename</span><span class="s3">, </span><span class="s5">&quot;r&quot;</span><span class="s3">) </span><span class="s2">as </span><span class="s1">fp</span><span class="s3">:</span>
+<a name="l185"><span class="ln">185  </span></a>                    <span class="s1">needs_written </span><span class="s3">= </span><span class="s2">not </span><span class="s3">(</span><span class="s1">fp</span><span class="s3">.</span><span class="s1">read</span><span class="s3">() == </span><span class="s1">source_data</span><span class="s3">)</span>
+<a name="l186"><span class="ln">186  </span></a>            <span class="s2">else</span><span class="s3">:</span>
+<a name="l187"><span class="ln">187  </span></a>                <span class="s1">needs_written </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l188"><span class="ln">188  </span></a>
+<a name="l189"><span class="ln">189  </span></a>            <span class="s0"># Actually write the file out if it doesn't match</span>
+<a name="l190"><span class="ln">190  </span></a>            <span class="s2">if </span><span class="s1">needs_written</span><span class="s3">:</span>
+<a name="l191"><span class="ln">191  </span></a>                <span class="s1">_ensure_dir</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">sourcefilename</span><span class="s3">)</span>
+<a name="l192"><span class="ln">192  </span></a>                <span class="s2">with </span><span class="s1">open</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">sourcefilename</span><span class="s3">, </span><span class="s5">&quot;w&quot;</span><span class="s3">) </span><span class="s2">as </span><span class="s1">fp</span><span class="s3">:</span>
+<a name="l193"><span class="ln">193  </span></a>                    <span class="s1">fp</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s1">source_data</span><span class="s3">)</span>
+<a name="l194"><span class="ln">194  </span></a>
+<a name="l195"><span class="ln">195  </span></a>            <span class="s0"># Set this flag</span>
+<a name="l196"><span class="ln">196  </span></a>            <span class="s1">self</span><span class="s3">.</span><span class="s1">_has_source </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l197"><span class="ln">197  </span></a>
+<a name="l198"><span class="ln">198  </span></a>    <span class="s2">def </span><span class="s1">_compile_module</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l199"><span class="ln">199  </span></a>        <span class="s0"># compile this C source</span>
+<a name="l200"><span class="ln">200  </span></a>        <span class="s1">tmpdir </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">dirname</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">sourcefilename</span><span class="s3">)</span>
+<a name="l201"><span class="ln">201  </span></a>        <span class="s1">outputfilename </span><span class="s3">= </span><span class="s1">ffiplatform</span><span class="s3">.</span><span class="s1">compile</span><span class="s3">(</span><span class="s1">tmpdir</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">get_extension</span><span class="s3">())</span>
+<a name="l202"><span class="ln">202  </span></a>        <span class="s2">try</span><span class="s3">:</span>
+<a name="l203"><span class="ln">203  </span></a>            <span class="s1">same </span><span class="s3">= </span><span class="s1">ffiplatform</span><span class="s3">.</span><span class="s1">samefile</span><span class="s3">(</span><span class="s1">outputfilename</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">modulefilename</span><span class="s3">)</span>
+<a name="l204"><span class="ln">204  </span></a>        <span class="s2">except </span><span class="s1">OSError</span><span class="s3">:</span>
+<a name="l205"><span class="ln">205  </span></a>            <span class="s1">same </span><span class="s3">= </span><span class="s2">False</span>
+<a name="l206"><span class="ln">206  </span></a>        <span class="s2">if not </span><span class="s1">same</span><span class="s3">:</span>
+<a name="l207"><span class="ln">207  </span></a>            <span class="s1">_ensure_dir</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">modulefilename</span><span class="s3">)</span>
+<a name="l208"><span class="ln">208  </span></a>            <span class="s1">shutil</span><span class="s3">.</span><span class="s1">move</span><span class="s3">(</span><span class="s1">outputfilename</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">modulefilename</span><span class="s3">)</span>
+<a name="l209"><span class="ln">209  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">_has_module </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l210"><span class="ln">210  </span></a>
+<a name="l211"><span class="ln">211  </span></a>    <span class="s2">def </span><span class="s1">_load_library</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l212"><span class="ln">212  </span></a>        <span class="s2">assert </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_has_module</span>
+<a name="l213"><span class="ln">213  </span></a>        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">flags </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l214"><span class="ln">214  </span></a>            <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_vengine</span><span class="s3">.</span><span class="s1">load_library</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">flags</span><span class="s3">)</span>
+<a name="l215"><span class="ln">215  </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l216"><span class="ln">216  </span></a>            <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_vengine</span><span class="s3">.</span><span class="s1">load_library</span><span class="s3">()</span>
+<a name="l217"><span class="ln">217  </span></a>
+<a name="l218"><span class="ln">218  </span></a><span class="s0"># ____________________________________________________________</span>
+<a name="l219"><span class="ln">219  </span></a>
+<a name="l220"><span class="ln">220  </span></a><span class="s1">_FORCE_GENERIC_ENGINE </span><span class="s3">= </span><span class="s2">False      </span><span class="s0"># for tests</span>
+<a name="l221"><span class="ln">221  </span></a>
+<a name="l222"><span class="ln">222  </span></a><span class="s2">def </span><span class="s1">_locate_engine_class</span><span class="s3">(</span><span class="s1">ffi</span><span class="s3">, </span><span class="s1">force_generic_engine</span><span class="s3">):</span>
+<a name="l223"><span class="ln">223  </span></a>    <span class="s2">if </span><span class="s1">_FORCE_GENERIC_ENGINE</span><span class="s3">:</span>
+<a name="l224"><span class="ln">224  </span></a>        <span class="s1">force_generic_engine </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l225"><span class="ln">225  </span></a>    <span class="s2">if not </span><span class="s1">force_generic_engine</span><span class="s3">:</span>
+<a name="l226"><span class="ln">226  </span></a>        <span class="s2">if </span><span class="s5">'__pypy__' </span><span class="s2">in </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">builtin_module_names</span><span class="s3">:</span>
+<a name="l227"><span class="ln">227  </span></a>            <span class="s1">force_generic_engine </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l228"><span class="ln">228  </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l229"><span class="ln">229  </span></a>            <span class="s2">try</span><span class="s3">:</span>
+<a name="l230"><span class="ln">230  </span></a>                <span class="s2">import </span><span class="s1">_cffi_backend</span>
+<a name="l231"><span class="ln">231  </span></a>            <span class="s2">except </span><span class="s1">ImportError</span><span class="s3">:</span>
+<a name="l232"><span class="ln">232  </span></a>                <span class="s1">_cffi_backend </span><span class="s3">= </span><span class="s5">'?'</span>
+<a name="l233"><span class="ln">233  </span></a>            <span class="s2">if </span><span class="s1">ffi</span><span class="s3">.</span><span class="s1">_backend </span><span class="s2">is not </span><span class="s1">_cffi_backend</span><span class="s3">:</span>
+<a name="l234"><span class="ln">234  </span></a>                <span class="s1">force_generic_engine </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l235"><span class="ln">235  </span></a>    <span class="s2">if </span><span class="s1">force_generic_engine</span><span class="s3">:</span>
+<a name="l236"><span class="ln">236  </span></a>        <span class="s2">from </span><span class="s3">. </span><span class="s2">import </span><span class="s1">vengine_gen</span>
+<a name="l237"><span class="ln">237  </span></a>        <span class="s2">return </span><span class="s1">vengine_gen</span><span class="s3">.</span><span class="s1">VGenericEngine</span>
+<a name="l238"><span class="ln">238  </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l239"><span class="ln">239  </span></a>        <span class="s2">from </span><span class="s3">. </span><span class="s2">import </span><span class="s1">vengine_cpy</span>
+<a name="l240"><span class="ln">240  </span></a>        <span class="s2">return </span><span class="s1">vengine_cpy</span><span class="s3">.</span><span class="s1">VCPythonEngine</span>
+<a name="l241"><span class="ln">241  </span></a>
+<a name="l242"><span class="ln">242  </span></a><span class="s0"># ____________________________________________________________</span>
+<a name="l243"><span class="ln">243  </span></a>
+<a name="l244"><span class="ln">244  </span></a><span class="s1">_TMPDIR </span><span class="s3">= </span><span class="s2">None</span>
+<a name="l245"><span class="ln">245  </span></a>
+<a name="l246"><span class="ln">246  </span></a><span class="s2">def </span><span class="s1">_caller_dir_pycache</span><span class="s3">():</span>
+<a name="l247"><span class="ln">247  </span></a>    <span class="s2">if </span><span class="s1">_TMPDIR</span><span class="s3">:</span>
+<a name="l248"><span class="ln">248  </span></a>        <span class="s2">return </span><span class="s1">_TMPDIR</span>
+<a name="l249"><span class="ln">249  </span></a>    <span class="s1">result </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">environ</span><span class="s3">.</span><span class="s1">get</span><span class="s3">(</span><span class="s5">'CFFI_TMPDIR'</span><span class="s3">)</span>
+<a name="l250"><span class="ln">250  </span></a>    <span class="s2">if </span><span class="s1">result</span><span class="s3">:</span>
+<a name="l251"><span class="ln">251  </span></a>        <span class="s2">return </span><span class="s1">result</span>
+<a name="l252"><span class="ln">252  </span></a>    <span class="s1">filename </span><span class="s3">= </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">_getframe</span><span class="s3">(</span><span class="s4">2</span><span class="s3">).</span><span class="s1">f_code</span><span class="s3">.</span><span class="s1">co_filename</span>
+<a name="l253"><span class="ln">253  </span></a>    <span class="s2">return </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">abspath</span><span class="s3">(</span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">dirname</span><span class="s3">(</span><span class="s1">filename</span><span class="s3">),</span>
+<a name="l254"><span class="ln">254  </span></a>                           <span class="s5">'__pycache__'</span><span class="s3">))</span>
+<a name="l255"><span class="ln">255  </span></a>
+<a name="l256"><span class="ln">256  </span></a><span class="s2">def </span><span class="s1">set_tmpdir</span><span class="s3">(</span><span class="s1">dirname</span><span class="s3">):</span>
+<a name="l257"><span class="ln">257  </span></a>    <span class="s6">&quot;&quot;&quot;Set the temporary directory to use instead of __pycache__.&quot;&quot;&quot;</span>
+<a name="l258"><span class="ln">258  </span></a>    <span class="s2">global </span><span class="s1">_TMPDIR</span>
+<a name="l259"><span class="ln">259  </span></a>    <span class="s1">_TMPDIR </span><span class="s3">= </span><span class="s1">dirname</span>
+<a name="l260"><span class="ln">260  </span></a>
+<a name="l261"><span class="ln">261  </span></a><span class="s2">def </span><span class="s1">cleanup_tmpdir</span><span class="s3">(</span><span class="s1">tmpdir</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">keep_so</span><span class="s3">=</span><span class="s2">False</span><span class="s3">):</span>
+<a name="l262"><span class="ln">262  </span></a>    <span class="s6">&quot;&quot;&quot;Clean up the temporary directory by removing all files in it 
+<a name="l263"><span class="ln">263  </span></a>    called `_cffi_*.{c,so}` as well as the `build` subdirectory.&quot;&quot;&quot;</span>
+<a name="l264"><span class="ln">264  </span></a>    <span class="s1">tmpdir </span><span class="s3">= </span><span class="s1">tmpdir </span><span class="s2">or </span><span class="s1">_caller_dir_pycache</span><span class="s3">()</span>
+<a name="l265"><span class="ln">265  </span></a>    <span class="s2">try</span><span class="s3">:</span>
+<a name="l266"><span class="ln">266  </span></a>        <span class="s1">filelist </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">listdir</span><span class="s3">(</span><span class="s1">tmpdir</span><span class="s3">)</span>
+<a name="l267"><span class="ln">267  </span></a>    <span class="s2">except </span><span class="s1">OSError</span><span class="s3">:</span>
+<a name="l268"><span class="ln">268  </span></a>        <span class="s2">return</span>
+<a name="l269"><span class="ln">269  </span></a>    <span class="s2">if </span><span class="s1">keep_so</span><span class="s3">:</span>
+<a name="l270"><span class="ln">270  </span></a>        <span class="s1">suffix </span><span class="s3">= </span><span class="s5">'.c'   </span><span class="s0"># only remove .c files</span>
+<a name="l271"><span class="ln">271  </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l272"><span class="ln">272  </span></a>        <span class="s1">suffix </span><span class="s3">= </span><span class="s1">_get_so_suffixes</span><span class="s3">()[</span><span class="s4">0</span><span class="s3">].</span><span class="s1">lower</span><span class="s3">()</span>
+<a name="l273"><span class="ln">273  </span></a>    <span class="s2">for </span><span class="s1">fn </span><span class="s2">in </span><span class="s1">filelist</span><span class="s3">:</span>
+<a name="l274"><span class="ln">274  </span></a>        <span class="s2">if </span><span class="s1">fn</span><span class="s3">.</span><span class="s1">lower</span><span class="s3">().</span><span class="s1">startswith</span><span class="s3">(</span><span class="s5">'_cffi_'</span><span class="s3">) </span><span class="s2">and </span><span class="s3">(</span>
+<a name="l275"><span class="ln">275  </span></a>                <span class="s1">fn</span><span class="s3">.</span><span class="s1">lower</span><span class="s3">().</span><span class="s1">endswith</span><span class="s3">(</span><span class="s1">suffix</span><span class="s3">) </span><span class="s2">or </span><span class="s1">fn</span><span class="s3">.</span><span class="s1">lower</span><span class="s3">().</span><span class="s1">endswith</span><span class="s3">(</span><span class="s5">'.c'</span><span class="s3">)):</span>
+<a name="l276"><span class="ln">276  </span></a>            <span class="s2">try</span><span class="s3">:</span>
+<a name="l277"><span class="ln">277  </span></a>                <span class="s1">os</span><span class="s3">.</span><span class="s1">unlink</span><span class="s3">(</span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">tmpdir</span><span class="s3">, </span><span class="s1">fn</span><span class="s3">))</span>
+<a name="l278"><span class="ln">278  </span></a>            <span class="s2">except </span><span class="s1">OSError</span><span class="s3">:</span>
+<a name="l279"><span class="ln">279  </span></a>                <span class="s2">pass</span>
+<a name="l280"><span class="ln">280  </span></a>    <span class="s1">clean_dir </span><span class="s3">= [</span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">tmpdir</span><span class="s3">, </span><span class="s5">'build'</span><span class="s3">)]</span>
+<a name="l281"><span class="ln">281  </span></a>    <span class="s2">for </span><span class="s1">dir </span><span class="s2">in </span><span class="s1">clean_dir</span><span class="s3">:</span>
+<a name="l282"><span class="ln">282  </span></a>        <span class="s2">try</span><span class="s3">:</span>
+<a name="l283"><span class="ln">283  </span></a>            <span class="s2">for </span><span class="s1">fn </span><span class="s2">in </span><span class="s1">os</span><span class="s3">.</span><span class="s1">listdir</span><span class="s3">(</span><span class="s1">dir</span><span class="s3">):</span>
+<a name="l284"><span class="ln">284  </span></a>                <span class="s1">fn </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">dir</span><span class="s3">, </span><span class="s1">fn</span><span class="s3">)</span>
+<a name="l285"><span class="ln">285  </span></a>                <span class="s2">if </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">isdir</span><span class="s3">(</span><span class="s1">fn</span><span class="s3">):</span>
+<a name="l286"><span class="ln">286  </span></a>                    <span class="s1">clean_dir</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">fn</span><span class="s3">)</span>
+<a name="l287"><span class="ln">287  </span></a>                <span class="s2">else</span><span class="s3">:</span>
+<a name="l288"><span class="ln">288  </span></a>                    <span class="s1">os</span><span class="s3">.</span><span class="s1">unlink</span><span class="s3">(</span><span class="s1">fn</span><span class="s3">)</span>
+<a name="l289"><span class="ln">289  </span></a>        <span class="s2">except </span><span class="s1">OSError</span><span class="s3">:</span>
+<a name="l290"><span class="ln">290  </span></a>            <span class="s2">pass</span>
+<a name="l291"><span class="ln">291  </span></a>
+<a name="l292"><span class="ln">292  </span></a><span class="s2">def </span><span class="s1">_get_so_suffixes</span><span class="s3">():</span>
+<a name="l293"><span class="ln">293  </span></a>    <span class="s1">suffixes </span><span class="s3">= </span><span class="s1">_extension_suffixes</span><span class="s3">()</span>
+<a name="l294"><span class="ln">294  </span></a>    <span class="s2">if not </span><span class="s1">suffixes</span><span class="s3">:</span>
+<a name="l295"><span class="ln">295  </span></a>        <span class="s0"># bah, no C_EXTENSION available.  Occurs on pypy without cpyext</span>
+<a name="l296"><span class="ln">296  </span></a>        <span class="s2">if </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">platform </span><span class="s3">== </span><span class="s5">'win32'</span><span class="s3">:</span>
+<a name="l297"><span class="ln">297  </span></a>            <span class="s1">suffixes </span><span class="s3">= [</span><span class="s5">&quot;.pyd&quot;</span><span class="s3">]</span>
+<a name="l298"><span class="ln">298  </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l299"><span class="ln">299  </span></a>            <span class="s1">suffixes </span><span class="s3">= [</span><span class="s5">&quot;.so&quot;</span><span class="s3">]</span>
+<a name="l300"><span class="ln">300  </span></a>
+<a name="l301"><span class="ln">301  </span></a>    <span class="s2">return </span><span class="s1">suffixes</span>
+<a name="l302"><span class="ln">302  </span></a>
+<a name="l303"><span class="ln">303  </span></a><span class="s2">def </span><span class="s1">_ensure_dir</span><span class="s3">(</span><span class="s1">filename</span><span class="s3">):</span>
+<a name="l304"><span class="ln">304  </span></a>    <span class="s1">dirname </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">dirname</span><span class="s3">(</span><span class="s1">filename</span><span class="s3">)</span>
+<a name="l305"><span class="ln">305  </span></a>    <span class="s2">if </span><span class="s1">dirname </span><span class="s2">and not </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">isdir</span><span class="s3">(</span><span class="s1">dirname</span><span class="s3">):</span>
+<a name="l306"><span class="ln">306  </span></a>        <span class="s1">os</span><span class="s3">.</span><span class="s1">makedirs</span><span class="s3">(</span><span class="s1">dirname</span><span class="s3">)</span>
+<a name="l307"><span class="ln">307  </span></a></pre>
+</body>
+</html>

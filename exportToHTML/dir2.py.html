@@ -1,0 +1,106 @@
+<html>
+<head>
+<title>dir2.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+dir2.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># encoding: utf-8</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s2">&quot;&quot;&quot;A fancy version of Python's builtin :func:`dir` function.&quot;&quot;&quot;</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s0"># Copyright (c) IPython Development Team.</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0"># Distributed under the terms of the Modified BSD License.</span>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s3">import </span><span class="s1">inspect</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s3">import </span><span class="s1">types</span>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s3">def </span><span class="s1">safe_hasattr</span><span class="s4">(</span><span class="s1">obj</span><span class="s4">, </span><span class="s1">attr</span><span class="s4">):</span>
+<a name="l12"><span class="ln">12   </span></a>    <span class="s2">&quot;&quot;&quot;In recent versions of Python, hasattr() only catches AttributeError. 
+<a name="l13"><span class="ln">13   </span></a>    This catches all errors. 
+<a name="l14"><span class="ln">14   </span></a>    &quot;&quot;&quot;</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s3">try</span><span class="s4">:</span>
+<a name="l16"><span class="ln">16   </span></a>        <span class="s1">getattr</span><span class="s4">(</span><span class="s1">obj</span><span class="s4">, </span><span class="s1">attr</span><span class="s4">)</span>
+<a name="l17"><span class="ln">17   </span></a>        <span class="s3">return True</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s3">except</span><span class="s4">:</span>
+<a name="l19"><span class="ln">19   </span></a>        <span class="s3">return False</span>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a>
+<a name="l22"><span class="ln">22   </span></a><span class="s3">def </span><span class="s1">dir2</span><span class="s4">(</span><span class="s1">obj</span><span class="s4">):</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s2">&quot;&quot;&quot;dir2(obj) -&gt; list of strings 
+<a name="l24"><span class="ln">24   </span></a> 
+<a name="l25"><span class="ln">25   </span></a>    Extended version of the Python builtin dir(), which does a few extra 
+<a name="l26"><span class="ln">26   </span></a>    checks. 
+<a name="l27"><span class="ln">27   </span></a> 
+<a name="l28"><span class="ln">28   </span></a>    This version is guaranteed to return only a list of true strings, whereas 
+<a name="l29"><span class="ln">29   </span></a>    dir() returns anything that objects inject into themselves, even if they 
+<a name="l30"><span class="ln">30   </span></a>    are later not really valid for attribute access (many extension libraries 
+<a name="l31"><span class="ln">31   </span></a>    have such bugs). 
+<a name="l32"><span class="ln">32   </span></a>    &quot;&quot;&quot;</span>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s0"># Start building the attribute list via dir(), and then complete it</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s0"># with a few extra special-purpose calls.</span>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s3">try</span><span class="s4">:</span>
+<a name="l38"><span class="ln">38   </span></a>        <span class="s1">words </span><span class="s4">= </span><span class="s1">set</span><span class="s4">(</span><span class="s1">dir</span><span class="s4">(</span><span class="s1">obj</span><span class="s4">))</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s3">except </span><span class="s1">Exception</span><span class="s4">:</span>
+<a name="l40"><span class="ln">40   </span></a>        <span class="s0"># TypeError: dir(obj) does not return a list</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s1">words </span><span class="s4">= </span><span class="s1">set</span><span class="s4">()</span>
+<a name="l42"><span class="ln">42   </span></a>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s3">if </span><span class="s1">safe_hasattr</span><span class="s4">(</span><span class="s1">obj</span><span class="s4">, </span><span class="s5">&quot;__class__&quot;</span><span class="s4">):</span>
+<a name="l44"><span class="ln">44   </span></a>        <span class="s1">words </span><span class="s4">|= </span><span class="s1">set</span><span class="s4">(</span><span class="s1">dir</span><span class="s4">(</span><span class="s1">obj</span><span class="s4">.</span><span class="s1">__class__</span><span class="s4">))</span>
+<a name="l45"><span class="ln">45   </span></a>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s0"># filter out non-string attributes which may be stuffed by dir() calls</span>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s0"># and poor coding in third-party modules</span>
+<a name="l48"><span class="ln">48   </span></a>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s1">words </span><span class="s4">= [</span><span class="s1">w </span><span class="s3">for </span><span class="s1">w </span><span class="s3">in </span><span class="s1">words </span><span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">w</span><span class="s4">, </span><span class="s1">str</span><span class="s4">)]</span>
+<a name="l50"><span class="ln">50   </span></a>    <span class="s3">return </span><span class="s1">sorted</span><span class="s4">(</span><span class="s1">words</span><span class="s4">)</span>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a>
+<a name="l53"><span class="ln">53   </span></a><span class="s3">def </span><span class="s1">get_real_method</span><span class="s4">(</span><span class="s1">obj</span><span class="s4">, </span><span class="s1">name</span><span class="s4">):</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s2">&quot;&quot;&quot;Like getattr, but with a few extra sanity checks: 
+<a name="l55"><span class="ln">55   </span></a> 
+<a name="l56"><span class="ln">56   </span></a>    - If obj is a class, ignore everything except class methods 
+<a name="l57"><span class="ln">57   </span></a>    - Check if obj is a proxy that claims to have all attributes 
+<a name="l58"><span class="ln">58   </span></a>    - Catch attribute access failing with any exception 
+<a name="l59"><span class="ln">59   </span></a>    - Check that the attribute is a callable object 
+<a name="l60"><span class="ln">60   </span></a> 
+<a name="l61"><span class="ln">61   </span></a>    Returns the method or None. 
+<a name="l62"><span class="ln">62   </span></a>    &quot;&quot;&quot;</span>
+<a name="l63"><span class="ln">63   </span></a>    <span class="s3">try</span><span class="s4">:</span>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s1">canary </span><span class="s4">= </span><span class="s1">getattr</span><span class="s4">(</span><span class="s1">obj</span><span class="s4">, </span><span class="s5">&quot;_ipython_canary_method_should_not_exist_&quot;</span><span class="s4">, </span><span class="s3">None</span><span class="s4">)</span>
+<a name="l65"><span class="ln">65   </span></a>    <span class="s3">except </span><span class="s1">Exception</span><span class="s4">:</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s3">return None</span>
+<a name="l67"><span class="ln">67   </span></a>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s3">if </span><span class="s1">canary </span><span class="s3">is not None</span><span class="s4">:</span>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s0"># It claimed to have an attribute it should never have</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s3">return None</span>
+<a name="l71"><span class="ln">71   </span></a>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s3">try</span><span class="s4">:</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s1">m </span><span class="s4">= </span><span class="s1">getattr</span><span class="s4">(</span><span class="s1">obj</span><span class="s4">, </span><span class="s1">name</span><span class="s4">, </span><span class="s3">None</span><span class="s4">)</span>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s3">except </span><span class="s1">Exception</span><span class="s4">:</span>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s3">return None</span>
+<a name="l76"><span class="ln">76   </span></a>
+<a name="l77"><span class="ln">77   </span></a>    <span class="s3">if </span><span class="s1">inspect</span><span class="s4">.</span><span class="s1">isclass</span><span class="s4">(</span><span class="s1">obj</span><span class="s4">) </span><span class="s3">and not </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">m</span><span class="s4">, </span><span class="s1">types</span><span class="s4">.</span><span class="s1">MethodType</span><span class="s4">):</span>
+<a name="l78"><span class="ln">78   </span></a>        <span class="s3">return None</span>
+<a name="l79"><span class="ln">79   </span></a>
+<a name="l80"><span class="ln">80   </span></a>    <span class="s3">if </span><span class="s1">callable</span><span class="s4">(</span><span class="s1">m</span><span class="s4">):</span>
+<a name="l81"><span class="ln">81   </span></a>        <span class="s3">return </span><span class="s1">m</span>
+<a name="l82"><span class="ln">82   </span></a>
+<a name="l83"><span class="ln">83   </span></a>    <span class="s3">return None</span>
+<a name="l84"><span class="ln">84   </span></a></pre>
+</body>
+</html>

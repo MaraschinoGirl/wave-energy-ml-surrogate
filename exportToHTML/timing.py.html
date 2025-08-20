@@ -1,0 +1,147 @@
+<html>
+<head>
+<title>timing.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+timing.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># encoding: utf-8</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s2">&quot;&quot;&quot; 
+<a name="l3"><span class="ln">3    </span></a>Utilities for timing code execution. 
+<a name="l4"><span class="ln">4    </span></a>&quot;&quot;&quot;</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">#-----------------------------------------------------------------------------</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">#  Copyright (C) 2008-2011  The IPython Development Team</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">#</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0">#  Distributed under the terms of the BSD License.  The full license is in</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">#  the file COPYING, distributed as part of this software.</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s0">#-----------------------------------------------------------------------------</span>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a><span class="s0">#-----------------------------------------------------------------------------</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s0"># Imports</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s0">#-----------------------------------------------------------------------------</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s3">import </span><span class="s1">time</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a><span class="s0">#-----------------------------------------------------------------------------</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s0"># Code</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s0">#-----------------------------------------------------------------------------</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a><span class="s0"># If possible (Unix), use the resource module instead of time.clock()</span>
+<a name="l24"><span class="ln">24   </span></a><span class="s3">try</span><span class="s4">:</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s3">import </span><span class="s1">resource</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s3">except </span><span class="s1">ModuleNotFoundError</span><span class="s4">:</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s1">resource </span><span class="s4">= </span><span class="s3">None  </span><span class="s0"># type: ignore [assignment]</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a><span class="s0"># Some implementations (like jyputerlite) don't have getrusage</span>
+<a name="l30"><span class="ln">30   </span></a><span class="s3">if </span><span class="s1">resource </span><span class="s3">is not None and </span><span class="s1">hasattr</span><span class="s4">(</span><span class="s1">resource</span><span class="s4">, </span><span class="s5">&quot;getrusage&quot;</span><span class="s4">):</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s3">def </span><span class="s1">clocku</span><span class="s4">():</span>
+<a name="l32"><span class="ln">32   </span></a>        <span class="s2">&quot;&quot;&quot;clocku() -&gt; floating point number 
+<a name="l33"><span class="ln">33   </span></a> 
+<a name="l34"><span class="ln">34   </span></a>        Return the *USER* CPU time in seconds since the start of the process. 
+<a name="l35"><span class="ln">35   </span></a>        This is done via a call to resource.getrusage, so it avoids the 
+<a name="l36"><span class="ln">36   </span></a>        wraparound problems in time.clock().&quot;&quot;&quot;</span>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a>        <span class="s3">return </span><span class="s1">resource</span><span class="s4">.</span><span class="s1">getrusage</span><span class="s4">(</span><span class="s1">resource</span><span class="s4">.</span><span class="s1">RUSAGE_SELF</span><span class="s4">)[</span><span class="s6">0</span><span class="s4">]</span>
+<a name="l39"><span class="ln">39   </span></a>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s3">def </span><span class="s1">clocks</span><span class="s4">():</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s2">&quot;&quot;&quot;clocks() -&gt; floating point number 
+<a name="l42"><span class="ln">42   </span></a> 
+<a name="l43"><span class="ln">43   </span></a>        Return the *SYSTEM* CPU time in seconds since the start of the process. 
+<a name="l44"><span class="ln">44   </span></a>        This is done via a call to resource.getrusage, so it avoids the 
+<a name="l45"><span class="ln">45   </span></a>        wraparound problems in time.clock().&quot;&quot;&quot;</span>
+<a name="l46"><span class="ln">46   </span></a>
+<a name="l47"><span class="ln">47   </span></a>        <span class="s3">return </span><span class="s1">resource</span><span class="s4">.</span><span class="s1">getrusage</span><span class="s4">(</span><span class="s1">resource</span><span class="s4">.</span><span class="s1">RUSAGE_SELF</span><span class="s4">)[</span><span class="s6">1</span><span class="s4">]</span>
+<a name="l48"><span class="ln">48   </span></a>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s3">def </span><span class="s1">clock</span><span class="s4">():</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s2">&quot;&quot;&quot;clock() -&gt; floating point number 
+<a name="l51"><span class="ln">51   </span></a> 
+<a name="l52"><span class="ln">52   </span></a>        Return the *TOTAL USER+SYSTEM* CPU time in seconds since the start of 
+<a name="l53"><span class="ln">53   </span></a>        the process.  This is done via a call to resource.getrusage, so it 
+<a name="l54"><span class="ln">54   </span></a>        avoids the wraparound problems in time.clock().&quot;&quot;&quot;</span>
+<a name="l55"><span class="ln">55   </span></a>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s1">u</span><span class="s4">,</span><span class="s1">s </span><span class="s4">= </span><span class="s1">resource</span><span class="s4">.</span><span class="s1">getrusage</span><span class="s4">(</span><span class="s1">resource</span><span class="s4">.</span><span class="s1">RUSAGE_SELF</span><span class="s4">)[:</span><span class="s6">2</span><span class="s4">]</span>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s3">return </span><span class="s1">u</span><span class="s4">+</span><span class="s1">s</span>
+<a name="l58"><span class="ln">58   </span></a>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s3">def </span><span class="s1">clock2</span><span class="s4">():</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s2">&quot;&quot;&quot;clock2() -&gt; (t_user,t_system) 
+<a name="l61"><span class="ln">61   </span></a> 
+<a name="l62"><span class="ln">62   </span></a>        Similar to clock(), but return a tuple of user/system times.&quot;&quot;&quot;</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s3">return </span><span class="s1">resource</span><span class="s4">.</span><span class="s1">getrusage</span><span class="s4">(</span><span class="s1">resource</span><span class="s4">.</span><span class="s1">RUSAGE_SELF</span><span class="s4">)[:</span><span class="s6">2</span><span class="s4">]</span>
+<a name="l64"><span class="ln">64   </span></a>
+<a name="l65"><span class="ln">65   </span></a><span class="s3">else</span><span class="s4">:</span>
+<a name="l66"><span class="ln">66   </span></a>    <span class="s0"># There is no distinction of user/system time under windows, so we just use</span>
+<a name="l67"><span class="ln">67   </span></a>    <span class="s0"># time.process_time() for everything...</span>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s1">clocku </span><span class="s4">= </span><span class="s1">clocks </span><span class="s4">= </span><span class="s1">clock </span><span class="s4">= </span><span class="s1">time</span><span class="s4">.</span><span class="s1">process_time</span>
+<a name="l69"><span class="ln">69   </span></a>
+<a name="l70"><span class="ln">70   </span></a>    <span class="s3">def </span><span class="s1">clock2</span><span class="s4">():</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s2">&quot;&quot;&quot;Under windows, system CPU time can't be measured. 
+<a name="l72"><span class="ln">72   </span></a> 
+<a name="l73"><span class="ln">73   </span></a>        This just returns process_time() and zero.&quot;&quot;&quot;</span>
+<a name="l74"><span class="ln">74   </span></a>        <span class="s3">return </span><span class="s1">time</span><span class="s4">.</span><span class="s1">process_time</span><span class="s4">(), </span><span class="s6">0.0</span>
+<a name="l75"><span class="ln">75   </span></a>
+<a name="l76"><span class="ln">76   </span></a>    
+<a name="l77"><span class="ln">77   </span></a><span class="s3">def </span><span class="s1">timings_out</span><span class="s4">(</span><span class="s1">reps</span><span class="s4">,</span><span class="s1">func</span><span class="s4">,*</span><span class="s1">args</span><span class="s4">,**</span><span class="s1">kw</span><span class="s4">):</span>
+<a name="l78"><span class="ln">78   </span></a>    <span class="s2">&quot;&quot;&quot;timings_out(reps,func,*args,**kw) -&gt; (t_total,t_per_call,output) 
+<a name="l79"><span class="ln">79   </span></a> 
+<a name="l80"><span class="ln">80   </span></a>    Execute a function reps times, return a tuple with the elapsed total 
+<a name="l81"><span class="ln">81   </span></a>    CPU time in seconds, the time per call and the function's output. 
+<a name="l82"><span class="ln">82   </span></a> 
+<a name="l83"><span class="ln">83   </span></a>    Under Unix, the return value is the sum of user+system time consumed by 
+<a name="l84"><span class="ln">84   </span></a>    the process, computed via the resource module.  This prevents problems 
+<a name="l85"><span class="ln">85   </span></a>    related to the wraparound effect which the time.clock() function has. 
+<a name="l86"><span class="ln">86   </span></a> 
+<a name="l87"><span class="ln">87   </span></a>    Under Windows the return value is in wall clock seconds. See the 
+<a name="l88"><span class="ln">88   </span></a>    documentation for the time module for more details.&quot;&quot;&quot;</span>
+<a name="l89"><span class="ln">89   </span></a>
+<a name="l90"><span class="ln">90   </span></a>    <span class="s1">reps </span><span class="s4">= </span><span class="s1">int</span><span class="s4">(</span><span class="s1">reps</span><span class="s4">)</span>
+<a name="l91"><span class="ln">91   </span></a>    <span class="s3">assert </span><span class="s1">reps </span><span class="s4">&gt;=</span><span class="s6">1</span><span class="s4">, </span><span class="s5">'reps must be &gt;= 1'</span>
+<a name="l92"><span class="ln">92   </span></a>    <span class="s3">if </span><span class="s1">reps</span><span class="s4">==</span><span class="s6">1</span><span class="s4">:</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s1">start </span><span class="s4">= </span><span class="s1">clock</span><span class="s4">()</span>
+<a name="l94"><span class="ln">94   </span></a>        <span class="s1">out </span><span class="s4">= </span><span class="s1">func</span><span class="s4">(*</span><span class="s1">args</span><span class="s4">,**</span><span class="s1">kw</span><span class="s4">)</span>
+<a name="l95"><span class="ln">95   </span></a>        <span class="s1">tot_time </span><span class="s4">= </span><span class="s1">clock</span><span class="s4">()-</span><span class="s1">start</span>
+<a name="l96"><span class="ln">96   </span></a>    <span class="s3">else</span><span class="s4">:</span>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s1">rng </span><span class="s4">= </span><span class="s1">range</span><span class="s4">(</span><span class="s1">reps</span><span class="s4">-</span><span class="s6">1</span><span class="s4">) </span><span class="s0"># the last time is executed separately to store output</span>
+<a name="l98"><span class="ln">98   </span></a>        <span class="s1">start </span><span class="s4">= </span><span class="s1">clock</span><span class="s4">()</span>
+<a name="l99"><span class="ln">99   </span></a>        <span class="s3">for </span><span class="s1">dummy </span><span class="s3">in </span><span class="s1">rng</span><span class="s4">: </span><span class="s1">func</span><span class="s4">(*</span><span class="s1">args</span><span class="s4">,**</span><span class="s1">kw</span><span class="s4">)</span>
+<a name="l100"><span class="ln">100  </span></a>        <span class="s1">out </span><span class="s4">= </span><span class="s1">func</span><span class="s4">(*</span><span class="s1">args</span><span class="s4">,**</span><span class="s1">kw</span><span class="s4">)  </span><span class="s0"># one last time</span>
+<a name="l101"><span class="ln">101  </span></a>        <span class="s1">tot_time </span><span class="s4">= </span><span class="s1">clock</span><span class="s4">()-</span><span class="s1">start</span>
+<a name="l102"><span class="ln">102  </span></a>    <span class="s1">av_time </span><span class="s4">= </span><span class="s1">tot_time </span><span class="s4">/ </span><span class="s1">reps</span>
+<a name="l103"><span class="ln">103  </span></a>    <span class="s3">return </span><span class="s1">tot_time</span><span class="s4">,</span><span class="s1">av_time</span><span class="s4">,</span><span class="s1">out</span>
+<a name="l104"><span class="ln">104  </span></a>
+<a name="l105"><span class="ln">105  </span></a>
+<a name="l106"><span class="ln">106  </span></a><span class="s3">def </span><span class="s1">timings</span><span class="s4">(</span><span class="s1">reps</span><span class="s4">,</span><span class="s1">func</span><span class="s4">,*</span><span class="s1">args</span><span class="s4">,**</span><span class="s1">kw</span><span class="s4">):</span>
+<a name="l107"><span class="ln">107  </span></a>    <span class="s2">&quot;&quot;&quot;timings(reps,func,*args,**kw) -&gt; (t_total,t_per_call) 
+<a name="l108"><span class="ln">108  </span></a> 
+<a name="l109"><span class="ln">109  </span></a>    Execute a function reps times, return a tuple with the elapsed total CPU 
+<a name="l110"><span class="ln">110  </span></a>    time in seconds and the time per call. These are just the first two values 
+<a name="l111"><span class="ln">111  </span></a>    in timings_out().&quot;&quot;&quot;</span>
+<a name="l112"><span class="ln">112  </span></a>
+<a name="l113"><span class="ln">113  </span></a>    <span class="s3">return </span><span class="s1">timings_out</span><span class="s4">(</span><span class="s1">reps</span><span class="s4">,</span><span class="s1">func</span><span class="s4">,*</span><span class="s1">args</span><span class="s4">,**</span><span class="s1">kw</span><span class="s4">)[</span><span class="s6">0</span><span class="s4">:</span><span class="s6">2</span><span class="s4">]</span>
+<a name="l114"><span class="ln">114  </span></a>
+<a name="l115"><span class="ln">115  </span></a>
+<a name="l116"><span class="ln">116  </span></a><span class="s3">def </span><span class="s1">timing</span><span class="s4">(</span><span class="s1">func</span><span class="s4">,*</span><span class="s1">args</span><span class="s4">,**</span><span class="s1">kw</span><span class="s4">):</span>
+<a name="l117"><span class="ln">117  </span></a>    <span class="s2">&quot;&quot;&quot;timing(func,*args,**kw) -&gt; t_total 
+<a name="l118"><span class="ln">118  </span></a> 
+<a name="l119"><span class="ln">119  </span></a>    Execute a function once, return the elapsed total CPU time in 
+<a name="l120"><span class="ln">120  </span></a>    seconds. This is just the first value in timings_out().&quot;&quot;&quot;</span>
+<a name="l121"><span class="ln">121  </span></a>
+<a name="l122"><span class="ln">122  </span></a>    <span class="s3">return </span><span class="s1">timings_out</span><span class="s4">(</span><span class="s6">1</span><span class="s4">,</span><span class="s1">func</span><span class="s4">,*</span><span class="s1">args</span><span class="s4">,**</span><span class="s1">kw</span><span class="s4">)[</span><span class="s6">0</span><span class="s4">]</span>
+<a name="l123"><span class="ln">123  </span></a>
+<a name="l124"><span class="ln">124  </span></a></pre>
+</body>
+</html>

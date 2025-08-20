@@ -1,0 +1,719 @@
+<html>
+<head>
+<title>_partial_dependence.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #7a7e85;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_partial_dependence.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot;Partial dependence plots for regression and classification models.&quot;&quot;&quot;</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s2"># Authors: The scikit-learn developers</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s2"># SPDX-License-Identifier: BSD-3-Clause</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s3">from </span><span class="s1">collections</span><span class="s4">.</span><span class="s1">abc </span><span class="s3">import </span><span class="s1">Iterable</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a><span class="s3">import </span><span class="s1">numpy </span><span class="s3">as </span><span class="s1">np</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s3">from </span><span class="s1">scipy </span><span class="s3">import </span><span class="s1">sparse</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s3">from </span><span class="s1">scipy</span><span class="s4">.</span><span class="s1">stats</span><span class="s4">.</span><span class="s1">mstats </span><span class="s3">import </span><span class="s1">mquantiles</span>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">base </span><span class="s3">import </span><span class="s1">is_classifier</span><span class="s4">, </span><span class="s1">is_regressor</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">ensemble </span><span class="s3">import </span><span class="s1">RandomForestRegressor</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">ensemble</span><span class="s4">.</span><span class="s1">_gb </span><span class="s3">import </span><span class="s1">BaseGradientBoosting</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">ensemble</span><span class="s4">.</span><span class="s1">_hist_gradient_boosting</span><span class="s4">.</span><span class="s1">gradient_boosting </span><span class="s3">import </span><span class="s4">(</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s1">BaseHistGradientBoosting</span><span class="s4">,</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s4">)</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">tree </span><span class="s3">import </span><span class="s1">DecisionTreeRegressor</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">utils </span><span class="s3">import </span><span class="s1">Bunch</span><span class="s4">, </span><span class="s1">_safe_indexing</span><span class="s4">, </span><span class="s1">check_array</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">utils</span><span class="s4">.</span><span class="s1">_indexing </span><span class="s3">import </span><span class="s1">_determine_key_type</span><span class="s4">, </span><span class="s1">_get_column_indices</span><span class="s4">, </span><span class="s1">_safe_assign</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">utils</span><span class="s4">.</span><span class="s1">_optional_dependencies </span><span class="s3">import </span><span class="s1">check_matplotlib_support  </span><span class="s2"># noqa</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">utils</span><span class="s4">.</span><span class="s1">_param_validation </span><span class="s3">import </span><span class="s4">(</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s1">HasMethods</span><span class="s4">,</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s1">Integral</span><span class="s4">,</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s1">Interval</span><span class="s4">,</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s1">StrOptions</span><span class="s4">,</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s1">validate_params</span><span class="s4">,</span>
+<a name="l28"><span class="ln">28   </span></a><span class="s4">)</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">utils</span><span class="s4">.</span><span class="s1">_response </span><span class="s3">import </span><span class="s1">_get_response_values</span>
+<a name="l30"><span class="ln">30   </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">utils</span><span class="s4">.</span><span class="s1">extmath </span><span class="s3">import </span><span class="s1">cartesian</span>
+<a name="l31"><span class="ln">31   </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">utils</span><span class="s4">.</span><span class="s1">validation </span><span class="s3">import </span><span class="s1">_check_sample_weight</span><span class="s4">, </span><span class="s1">check_is_fitted</span>
+<a name="l32"><span class="ln">32   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">_pd_utils </span><span class="s3">import </span><span class="s1">_check_feature_names</span><span class="s4">, </span><span class="s1">_get_feature_index</span>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a><span class="s1">__all__ </span><span class="s4">= [</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s5">&quot;partial_dependence&quot;</span><span class="s4">,</span>
+<a name="l36"><span class="ln">36   </span></a><span class="s4">]</span>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a>
+<a name="l39"><span class="ln">39   </span></a><span class="s3">def </span><span class="s1">_grid_from_X</span><span class="s4">(</span><span class="s1">X</span><span class="s4">, </span><span class="s1">percentiles</span><span class="s4">, </span><span class="s1">is_categorical</span><span class="s4">, </span><span class="s1">grid_resolution</span><span class="s4">):</span>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s0">&quot;&quot;&quot;Generate a grid of points based on the percentiles of X. 
+<a name="l41"><span class="ln">41   </span></a> 
+<a name="l42"><span class="ln">42   </span></a>    The grid is a cartesian product between the columns of ``values``. The 
+<a name="l43"><span class="ln">43   </span></a>    ith column of ``values`` consists in ``grid_resolution`` equally-spaced 
+<a name="l44"><span class="ln">44   </span></a>    points between the percentiles of the jth column of X. 
+<a name="l45"><span class="ln">45   </span></a> 
+<a name="l46"><span class="ln">46   </span></a>    If ``grid_resolution`` is bigger than the number of unique values in the 
+<a name="l47"><span class="ln">47   </span></a>    j-th column of X or if the feature is a categorical feature (by inspecting 
+<a name="l48"><span class="ln">48   </span></a>    `is_categorical`) , then those unique values will be used instead. 
+<a name="l49"><span class="ln">49   </span></a> 
+<a name="l50"><span class="ln">50   </span></a>    Parameters 
+<a name="l51"><span class="ln">51   </span></a>    ---------- 
+<a name="l52"><span class="ln">52   </span></a>    X : array-like of shape (n_samples, n_target_features) 
+<a name="l53"><span class="ln">53   </span></a>        The data. 
+<a name="l54"><span class="ln">54   </span></a> 
+<a name="l55"><span class="ln">55   </span></a>    percentiles : tuple of float 
+<a name="l56"><span class="ln">56   </span></a>        The percentiles which are used to construct the extreme values of 
+<a name="l57"><span class="ln">57   </span></a>        the grid. Must be in [0, 1]. 
+<a name="l58"><span class="ln">58   </span></a> 
+<a name="l59"><span class="ln">59   </span></a>    is_categorical : list of bool 
+<a name="l60"><span class="ln">60   </span></a>        For each feature, tells whether it is categorical or not. If a feature 
+<a name="l61"><span class="ln">61   </span></a>        is categorical, then the values used will be the unique ones 
+<a name="l62"><span class="ln">62   </span></a>        (i.e. categories) instead of the percentiles. 
+<a name="l63"><span class="ln">63   </span></a> 
+<a name="l64"><span class="ln">64   </span></a>    grid_resolution : int 
+<a name="l65"><span class="ln">65   </span></a>        The number of equally spaced points to be placed on the grid for each 
+<a name="l66"><span class="ln">66   </span></a>        feature. 
+<a name="l67"><span class="ln">67   </span></a> 
+<a name="l68"><span class="ln">68   </span></a>    Returns 
+<a name="l69"><span class="ln">69   </span></a>    ------- 
+<a name="l70"><span class="ln">70   </span></a>    grid : ndarray of shape (n_points, n_target_features) 
+<a name="l71"><span class="ln">71   </span></a>        A value for each feature at each point in the grid. ``n_points`` is 
+<a name="l72"><span class="ln">72   </span></a>        always ``&lt;= grid_resolution ** X.shape[1]``. 
+<a name="l73"><span class="ln">73   </span></a> 
+<a name="l74"><span class="ln">74   </span></a>    values : list of 1d ndarrays 
+<a name="l75"><span class="ln">75   </span></a>        The values with which the grid has been created. The size of each 
+<a name="l76"><span class="ln">76   </span></a>        array ``values[j]`` is either ``grid_resolution``, or the number of 
+<a name="l77"><span class="ln">77   </span></a>        unique values in ``X[:, j]``, whichever is smaller. 
+<a name="l78"><span class="ln">78   </span></a>    &quot;&quot;&quot;</span>
+<a name="l79"><span class="ln">79   </span></a>    <span class="s3">if not </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">percentiles</span><span class="s4">, </span><span class="s1">Iterable</span><span class="s4">) </span><span class="s3">or </span><span class="s1">len</span><span class="s4">(</span><span class="s1">percentiles</span><span class="s4">) != </span><span class="s6">2</span><span class="s4">:</span>
+<a name="l80"><span class="ln">80   </span></a>        <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">&quot;'percentiles' must be a sequence of 2 elements.&quot;</span><span class="s4">)</span>
+<a name="l81"><span class="ln">81   </span></a>    <span class="s3">if not </span><span class="s1">all</span><span class="s4">(</span><span class="s6">0 </span><span class="s4">&lt;= </span><span class="s1">x </span><span class="s4">&lt;= </span><span class="s6">1 </span><span class="s3">for </span><span class="s1">x </span><span class="s3">in </span><span class="s1">percentiles</span><span class="s4">):</span>
+<a name="l82"><span class="ln">82   </span></a>        <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">&quot;'percentiles' values must be in [0, 1].&quot;</span><span class="s4">)</span>
+<a name="l83"><span class="ln">83   </span></a>    <span class="s3">if </span><span class="s1">percentiles</span><span class="s4">[</span><span class="s6">0</span><span class="s4">] &gt;= </span><span class="s1">percentiles</span><span class="s4">[</span><span class="s6">1</span><span class="s4">]:</span>
+<a name="l84"><span class="ln">84   </span></a>        <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">&quot;percentiles[0] must be strictly less than percentiles[1].&quot;</span><span class="s4">)</span>
+<a name="l85"><span class="ln">85   </span></a>
+<a name="l86"><span class="ln">86   </span></a>    <span class="s3">if </span><span class="s1">grid_resolution </span><span class="s4">&lt;= </span><span class="s6">1</span><span class="s4">:</span>
+<a name="l87"><span class="ln">87   </span></a>        <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">&quot;'grid_resolution' must be strictly greater than 1.&quot;</span><span class="s4">)</span>
+<a name="l88"><span class="ln">88   </span></a>
+<a name="l89"><span class="ln">89   </span></a>    <span class="s1">values </span><span class="s4">= []</span>
+<a name="l90"><span class="ln">90   </span></a>    <span class="s2"># TODO: we should handle missing values (i.e. `np.nan`) specifically and store them</span>
+<a name="l91"><span class="ln">91   </span></a>    <span class="s2"># in a different Bunch attribute.</span>
+<a name="l92"><span class="ln">92   </span></a>    <span class="s3">for </span><span class="s1">feature</span><span class="s4">, </span><span class="s1">is_cat </span><span class="s3">in </span><span class="s1">enumerate</span><span class="s4">(</span><span class="s1">is_categorical</span><span class="s4">):</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s3">try</span><span class="s4">:</span>
+<a name="l94"><span class="ln">94   </span></a>            <span class="s1">uniques </span><span class="s4">= </span><span class="s1">np</span><span class="s4">.</span><span class="s1">unique</span><span class="s4">(</span><span class="s1">_safe_indexing</span><span class="s4">(</span><span class="s1">X</span><span class="s4">, </span><span class="s1">feature</span><span class="s4">, </span><span class="s1">axis</span><span class="s4">=</span><span class="s6">1</span><span class="s4">))</span>
+<a name="l95"><span class="ln">95   </span></a>        <span class="s3">except </span><span class="s1">TypeError </span><span class="s3">as </span><span class="s1">exc</span><span class="s4">:</span>
+<a name="l96"><span class="ln">96   </span></a>            <span class="s2"># `np.unique` will fail in the presence of `np.nan` and `str` categories</span>
+<a name="l97"><span class="ln">97   </span></a>            <span class="s2"># due to sorting. Temporary, we reraise an error explaining the problem.</span>
+<a name="l98"><span class="ln">98   </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span>
+<a name="l99"><span class="ln">99   </span></a>                <span class="s5">f&quot;The column #</span><span class="s3">{</span><span class="s1">feature</span><span class="s3">} </span><span class="s5">contains mixed data types. Finding unique &quot;</span>
+<a name="l100"><span class="ln">100  </span></a>                <span class="s5">&quot;categories fail due to sorting. It usually means that the column &quot;</span>
+<a name="l101"><span class="ln">101  </span></a>                <span class="s5">&quot;contains `np.nan` values together with `str` categories. Such use &quot;</span>
+<a name="l102"><span class="ln">102  </span></a>                <span class="s5">&quot;case is not yet supported in scikit-learn.&quot;</span>
+<a name="l103"><span class="ln">103  </span></a>            <span class="s4">) </span><span class="s3">from </span><span class="s1">exc</span>
+<a name="l104"><span class="ln">104  </span></a>        <span class="s3">if </span><span class="s1">is_cat </span><span class="s3">or </span><span class="s1">uniques</span><span class="s4">.</span><span class="s1">shape</span><span class="s4">[</span><span class="s6">0</span><span class="s4">] &lt; </span><span class="s1">grid_resolution</span><span class="s4">:</span>
+<a name="l105"><span class="ln">105  </span></a>            <span class="s2"># Use the unique values either because:</span>
+<a name="l106"><span class="ln">106  </span></a>            <span class="s2"># - feature has low resolution use unique values</span>
+<a name="l107"><span class="ln">107  </span></a>            <span class="s2"># - feature is categorical</span>
+<a name="l108"><span class="ln">108  </span></a>            <span class="s1">axis </span><span class="s4">= </span><span class="s1">uniques</span>
+<a name="l109"><span class="ln">109  </span></a>        <span class="s3">else</span><span class="s4">:</span>
+<a name="l110"><span class="ln">110  </span></a>            <span class="s2"># create axis based on percentiles and grid resolution</span>
+<a name="l111"><span class="ln">111  </span></a>            <span class="s1">emp_percentiles </span><span class="s4">= </span><span class="s1">mquantiles</span><span class="s4">(</span>
+<a name="l112"><span class="ln">112  </span></a>                <span class="s1">_safe_indexing</span><span class="s4">(</span><span class="s1">X</span><span class="s4">, </span><span class="s1">feature</span><span class="s4">, </span><span class="s1">axis</span><span class="s4">=</span><span class="s6">1</span><span class="s4">), </span><span class="s1">prob</span><span class="s4">=</span><span class="s1">percentiles</span><span class="s4">, </span><span class="s1">axis</span><span class="s4">=</span><span class="s6">0</span>
+<a name="l113"><span class="ln">113  </span></a>            <span class="s4">)</span>
+<a name="l114"><span class="ln">114  </span></a>            <span class="s3">if </span><span class="s1">np</span><span class="s4">.</span><span class="s1">allclose</span><span class="s4">(</span><span class="s1">emp_percentiles</span><span class="s4">[</span><span class="s6">0</span><span class="s4">], </span><span class="s1">emp_percentiles</span><span class="s4">[</span><span class="s6">1</span><span class="s4">]):</span>
+<a name="l115"><span class="ln">115  </span></a>                <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span>
+<a name="l116"><span class="ln">116  </span></a>                    <span class="s5">&quot;percentiles are too close to each other, &quot;</span>
+<a name="l117"><span class="ln">117  </span></a>                    <span class="s5">&quot;unable to build the grid. Please choose percentiles &quot;</span>
+<a name="l118"><span class="ln">118  </span></a>                    <span class="s5">&quot;that are further apart.&quot;</span>
+<a name="l119"><span class="ln">119  </span></a>                <span class="s4">)</span>
+<a name="l120"><span class="ln">120  </span></a>            <span class="s1">axis </span><span class="s4">= </span><span class="s1">np</span><span class="s4">.</span><span class="s1">linspace</span><span class="s4">(</span>
+<a name="l121"><span class="ln">121  </span></a>                <span class="s1">emp_percentiles</span><span class="s4">[</span><span class="s6">0</span><span class="s4">],</span>
+<a name="l122"><span class="ln">122  </span></a>                <span class="s1">emp_percentiles</span><span class="s4">[</span><span class="s6">1</span><span class="s4">],</span>
+<a name="l123"><span class="ln">123  </span></a>                <span class="s1">num</span><span class="s4">=</span><span class="s1">grid_resolution</span><span class="s4">,</span>
+<a name="l124"><span class="ln">124  </span></a>                <span class="s1">endpoint</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l125"><span class="ln">125  </span></a>            <span class="s4">)</span>
+<a name="l126"><span class="ln">126  </span></a>        <span class="s1">values</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">axis</span><span class="s4">)</span>
+<a name="l127"><span class="ln">127  </span></a>
+<a name="l128"><span class="ln">128  </span></a>    <span class="s3">return </span><span class="s1">cartesian</span><span class="s4">(</span><span class="s1">values</span><span class="s4">), </span><span class="s1">values</span>
+<a name="l129"><span class="ln">129  </span></a>
+<a name="l130"><span class="ln">130  </span></a>
+<a name="l131"><span class="ln">131  </span></a><span class="s3">def </span><span class="s1">_partial_dependence_recursion</span><span class="s4">(</span><span class="s1">est</span><span class="s4">, </span><span class="s1">grid</span><span class="s4">, </span><span class="s1">features</span><span class="s4">):</span>
+<a name="l132"><span class="ln">132  </span></a>    <span class="s0">&quot;&quot;&quot;Calculate partial dependence via the recursion method. 
+<a name="l133"><span class="ln">133  </span></a> 
+<a name="l134"><span class="ln">134  </span></a>    The recursion method is in particular enabled for tree-based estimators. 
+<a name="l135"><span class="ln">135  </span></a> 
+<a name="l136"><span class="ln">136  </span></a>    For each `grid` value, a weighted tree traversal is performed: if a split node 
+<a name="l137"><span class="ln">137  </span></a>    involves an input feature of interest, the corresponding left or right branch 
+<a name="l138"><span class="ln">138  </span></a>    is followed; otherwise both branches are followed, each branch being weighted 
+<a name="l139"><span class="ln">139  </span></a>    by the fraction of training samples that entered that branch. Finally, the 
+<a name="l140"><span class="ln">140  </span></a>    partial dependence is given by a weighted average of all the visited leaves 
+<a name="l141"><span class="ln">141  </span></a>    values. 
+<a name="l142"><span class="ln">142  </span></a> 
+<a name="l143"><span class="ln">143  </span></a>    This method is more efficient in terms of speed than the `'brute'` method 
+<a name="l144"><span class="ln">144  </span></a>    (:func:`~sklearn.inspection._partial_dependence._partial_dependence_brute`). 
+<a name="l145"><span class="ln">145  </span></a>    However, here, the partial dependence computation is done explicitly with the 
+<a name="l146"><span class="ln">146  </span></a>    `X` used during training of `est`. 
+<a name="l147"><span class="ln">147  </span></a> 
+<a name="l148"><span class="ln">148  </span></a>    Parameters 
+<a name="l149"><span class="ln">149  </span></a>    ---------- 
+<a name="l150"><span class="ln">150  </span></a>    est : BaseEstimator 
+<a name="l151"><span class="ln">151  </span></a>        A fitted estimator object implementing :term:`predict` or 
+<a name="l152"><span class="ln">152  </span></a>        :term:`decision_function`. Multioutput-multiclass classifiers are not 
+<a name="l153"><span class="ln">153  </span></a>        supported. Note that `'recursion'` is only supported for some tree-based 
+<a name="l154"><span class="ln">154  </span></a>        estimators (namely 
+<a name="l155"><span class="ln">155  </span></a>        :class:`~sklearn.ensemble.GradientBoostingClassifier`, 
+<a name="l156"><span class="ln">156  </span></a>        :class:`~sklearn.ensemble.GradientBoostingRegressor`, 
+<a name="l157"><span class="ln">157  </span></a>        :class:`~sklearn.ensemble.HistGradientBoostingClassifier`, 
+<a name="l158"><span class="ln">158  </span></a>        :class:`~sklearn.ensemble.HistGradientBoostingRegressor`, 
+<a name="l159"><span class="ln">159  </span></a>        :class:`~sklearn.tree.DecisionTreeRegressor`, 
+<a name="l160"><span class="ln">160  </span></a>        :class:`~sklearn.ensemble.RandomForestRegressor`, 
+<a name="l161"><span class="ln">161  </span></a>        ). 
+<a name="l162"><span class="ln">162  </span></a> 
+<a name="l163"><span class="ln">163  </span></a>    grid : array-like of shape (n_points, n_target_features) 
+<a name="l164"><span class="ln">164  </span></a>        The grid of feature values for which the partial dependence is calculated. 
+<a name="l165"><span class="ln">165  </span></a>        Note that `n_points` is the number of points in the grid and `n_target_features` 
+<a name="l166"><span class="ln">166  </span></a>        is the number of features you are doing partial dependence at. 
+<a name="l167"><span class="ln">167  </span></a> 
+<a name="l168"><span class="ln">168  </span></a>    features : array-like of {int, str} 
+<a name="l169"><span class="ln">169  </span></a>        The feature (e.g. `[0]`) or pair of interacting features 
+<a name="l170"><span class="ln">170  </span></a>        (e.g. `[(0, 1)]`) for which the partial dependency should be computed. 
+<a name="l171"><span class="ln">171  </span></a> 
+<a name="l172"><span class="ln">172  </span></a>    Returns 
+<a name="l173"><span class="ln">173  </span></a>    ------- 
+<a name="l174"><span class="ln">174  </span></a>    averaged_predictions : array-like of shape (n_targets, n_points) 
+<a name="l175"><span class="ln">175  </span></a>        The averaged predictions for the given `grid` of features values. 
+<a name="l176"><span class="ln">176  </span></a>        Note that `n_targets` is the number of targets (e.g. 1 for binary 
+<a name="l177"><span class="ln">177  </span></a>        classification, `n_tasks` for multi-output regression, and `n_classes` for 
+<a name="l178"><span class="ln">178  </span></a>        multiclass classification) and `n_points` is the number of points in the `grid`. 
+<a name="l179"><span class="ln">179  </span></a>    &quot;&quot;&quot;</span>
+<a name="l180"><span class="ln">180  </span></a>    <span class="s1">averaged_predictions </span><span class="s4">= </span><span class="s1">est</span><span class="s4">.</span><span class="s1">_compute_partial_dependence_recursion</span><span class="s4">(</span><span class="s1">grid</span><span class="s4">, </span><span class="s1">features</span><span class="s4">)</span>
+<a name="l181"><span class="ln">181  </span></a>    <span class="s3">if </span><span class="s1">averaged_predictions</span><span class="s4">.</span><span class="s1">ndim </span><span class="s4">== </span><span class="s6">1</span><span class="s4">:</span>
+<a name="l182"><span class="ln">182  </span></a>        <span class="s2"># reshape to (1, n_points) for consistency with</span>
+<a name="l183"><span class="ln">183  </span></a>        <span class="s2"># _partial_dependence_brute</span>
+<a name="l184"><span class="ln">184  </span></a>        <span class="s1">averaged_predictions </span><span class="s4">= </span><span class="s1">averaged_predictions</span><span class="s4">.</span><span class="s1">reshape</span><span class="s4">(</span><span class="s6">1</span><span class="s4">, -</span><span class="s6">1</span><span class="s4">)</span>
+<a name="l185"><span class="ln">185  </span></a>
+<a name="l186"><span class="ln">186  </span></a>    <span class="s3">return </span><span class="s1">averaged_predictions</span>
+<a name="l187"><span class="ln">187  </span></a>
+<a name="l188"><span class="ln">188  </span></a>
+<a name="l189"><span class="ln">189  </span></a><span class="s3">def </span><span class="s1">_partial_dependence_brute</span><span class="s4">(</span>
+<a name="l190"><span class="ln">190  </span></a>    <span class="s1">est</span><span class="s4">, </span><span class="s1">grid</span><span class="s4">, </span><span class="s1">features</span><span class="s4">, </span><span class="s1">X</span><span class="s4">, </span><span class="s1">response_method</span><span class="s4">, </span><span class="s1">sample_weight</span><span class="s4">=</span><span class="s3">None</span>
+<a name="l191"><span class="ln">191  </span></a><span class="s4">):</span>
+<a name="l192"><span class="ln">192  </span></a>    <span class="s0">&quot;&quot;&quot;Calculate partial dependence via the brute force method. 
+<a name="l193"><span class="ln">193  </span></a> 
+<a name="l194"><span class="ln">194  </span></a>    The brute method explicitly averages the predictions of an estimator over a 
+<a name="l195"><span class="ln">195  </span></a>    grid of feature values. 
+<a name="l196"><span class="ln">196  </span></a> 
+<a name="l197"><span class="ln">197  </span></a>    For each `grid` value, all the samples from `X` have their variables of 
+<a name="l198"><span class="ln">198  </span></a>    interest replaced by that specific `grid` value. The predictions are then made 
+<a name="l199"><span class="ln">199  </span></a>    and averaged across the samples. 
+<a name="l200"><span class="ln">200  </span></a> 
+<a name="l201"><span class="ln">201  </span></a>    This method is slower than the `'recursion'` 
+<a name="l202"><span class="ln">202  </span></a>    (:func:`~sklearn.inspection._partial_dependence._partial_dependence_recursion`) 
+<a name="l203"><span class="ln">203  </span></a>    version for estimators with this second option. However, with the `'brute'` 
+<a name="l204"><span class="ln">204  </span></a>    force method, the average will be done with the given `X` and not the `X` 
+<a name="l205"><span class="ln">205  </span></a>    used during training, as it is done in the `'recursion'` version. Therefore 
+<a name="l206"><span class="ln">206  </span></a>    the average can always accept `sample_weight` (even when the estimator was 
+<a name="l207"><span class="ln">207  </span></a>    fitted without). 
+<a name="l208"><span class="ln">208  </span></a> 
+<a name="l209"><span class="ln">209  </span></a>    Parameters 
+<a name="l210"><span class="ln">210  </span></a>    ---------- 
+<a name="l211"><span class="ln">211  </span></a>    est : BaseEstimator 
+<a name="l212"><span class="ln">212  </span></a>        A fitted estimator object implementing :term:`predict`, 
+<a name="l213"><span class="ln">213  </span></a>        :term:`predict_proba`, or :term:`decision_function`. 
+<a name="l214"><span class="ln">214  </span></a>        Multioutput-multiclass classifiers are not supported. 
+<a name="l215"><span class="ln">215  </span></a> 
+<a name="l216"><span class="ln">216  </span></a>    grid : array-like of shape (n_points, n_target_features) 
+<a name="l217"><span class="ln">217  </span></a>        The grid of feature values for which the partial dependence is calculated. 
+<a name="l218"><span class="ln">218  </span></a>        Note that `n_points` is the number of points in the grid and `n_target_features` 
+<a name="l219"><span class="ln">219  </span></a>        is the number of features you are doing partial dependence at. 
+<a name="l220"><span class="ln">220  </span></a> 
+<a name="l221"><span class="ln">221  </span></a>    features : array-like of {int, str} 
+<a name="l222"><span class="ln">222  </span></a>        The feature (e.g. `[0]`) or pair of interacting features 
+<a name="l223"><span class="ln">223  </span></a>        (e.g. `[(0, 1)]`) for which the partial dependency should be computed. 
+<a name="l224"><span class="ln">224  </span></a> 
+<a name="l225"><span class="ln">225  </span></a>    X : array-like of shape (n_samples, n_features) 
+<a name="l226"><span class="ln">226  </span></a>        `X` is used to generate values for the complement features. That is, for 
+<a name="l227"><span class="ln">227  </span></a>        each value in `grid`, the method will average the prediction of each 
+<a name="l228"><span class="ln">228  </span></a>        sample from `X` having that grid value for `features`. 
+<a name="l229"><span class="ln">229  </span></a> 
+<a name="l230"><span class="ln">230  </span></a>    response_method : {'auto', 'predict_proba', 'decision_function'}, \ 
+<a name="l231"><span class="ln">231  </span></a>            default='auto' 
+<a name="l232"><span class="ln">232  </span></a>        Specifies whether to use :term:`predict_proba` or 
+<a name="l233"><span class="ln">233  </span></a>        :term:`decision_function` as the target response. For regressors 
+<a name="l234"><span class="ln">234  </span></a>        this parameter is ignored and the response is always the output of 
+<a name="l235"><span class="ln">235  </span></a>        :term:`predict`. By default, :term:`predict_proba` is tried first 
+<a name="l236"><span class="ln">236  </span></a>        and we revert to :term:`decision_function` if it doesn't exist. 
+<a name="l237"><span class="ln">237  </span></a> 
+<a name="l238"><span class="ln">238  </span></a>    sample_weight : array-like of shape (n_samples,), default=None 
+<a name="l239"><span class="ln">239  </span></a>        Sample weights are used to calculate weighted means when averaging the 
+<a name="l240"><span class="ln">240  </span></a>        model output. If `None`, then samples are equally weighted. Note that 
+<a name="l241"><span class="ln">241  </span></a>        `sample_weight` does not change the individual predictions. 
+<a name="l242"><span class="ln">242  </span></a> 
+<a name="l243"><span class="ln">243  </span></a>    Returns 
+<a name="l244"><span class="ln">244  </span></a>    ------- 
+<a name="l245"><span class="ln">245  </span></a>    averaged_predictions : array-like of shape (n_targets, n_points) 
+<a name="l246"><span class="ln">246  </span></a>        The averaged predictions for the given `grid` of features values. 
+<a name="l247"><span class="ln">247  </span></a>        Note that `n_targets` is the number of targets (e.g. 1 for binary 
+<a name="l248"><span class="ln">248  </span></a>        classification, `n_tasks` for multi-output regression, and `n_classes` for 
+<a name="l249"><span class="ln">249  </span></a>        multiclass classification) and `n_points` is the number of points in the `grid`. 
+<a name="l250"><span class="ln">250  </span></a> 
+<a name="l251"><span class="ln">251  </span></a>    predictions : array-like 
+<a name="l252"><span class="ln">252  </span></a>        The predictions for the given `grid` of features values over the samples 
+<a name="l253"><span class="ln">253  </span></a>        from `X`. For non-multioutput regression and binary classification the 
+<a name="l254"><span class="ln">254  </span></a>        shape is `(n_instances, n_points)` and for multi-output regression and 
+<a name="l255"><span class="ln">255  </span></a>        multiclass classification the shape is `(n_targets, n_instances, n_points)`, 
+<a name="l256"><span class="ln">256  </span></a>        where `n_targets` is the number of targets (`n_tasks` for multi-output 
+<a name="l257"><span class="ln">257  </span></a>        regression, and `n_classes` for multiclass classification), `n_instances` 
+<a name="l258"><span class="ln">258  </span></a>        is the number of instances in `X`, and `n_points` is the number of points 
+<a name="l259"><span class="ln">259  </span></a>        in the `grid`. 
+<a name="l260"><span class="ln">260  </span></a>    &quot;&quot;&quot;</span>
+<a name="l261"><span class="ln">261  </span></a>    <span class="s1">predictions </span><span class="s4">= []</span>
+<a name="l262"><span class="ln">262  </span></a>    <span class="s1">averaged_predictions </span><span class="s4">= []</span>
+<a name="l263"><span class="ln">263  </span></a>
+<a name="l264"><span class="ln">264  </span></a>    <span class="s3">if </span><span class="s1">response_method </span><span class="s4">== </span><span class="s5">&quot;auto&quot;</span><span class="s4">:</span>
+<a name="l265"><span class="ln">265  </span></a>        <span class="s1">response_method </span><span class="s4">= (</span>
+<a name="l266"><span class="ln">266  </span></a>            <span class="s5">&quot;predict&quot; </span><span class="s3">if </span><span class="s1">is_regressor</span><span class="s4">(</span><span class="s1">est</span><span class="s4">) </span><span class="s3">else </span><span class="s4">[</span><span class="s5">&quot;predict_proba&quot;</span><span class="s4">, </span><span class="s5">&quot;decision_function&quot;</span><span class="s4">]</span>
+<a name="l267"><span class="ln">267  </span></a>        <span class="s4">)</span>
+<a name="l268"><span class="ln">268  </span></a>
+<a name="l269"><span class="ln">269  </span></a>    <span class="s1">X_eval </span><span class="s4">= </span><span class="s1">X</span><span class="s4">.</span><span class="s1">copy</span><span class="s4">()</span>
+<a name="l270"><span class="ln">270  </span></a>    <span class="s3">for </span><span class="s1">new_values </span><span class="s3">in </span><span class="s1">grid</span><span class="s4">:</span>
+<a name="l271"><span class="ln">271  </span></a>        <span class="s3">for </span><span class="s1">i</span><span class="s4">, </span><span class="s1">variable </span><span class="s3">in </span><span class="s1">enumerate</span><span class="s4">(</span><span class="s1">features</span><span class="s4">):</span>
+<a name="l272"><span class="ln">272  </span></a>            <span class="s1">_safe_assign</span><span class="s4">(</span><span class="s1">X_eval</span><span class="s4">, </span><span class="s1">new_values</span><span class="s4">[</span><span class="s1">i</span><span class="s4">], </span><span class="s1">column_indexer</span><span class="s4">=</span><span class="s1">variable</span><span class="s4">)</span>
+<a name="l273"><span class="ln">273  </span></a>
+<a name="l274"><span class="ln">274  </span></a>        <span class="s2"># Note: predictions is of shape</span>
+<a name="l275"><span class="ln">275  </span></a>        <span class="s2"># (n_points,) for non-multioutput regressors</span>
+<a name="l276"><span class="ln">276  </span></a>        <span class="s2"># (n_points, n_tasks) for multioutput regressors</span>
+<a name="l277"><span class="ln">277  </span></a>        <span class="s2"># (n_points, 1) for the regressors in cross_decomposition (I think)</span>
+<a name="l278"><span class="ln">278  </span></a>        <span class="s2"># (n_points, 2) for binary classification</span>
+<a name="l279"><span class="ln">279  </span></a>        <span class="s2"># (n_points, n_classes) for multiclass classification</span>
+<a name="l280"><span class="ln">280  </span></a>        <span class="s1">pred</span><span class="s4">, </span><span class="s1">_ </span><span class="s4">= </span><span class="s1">_get_response_values</span><span class="s4">(</span><span class="s1">est</span><span class="s4">, </span><span class="s1">X_eval</span><span class="s4">, </span><span class="s1">response_method</span><span class="s4">=</span><span class="s1">response_method</span><span class="s4">)</span>
+<a name="l281"><span class="ln">281  </span></a>
+<a name="l282"><span class="ln">282  </span></a>        <span class="s1">predictions</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">pred</span><span class="s4">)</span>
+<a name="l283"><span class="ln">283  </span></a>        <span class="s2"># average over samples</span>
+<a name="l284"><span class="ln">284  </span></a>        <span class="s1">averaged_predictions</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">np</span><span class="s4">.</span><span class="s1">average</span><span class="s4">(</span><span class="s1">pred</span><span class="s4">, </span><span class="s1">axis</span><span class="s4">=</span><span class="s6">0</span><span class="s4">, </span><span class="s1">weights</span><span class="s4">=</span><span class="s1">sample_weight</span><span class="s4">))</span>
+<a name="l285"><span class="ln">285  </span></a>
+<a name="l286"><span class="ln">286  </span></a>    <span class="s1">n_samples </span><span class="s4">= </span><span class="s1">X</span><span class="s4">.</span><span class="s1">shape</span><span class="s4">[</span><span class="s6">0</span><span class="s4">]</span>
+<a name="l287"><span class="ln">287  </span></a>
+<a name="l288"><span class="ln">288  </span></a>    <span class="s2"># reshape to (n_targets, n_instances, n_points) where n_targets is:</span>
+<a name="l289"><span class="ln">289  </span></a>    <span class="s2"># - 1 for non-multioutput regression and binary classification (shape is</span>
+<a name="l290"><span class="ln">290  </span></a>    <span class="s2">#   already correct in those cases)</span>
+<a name="l291"><span class="ln">291  </span></a>    <span class="s2"># - n_tasks for multi-output regression</span>
+<a name="l292"><span class="ln">292  </span></a>    <span class="s2"># - n_classes for multiclass classification.</span>
+<a name="l293"><span class="ln">293  </span></a>    <span class="s1">predictions </span><span class="s4">= </span><span class="s1">np</span><span class="s4">.</span><span class="s1">array</span><span class="s4">(</span><span class="s1">predictions</span><span class="s4">).</span><span class="s1">T</span>
+<a name="l294"><span class="ln">294  </span></a>    <span class="s3">if </span><span class="s1">is_regressor</span><span class="s4">(</span><span class="s1">est</span><span class="s4">) </span><span class="s3">and </span><span class="s1">predictions</span><span class="s4">.</span><span class="s1">ndim </span><span class="s4">== </span><span class="s6">2</span><span class="s4">:</span>
+<a name="l295"><span class="ln">295  </span></a>        <span class="s2"># non-multioutput regression, shape is (n_instances, n_points,)</span>
+<a name="l296"><span class="ln">296  </span></a>        <span class="s1">predictions </span><span class="s4">= </span><span class="s1">predictions</span><span class="s4">.</span><span class="s1">reshape</span><span class="s4">(</span><span class="s1">n_samples</span><span class="s4">, -</span><span class="s6">1</span><span class="s4">)</span>
+<a name="l297"><span class="ln">297  </span></a>    <span class="s3">elif </span><span class="s1">is_classifier</span><span class="s4">(</span><span class="s1">est</span><span class="s4">) </span><span class="s3">and </span><span class="s1">predictions</span><span class="s4">.</span><span class="s1">shape</span><span class="s4">[</span><span class="s6">0</span><span class="s4">] == </span><span class="s6">2</span><span class="s4">:</span>
+<a name="l298"><span class="ln">298  </span></a>        <span class="s2"># Binary classification, shape is (2, n_instances, n_points).</span>
+<a name="l299"><span class="ln">299  </span></a>        <span class="s2"># we output the effect of **positive** class</span>
+<a name="l300"><span class="ln">300  </span></a>        <span class="s1">predictions </span><span class="s4">= </span><span class="s1">predictions</span><span class="s4">[</span><span class="s6">1</span><span class="s4">]</span>
+<a name="l301"><span class="ln">301  </span></a>        <span class="s1">predictions </span><span class="s4">= </span><span class="s1">predictions</span><span class="s4">.</span><span class="s1">reshape</span><span class="s4">(</span><span class="s1">n_samples</span><span class="s4">, -</span><span class="s6">1</span><span class="s4">)</span>
+<a name="l302"><span class="ln">302  </span></a>
+<a name="l303"><span class="ln">303  </span></a>    <span class="s2"># reshape averaged_predictions to (n_targets, n_points) where n_targets is:</span>
+<a name="l304"><span class="ln">304  </span></a>    <span class="s2"># - 1 for non-multioutput regression and binary classification (shape is</span>
+<a name="l305"><span class="ln">305  </span></a>    <span class="s2">#   already correct in those cases)</span>
+<a name="l306"><span class="ln">306  </span></a>    <span class="s2"># - n_tasks for multi-output regression</span>
+<a name="l307"><span class="ln">307  </span></a>    <span class="s2"># - n_classes for multiclass classification.</span>
+<a name="l308"><span class="ln">308  </span></a>    <span class="s1">averaged_predictions </span><span class="s4">= </span><span class="s1">np</span><span class="s4">.</span><span class="s1">array</span><span class="s4">(</span><span class="s1">averaged_predictions</span><span class="s4">).</span><span class="s1">T</span>
+<a name="l309"><span class="ln">309  </span></a>    <span class="s3">if </span><span class="s1">is_regressor</span><span class="s4">(</span><span class="s1">est</span><span class="s4">) </span><span class="s3">and </span><span class="s1">averaged_predictions</span><span class="s4">.</span><span class="s1">ndim </span><span class="s4">== </span><span class="s6">1</span><span class="s4">:</span>
+<a name="l310"><span class="ln">310  </span></a>        <span class="s2"># non-multioutput regression, shape is (n_points,)</span>
+<a name="l311"><span class="ln">311  </span></a>        <span class="s1">averaged_predictions </span><span class="s4">= </span><span class="s1">averaged_predictions</span><span class="s4">.</span><span class="s1">reshape</span><span class="s4">(</span><span class="s6">1</span><span class="s4">, -</span><span class="s6">1</span><span class="s4">)</span>
+<a name="l312"><span class="ln">312  </span></a>    <span class="s3">elif </span><span class="s1">is_classifier</span><span class="s4">(</span><span class="s1">est</span><span class="s4">) </span><span class="s3">and </span><span class="s1">averaged_predictions</span><span class="s4">.</span><span class="s1">shape</span><span class="s4">[</span><span class="s6">0</span><span class="s4">] == </span><span class="s6">2</span><span class="s4">:</span>
+<a name="l313"><span class="ln">313  </span></a>        <span class="s2"># Binary classification, shape is (2, n_points).</span>
+<a name="l314"><span class="ln">314  </span></a>        <span class="s2"># we output the effect of **positive** class</span>
+<a name="l315"><span class="ln">315  </span></a>        <span class="s1">averaged_predictions </span><span class="s4">= </span><span class="s1">averaged_predictions</span><span class="s4">[</span><span class="s6">1</span><span class="s4">]</span>
+<a name="l316"><span class="ln">316  </span></a>        <span class="s1">averaged_predictions </span><span class="s4">= </span><span class="s1">averaged_predictions</span><span class="s4">.</span><span class="s1">reshape</span><span class="s4">(</span><span class="s6">1</span><span class="s4">, -</span><span class="s6">1</span><span class="s4">)</span>
+<a name="l317"><span class="ln">317  </span></a>
+<a name="l318"><span class="ln">318  </span></a>    <span class="s3">return </span><span class="s1">averaged_predictions</span><span class="s4">, </span><span class="s1">predictions</span>
+<a name="l319"><span class="ln">319  </span></a>
+<a name="l320"><span class="ln">320  </span></a>
+<a name="l321"><span class="ln">321  </span></a><span class="s4">@</span><span class="s1">validate_params</span><span class="s4">(</span>
+<a name="l322"><span class="ln">322  </span></a>    <span class="s4">{</span>
+<a name="l323"><span class="ln">323  </span></a>        <span class="s5">&quot;estimator&quot;</span><span class="s4">: [</span>
+<a name="l324"><span class="ln">324  </span></a>            <span class="s1">HasMethods</span><span class="s4">([</span><span class="s5">&quot;fit&quot;</span><span class="s4">, </span><span class="s5">&quot;predict&quot;</span><span class="s4">]),</span>
+<a name="l325"><span class="ln">325  </span></a>            <span class="s1">HasMethods</span><span class="s4">([</span><span class="s5">&quot;fit&quot;</span><span class="s4">, </span><span class="s5">&quot;predict_proba&quot;</span><span class="s4">]),</span>
+<a name="l326"><span class="ln">326  </span></a>            <span class="s1">HasMethods</span><span class="s4">([</span><span class="s5">&quot;fit&quot;</span><span class="s4">, </span><span class="s5">&quot;decision_function&quot;</span><span class="s4">]),</span>
+<a name="l327"><span class="ln">327  </span></a>        <span class="s4">],</span>
+<a name="l328"><span class="ln">328  </span></a>        <span class="s5">&quot;X&quot;</span><span class="s4">: [</span><span class="s5">&quot;array-like&quot;</span><span class="s4">, </span><span class="s5">&quot;sparse matrix&quot;</span><span class="s4">],</span>
+<a name="l329"><span class="ln">329  </span></a>        <span class="s5">&quot;features&quot;</span><span class="s4">: [</span><span class="s5">&quot;array-like&quot;</span><span class="s4">, </span><span class="s1">Integral</span><span class="s4">, </span><span class="s1">str</span><span class="s4">],</span>
+<a name="l330"><span class="ln">330  </span></a>        <span class="s5">&quot;sample_weight&quot;</span><span class="s4">: [</span><span class="s5">&quot;array-like&quot;</span><span class="s4">, </span><span class="s3">None</span><span class="s4">],</span>
+<a name="l331"><span class="ln">331  </span></a>        <span class="s5">&quot;categorical_features&quot;</span><span class="s4">: [</span><span class="s5">&quot;array-like&quot;</span><span class="s4">, </span><span class="s3">None</span><span class="s4">],</span>
+<a name="l332"><span class="ln">332  </span></a>        <span class="s5">&quot;feature_names&quot;</span><span class="s4">: [</span><span class="s5">&quot;array-like&quot;</span><span class="s4">, </span><span class="s3">None</span><span class="s4">],</span>
+<a name="l333"><span class="ln">333  </span></a>        <span class="s5">&quot;response_method&quot;</span><span class="s4">: [</span><span class="s1">StrOptions</span><span class="s4">({</span><span class="s5">&quot;auto&quot;</span><span class="s4">, </span><span class="s5">&quot;predict_proba&quot;</span><span class="s4">, </span><span class="s5">&quot;decision_function&quot;</span><span class="s4">})],</span>
+<a name="l334"><span class="ln">334  </span></a>        <span class="s5">&quot;percentiles&quot;</span><span class="s4">: [</span><span class="s1">tuple</span><span class="s4">],</span>
+<a name="l335"><span class="ln">335  </span></a>        <span class="s5">&quot;grid_resolution&quot;</span><span class="s4">: [</span><span class="s1">Interval</span><span class="s4">(</span><span class="s1">Integral</span><span class="s4">, </span><span class="s6">1</span><span class="s4">, </span><span class="s3">None</span><span class="s4">, </span><span class="s1">closed</span><span class="s4">=</span><span class="s5">&quot;left&quot;</span><span class="s4">)],</span>
+<a name="l336"><span class="ln">336  </span></a>        <span class="s5">&quot;method&quot;</span><span class="s4">: [</span><span class="s1">StrOptions</span><span class="s4">({</span><span class="s5">&quot;auto&quot;</span><span class="s4">, </span><span class="s5">&quot;recursion&quot;</span><span class="s4">, </span><span class="s5">&quot;brute&quot;</span><span class="s4">})],</span>
+<a name="l337"><span class="ln">337  </span></a>        <span class="s5">&quot;kind&quot;</span><span class="s4">: [</span><span class="s1">StrOptions</span><span class="s4">({</span><span class="s5">&quot;average&quot;</span><span class="s4">, </span><span class="s5">&quot;individual&quot;</span><span class="s4">, </span><span class="s5">&quot;both&quot;</span><span class="s4">})],</span>
+<a name="l338"><span class="ln">338  </span></a>    <span class="s4">},</span>
+<a name="l339"><span class="ln">339  </span></a>    <span class="s1">prefer_skip_nested_validation</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l340"><span class="ln">340  </span></a><span class="s4">)</span>
+<a name="l341"><span class="ln">341  </span></a><span class="s3">def </span><span class="s1">partial_dependence</span><span class="s4">(</span>
+<a name="l342"><span class="ln">342  </span></a>    <span class="s1">estimator</span><span class="s4">,</span>
+<a name="l343"><span class="ln">343  </span></a>    <span class="s1">X</span><span class="s4">,</span>
+<a name="l344"><span class="ln">344  </span></a>    <span class="s1">features</span><span class="s4">,</span>
+<a name="l345"><span class="ln">345  </span></a>    <span class="s4">*,</span>
+<a name="l346"><span class="ln">346  </span></a>    <span class="s1">sample_weight</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l347"><span class="ln">347  </span></a>    <span class="s1">categorical_features</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l348"><span class="ln">348  </span></a>    <span class="s1">feature_names</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l349"><span class="ln">349  </span></a>    <span class="s1">response_method</span><span class="s4">=</span><span class="s5">&quot;auto&quot;</span><span class="s4">,</span>
+<a name="l350"><span class="ln">350  </span></a>    <span class="s1">percentiles</span><span class="s4">=(</span><span class="s6">0.05</span><span class="s4">, </span><span class="s6">0.95</span><span class="s4">),</span>
+<a name="l351"><span class="ln">351  </span></a>    <span class="s1">grid_resolution</span><span class="s4">=</span><span class="s6">100</span><span class="s4">,</span>
+<a name="l352"><span class="ln">352  </span></a>    <span class="s1">method</span><span class="s4">=</span><span class="s5">&quot;auto&quot;</span><span class="s4">,</span>
+<a name="l353"><span class="ln">353  </span></a>    <span class="s1">kind</span><span class="s4">=</span><span class="s5">&quot;average&quot;</span><span class="s4">,</span>
+<a name="l354"><span class="ln">354  </span></a><span class="s4">):</span>
+<a name="l355"><span class="ln">355  </span></a>    <span class="s0">&quot;&quot;&quot;Partial dependence of ``features``. 
+<a name="l356"><span class="ln">356  </span></a> 
+<a name="l357"><span class="ln">357  </span></a>    Partial dependence of a feature (or a set of features) corresponds to 
+<a name="l358"><span class="ln">358  </span></a>    the average response of an estimator for each possible value of the 
+<a name="l359"><span class="ln">359  </span></a>    feature. 
+<a name="l360"><span class="ln">360  </span></a> 
+<a name="l361"><span class="ln">361  </span></a>    Read more in the :ref:`User Guide &lt;partial_dependence&gt;`. 
+<a name="l362"><span class="ln">362  </span></a> 
+<a name="l363"><span class="ln">363  </span></a>    .. warning:: 
+<a name="l364"><span class="ln">364  </span></a> 
+<a name="l365"><span class="ln">365  </span></a>        For :class:`~sklearn.ensemble.GradientBoostingClassifier` and 
+<a name="l366"><span class="ln">366  </span></a>        :class:`~sklearn.ensemble.GradientBoostingRegressor`, the 
+<a name="l367"><span class="ln">367  </span></a>        `'recursion'` method (used by default) will not account for the `init` 
+<a name="l368"><span class="ln">368  </span></a>        predictor of the boosting process. In practice, this will produce 
+<a name="l369"><span class="ln">369  </span></a>        the same values as `'brute'` up to a constant offset in the target 
+<a name="l370"><span class="ln">370  </span></a>        response, provided that `init` is a constant estimator (which is the 
+<a name="l371"><span class="ln">371  </span></a>        default). However, if `init` is not a constant estimator, the 
+<a name="l372"><span class="ln">372  </span></a>        partial dependence values are incorrect for `'recursion'` because the 
+<a name="l373"><span class="ln">373  </span></a>        offset will be sample-dependent. It is preferable to use the `'brute'` 
+<a name="l374"><span class="ln">374  </span></a>        method. Note that this only applies to 
+<a name="l375"><span class="ln">375  </span></a>        :class:`~sklearn.ensemble.GradientBoostingClassifier` and 
+<a name="l376"><span class="ln">376  </span></a>        :class:`~sklearn.ensemble.GradientBoostingRegressor`, not to 
+<a name="l377"><span class="ln">377  </span></a>        :class:`~sklearn.ensemble.HistGradientBoostingClassifier` and 
+<a name="l378"><span class="ln">378  </span></a>        :class:`~sklearn.ensemble.HistGradientBoostingRegressor`. 
+<a name="l379"><span class="ln">379  </span></a> 
+<a name="l380"><span class="ln">380  </span></a>    Parameters 
+<a name="l381"><span class="ln">381  </span></a>    ---------- 
+<a name="l382"><span class="ln">382  </span></a>    estimator : BaseEstimator 
+<a name="l383"><span class="ln">383  </span></a>        A fitted estimator object implementing :term:`predict`, 
+<a name="l384"><span class="ln">384  </span></a>        :term:`predict_proba`, or :term:`decision_function`. 
+<a name="l385"><span class="ln">385  </span></a>        Multioutput-multiclass classifiers are not supported. 
+<a name="l386"><span class="ln">386  </span></a> 
+<a name="l387"><span class="ln">387  </span></a>    X : {array-like, sparse matrix or dataframe} of shape (n_samples, n_features) 
+<a name="l388"><span class="ln">388  </span></a>        ``X`` is used to generate a grid of values for the target 
+<a name="l389"><span class="ln">389  </span></a>        ``features`` (where the partial dependence will be evaluated), and 
+<a name="l390"><span class="ln">390  </span></a>        also to generate values for the complement features when the 
+<a name="l391"><span class="ln">391  </span></a>        `method` is 'brute'. 
+<a name="l392"><span class="ln">392  </span></a> 
+<a name="l393"><span class="ln">393  </span></a>    features : array-like of {int, str, bool} or int or str 
+<a name="l394"><span class="ln">394  </span></a>        The feature (e.g. `[0]`) or pair of interacting features 
+<a name="l395"><span class="ln">395  </span></a>        (e.g. `[(0, 1)]`) for which the partial dependency should be computed. 
+<a name="l396"><span class="ln">396  </span></a> 
+<a name="l397"><span class="ln">397  </span></a>    sample_weight : array-like of shape (n_samples,), default=None 
+<a name="l398"><span class="ln">398  </span></a>        Sample weights are used to calculate weighted means when averaging the 
+<a name="l399"><span class="ln">399  </span></a>        model output. If `None`, then samples are equally weighted. If 
+<a name="l400"><span class="ln">400  </span></a>        `sample_weight` is not `None`, then `method` will be set to `'brute'`. 
+<a name="l401"><span class="ln">401  </span></a>        Note that `sample_weight` is ignored for `kind='individual'`. 
+<a name="l402"><span class="ln">402  </span></a> 
+<a name="l403"><span class="ln">403  </span></a>        .. versionadded:: 1.3 
+<a name="l404"><span class="ln">404  </span></a> 
+<a name="l405"><span class="ln">405  </span></a>    categorical_features : array-like of shape (n_features,) or shape \ 
+<a name="l406"><span class="ln">406  </span></a>            (n_categorical_features,), dtype={bool, int, str}, default=None 
+<a name="l407"><span class="ln">407  </span></a>        Indicates the categorical features. 
+<a name="l408"><span class="ln">408  </span></a> 
+<a name="l409"><span class="ln">409  </span></a>        - `None`: no feature will be considered categorical; 
+<a name="l410"><span class="ln">410  </span></a>        - boolean array-like: boolean mask of shape `(n_features,)` 
+<a name="l411"><span class="ln">411  </span></a>            indicating which features are categorical. Thus, this array has 
+<a name="l412"><span class="ln">412  </span></a>            the same shape has `X.shape[1]`; 
+<a name="l413"><span class="ln">413  </span></a>        - integer or string array-like: integer indices or strings 
+<a name="l414"><span class="ln">414  </span></a>            indicating categorical features. 
+<a name="l415"><span class="ln">415  </span></a> 
+<a name="l416"><span class="ln">416  </span></a>        .. versionadded:: 1.2 
+<a name="l417"><span class="ln">417  </span></a> 
+<a name="l418"><span class="ln">418  </span></a>    feature_names : array-like of shape (n_features,), dtype=str, default=None 
+<a name="l419"><span class="ln">419  </span></a>        Name of each feature; `feature_names[i]` holds the name of the feature 
+<a name="l420"><span class="ln">420  </span></a>        with index `i`. 
+<a name="l421"><span class="ln">421  </span></a>        By default, the name of the feature corresponds to their numerical 
+<a name="l422"><span class="ln">422  </span></a>        index for NumPy array and their column name for pandas dataframe. 
+<a name="l423"><span class="ln">423  </span></a> 
+<a name="l424"><span class="ln">424  </span></a>        .. versionadded:: 1.2 
+<a name="l425"><span class="ln">425  </span></a> 
+<a name="l426"><span class="ln">426  </span></a>    response_method : {'auto', 'predict_proba', 'decision_function'}, \ 
+<a name="l427"><span class="ln">427  </span></a>            default='auto' 
+<a name="l428"><span class="ln">428  </span></a>        Specifies whether to use :term:`predict_proba` or 
+<a name="l429"><span class="ln">429  </span></a>        :term:`decision_function` as the target response. For regressors 
+<a name="l430"><span class="ln">430  </span></a>        this parameter is ignored and the response is always the output of 
+<a name="l431"><span class="ln">431  </span></a>        :term:`predict`. By default, :term:`predict_proba` is tried first 
+<a name="l432"><span class="ln">432  </span></a>        and we revert to :term:`decision_function` if it doesn't exist. If 
+<a name="l433"><span class="ln">433  </span></a>        ``method`` is 'recursion', the response is always the output of 
+<a name="l434"><span class="ln">434  </span></a>        :term:`decision_function`. 
+<a name="l435"><span class="ln">435  </span></a> 
+<a name="l436"><span class="ln">436  </span></a>    percentiles : tuple of float, default=(0.05, 0.95) 
+<a name="l437"><span class="ln">437  </span></a>        The lower and upper percentile used to create the extreme values 
+<a name="l438"><span class="ln">438  </span></a>        for the grid. Must be in [0, 1]. 
+<a name="l439"><span class="ln">439  </span></a> 
+<a name="l440"><span class="ln">440  </span></a>    grid_resolution : int, default=100 
+<a name="l441"><span class="ln">441  </span></a>        The number of equally spaced points on the grid, for each target 
+<a name="l442"><span class="ln">442  </span></a>        feature. 
+<a name="l443"><span class="ln">443  </span></a> 
+<a name="l444"><span class="ln">444  </span></a>    method : {'auto', 'recursion', 'brute'}, default='auto' 
+<a name="l445"><span class="ln">445  </span></a>        The method used to calculate the averaged predictions: 
+<a name="l446"><span class="ln">446  </span></a> 
+<a name="l447"><span class="ln">447  </span></a>        - `'recursion'` is only supported for some tree-based estimators 
+<a name="l448"><span class="ln">448  </span></a>          (namely 
+<a name="l449"><span class="ln">449  </span></a>          :class:`~sklearn.ensemble.GradientBoostingClassifier`, 
+<a name="l450"><span class="ln">450  </span></a>          :class:`~sklearn.ensemble.GradientBoostingRegressor`, 
+<a name="l451"><span class="ln">451  </span></a>          :class:`~sklearn.ensemble.HistGradientBoostingClassifier`, 
+<a name="l452"><span class="ln">452  </span></a>          :class:`~sklearn.ensemble.HistGradientBoostingRegressor`, 
+<a name="l453"><span class="ln">453  </span></a>          :class:`~sklearn.tree.DecisionTreeRegressor`, 
+<a name="l454"><span class="ln">454  </span></a>          :class:`~sklearn.ensemble.RandomForestRegressor`, 
+<a name="l455"><span class="ln">455  </span></a>          ) when `kind='average'`. 
+<a name="l456"><span class="ln">456  </span></a>          This is more efficient in terms of speed. 
+<a name="l457"><span class="ln">457  </span></a>          With this method, the target response of a 
+<a name="l458"><span class="ln">458  </span></a>          classifier is always the decision function, not the predicted 
+<a name="l459"><span class="ln">459  </span></a>          probabilities. Since the `'recursion'` method implicitly computes 
+<a name="l460"><span class="ln">460  </span></a>          the average of the Individual Conditional Expectation (ICE) by 
+<a name="l461"><span class="ln">461  </span></a>          design, it is not compatible with ICE and thus `kind` must be 
+<a name="l462"><span class="ln">462  </span></a>          `'average'`. 
+<a name="l463"><span class="ln">463  </span></a> 
+<a name="l464"><span class="ln">464  </span></a>        - `'brute'` is supported for any estimator, but is more 
+<a name="l465"><span class="ln">465  </span></a>          computationally intensive. 
+<a name="l466"><span class="ln">466  </span></a> 
+<a name="l467"><span class="ln">467  </span></a>        - `'auto'`: the `'recursion'` is used for estimators that support it, 
+<a name="l468"><span class="ln">468  </span></a>          and `'brute'` is used otherwise. If `sample_weight` is not `None`, 
+<a name="l469"><span class="ln">469  </span></a>          then `'brute'` is used regardless of the estimator. 
+<a name="l470"><span class="ln">470  </span></a> 
+<a name="l471"><span class="ln">471  </span></a>        Please see :ref:`this note &lt;pdp_method_differences&gt;` for 
+<a name="l472"><span class="ln">472  </span></a>        differences between the `'brute'` and `'recursion'` method. 
+<a name="l473"><span class="ln">473  </span></a> 
+<a name="l474"><span class="ln">474  </span></a>    kind : {'average', 'individual', 'both'}, default='average' 
+<a name="l475"><span class="ln">475  </span></a>        Whether to return the partial dependence averaged across all the 
+<a name="l476"><span class="ln">476  </span></a>        samples in the dataset or one value per sample or both. 
+<a name="l477"><span class="ln">477  </span></a>        See Returns below. 
+<a name="l478"><span class="ln">478  </span></a> 
+<a name="l479"><span class="ln">479  </span></a>        Note that the fast `method='recursion'` option is only available for 
+<a name="l480"><span class="ln">480  </span></a>        `kind='average'` and `sample_weights=None`. Computing individual 
+<a name="l481"><span class="ln">481  </span></a>        dependencies and doing weighted averages requires using the slower 
+<a name="l482"><span class="ln">482  </span></a>        `method='brute'`. 
+<a name="l483"><span class="ln">483  </span></a> 
+<a name="l484"><span class="ln">484  </span></a>        .. versionadded:: 0.24 
+<a name="l485"><span class="ln">485  </span></a> 
+<a name="l486"><span class="ln">486  </span></a>    Returns 
+<a name="l487"><span class="ln">487  </span></a>    ------- 
+<a name="l488"><span class="ln">488  </span></a>    predictions : :class:`~sklearn.utils.Bunch` 
+<a name="l489"><span class="ln">489  </span></a>        Dictionary-like object, with the following attributes. 
+<a name="l490"><span class="ln">490  </span></a> 
+<a name="l491"><span class="ln">491  </span></a>        individual : ndarray of shape (n_outputs, n_instances, \ 
+<a name="l492"><span class="ln">492  </span></a>                len(values[0]), len(values[1]), ...) 
+<a name="l493"><span class="ln">493  </span></a>            The predictions for all the points in the grid for all 
+<a name="l494"><span class="ln">494  </span></a>            samples in X. This is also known as Individual 
+<a name="l495"><span class="ln">495  </span></a>            Conditional Expectation (ICE). 
+<a name="l496"><span class="ln">496  </span></a>            Only available when `kind='individual'` or `kind='both'`. 
+<a name="l497"><span class="ln">497  </span></a> 
+<a name="l498"><span class="ln">498  </span></a>        average : ndarray of shape (n_outputs, len(values[0]), \ 
+<a name="l499"><span class="ln">499  </span></a>                len(values[1]), ...) 
+<a name="l500"><span class="ln">500  </span></a>            The predictions for all the points in the grid, averaged 
+<a name="l501"><span class="ln">501  </span></a>            over all samples in X (or over the training data if 
+<a name="l502"><span class="ln">502  </span></a>            `method` is 'recursion'). 
+<a name="l503"><span class="ln">503  </span></a>            Only available when `kind='average'` or `kind='both'`. 
+<a name="l504"><span class="ln">504  </span></a> 
+<a name="l505"><span class="ln">505  </span></a>        grid_values : seq of 1d ndarrays 
+<a name="l506"><span class="ln">506  </span></a>            The values with which the grid has been created. The generated 
+<a name="l507"><span class="ln">507  </span></a>            grid is a cartesian product of the arrays in `grid_values` where 
+<a name="l508"><span class="ln">508  </span></a>            `len(grid_values) == len(features)`. The size of each array 
+<a name="l509"><span class="ln">509  </span></a>            `grid_values[j]` is either `grid_resolution`, or the number of 
+<a name="l510"><span class="ln">510  </span></a>            unique values in `X[:, j]`, whichever is smaller. 
+<a name="l511"><span class="ln">511  </span></a> 
+<a name="l512"><span class="ln">512  </span></a>            .. versionadded:: 1.3 
+<a name="l513"><span class="ln">513  </span></a> 
+<a name="l514"><span class="ln">514  </span></a>        `n_outputs` corresponds to the number of classes in a multi-class 
+<a name="l515"><span class="ln">515  </span></a>        setting, or to the number of tasks for multi-output regression. 
+<a name="l516"><span class="ln">516  </span></a>        For classical regression and binary classification `n_outputs==1`. 
+<a name="l517"><span class="ln">517  </span></a>        `n_values_feature_j` corresponds to the size `grid_values[j]`. 
+<a name="l518"><span class="ln">518  </span></a> 
+<a name="l519"><span class="ln">519  </span></a>    See Also 
+<a name="l520"><span class="ln">520  </span></a>    -------- 
+<a name="l521"><span class="ln">521  </span></a>    PartialDependenceDisplay.from_estimator : Plot Partial Dependence. 
+<a name="l522"><span class="ln">522  </span></a>    PartialDependenceDisplay : Partial Dependence visualization. 
+<a name="l523"><span class="ln">523  </span></a> 
+<a name="l524"><span class="ln">524  </span></a>    Examples 
+<a name="l525"><span class="ln">525  </span></a>    -------- 
+<a name="l526"><span class="ln">526  </span></a>    &gt;&gt;&gt; X = [[0, 0, 2], [1, 0, 0]] 
+<a name="l527"><span class="ln">527  </span></a>    &gt;&gt;&gt; y = [0, 1] 
+<a name="l528"><span class="ln">528  </span></a>    &gt;&gt;&gt; from sklearn.ensemble import GradientBoostingClassifier 
+<a name="l529"><span class="ln">529  </span></a>    &gt;&gt;&gt; gb = GradientBoostingClassifier(random_state=0).fit(X, y) 
+<a name="l530"><span class="ln">530  </span></a>    &gt;&gt;&gt; partial_dependence(gb, features=[0], X=X, percentiles=(0, 1), 
+<a name="l531"><span class="ln">531  </span></a>    ...                    grid_resolution=2) # doctest: +SKIP 
+<a name="l532"><span class="ln">532  </span></a>    (array([[-4.52...,  4.52...]]), [array([ 0.,  1.])]) 
+<a name="l533"><span class="ln">533  </span></a>    &quot;&quot;&quot;</span>
+<a name="l534"><span class="ln">534  </span></a>    <span class="s1">check_is_fitted</span><span class="s4">(</span><span class="s1">estimator</span><span class="s4">)</span>
+<a name="l535"><span class="ln">535  </span></a>
+<a name="l536"><span class="ln">536  </span></a>    <span class="s3">if not </span><span class="s4">(</span><span class="s1">is_classifier</span><span class="s4">(</span><span class="s1">estimator</span><span class="s4">) </span><span class="s3">or </span><span class="s1">is_regressor</span><span class="s4">(</span><span class="s1">estimator</span><span class="s4">)):</span>
+<a name="l537"><span class="ln">537  </span></a>        <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">&quot;'estimator' must be a fitted regressor or classifier.&quot;</span><span class="s4">)</span>
+<a name="l538"><span class="ln">538  </span></a>
+<a name="l539"><span class="ln">539  </span></a>    <span class="s3">if </span><span class="s1">is_classifier</span><span class="s4">(</span><span class="s1">estimator</span><span class="s4">) </span><span class="s3">and </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">estimator</span><span class="s4">.</span><span class="s1">classes_</span><span class="s4">[</span><span class="s6">0</span><span class="s4">], </span><span class="s1">np</span><span class="s4">.</span><span class="s1">ndarray</span><span class="s4">):</span>
+<a name="l540"><span class="ln">540  </span></a>        <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">&quot;Multiclass-multioutput estimators are not supported&quot;</span><span class="s4">)</span>
+<a name="l541"><span class="ln">541  </span></a>
+<a name="l542"><span class="ln">542  </span></a>    <span class="s2"># Use check_array only on lists and other non-array-likes / sparse. Do not</span>
+<a name="l543"><span class="ln">543  </span></a>    <span class="s2"># convert DataFrame into a NumPy array.</span>
+<a name="l544"><span class="ln">544  </span></a>    <span class="s3">if not </span><span class="s4">(</span><span class="s1">hasattr</span><span class="s4">(</span><span class="s1">X</span><span class="s4">, </span><span class="s5">&quot;__array__&quot;</span><span class="s4">) </span><span class="s3">or </span><span class="s1">sparse</span><span class="s4">.</span><span class="s1">issparse</span><span class="s4">(</span><span class="s1">X</span><span class="s4">)):</span>
+<a name="l545"><span class="ln">545  </span></a>        <span class="s1">X </span><span class="s4">= </span><span class="s1">check_array</span><span class="s4">(</span><span class="s1">X</span><span class="s4">, </span><span class="s1">ensure_all_finite</span><span class="s4">=</span><span class="s5">&quot;allow-nan&quot;</span><span class="s4">, </span><span class="s1">dtype</span><span class="s4">=</span><span class="s1">object</span><span class="s4">)</span>
+<a name="l546"><span class="ln">546  </span></a>
+<a name="l547"><span class="ln">547  </span></a>    <span class="s3">if </span><span class="s1">is_regressor</span><span class="s4">(</span><span class="s1">estimator</span><span class="s4">) </span><span class="s3">and </span><span class="s1">response_method </span><span class="s4">!= </span><span class="s5">&quot;auto&quot;</span><span class="s4">:</span>
+<a name="l548"><span class="ln">548  </span></a>        <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span>
+<a name="l549"><span class="ln">549  </span></a>            <span class="s5">&quot;The response_method parameter is ignored for regressors and &quot;</span>
+<a name="l550"><span class="ln">550  </span></a>            <span class="s5">&quot;must be 'auto'.&quot;</span>
+<a name="l551"><span class="ln">551  </span></a>        <span class="s4">)</span>
+<a name="l552"><span class="ln">552  </span></a>
+<a name="l553"><span class="ln">553  </span></a>    <span class="s3">if </span><span class="s1">kind </span><span class="s4">!= </span><span class="s5">&quot;average&quot;</span><span class="s4">:</span>
+<a name="l554"><span class="ln">554  </span></a>        <span class="s3">if </span><span class="s1">method </span><span class="s4">== </span><span class="s5">&quot;recursion&quot;</span><span class="s4">:</span>
+<a name="l555"><span class="ln">555  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span>
+<a name="l556"><span class="ln">556  </span></a>                <span class="s5">&quot;The 'recursion' method only applies when 'kind' is set to 'average'&quot;</span>
+<a name="l557"><span class="ln">557  </span></a>            <span class="s4">)</span>
+<a name="l558"><span class="ln">558  </span></a>        <span class="s1">method </span><span class="s4">= </span><span class="s5">&quot;brute&quot;</span>
+<a name="l559"><span class="ln">559  </span></a>
+<a name="l560"><span class="ln">560  </span></a>    <span class="s3">if </span><span class="s1">method </span><span class="s4">== </span><span class="s5">&quot;recursion&quot; </span><span class="s3">and </span><span class="s1">sample_weight </span><span class="s3">is not None</span><span class="s4">:</span>
+<a name="l561"><span class="ln">561  </span></a>        <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span>
+<a name="l562"><span class="ln">562  </span></a>            <span class="s5">&quot;The 'recursion' method can only be applied when sample_weight is None.&quot;</span>
+<a name="l563"><span class="ln">563  </span></a>        <span class="s4">)</span>
+<a name="l564"><span class="ln">564  </span></a>
+<a name="l565"><span class="ln">565  </span></a>    <span class="s3">if </span><span class="s1">method </span><span class="s4">== </span><span class="s5">&quot;auto&quot;</span><span class="s4">:</span>
+<a name="l566"><span class="ln">566  </span></a>        <span class="s3">if </span><span class="s1">sample_weight </span><span class="s3">is not None</span><span class="s4">:</span>
+<a name="l567"><span class="ln">567  </span></a>            <span class="s1">method </span><span class="s4">= </span><span class="s5">&quot;brute&quot;</span>
+<a name="l568"><span class="ln">568  </span></a>        <span class="s3">elif </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">estimator</span><span class="s4">, </span><span class="s1">BaseGradientBoosting</span><span class="s4">) </span><span class="s3">and </span><span class="s1">estimator</span><span class="s4">.</span><span class="s1">init </span><span class="s3">is None</span><span class="s4">:</span>
+<a name="l569"><span class="ln">569  </span></a>            <span class="s1">method </span><span class="s4">= </span><span class="s5">&quot;recursion&quot;</span>
+<a name="l570"><span class="ln">570  </span></a>        <span class="s3">elif </span><span class="s1">isinstance</span><span class="s4">(</span>
+<a name="l571"><span class="ln">571  </span></a>            <span class="s1">estimator</span><span class="s4">,</span>
+<a name="l572"><span class="ln">572  </span></a>            <span class="s4">(</span><span class="s1">BaseHistGradientBoosting</span><span class="s4">, </span><span class="s1">DecisionTreeRegressor</span><span class="s4">, </span><span class="s1">RandomForestRegressor</span><span class="s4">),</span>
+<a name="l573"><span class="ln">573  </span></a>        <span class="s4">):</span>
+<a name="l574"><span class="ln">574  </span></a>            <span class="s1">method </span><span class="s4">= </span><span class="s5">&quot;recursion&quot;</span>
+<a name="l575"><span class="ln">575  </span></a>        <span class="s3">else</span><span class="s4">:</span>
+<a name="l576"><span class="ln">576  </span></a>            <span class="s1">method </span><span class="s4">= </span><span class="s5">&quot;brute&quot;</span>
+<a name="l577"><span class="ln">577  </span></a>
+<a name="l578"><span class="ln">578  </span></a>    <span class="s3">if </span><span class="s1">method </span><span class="s4">== </span><span class="s5">&quot;recursion&quot;</span><span class="s4">:</span>
+<a name="l579"><span class="ln">579  </span></a>        <span class="s3">if not </span><span class="s1">isinstance</span><span class="s4">(</span>
+<a name="l580"><span class="ln">580  </span></a>            <span class="s1">estimator</span><span class="s4">,</span>
+<a name="l581"><span class="ln">581  </span></a>            <span class="s4">(</span>
+<a name="l582"><span class="ln">582  </span></a>                <span class="s1">BaseGradientBoosting</span><span class="s4">,</span>
+<a name="l583"><span class="ln">583  </span></a>                <span class="s1">BaseHistGradientBoosting</span><span class="s4">,</span>
+<a name="l584"><span class="ln">584  </span></a>                <span class="s1">DecisionTreeRegressor</span><span class="s4">,</span>
+<a name="l585"><span class="ln">585  </span></a>                <span class="s1">RandomForestRegressor</span><span class="s4">,</span>
+<a name="l586"><span class="ln">586  </span></a>            <span class="s4">),</span>
+<a name="l587"><span class="ln">587  </span></a>        <span class="s4">):</span>
+<a name="l588"><span class="ln">588  </span></a>            <span class="s1">supported_classes_recursion </span><span class="s4">= (</span>
+<a name="l589"><span class="ln">589  </span></a>                <span class="s5">&quot;GradientBoostingClassifier&quot;</span><span class="s4">,</span>
+<a name="l590"><span class="ln">590  </span></a>                <span class="s5">&quot;GradientBoostingRegressor&quot;</span><span class="s4">,</span>
+<a name="l591"><span class="ln">591  </span></a>                <span class="s5">&quot;HistGradientBoostingClassifier&quot;</span><span class="s4">,</span>
+<a name="l592"><span class="ln">592  </span></a>                <span class="s5">&quot;HistGradientBoostingRegressor&quot;</span><span class="s4">,</span>
+<a name="l593"><span class="ln">593  </span></a>                <span class="s5">&quot;HistGradientBoostingRegressor&quot;</span><span class="s4">,</span>
+<a name="l594"><span class="ln">594  </span></a>                <span class="s5">&quot;DecisionTreeRegressor&quot;</span><span class="s4">,</span>
+<a name="l595"><span class="ln">595  </span></a>                <span class="s5">&quot;RandomForestRegressor&quot;</span><span class="s4">,</span>
+<a name="l596"><span class="ln">596  </span></a>            <span class="s4">)</span>
+<a name="l597"><span class="ln">597  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span>
+<a name="l598"><span class="ln">598  </span></a>                <span class="s5">&quot;Only the following estimators support the 'recursion' &quot;</span>
+<a name="l599"><span class="ln">599  </span></a>                <span class="s5">&quot;method: {}. Try using method='brute'.&quot;</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span>
+<a name="l600"><span class="ln">600  </span></a>                    <span class="s5">&quot;, &quot;</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">supported_classes_recursion</span><span class="s4">)</span>
+<a name="l601"><span class="ln">601  </span></a>                <span class="s4">)</span>
+<a name="l602"><span class="ln">602  </span></a>            <span class="s4">)</span>
+<a name="l603"><span class="ln">603  </span></a>        <span class="s3">if </span><span class="s1">response_method </span><span class="s4">== </span><span class="s5">&quot;auto&quot;</span><span class="s4">:</span>
+<a name="l604"><span class="ln">604  </span></a>            <span class="s1">response_method </span><span class="s4">= </span><span class="s5">&quot;decision_function&quot;</span>
+<a name="l605"><span class="ln">605  </span></a>
+<a name="l606"><span class="ln">606  </span></a>        <span class="s3">if </span><span class="s1">response_method </span><span class="s4">!= </span><span class="s5">&quot;decision_function&quot;</span><span class="s4">:</span>
+<a name="l607"><span class="ln">607  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span>
+<a name="l608"><span class="ln">608  </span></a>                <span class="s5">&quot;With the 'recursion' method, the response_method must be &quot;</span>
+<a name="l609"><span class="ln">609  </span></a>                <span class="s5">&quot;'decision_function'. Got {}.&quot;</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span><span class="s1">response_method</span><span class="s4">)</span>
+<a name="l610"><span class="ln">610  </span></a>            <span class="s4">)</span>
+<a name="l611"><span class="ln">611  </span></a>
+<a name="l612"><span class="ln">612  </span></a>    <span class="s3">if </span><span class="s1">sample_weight </span><span class="s3">is not None</span><span class="s4">:</span>
+<a name="l613"><span class="ln">613  </span></a>        <span class="s1">sample_weight </span><span class="s4">= </span><span class="s1">_check_sample_weight</span><span class="s4">(</span><span class="s1">sample_weight</span><span class="s4">, </span><span class="s1">X</span><span class="s4">)</span>
+<a name="l614"><span class="ln">614  </span></a>
+<a name="l615"><span class="ln">615  </span></a>    <span class="s3">if </span><span class="s1">_determine_key_type</span><span class="s4">(</span><span class="s1">features</span><span class="s4">, </span><span class="s1">accept_slice</span><span class="s4">=</span><span class="s3">False</span><span class="s4">) == </span><span class="s5">&quot;int&quot;</span><span class="s4">:</span>
+<a name="l616"><span class="ln">616  </span></a>        <span class="s2"># _get_column_indices() supports negative indexing. Here, we limit</span>
+<a name="l617"><span class="ln">617  </span></a>        <span class="s2"># the indexing to be positive. The upper bound will be checked</span>
+<a name="l618"><span class="ln">618  </span></a>        <span class="s2"># by _get_column_indices()</span>
+<a name="l619"><span class="ln">619  </span></a>        <span class="s3">if </span><span class="s1">np</span><span class="s4">.</span><span class="s1">any</span><span class="s4">(</span><span class="s1">np</span><span class="s4">.</span><span class="s1">less</span><span class="s4">(</span><span class="s1">features</span><span class="s4">, </span><span class="s6">0</span><span class="s4">)):</span>
+<a name="l620"><span class="ln">620  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">&quot;all features must be in [0, {}]&quot;</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span><span class="s1">X</span><span class="s4">.</span><span class="s1">shape</span><span class="s4">[</span><span class="s6">1</span><span class="s4">] - </span><span class="s6">1</span><span class="s4">))</span>
+<a name="l621"><span class="ln">621  </span></a>
+<a name="l622"><span class="ln">622  </span></a>    <span class="s1">features_indices </span><span class="s4">= </span><span class="s1">np</span><span class="s4">.</span><span class="s1">asarray</span><span class="s4">(</span>
+<a name="l623"><span class="ln">623  </span></a>        <span class="s1">_get_column_indices</span><span class="s4">(</span><span class="s1">X</span><span class="s4">, </span><span class="s1">features</span><span class="s4">), </span><span class="s1">dtype</span><span class="s4">=</span><span class="s1">np</span><span class="s4">.</span><span class="s1">intp</span><span class="s4">, </span><span class="s1">order</span><span class="s4">=</span><span class="s5">&quot;C&quot;</span>
+<a name="l624"><span class="ln">624  </span></a>    <span class="s4">).</span><span class="s1">ravel</span><span class="s4">()</span>
+<a name="l625"><span class="ln">625  </span></a>
+<a name="l626"><span class="ln">626  </span></a>    <span class="s1">feature_names </span><span class="s4">= </span><span class="s1">_check_feature_names</span><span class="s4">(</span><span class="s1">X</span><span class="s4">, </span><span class="s1">feature_names</span><span class="s4">)</span>
+<a name="l627"><span class="ln">627  </span></a>
+<a name="l628"><span class="ln">628  </span></a>    <span class="s1">n_features </span><span class="s4">= </span><span class="s1">X</span><span class="s4">.</span><span class="s1">shape</span><span class="s4">[</span><span class="s6">1</span><span class="s4">]</span>
+<a name="l629"><span class="ln">629  </span></a>    <span class="s3">if </span><span class="s1">categorical_features </span><span class="s3">is None</span><span class="s4">:</span>
+<a name="l630"><span class="ln">630  </span></a>        <span class="s1">is_categorical </span><span class="s4">= [</span><span class="s3">False</span><span class="s4">] * </span><span class="s1">len</span><span class="s4">(</span><span class="s1">features_indices</span><span class="s4">)</span>
+<a name="l631"><span class="ln">631  </span></a>    <span class="s3">else</span><span class="s4">:</span>
+<a name="l632"><span class="ln">632  </span></a>        <span class="s1">categorical_features </span><span class="s4">= </span><span class="s1">np</span><span class="s4">.</span><span class="s1">asarray</span><span class="s4">(</span><span class="s1">categorical_features</span><span class="s4">)</span>
+<a name="l633"><span class="ln">633  </span></a>        <span class="s3">if </span><span class="s1">categorical_features</span><span class="s4">.</span><span class="s1">dtype</span><span class="s4">.</span><span class="s1">kind </span><span class="s4">== </span><span class="s5">&quot;b&quot;</span><span class="s4">:</span>
+<a name="l634"><span class="ln">634  </span></a>            <span class="s2"># categorical features provided as a list of boolean</span>
+<a name="l635"><span class="ln">635  </span></a>            <span class="s3">if </span><span class="s1">categorical_features</span><span class="s4">.</span><span class="s1">size </span><span class="s4">!= </span><span class="s1">n_features</span><span class="s4">:</span>
+<a name="l636"><span class="ln">636  </span></a>                <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span>
+<a name="l637"><span class="ln">637  </span></a>                    <span class="s5">&quot;When `categorical_features` is a boolean array-like, &quot;</span>
+<a name="l638"><span class="ln">638  </span></a>                    <span class="s5">&quot;the array should be of shape (n_features,). Got &quot;</span>
+<a name="l639"><span class="ln">639  </span></a>                    <span class="s5">f&quot;</span><span class="s3">{</span><span class="s1">categorical_features</span><span class="s4">.</span><span class="s1">size</span><span class="s3">} </span><span class="s5">elements while `X` contains &quot;</span>
+<a name="l640"><span class="ln">640  </span></a>                    <span class="s5">f&quot;</span><span class="s3">{</span><span class="s1">n_features</span><span class="s3">} </span><span class="s5">features.&quot;</span>
+<a name="l641"><span class="ln">641  </span></a>                <span class="s4">)</span>
+<a name="l642"><span class="ln">642  </span></a>            <span class="s1">is_categorical </span><span class="s4">= [</span><span class="s1">categorical_features</span><span class="s4">[</span><span class="s1">idx</span><span class="s4">] </span><span class="s3">for </span><span class="s1">idx </span><span class="s3">in </span><span class="s1">features_indices</span><span class="s4">]</span>
+<a name="l643"><span class="ln">643  </span></a>        <span class="s3">elif </span><span class="s1">categorical_features</span><span class="s4">.</span><span class="s1">dtype</span><span class="s4">.</span><span class="s1">kind </span><span class="s3">in </span><span class="s4">(</span><span class="s5">&quot;i&quot;</span><span class="s4">, </span><span class="s5">&quot;O&quot;</span><span class="s4">, </span><span class="s5">&quot;U&quot;</span><span class="s4">):</span>
+<a name="l644"><span class="ln">644  </span></a>            <span class="s2"># categorical features provided as a list of indices or feature names</span>
+<a name="l645"><span class="ln">645  </span></a>            <span class="s1">categorical_features_idx </span><span class="s4">= [</span>
+<a name="l646"><span class="ln">646  </span></a>                <span class="s1">_get_feature_index</span><span class="s4">(</span><span class="s1">cat</span><span class="s4">, </span><span class="s1">feature_names</span><span class="s4">=</span><span class="s1">feature_names</span><span class="s4">)</span>
+<a name="l647"><span class="ln">647  </span></a>                <span class="s3">for </span><span class="s1">cat </span><span class="s3">in </span><span class="s1">categorical_features</span>
+<a name="l648"><span class="ln">648  </span></a>            <span class="s4">]</span>
+<a name="l649"><span class="ln">649  </span></a>            <span class="s1">is_categorical </span><span class="s4">= [</span>
+<a name="l650"><span class="ln">650  </span></a>                <span class="s1">idx </span><span class="s3">in </span><span class="s1">categorical_features_idx </span><span class="s3">for </span><span class="s1">idx </span><span class="s3">in </span><span class="s1">features_indices</span>
+<a name="l651"><span class="ln">651  </span></a>            <span class="s4">]</span>
+<a name="l652"><span class="ln">652  </span></a>        <span class="s3">else</span><span class="s4">:</span>
+<a name="l653"><span class="ln">653  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span>
+<a name="l654"><span class="ln">654  </span></a>                <span class="s5">&quot;Expected `categorical_features` to be an array-like of boolean,&quot;</span>
+<a name="l655"><span class="ln">655  </span></a>                <span class="s5">f&quot; integer, or string. Got </span><span class="s3">{</span><span class="s1">categorical_features</span><span class="s4">.</span><span class="s1">dtype</span><span class="s3">} </span><span class="s5">instead.&quot;</span>
+<a name="l656"><span class="ln">656  </span></a>            <span class="s4">)</span>
+<a name="l657"><span class="ln">657  </span></a>
+<a name="l658"><span class="ln">658  </span></a>    <span class="s1">grid</span><span class="s4">, </span><span class="s1">values </span><span class="s4">= </span><span class="s1">_grid_from_X</span><span class="s4">(</span>
+<a name="l659"><span class="ln">659  </span></a>        <span class="s1">_safe_indexing</span><span class="s4">(</span><span class="s1">X</span><span class="s4">, </span><span class="s1">features_indices</span><span class="s4">, </span><span class="s1">axis</span><span class="s4">=</span><span class="s6">1</span><span class="s4">),</span>
+<a name="l660"><span class="ln">660  </span></a>        <span class="s1">percentiles</span><span class="s4">,</span>
+<a name="l661"><span class="ln">661  </span></a>        <span class="s1">is_categorical</span><span class="s4">,</span>
+<a name="l662"><span class="ln">662  </span></a>        <span class="s1">grid_resolution</span><span class="s4">,</span>
+<a name="l663"><span class="ln">663  </span></a>    <span class="s4">)</span>
+<a name="l664"><span class="ln">664  </span></a>
+<a name="l665"><span class="ln">665  </span></a>    <span class="s3">if </span><span class="s1">method </span><span class="s4">== </span><span class="s5">&quot;brute&quot;</span><span class="s4">:</span>
+<a name="l666"><span class="ln">666  </span></a>        <span class="s1">averaged_predictions</span><span class="s4">, </span><span class="s1">predictions </span><span class="s4">= </span><span class="s1">_partial_dependence_brute</span><span class="s4">(</span>
+<a name="l667"><span class="ln">667  </span></a>            <span class="s1">estimator</span><span class="s4">, </span><span class="s1">grid</span><span class="s4">, </span><span class="s1">features_indices</span><span class="s4">, </span><span class="s1">X</span><span class="s4">, </span><span class="s1">response_method</span><span class="s4">, </span><span class="s1">sample_weight</span>
+<a name="l668"><span class="ln">668  </span></a>        <span class="s4">)</span>
+<a name="l669"><span class="ln">669  </span></a>
+<a name="l670"><span class="ln">670  </span></a>        <span class="s2"># reshape predictions to</span>
+<a name="l671"><span class="ln">671  </span></a>        <span class="s2"># (n_outputs, n_instances, n_values_feature_0, n_values_feature_1, ...)</span>
+<a name="l672"><span class="ln">672  </span></a>        <span class="s1">predictions </span><span class="s4">= </span><span class="s1">predictions</span><span class="s4">.</span><span class="s1">reshape</span><span class="s4">(</span>
+<a name="l673"><span class="ln">673  </span></a>            <span class="s4">-</span><span class="s6">1</span><span class="s4">, </span><span class="s1">X</span><span class="s4">.</span><span class="s1">shape</span><span class="s4">[</span><span class="s6">0</span><span class="s4">], *[</span><span class="s1">val</span><span class="s4">.</span><span class="s1">shape</span><span class="s4">[</span><span class="s6">0</span><span class="s4">] </span><span class="s3">for </span><span class="s1">val </span><span class="s3">in </span><span class="s1">values</span><span class="s4">]</span>
+<a name="l674"><span class="ln">674  </span></a>        <span class="s4">)</span>
+<a name="l675"><span class="ln">675  </span></a>    <span class="s3">else</span><span class="s4">:</span>
+<a name="l676"><span class="ln">676  </span></a>        <span class="s1">averaged_predictions </span><span class="s4">= </span><span class="s1">_partial_dependence_recursion</span><span class="s4">(</span>
+<a name="l677"><span class="ln">677  </span></a>            <span class="s1">estimator</span><span class="s4">, </span><span class="s1">grid</span><span class="s4">, </span><span class="s1">features_indices</span>
+<a name="l678"><span class="ln">678  </span></a>        <span class="s4">)</span>
+<a name="l679"><span class="ln">679  </span></a>
+<a name="l680"><span class="ln">680  </span></a>    <span class="s2"># reshape averaged_predictions to</span>
+<a name="l681"><span class="ln">681  </span></a>    <span class="s2"># (n_outputs, n_values_feature_0, n_values_feature_1, ...)</span>
+<a name="l682"><span class="ln">682  </span></a>    <span class="s1">averaged_predictions </span><span class="s4">= </span><span class="s1">averaged_predictions</span><span class="s4">.</span><span class="s1">reshape</span><span class="s4">(</span>
+<a name="l683"><span class="ln">683  </span></a>        <span class="s4">-</span><span class="s6">1</span><span class="s4">, *[</span><span class="s1">val</span><span class="s4">.</span><span class="s1">shape</span><span class="s4">[</span><span class="s6">0</span><span class="s4">] </span><span class="s3">for </span><span class="s1">val </span><span class="s3">in </span><span class="s1">values</span><span class="s4">]</span>
+<a name="l684"><span class="ln">684  </span></a>    <span class="s4">)</span>
+<a name="l685"><span class="ln">685  </span></a>    <span class="s1">pdp_results </span><span class="s4">= </span><span class="s1">Bunch</span><span class="s4">(</span><span class="s1">grid_values</span><span class="s4">=</span><span class="s1">values</span><span class="s4">)</span>
+<a name="l686"><span class="ln">686  </span></a>
+<a name="l687"><span class="ln">687  </span></a>    <span class="s3">if </span><span class="s1">kind </span><span class="s4">== </span><span class="s5">&quot;average&quot;</span><span class="s4">:</span>
+<a name="l688"><span class="ln">688  </span></a>        <span class="s1">pdp_results</span><span class="s4">[</span><span class="s5">&quot;average&quot;</span><span class="s4">] = </span><span class="s1">averaged_predictions</span>
+<a name="l689"><span class="ln">689  </span></a>    <span class="s3">elif </span><span class="s1">kind </span><span class="s4">== </span><span class="s5">&quot;individual&quot;</span><span class="s4">:</span>
+<a name="l690"><span class="ln">690  </span></a>        <span class="s1">pdp_results</span><span class="s4">[</span><span class="s5">&quot;individual&quot;</span><span class="s4">] = </span><span class="s1">predictions</span>
+<a name="l691"><span class="ln">691  </span></a>    <span class="s3">else</span><span class="s4">:  </span><span class="s2"># kind='both'</span>
+<a name="l692"><span class="ln">692  </span></a>        <span class="s1">pdp_results</span><span class="s4">[</span><span class="s5">&quot;average&quot;</span><span class="s4">] = </span><span class="s1">averaged_predictions</span>
+<a name="l693"><span class="ln">693  </span></a>        <span class="s1">pdp_results</span><span class="s4">[</span><span class="s5">&quot;individual&quot;</span><span class="s4">] = </span><span class="s1">predictions</span>
+<a name="l694"><span class="ln">694  </span></a>
+<a name="l695"><span class="ln">695  </span></a>    <span class="s3">return </span><span class="s1">pdp_results</span>
+<a name="l696"><span class="ln">696  </span></a></pre>
+</body>
+</html>

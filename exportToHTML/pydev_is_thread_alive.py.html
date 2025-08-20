@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>pydev_is_thread_alive.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+pydev_is_thread_alive.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">_pydev_bundle</span><span class="s2">.</span><span class="s1">_pydev_saved_modules </span><span class="s0">import </span><span class="s1">threading</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s3"># Hack for https://www.brainwy.com/tracker/PyDev/363 (i.e.: calling is_alive() can throw AssertionError under some</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s3"># circumstances).</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s3"># It is required to debug threads started by start_new_thread in Python 3.4</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s1">_temp </span><span class="s2">= </span><span class="s1">threading</span><span class="s2">.</span><span class="s1">Thread</span><span class="s2">()</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">if </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_temp</span><span class="s2">, </span><span class="s4">&quot;_handle&quot;</span><span class="s2">) </span><span class="s0">and </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_temp</span><span class="s2">, </span><span class="s4">&quot;_started&quot;</span><span class="s2">):  </span><span class="s3"># Python 3.13 and later has this</span>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a>    <span class="s0">def </span><span class="s1">is_thread_alive</span><span class="s2">(</span><span class="s1">t</span><span class="s2">):</span>
+<a name="l11"><span class="ln">11   </span></a>        <span class="s0">return not </span><span class="s1">t</span><span class="s2">.</span><span class="s1">_handle</span><span class="s2">.</span><span class="s1">is_done</span><span class="s2">()</span>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a><span class="s0">elif </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_temp</span><span class="s2">, </span><span class="s4">&quot;_is_stopped&quot;</span><span class="s2">):  </span><span class="s3"># Python 3.12 and earlier has this</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s0">def </span><span class="s1">is_thread_alive</span><span class="s2">(</span><span class="s1">t</span><span class="s2">):</span>
+<a name="l17"><span class="ln">17   </span></a>        <span class="s0">return not </span><span class="s1">t</span><span class="s2">.</span><span class="s1">_is_stopped</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a><span class="s0">elif </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">_temp</span><span class="s2">, </span><span class="s4">&quot;_Thread__stopped&quot;</span><span class="s2">):  </span><span class="s3"># Python 2.x has this</span>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s0">def </span><span class="s1">is_thread_alive</span><span class="s2">(</span><span class="s1">t</span><span class="s2">):</span>
+<a name="l22"><span class="ln">22   </span></a>        <span class="s0">return not </span><span class="s1">t</span><span class="s2">.</span><span class="s1">_Thread__stopped</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a><span class="s0">else</span><span class="s2">:</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s3"># Jython wraps a native java thread and thus only obeys the public API.</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s0">def </span><span class="s1">is_thread_alive</span><span class="s2">(</span><span class="s1">t</span><span class="s2">):</span>
+<a name="l27"><span class="ln">27   </span></a>        <span class="s0">return </span><span class="s1">t</span><span class="s2">.</span><span class="s1">is_alive</span><span class="s2">()</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a>
+<a name="l30"><span class="ln">30   </span></a><span class="s0">del </span><span class="s1">_temp</span>
+<a name="l31"><span class="ln">31   </span></a></pre>
+</body>
+</html>

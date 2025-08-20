@@ -1,0 +1,109 @@
+<html>
+<head>
+<title>lambda_callback.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #5f826b; font-style: italic;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+lambda_callback.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">api_export </span><span class="s0">import </span><span class="s1">keras_export</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">callbacks</span><span class="s2">.</span><span class="s1">callback </span><span class="s0">import </span><span class="s1">Callback</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s2">@</span><span class="s1">keras_export</span><span class="s2">(</span><span class="s3">&quot;keras.callbacks.LambdaCallback&quot;</span><span class="s2">)</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">class </span><span class="s1">LambdaCallback</span><span class="s2">(</span><span class="s1">Callback</span><span class="s2">):</span>
+<a name="l7"><span class="ln">7    </span></a>    <span class="s4">&quot;&quot;&quot;Callback for creating simple, custom callbacks on-the-fly. 
+<a name="l8"><span class="ln">8    </span></a> 
+<a name="l9"><span class="ln">9    </span></a>    This callback is constructed with anonymous functions that will be called 
+<a name="l10"><span class="ln">10   </span></a>    at the appropriate time (during `Model.{fit | evaluate | predict}`). 
+<a name="l11"><span class="ln">11   </span></a>    Note that the callbacks expects positional arguments, as: 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>    - `on_epoch_begin` and `on_epoch_end` expect two positional arguments: 
+<a name="l14"><span class="ln">14   </span></a>      `epoch`, `logs` 
+<a name="l15"><span class="ln">15   </span></a>    - `on_train_begin` and `on_train_end` expect one positional argument: 
+<a name="l16"><span class="ln">16   </span></a>      `logs` 
+<a name="l17"><span class="ln">17   </span></a>    - `on_train_batch_begin` and `on_train_batch_end` expect two positional 
+<a name="l18"><span class="ln">18   </span></a>      arguments: `batch`, `logs` 
+<a name="l19"><span class="ln">19   </span></a>    - See `Callback` class definition for the full list of functions and their 
+<a name="l20"><span class="ln">20   </span></a>      expected arguments. 
+<a name="l21"><span class="ln">21   </span></a> 
+<a name="l22"><span class="ln">22   </span></a>    Args: 
+<a name="l23"><span class="ln">23   </span></a>        on_epoch_begin: called at the beginning of every epoch. 
+<a name="l24"><span class="ln">24   </span></a>        on_epoch_end: called at the end of every epoch. 
+<a name="l25"><span class="ln">25   </span></a>        on_train_begin: called at the beginning of model training. 
+<a name="l26"><span class="ln">26   </span></a>        on_train_end: called at the end of model training. 
+<a name="l27"><span class="ln">27   </span></a>        on_train_batch_begin: called at the beginning of every train batch. 
+<a name="l28"><span class="ln">28   </span></a>        on_train_batch_end: called at the end of every train batch. 
+<a name="l29"><span class="ln">29   </span></a>        kwargs: Any function in `Callback` that you want to override by 
+<a name="l30"><span class="ln">30   </span></a>            passing `function_name=function`. For example, 
+<a name="l31"><span class="ln">31   </span></a>            `LambdaCallback(.., on_train_end=train_end_fn)`. The custom function 
+<a name="l32"><span class="ln">32   </span></a>            needs to have same arguments as the ones defined in `Callback`. 
+<a name="l33"><span class="ln">33   </span></a> 
+<a name="l34"><span class="ln">34   </span></a>    Example: 
+<a name="l35"><span class="ln">35   </span></a> 
+<a name="l36"><span class="ln">36   </span></a>    ```python 
+<a name="l37"><span class="ln">37   </span></a>    # Print the batch number at the beginning of every batch. 
+<a name="l38"><span class="ln">38   </span></a>    batch_print_callback = LambdaCallback( 
+<a name="l39"><span class="ln">39   </span></a>        on_train_batch_begin=lambda batch,logs: print(batch)) 
+<a name="l40"><span class="ln">40   </span></a> 
+<a name="l41"><span class="ln">41   </span></a>    # Stream the epoch loss to a file in JSON format. The file content 
+<a name="l42"><span class="ln">42   </span></a>    # is not well-formed JSON but rather has a JSON object per line. 
+<a name="l43"><span class="ln">43   </span></a>    import json 
+<a name="l44"><span class="ln">44   </span></a>    json_log = open('loss_log.json', mode='wt', buffering=1) 
+<a name="l45"><span class="ln">45   </span></a>    json_logging_callback = LambdaCallback( 
+<a name="l46"><span class="ln">46   </span></a>        on_epoch_end=lambda epoch, logs: json_log.write( 
+<a name="l47"><span class="ln">47   </span></a>            json.dumps({'epoch': epoch, 'loss': logs['loss']}) + '\n'), 
+<a name="l48"><span class="ln">48   </span></a>        on_train_end=lambda logs: json_log.close() 
+<a name="l49"><span class="ln">49   </span></a>    ) 
+<a name="l50"><span class="ln">50   </span></a> 
+<a name="l51"><span class="ln">51   </span></a>    # Terminate some processes after having finished model training. 
+<a name="l52"><span class="ln">52   </span></a>    processes = ... 
+<a name="l53"><span class="ln">53   </span></a>    cleanup_callback = LambdaCallback( 
+<a name="l54"><span class="ln">54   </span></a>        on_train_end=lambda logs: [ 
+<a name="l55"><span class="ln">55   </span></a>            p.terminate() for p in processes if p.is_alive()]) 
+<a name="l56"><span class="ln">56   </span></a> 
+<a name="l57"><span class="ln">57   </span></a>    model.fit(..., 
+<a name="l58"><span class="ln">58   </span></a>              callbacks=[batch_print_callback, 
+<a name="l59"><span class="ln">59   </span></a>                         json_logging_callback, 
+<a name="l60"><span class="ln">60   </span></a>                         cleanup_callback]) 
+<a name="l61"><span class="ln">61   </span></a>    ``` 
+<a name="l62"><span class="ln">62   </span></a>    &quot;&quot;&quot;</span>
+<a name="l63"><span class="ln">63   </span></a>
+<a name="l64"><span class="ln">64   </span></a>    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s1">self</span><span class="s2">,</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s1">on_epoch_begin</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l67"><span class="ln">67   </span></a>        <span class="s1">on_epoch_end</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l68"><span class="ln">68   </span></a>        <span class="s1">on_train_begin</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s1">on_train_end</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s1">on_train_batch_begin</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s1">on_train_batch_end</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l72"><span class="ln">72   </span></a>        <span class="s2">**</span><span class="s1">kwargs</span><span class="s2">,</span>
+<a name="l73"><span class="ln">73   </span></a>    <span class="s2">):</span>
+<a name="l74"><span class="ln">74   </span></a>        <span class="s1">super</span><span class="s2">().</span><span class="s1">__init__</span><span class="s2">()</span>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">__dict__</span><span class="s2">.</span><span class="s1">update</span><span class="s2">(</span><span class="s1">kwargs</span><span class="s2">)</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s0">if </span><span class="s1">on_epoch_begin </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l77"><span class="ln">77   </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">on_epoch_begin </span><span class="s2">= </span><span class="s1">on_epoch_begin</span>
+<a name="l78"><span class="ln">78   </span></a>        <span class="s0">if </span><span class="s1">on_epoch_end </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l79"><span class="ln">79   </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">on_epoch_end </span><span class="s2">= </span><span class="s1">on_epoch_end</span>
+<a name="l80"><span class="ln">80   </span></a>        <span class="s0">if </span><span class="s1">on_train_begin </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l81"><span class="ln">81   </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">on_train_begin </span><span class="s2">= </span><span class="s1">on_train_begin</span>
+<a name="l82"><span class="ln">82   </span></a>        <span class="s0">if </span><span class="s1">on_train_end </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l83"><span class="ln">83   </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">on_train_end </span><span class="s2">= </span><span class="s1">on_train_end</span>
+<a name="l84"><span class="ln">84   </span></a>        <span class="s0">if </span><span class="s1">on_train_batch_begin </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l85"><span class="ln">85   </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">on_train_batch_begin </span><span class="s2">= </span><span class="s1">on_train_batch_begin</span>
+<a name="l86"><span class="ln">86   </span></a>        <span class="s0">if </span><span class="s1">on_train_batch_end </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l87"><span class="ln">87   </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">on_train_batch_end </span><span class="s2">= </span><span class="s1">on_train_batch_end</span>
+<a name="l88"><span class="ln">88   </span></a></pre>
+</body>
+</html>

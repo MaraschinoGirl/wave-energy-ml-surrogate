@@ -1,0 +1,94 @@
+<html>
+<head>
+<title>mnist.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+mnist.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot;MNIST handwritten digits dataset.&quot;&quot;&quot;</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s2">import </span><span class="s1">numpy </span><span class="s2">as </span><span class="s1">np</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s2">from </span><span class="s1">keras</span><span class="s3">.</span><span class="s1">src</span><span class="s3">.</span><span class="s1">api_export </span><span class="s2">import </span><span class="s1">keras_export</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">from </span><span class="s1">keras</span><span class="s3">.</span><span class="s1">src</span><span class="s3">.</span><span class="s1">utils</span><span class="s3">.</span><span class="s1">file_utils </span><span class="s2">import </span><span class="s1">get_file</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s3">@</span><span class="s1">keras_export</span><span class="s3">(</span><span class="s4">&quot;keras.datasets.mnist.load_data&quot;</span><span class="s3">)</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s2">def </span><span class="s1">load_data</span><span class="s3">(</span><span class="s1">path</span><span class="s3">=</span><span class="s4">&quot;mnist.npz&quot;</span><span class="s3">):</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s0">&quot;&quot;&quot;Loads the MNIST dataset. 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>    This is a dataset of 60,000 28x28 grayscale images of the 10 digits, 
+<a name="l14"><span class="ln">14   </span></a>    along with a test set of 10,000 images. 
+<a name="l15"><span class="ln">15   </span></a>    More info can be found at the 
+<a name="l16"><span class="ln">16   </span></a>    [MNIST homepage](http://yann.lecun.com/exdb/mnist/). 
+<a name="l17"><span class="ln">17   </span></a> 
+<a name="l18"><span class="ln">18   </span></a>    Args: 
+<a name="l19"><span class="ln">19   </span></a>        path: path where to cache the dataset locally 
+<a name="l20"><span class="ln">20   </span></a>            (relative to `~/.keras/datasets`). 
+<a name="l21"><span class="ln">21   </span></a> 
+<a name="l22"><span class="ln">22   </span></a>    Returns: 
+<a name="l23"><span class="ln">23   </span></a>        Tuple of NumPy arrays: `(x_train, y_train), (x_test, y_test)`. 
+<a name="l24"><span class="ln">24   </span></a> 
+<a name="l25"><span class="ln">25   </span></a>    **`x_train`**: `uint8` NumPy array of grayscale image data with shapes 
+<a name="l26"><span class="ln">26   </span></a>      `(60000, 28, 28)`, containing the training data. Pixel values range 
+<a name="l27"><span class="ln">27   </span></a>      from 0 to 255. 
+<a name="l28"><span class="ln">28   </span></a> 
+<a name="l29"><span class="ln">29   </span></a>    **`y_train`**: `uint8` NumPy array of digit labels (integers in range 0-9) 
+<a name="l30"><span class="ln">30   </span></a>      with shape `(60000,)` for the training data. 
+<a name="l31"><span class="ln">31   </span></a> 
+<a name="l32"><span class="ln">32   </span></a>    **`x_test`**: `uint8` NumPy array of grayscale image data with shapes 
+<a name="l33"><span class="ln">33   </span></a>      `(10000, 28, 28)`, containing the test data. Pixel values range 
+<a name="l34"><span class="ln">34   </span></a>      from 0 to 255. 
+<a name="l35"><span class="ln">35   </span></a> 
+<a name="l36"><span class="ln">36   </span></a>    **`y_test`**: `uint8` NumPy array of digit labels (integers in range 0-9) 
+<a name="l37"><span class="ln">37   </span></a>      with shape `(10000,)` for the test data. 
+<a name="l38"><span class="ln">38   </span></a> 
+<a name="l39"><span class="ln">39   </span></a>    Example: 
+<a name="l40"><span class="ln">40   </span></a> 
+<a name="l41"><span class="ln">41   </span></a>    ```python 
+<a name="l42"><span class="ln">42   </span></a>    (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data() 
+<a name="l43"><span class="ln">43   </span></a>    assert x_train.shape == (60000, 28, 28) 
+<a name="l44"><span class="ln">44   </span></a>    assert x_test.shape == (10000, 28, 28) 
+<a name="l45"><span class="ln">45   </span></a>    assert y_train.shape == (60000,) 
+<a name="l46"><span class="ln">46   </span></a>    assert y_test.shape == (10000,) 
+<a name="l47"><span class="ln">47   </span></a>    ``` 
+<a name="l48"><span class="ln">48   </span></a> 
+<a name="l49"><span class="ln">49   </span></a>    License: 
+<a name="l50"><span class="ln">50   </span></a> 
+<a name="l51"><span class="ln">51   </span></a>    Yann LeCun and Corinna Cortes hold the copyright of MNIST dataset, 
+<a name="l52"><span class="ln">52   </span></a>    which is a derivative work from original NIST datasets. 
+<a name="l53"><span class="ln">53   </span></a>    MNIST dataset is made available under the terms of the 
+<a name="l54"><span class="ln">54   </span></a>    [Creative Commons Attribution-Share Alike 3.0 license.]( 
+<a name="l55"><span class="ln">55   </span></a>        https://creativecommons.org/licenses/by-sa/3.0/) 
+<a name="l56"><span class="ln">56   </span></a>    &quot;&quot;&quot;</span>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s1">origin_folder </span><span class="s3">= (</span>
+<a name="l58"><span class="ln">58   </span></a>        <span class="s4">&quot;https://storage.googleapis.com/tensorflow/tf-keras-datasets/&quot;</span>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s3">)</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s1">path </span><span class="s3">= </span><span class="s1">get_file</span><span class="s3">(</span>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s1">fname</span><span class="s3">=</span><span class="s1">path</span><span class="s3">,</span>
+<a name="l62"><span class="ln">62   </span></a>        <span class="s1">origin</span><span class="s3">=</span><span class="s1">origin_folder </span><span class="s3">+ </span><span class="s4">&quot;mnist.npz&quot;</span><span class="s3">,</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s1">file_hash</span><span class="s3">=(  </span><span class="s5"># noqa: E501</span>
+<a name="l64"><span class="ln">64   </span></a>            <span class="s4">&quot;731c5ac602752760c8e48fbffcf8c3b850d9dc2a2aedcf2cc48468fc17b673d1&quot;</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s3">),</span>
+<a name="l66"><span class="ln">66   </span></a>    <span class="s3">)</span>
+<a name="l67"><span class="ln">67   </span></a>    <span class="s2">with </span><span class="s1">np</span><span class="s3">.</span><span class="s1">load</span><span class="s3">(</span><span class="s1">path</span><span class="s3">, </span><span class="s1">allow_pickle</span><span class="s3">=</span><span class="s2">True</span><span class="s3">) </span><span class="s2">as </span><span class="s1">f</span><span class="s3">:</span>
+<a name="l68"><span class="ln">68   </span></a>        <span class="s1">x_train</span><span class="s3">, </span><span class="s1">y_train </span><span class="s3">= </span><span class="s1">f</span><span class="s3">[</span><span class="s4">&quot;x_train&quot;</span><span class="s3">], </span><span class="s1">f</span><span class="s3">[</span><span class="s4">&quot;y_train&quot;</span><span class="s3">]</span>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s1">x_test</span><span class="s3">, </span><span class="s1">y_test </span><span class="s3">= </span><span class="s1">f</span><span class="s3">[</span><span class="s4">&quot;x_test&quot;</span><span class="s3">], </span><span class="s1">f</span><span class="s3">[</span><span class="s4">&quot;y_test&quot;</span><span class="s3">]</span>
+<a name="l70"><span class="ln">70   </span></a>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s2">return </span><span class="s3">(</span><span class="s1">x_train</span><span class="s3">, </span><span class="s1">y_train</span><span class="s3">), (</span><span class="s1">x_test</span><span class="s3">, </span><span class="s1">y_test</span><span class="s3">)</span>
+<a name="l72"><span class="ln">72   </span></a></pre>
+</body>
+</html>

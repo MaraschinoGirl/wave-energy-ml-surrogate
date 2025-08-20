@@ -1,0 +1,92 @@
+<html>
+<head>
+<title>_bazelize_command.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_bazelize_command.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Copyright 2017 The Abseil Authors.</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">#</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0"># you may not use this file except in compliance with the License.</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0"># You may obtain a copy of the License at</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">#</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">#      http://www.apache.org/licenses/LICENSE-2.0</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">#</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0"># Unless required by applicable law or agreed to in writing, software</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s0"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0"># See the License for the specific language governing permissions and</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s0"># limitations under the License.</span>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a><span class="s2">&quot;&quot;&quot;Internal helper for running tests on Windows Bazel.&quot;&quot;&quot;</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s3">import </span><span class="s1">os</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a><span class="s3">from </span><span class="s1">absl </span><span class="s3">import </span><span class="s1">flags</span>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a><span class="s1">FLAGS </span><span class="s4">= </span><span class="s1">flags</span><span class="s4">.</span><span class="s1">FLAGS</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a><span class="s3">def </span><span class="s1">get_executable_path</span><span class="s4">(</span><span class="s1">py_binary_name</span><span class="s4">):</span>
+<a name="l25"><span class="ln">25   </span></a>  <span class="s2">&quot;&quot;&quot;Returns the executable path of a py_binary. 
+<a name="l26"><span class="ln">26   </span></a> 
+<a name="l27"><span class="ln">27   </span></a>  This returns the executable path of a py_binary that is in another Bazel 
+<a name="l28"><span class="ln">28   </span></a>  target's data dependencies. 
+<a name="l29"><span class="ln">29   </span></a> 
+<a name="l30"><span class="ln">30   </span></a>  On Linux/macOS, the path and __file__ has the same root directory. 
+<a name="l31"><span class="ln">31   </span></a>  On Windows, bazel builds an .exe file and we need to use the MANIFEST file 
+<a name="l32"><span class="ln">32   </span></a>  the location the actual binary. 
+<a name="l33"><span class="ln">33   </span></a> 
+<a name="l34"><span class="ln">34   </span></a>  Args: 
+<a name="l35"><span class="ln">35   </span></a>    py_binary_name: string, the name of a py_binary that is in another Bazel 
+<a name="l36"><span class="ln">36   </span></a>        target's data dependencies. 
+<a name="l37"><span class="ln">37   </span></a> 
+<a name="l38"><span class="ln">38   </span></a>  Raises: 
+<a name="l39"><span class="ln">39   </span></a>    RuntimeError: Raised when it cannot locate the executable path. 
+<a name="l40"><span class="ln">40   </span></a>  &quot;&quot;&quot;</span>
+<a name="l41"><span class="ln">41   </span></a>
+<a name="l42"><span class="ln">42   </span></a>  <span class="s3">if </span><span class="s1">os</span><span class="s4">.</span><span class="s1">name </span><span class="s4">== </span><span class="s5">'nt'</span><span class="s4">:</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s1">py_binary_name </span><span class="s4">+= </span><span class="s5">'.exe'</span>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s1">manifest_file </span><span class="s4">= </span><span class="s1">os</span><span class="s4">.</span><span class="s1">path</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">FLAGS</span><span class="s4">.</span><span class="s1">test_srcdir</span><span class="s4">, </span><span class="s5">'MANIFEST'</span><span class="s4">)</span>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s1">workspace_name </span><span class="s4">= </span><span class="s1">os</span><span class="s4">.</span><span class="s1">environ</span><span class="s4">[</span><span class="s5">'TEST_WORKSPACE'</span><span class="s4">]</span>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s1">manifest_entry </span><span class="s4">= </span><span class="s5">f'</span><span class="s3">{</span><span class="s1">workspace_name</span><span class="s3">}</span><span class="s5">/</span><span class="s3">{</span><span class="s1">py_binary_name</span><span class="s3">}</span><span class="s5">'</span>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s3">with </span><span class="s1">open</span><span class="s4">(</span><span class="s1">manifest_file</span><span class="s4">) </span><span class="s3">as </span><span class="s1">manifest_fd</span><span class="s4">:</span>
+<a name="l48"><span class="ln">48   </span></a>      <span class="s3">for </span><span class="s1">line </span><span class="s3">in </span><span class="s1">manifest_fd</span><span class="s4">:</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s1">tokens </span><span class="s4">= </span><span class="s1">line</span><span class="s4">.</span><span class="s1">strip</span><span class="s4">().</span><span class="s1">split</span><span class="s4">(</span><span class="s5">' '</span><span class="s4">)</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s3">if </span><span class="s1">len</span><span class="s4">(</span><span class="s1">tokens</span><span class="s4">) != </span><span class="s6">2</span><span class="s4">:</span>
+<a name="l51"><span class="ln">51   </span></a>          <span class="s3">continue</span>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s3">if </span><span class="s1">manifest_entry </span><span class="s4">== </span><span class="s1">tokens</span><span class="s4">[</span><span class="s6">0</span><span class="s4">]:</span>
+<a name="l53"><span class="ln">53   </span></a>          <span class="s3">return </span><span class="s1">tokens</span><span class="s4">[</span><span class="s6">1</span><span class="s4">]</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s3">raise </span><span class="s1">RuntimeError</span><span class="s4">(</span>
+<a name="l55"><span class="ln">55   </span></a>        <span class="s5">'Cannot locate executable path for {}, MANIFEST file: {}.'</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span>
+<a name="l56"><span class="ln">56   </span></a>            <span class="s1">py_binary_name</span><span class="s4">, </span><span class="s1">manifest_file</span><span class="s4">))</span>
+<a name="l57"><span class="ln">57   </span></a>  <span class="s3">else</span><span class="s4">:</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s0"># NOTE: __file__ may be .py or .pyc, depending on how the module was</span>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s0"># loaded and executed.</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s1">path </span><span class="s4">= </span><span class="s1">__file__</span>
+<a name="l61"><span class="ln">61   </span></a>
+<a name="l62"><span class="ln">62   </span></a>    <span class="s0"># Use the package name to find the root directory: every dot is</span>
+<a name="l63"><span class="ln">63   </span></a>    <span class="s0"># a directory, plus one for ourselves.</span>
+<a name="l64"><span class="ln">64   </span></a>    <span class="s3">for </span><span class="s1">_ </span><span class="s3">in </span><span class="s1">range</span><span class="s4">(</span><span class="s1">__name__</span><span class="s4">.</span><span class="s1">count</span><span class="s4">(</span><span class="s5">'.'</span><span class="s4">) + </span><span class="s6">1</span><span class="s4">):</span>
+<a name="l65"><span class="ln">65   </span></a>      <span class="s1">path </span><span class="s4">= </span><span class="s1">os</span><span class="s4">.</span><span class="s1">path</span><span class="s4">.</span><span class="s1">dirname</span><span class="s4">(</span><span class="s1">path</span><span class="s4">)</span>
+<a name="l66"><span class="ln">66   </span></a>
+<a name="l67"><span class="ln">67   </span></a>    <span class="s1">root_directory </span><span class="s4">= </span><span class="s1">path</span>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s3">return </span><span class="s1">os</span><span class="s4">.</span><span class="s1">path</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">root_directory</span><span class="s4">, </span><span class="s1">py_binary_name</span><span class="s4">)</span>
+<a name="l69"><span class="ln">69   </span></a></pre>
+</body>
+</html>

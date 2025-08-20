@@ -1,0 +1,108 @@
+<html>
+<head>
+<title>_radius_neighbors.pxd.tp</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_radius_neighbors.pxd.tp</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">cimport numpy as cnp</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">from libcpp.memory cimport shared_ptr</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">from libcpp.vector cimport vector</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">from cython cimport final</span>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">from ...utils._typedefs cimport intp_t, float64_t</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s0">cnp.import_array()</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s0">######################</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0">## std::vector to np.ndarray coercion</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s0"># As type covariance is not supported for C++ containers via Cython,</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s0"># we need to redefine fused types.</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s0">ctypedef fused vector_double_intp_t:</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s0">vector[intp_t]</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s0">vector[float64_t]</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s0">ctypedef fused vector_vector_double_intp_t:</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s0">vector[vector[intp_t]]</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s0">vector[vector[float64_t]]</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a><span class="s0">cdef cnp.ndarray[object, ndim=1] coerce_vectors_to_nd_arrays(</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s0">shared_ptr[vector_vector_double_intp_t] vecs</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s0">)</span>
+<a name="l27"><span class="ln">27   </span></a>
+<a name="l28"><span class="ln">28   </span></a><span class="s0">#####################</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s0">{{for name_suffix in ['64', '32']}}</span>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a><span class="s0">from ._base cimport BaseDistancesReduction{{name_suffix}}</span>
+<a name="l32"><span class="ln">32   </span></a><span class="s0">from ._middle_term_computer cimport MiddleTermComputer{{name_suffix}}</span>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a><span class="s0">cdef class RadiusNeighbors{{name_suffix}}(BaseDistancesReduction{{name_suffix}}):</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s0">&quot;&quot;&quot;float{{name_suffix}} implementation of the RadiusNeighbors.&quot;&quot;&quot;</span>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s0">cdef:</span>
+<a name="l38"><span class="ln">38   </span></a>        <span class="s0">float64_t radius</span>
+<a name="l39"><span class="ln">39   </span></a>
+<a name="l40"><span class="ln">40   </span></a>        <span class="s0"># DistanceMetric{{name_suffix}} compute rank-preserving surrogate distance via rdist</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s0"># which are proxies necessitating less computations.</span>
+<a name="l42"><span class="ln">42   </span></a>        <span class="s0"># We get the equivalent for the radius to be able to compare it against</span>
+<a name="l43"><span class="ln">43   </span></a>        <span class="s0"># vectors' rank-preserving surrogate distances.</span>
+<a name="l44"><span class="ln">44   </span></a>        <span class="s0">float64_t r_radius</span>
+<a name="l45"><span class="ln">45   </span></a>
+<a name="l46"><span class="ln">46   </span></a>        <span class="s0"># Neighbors indices and distances are returned as np.ndarrays of np.ndarrays.</span>
+<a name="l47"><span class="ln">47   </span></a>        <span class="s0">#</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s0"># For this implementation, we want resizable buffers which we will wrap</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s0"># into numpy arrays at the end. std::vector comes as a handy container</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s0"># for interacting efficiently with resizable buffers.</span>
+<a name="l51"><span class="ln">51   </span></a>        <span class="s0">#</span>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s0"># Though it is possible to access their buffer address with</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s0"># std::vector::data, they can't be stolen: buffers lifetime</span>
+<a name="l54"><span class="ln">54   </span></a>        <span class="s0"># is tied to their std::vector and are deallocated when</span>
+<a name="l55"><span class="ln">55   </span></a>        <span class="s0"># std::vectors are.</span>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s0">#</span>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s0"># To solve this, we dynamically allocate std::vectors and then</span>
+<a name="l58"><span class="ln">58   </span></a>        <span class="s0"># encapsulate them in a StdVectorSentinel responsible for</span>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s0"># freeing them when the associated np.ndarray is freed.</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s0">#</span>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s0"># Shared pointers (defined via shared_ptr) are use for safer memory management.</span>
+<a name="l62"><span class="ln">62   </span></a>        <span class="s0"># Unique pointers (defined via unique_ptr) can't be used as datastructures</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s0"># are shared across threads for parallel_on_X; see _parallel_on_X_init_chunk.</span>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s0">shared_ptr[vector[vector[intp_t]]] neigh_indices</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s0">shared_ptr[vector[vector[float64_t]]] neigh_distances</span>
+<a name="l66"><span class="ln">66   </span></a>
+<a name="l67"><span class="ln">67   </span></a>        <span class="s0"># Used as array of pointers to private datastructures used in threads.</span>
+<a name="l68"><span class="ln">68   </span></a>        <span class="s0">vector[shared_ptr[vector[vector[intp_t]]]] neigh_indices_chunks</span>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s0">vector[shared_ptr[vector[vector[float64_t]]]] neigh_distances_chunks</span>
+<a name="l70"><span class="ln">70   </span></a>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s0">bint sort_results</span>
+<a name="l72"><span class="ln">72   </span></a>
+<a name="l73"><span class="ln">73   </span></a>    <span class="s0">@final</span>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s0">cdef void _merge_vectors(</span>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s0">self,</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s0">intp_t idx,</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s0">intp_t num_threads,</span>
+<a name="l78"><span class="ln">78   </span></a>    <span class="s0">) noexcept nogil</span>
+<a name="l79"><span class="ln">79   </span></a>
+<a name="l80"><span class="ln">80   </span></a>
+<a name="l81"><span class="ln">81   </span></a><span class="s0">cdef class EuclideanRadiusNeighbors{{name_suffix}}(RadiusNeighbors{{name_suffix}}):</span>
+<a name="l82"><span class="ln">82   </span></a>    <span class="s0">&quot;&quot;&quot;EuclideanDistance-specialisation of RadiusNeighbors{{name_suffix}}.&quot;&quot;&quot;</span>
+<a name="l83"><span class="ln">83   </span></a>    <span class="s0">cdef:</span>
+<a name="l84"><span class="ln">84   </span></a>        <span class="s0">MiddleTermComputer{{name_suffix}} middle_term_computer</span>
+<a name="l85"><span class="ln">85   </span></a>        <span class="s0">const float64_t[::1] X_norm_squared</span>
+<a name="l86"><span class="ln">86   </span></a>        <span class="s0">const float64_t[::1] Y_norm_squared</span>
+<a name="l87"><span class="ln">87   </span></a>
+<a name="l88"><span class="ln">88   </span></a>        <span class="s0">bint use_squared_distances</span>
+<a name="l89"><span class="ln">89   </span></a>
+<a name="l90"><span class="ln">90   </span></a><span class="s0">{{endfor}}</span>
+<a name="l91"><span class="ln">91   </span></a></pre>
+</body>
+</html>

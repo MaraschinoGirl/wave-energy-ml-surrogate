@@ -1,0 +1,125 @@
+<html>
+<head>
+<title>gsql.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+gsql.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>    pygments.lexers.gsql 
+<a name="l3"><span class="ln">3    </span></a>    ~~~~~~~~~~~~~~~~~~~~ 
+<a name="l4"><span class="ln">4    </span></a> 
+<a name="l5"><span class="ln">5    </span></a>    Lexers for TigerGraph GSQL graph query language 
+<a name="l6"><span class="ln">6    </span></a> 
+<a name="l7"><span class="ln">7    </span></a>    :copyright: Copyright 2006-2025 by the Pygments team, see AUTHORS. 
+<a name="l8"><span class="ln">8    </span></a>    :license: BSD, see LICENSE for details. 
+<a name="l9"><span class="ln">9    </span></a>&quot;&quot;&quot;</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s2">import </span><span class="s1">re</span>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">lexer </span><span class="s2">import </span><span class="s1">RegexLexer</span><span class="s3">, </span><span class="s1">include</span><span class="s3">, </span><span class="s1">bygroups</span><span class="s3">, </span><span class="s1">using</span><span class="s3">, </span><span class="s1">this</span><span class="s3">, </span><span class="s1">words</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">token </span><span class="s2">import </span><span class="s1">Keyword</span><span class="s3">, </span><span class="s1">Punctuation</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">, </span><span class="s1">Operator</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">, </span><span class="s1">\</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s1">String</span><span class="s3">, </span><span class="s1">Number</span><span class="s3">, </span><span class="s1">Whitespace</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s1">__all__ </span><span class="s3">= [</span><span class="s4">&quot;GSQLLexer&quot;</span><span class="s3">]</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s2">class </span><span class="s1">GSQLLexer</span><span class="s3">(</span><span class="s1">RegexLexer</span><span class="s3">):</span>
+<a name="l21"><span class="ln">21   </span></a>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l23"><span class="ln">23   </span></a>    For GSQL queries (version 3.x). 
+<a name="l24"><span class="ln">24   </span></a>    &quot;&quot;&quot;</span>
+<a name="l25"><span class="ln">25   </span></a>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s1">name </span><span class="s3">= </span><span class="s4">'GSQL'</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s1">url </span><span class="s3">= </span><span class="s4">'https://docs.tigergraph.com/dev/gsql-ref'</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s1">aliases </span><span class="s3">= [</span><span class="s4">'gsql'</span><span class="s3">]</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s1">filenames </span><span class="s3">= [</span><span class="s4">'*.gsql'</span><span class="s3">]</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s1">version_added </span><span class="s3">= </span><span class="s4">'2.10'</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">flags </span><span class="s3">= </span><span class="s1">re</span><span class="s3">.</span><span class="s1">MULTILINE </span><span class="s3">| </span><span class="s1">re</span><span class="s3">.</span><span class="s1">IGNORECASE</span>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s1">tokens </span><span class="s3">= {</span>
+<a name="l35"><span class="ln">35   </span></a>        <span class="s4">'root'</span><span class="s3">: [</span>
+<a name="l36"><span class="ln">36   </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'comment'</span><span class="s3">),</span>
+<a name="l37"><span class="ln">37   </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'keywords'</span><span class="s3">),</span>
+<a name="l38"><span class="ln">38   </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'clauses'</span><span class="s3">),</span>
+<a name="l39"><span class="ln">39   </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'accums'</span><span class="s3">),</span>
+<a name="l40"><span class="ln">40   </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'relations'</span><span class="s3">),</span>
+<a name="l41"><span class="ln">41   </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'strings'</span><span class="s3">),</span>
+<a name="l42"><span class="ln">42   </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'whitespace'</span><span class="s3">),</span>
+<a name="l43"><span class="ln">43   </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'barewords'</span><span class="s3">),</span>
+<a name="l44"><span class="ln">44   </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'operators'</span><span class="s3">),</span>
+<a name="l45"><span class="ln">45   </span></a>        <span class="s3">],</span>
+<a name="l46"><span class="ln">46   </span></a>        <span class="s4">'comment'</span><span class="s3">: [</span>
+<a name="l47"><span class="ln">47   </span></a>            <span class="s3">(</span><span class="s4">r'\#.*'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">.</span><span class="s1">Single</span><span class="s3">),</span>
+<a name="l48"><span class="ln">48   </span></a>            <span class="s3">(</span><span class="s4">r'/\*(.|\n)*?\*/'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">.</span><span class="s1">Multiline</span><span class="s3">),</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s3">],</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s4">'keywords'</span><span class="s3">: [</span>
+<a name="l51"><span class="ln">51   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">((</span>
+<a name="l52"><span class="ln">52   </span></a>                <span class="s4">'ACCUM'</span><span class="s3">, </span><span class="s4">'AND'</span><span class="s3">, </span><span class="s4">'ANY'</span><span class="s3">, </span><span class="s4">'API'</span><span class="s3">, </span><span class="s4">'AS'</span><span class="s3">, </span><span class="s4">'ASC'</span><span class="s3">, </span><span class="s4">'AVG'</span><span class="s3">, </span><span class="s4">'BAG'</span><span class="s3">, </span><span class="s4">'BATCH'</span><span class="s3">,</span>
+<a name="l53"><span class="ln">53   </span></a>                <span class="s4">'BETWEEN'</span><span class="s3">, </span><span class="s4">'BOOL'</span><span class="s3">, </span><span class="s4">'BOTH'</span><span class="s3">, </span><span class="s4">'BREAK'</span><span class="s3">, </span><span class="s4">'BY'</span><span class="s3">, </span><span class="s4">'CASE'</span><span class="s3">, </span><span class="s4">'CATCH'</span><span class="s3">, </span><span class="s4">'COALESCE'</span><span class="s3">,</span>
+<a name="l54"><span class="ln">54   </span></a>                <span class="s4">'COMPRESS'</span><span class="s3">, </span><span class="s4">'CONTINUE'</span><span class="s3">, </span><span class="s4">'COUNT'</span><span class="s3">, </span><span class="s4">'CREATE'</span><span class="s3">, </span><span class="s4">'DATETIME'</span><span class="s3">, </span><span class="s4">'DATETIME_ADD'</span><span class="s3">,</span>
+<a name="l55"><span class="ln">55   </span></a>                <span class="s4">'DATETIME_SUB'</span><span class="s3">, </span><span class="s4">'DELETE'</span><span class="s3">, </span><span class="s4">'DESC'</span><span class="s3">, </span><span class="s4">'DISTRIBUTED'</span><span class="s3">, </span><span class="s4">'DO'</span><span class="s3">, </span><span class="s4">'DOUBLE'</span><span class="s3">,</span>
+<a name="l56"><span class="ln">56   </span></a>                <span class="s4">'EDGE'</span><span class="s3">, </span><span class="s4">'ELSE'</span><span class="s3">, </span><span class="s4">'END'</span><span class="s3">, </span><span class="s4">'ESCAPE'</span><span class="s3">, </span><span class="s4">'EXCEPTION'</span><span class="s3">, </span><span class="s4">'FALSE'</span><span class="s3">, </span><span class="s4">'FILE'</span><span class="s3">,</span>
+<a name="l57"><span class="ln">57   </span></a>                <span class="s4">'FILTER'</span><span class="s3">, </span><span class="s4">'FLOAT'</span><span class="s3">, </span><span class="s4">'FOREACH'</span><span class="s3">, </span><span class="s4">'FOR'</span><span class="s3">, </span><span class="s4">'FROM'</span><span class="s3">, </span><span class="s4">'GRAPH'</span><span class="s3">, </span><span class="s4">'GROUP'</span><span class="s3">,</span>
+<a name="l58"><span class="ln">58   </span></a>                <span class="s4">'GSQL_INT_MAX'</span><span class="s3">, </span><span class="s4">'GSQL_INT_MIN'</span><span class="s3">, </span><span class="s4">'GSQL_UINT_MAX'</span><span class="s3">, </span><span class="s4">'HAVING'</span><span class="s3">, </span><span class="s4">'IF'</span><span class="s3">,</span>
+<a name="l59"><span class="ln">59   </span></a>                <span class="s4">'IN'</span><span class="s3">, </span><span class="s4">'INSERT'</span><span class="s3">, </span><span class="s4">'INT'</span><span class="s3">, </span><span class="s4">'INTERPRET'</span><span class="s3">, </span><span class="s4">'INTERSECT'</span><span class="s3">, </span><span class="s4">'INTERVAL'</span><span class="s3">, </span><span class="s4">'INTO'</span><span class="s3">,</span>
+<a name="l60"><span class="ln">60   </span></a>                <span class="s4">'IS'</span><span class="s3">, </span><span class="s4">'ISEMPTY'</span><span class="s3">, </span><span class="s4">'JSONARRAY'</span><span class="s3">, </span><span class="s4">'JSONOBJECT'</span><span class="s3">, </span><span class="s4">'LASTHOP'</span><span class="s3">, </span><span class="s4">'LEADING'</span><span class="s3">,</span>
+<a name="l61"><span class="ln">61   </span></a>                <span class="s4">'LIKE'</span><span class="s3">, </span><span class="s4">'LIMIT'</span><span class="s3">, </span><span class="s4">'LIST'</span><span class="s3">, </span><span class="s4">'LOAD_ACCUM'</span><span class="s3">, </span><span class="s4">'LOG'</span><span class="s3">, </span><span class="s4">'MAP'</span><span class="s3">, </span><span class="s4">'MATCH'</span><span class="s3">, </span><span class="s4">'MAX'</span><span class="s3">,</span>
+<a name="l62"><span class="ln">62   </span></a>                <span class="s4">'MIN'</span><span class="s3">, </span><span class="s4">'MINUS'</span><span class="s3">, </span><span class="s4">'NOT'</span><span class="s3">, </span><span class="s4">'NOW'</span><span class="s3">, </span><span class="s4">'NULL'</span><span class="s3">, </span><span class="s4">'OFFSET'</span><span class="s3">, </span><span class="s4">'OR'</span><span class="s3">, </span><span class="s4">'ORDER'</span><span class="s3">, </span><span class="s4">'PATH'</span><span class="s3">,</span>
+<a name="l63"><span class="ln">63   </span></a>                <span class="s4">'PER'</span><span class="s3">, </span><span class="s4">'PINNED'</span><span class="s3">, </span><span class="s4">'POST_ACCUM'</span><span class="s3">, </span><span class="s4">'POST-ACCUM'</span><span class="s3">, </span><span class="s4">'PRIMARY_ID'</span><span class="s3">, </span><span class="s4">'PRINT'</span><span class="s3">,</span>
+<a name="l64"><span class="ln">64   </span></a>                <span class="s4">'QUERY'</span><span class="s3">, </span><span class="s4">'RAISE'</span><span class="s3">, </span><span class="s4">'RANGE'</span><span class="s3">, </span><span class="s4">'REPLACE'</span><span class="s3">, </span><span class="s4">'RESET_COLLECTION_ACCUM'</span><span class="s3">,</span>
+<a name="l65"><span class="ln">65   </span></a>                <span class="s4">'RETURN'</span><span class="s3">, </span><span class="s4">'RETURNS'</span><span class="s3">, </span><span class="s4">'RUN'</span><span class="s3">, </span><span class="s4">'SAMPLE'</span><span class="s3">, </span><span class="s4">'SELECT'</span><span class="s3">, </span><span class="s4">'SELECT_VERTEX'</span><span class="s3">,</span>
+<a name="l66"><span class="ln">66   </span></a>                <span class="s4">'SET'</span><span class="s3">, </span><span class="s4">'SRC'</span><span class="s3">, </span><span class="s4">'STATIC'</span><span class="s3">, </span><span class="s4">'STRING'</span><span class="s3">, </span><span class="s4">'SUM'</span><span class="s3">, </span><span class="s4">'SYNTAX'</span><span class="s3">, </span><span class="s4">'TARGET'</span><span class="s3">,</span>
+<a name="l67"><span class="ln">67   </span></a>                <span class="s4">'TAGSTGT'</span><span class="s3">, </span><span class="s4">'THEN'</span><span class="s3">, </span><span class="s4">'TO'</span><span class="s3">, </span><span class="s4">'TO_CSV'</span><span class="s3">, </span><span class="s4">'TO_DATETIME'</span><span class="s3">, </span><span class="s4">'TRAILING'</span><span class="s3">,</span>
+<a name="l68"><span class="ln">68   </span></a>                <span class="s4">'TRIM'</span><span class="s3">, </span><span class="s4">'TRUE'</span><span class="s3">, </span><span class="s4">'TRY'</span><span class="s3">, </span><span class="s4">'TUPLE'</span><span class="s3">, </span><span class="s4">'TYPEDEF'</span><span class="s3">, </span><span class="s4">'UINT'</span><span class="s3">, </span><span class="s4">'UNION'</span><span class="s3">, </span><span class="s4">'UPDATE'</span><span class="s3">,</span>
+<a name="l69"><span class="ln">69   </span></a>                <span class="s4">'VALUES'</span><span class="s3">, </span><span class="s4">'VERTEX'</span><span class="s3">, </span><span class="s4">'WHEN'</span><span class="s3">, </span><span class="s4">'WHERE'</span><span class="s3">, </span><span class="s4">'WHILE'</span><span class="s3">, </span><span class="s4">'WITH'</span><span class="s3">),</span>
+<a name="l70"><span class="ln">70   </span></a>                   <span class="s1">prefix</span><span class="s3">=</span><span class="s4">r'(?&lt;!\.)'</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s4">r'\b'</span><span class="s3">), </span><span class="s1">Keyword</span><span class="s3">),</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s3">],</span>
+<a name="l72"><span class="ln">72   </span></a>        <span class="s4">'clauses'</span><span class="s3">: [</span>
+<a name="l73"><span class="ln">73   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">((</span><span class="s4">'accum'</span><span class="s3">, </span><span class="s4">'having'</span><span class="s3">, </span><span class="s4">'limit'</span><span class="s3">, </span><span class="s4">'order'</span><span class="s3">, </span><span class="s4">'postAccum'</span><span class="s3">, </span><span class="s4">'sample'</span><span class="s3">, </span><span class="s4">'where'</span><span class="s3">)),</span>
+<a name="l74"><span class="ln">74   </span></a>             <span class="s1">Name</span><span class="s3">.</span><span class="s1">Builtin</span><span class="s3">),</span>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s3">],</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s4">'accums'</span><span class="s3">: [</span>
+<a name="l77"><span class="ln">77   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">((</span><span class="s4">'andaccum'</span><span class="s3">, </span><span class="s4">'arrayaccum'</span><span class="s3">, </span><span class="s4">'avgaccum'</span><span class="s3">, </span><span class="s4">'bagaccum'</span><span class="s3">, </span><span class="s4">'bitwiseandaccum'</span><span class="s3">,</span>
+<a name="l78"><span class="ln">78   </span></a>                    <span class="s4">'bitwiseoraccum'</span><span class="s3">, </span><span class="s4">'groupbyaccum'</span><span class="s3">, </span><span class="s4">'heapaccum'</span><span class="s3">, </span><span class="s4">'listaccum'</span><span class="s3">,</span>
+<a name="l79"><span class="ln">79   </span></a>                    <span class="s4">'MapAccum'</span><span class="s3">, </span><span class="s4">'maxaccum'</span><span class="s3">, </span><span class="s4">'minaccum'</span><span class="s3">, </span><span class="s4">'oraccum'</span><span class="s3">, </span><span class="s4">'setaccum'</span><span class="s3">,</span>
+<a name="l80"><span class="ln">80   </span></a>                    <span class="s4">'sumaccum'</span><span class="s3">)), </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Builtin</span><span class="s3">),</span>
+<a name="l81"><span class="ln">81   </span></a>        <span class="s3">],</span>
+<a name="l82"><span class="ln">82   </span></a>        <span class="s4">'relations'</span><span class="s3">: [</span>
+<a name="l83"><span class="ln">83   </span></a>            <span class="s3">(</span><span class="s4">r'(-\s?)(\(.*\:\w?\))(\s?-)'</span><span class="s3">, </span><span class="s1">bygroups</span><span class="s3">(</span><span class="s1">Operator</span><span class="s3">, </span><span class="s1">using</span><span class="s3">(</span><span class="s1">this</span><span class="s3">), </span><span class="s1">Operator</span><span class="s3">)),</span>
+<a name="l84"><span class="ln">84   </span></a>            <span class="s3">(</span><span class="s4">r'-&gt;|&lt;-'</span><span class="s3">, </span><span class="s1">Operator</span><span class="s3">),</span>
+<a name="l85"><span class="ln">85   </span></a>            <span class="s3">(</span><span class="s4">r'[.*{}\[\]\&lt;\&gt;\_]'</span><span class="s3">, </span><span class="s1">Punctuation</span><span class="s3">),</span>
+<a name="l86"><span class="ln">86   </span></a>        <span class="s3">],</span>
+<a name="l87"><span class="ln">87   </span></a>        <span class="s4">'strings'</span><span class="s3">: [</span>
+<a name="l88"><span class="ln">88   </span></a>            <span class="s3">(</span><span class="s4">r'&quot;([^&quot;\\]|\\.)*&quot;'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">),</span>
+<a name="l89"><span class="ln">89   </span></a>            <span class="s3">(</span><span class="s4">r'@{1,2}\w+'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">),</span>
+<a name="l90"><span class="ln">90   </span></a>        <span class="s3">],</span>
+<a name="l91"><span class="ln">91   </span></a>        <span class="s4">'whitespace'</span><span class="s3">: [</span>
+<a name="l92"><span class="ln">92   </span></a>            <span class="s3">(</span><span class="s4">r'\s+'</span><span class="s3">, </span><span class="s1">Whitespace</span><span class="s3">),</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s3">],</span>
+<a name="l94"><span class="ln">94   </span></a>        <span class="s4">'barewords'</span><span class="s3">: [</span>
+<a name="l95"><span class="ln">95   </span></a>            <span class="s3">(</span><span class="s4">r'[a-z]\w*'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">),</span>
+<a name="l96"><span class="ln">96   </span></a>            <span class="s3">(</span><span class="s4">r'(\d+\.\d+|\d+)'</span><span class="s3">, </span><span class="s1">Number</span><span class="s3">),</span>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s3">],</span>
+<a name="l98"><span class="ln">98   </span></a>        <span class="s4">'operators'</span><span class="s3">: [</span>
+<a name="l99"><span class="ln">99   </span></a>            <span class="s3">(</span><span class="s4">r'\$|[^0-9|\/|\-](\-\=|\+\=|\*\=|\\\=|\=|\=\=|\=\=\=|'</span>
+<a name="l100"><span class="ln">100  </span></a>             <span class="s4">r'\+|\-|\*|\\|\+\=|\&gt;|\&lt;)[^\&gt;|\/]'</span><span class="s3">, </span><span class="s1">Operator</span><span class="s3">),</span>
+<a name="l101"><span class="ln">101  </span></a>            <span class="s3">(</span><span class="s4">r'(\||\(|\)|\,|\;|\=|\-|\+|\*|\/|\&gt;|\&lt;|\:)'</span><span class="s3">, </span><span class="s1">Operator</span><span class="s3">),</span>
+<a name="l102"><span class="ln">102  </span></a>        <span class="s3">],</span>
+<a name="l103"><span class="ln">103  </span></a>    <span class="s3">}</span>
+<a name="l104"><span class="ln">104  </span></a></pre>
+</body>
+</html>

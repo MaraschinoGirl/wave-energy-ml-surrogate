@@ -1,0 +1,365 @@
+<html>
+<head>
+<title>usage.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+usage.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># -*- coding: utf-8 -*-</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s2">&quot;&quot;&quot;Usage information for the main IPython applications. 
+<a name="l3"><span class="ln">3    </span></a>&quot;&quot;&quot;</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">#-----------------------------------------------------------------------------</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">#  Copyright (C) 2008-2011  The IPython Development Team</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">#  Copyright (C) 2001-2007 Fernando Perez. &lt;fperez@colorado.edu&gt;</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">#</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">#  Distributed under the terms of the BSD License.  The full license is in</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0">#  the file COPYING, distributed as part of this software.</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">#-----------------------------------------------------------------------------</span>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a><span class="s3">import </span><span class="s1">sys</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s3">from </span><span class="s1">IPython</span><span class="s4">.</span><span class="s1">core </span><span class="s3">import </span><span class="s1">release</span>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a><span class="s1">cl_usage </span><span class="s4">= </span><span class="s5">&quot;&quot;&quot;</span><span class="s3">\ 
+<a name="l16"><span class="ln">16   </span></a></span><span class="s5">========= 
+<a name="l17"><span class="ln">17   </span></a> IPython 
+<a name="l18"><span class="ln">18   </span></a>========= 
+<a name="l19"><span class="ln">19   </span></a> 
+<a name="l20"><span class="ln">20   </span></a>Tools for Interactive Computing in Python 
+<a name="l21"><span class="ln">21   </span></a>========================================= 
+<a name="l22"><span class="ln">22   </span></a> 
+<a name="l23"><span class="ln">23   </span></a>    A Python shell with automatic history (input and output), dynamic object 
+<a name="l24"><span class="ln">24   </span></a>    introspection, easier configuration, command completion, access to the 
+<a name="l25"><span class="ln">25   </span></a>    system shell and more.  IPython can also be embedded in running programs. 
+<a name="l26"><span class="ln">26   </span></a> 
+<a name="l27"><span class="ln">27   </span></a> 
+<a name="l28"><span class="ln">28   </span></a>Usage 
+<a name="l29"><span class="ln">29   </span></a> 
+<a name="l30"><span class="ln">30   </span></a>    ipython [subcommand] [options] [-c cmd | -m mod | file] [--] [arg] ... 
+<a name="l31"><span class="ln">31   </span></a> 
+<a name="l32"><span class="ln">32   </span></a>    If invoked with no options, it executes the file and exits, passing the 
+<a name="l33"><span class="ln">33   </span></a>    remaining arguments to the script, just as if you had specified the same 
+<a name="l34"><span class="ln">34   </span></a>    command with python. You may need to specify `--` before args to be passed 
+<a name="l35"><span class="ln">35   </span></a>    to the script, to prevent IPython from attempting to parse them. If you 
+<a name="l36"><span class="ln">36   </span></a>    specify the option `-i` before the filename, it will enter an interactive 
+<a name="l37"><span class="ln">37   </span></a>    IPython session after running the script, rather than exiting. Files ending 
+<a name="l38"><span class="ln">38   </span></a>    in .py will be treated as normal Python, but files ending in .ipy can 
+<a name="l39"><span class="ln">39   </span></a>    contain special IPython syntax (magic commands, shell expansions, etc.). 
+<a name="l40"><span class="ln">40   </span></a> 
+<a name="l41"><span class="ln">41   </span></a>    Almost all configuration in IPython is available via the command-line. Do 
+<a name="l42"><span class="ln">42   </span></a>    `ipython --help-all` to see all available options.  For persistent 
+<a name="l43"><span class="ln">43   </span></a>    configuration, look into your `ipython_config.py` configuration file for 
+<a name="l44"><span class="ln">44   </span></a>    details. 
+<a name="l45"><span class="ln">45   </span></a> 
+<a name="l46"><span class="ln">46   </span></a>    This file is typically installed in the `IPYTHONDIR` directory, and there 
+<a name="l47"><span class="ln">47   </span></a>    is a separate configuration directory for each profile. The default profile 
+<a name="l48"><span class="ln">48   </span></a>    directory will be located in $IPYTHONDIR/profile_default. IPYTHONDIR 
+<a name="l49"><span class="ln">49   </span></a>    defaults to to `$HOME/.ipython`.  For Windows users, $HOME resolves to 
+<a name="l50"><span class="ln">50   </span></a>    C:</span><span class="s3">\\</span><span class="s5">Users</span><span class="s3">\\</span><span class="s5">YourUserName in most instances. 
+<a name="l51"><span class="ln">51   </span></a> 
+<a name="l52"><span class="ln">52   </span></a>    To initialize a profile with the default configuration file, do:: 
+<a name="l53"><span class="ln">53   </span></a> 
+<a name="l54"><span class="ln">54   </span></a>      $&gt; ipython profile create 
+<a name="l55"><span class="ln">55   </span></a> 
+<a name="l56"><span class="ln">56   </span></a>    and start editing `IPYTHONDIR/profile_default/ipython_config.py` 
+<a name="l57"><span class="ln">57   </span></a> 
+<a name="l58"><span class="ln">58   </span></a>    In IPython's documentation, we will refer to this directory as 
+<a name="l59"><span class="ln">59   </span></a>    `IPYTHONDIR`, you can change its default location by creating an 
+<a name="l60"><span class="ln">60   </span></a>    environment variable with this name and setting it to the desired path. 
+<a name="l61"><span class="ln">61   </span></a> 
+<a name="l62"><span class="ln">62   </span></a>    For more information, see the manual available in HTML and PDF in your 
+<a name="l63"><span class="ln">63   </span></a>    installation, or online at https://ipython.org/documentation.html. 
+<a name="l64"><span class="ln">64   </span></a>&quot;&quot;&quot;</span>
+<a name="l65"><span class="ln">65   </span></a>
+<a name="l66"><span class="ln">66   </span></a><span class="s1">interactive_usage </span><span class="s4">= </span><span class="s5">&quot;&quot;&quot; 
+<a name="l67"><span class="ln">67   </span></a>IPython -- An enhanced Interactive Python 
+<a name="l68"><span class="ln">68   </span></a>========================================= 
+<a name="l69"><span class="ln">69   </span></a> 
+<a name="l70"><span class="ln">70   </span></a>IPython offers a fully compatible replacement for the standard Python 
+<a name="l71"><span class="ln">71   </span></a>interpreter, with convenient shell features, special commands, command 
+<a name="l72"><span class="ln">72   </span></a>history mechanism and output results caching. 
+<a name="l73"><span class="ln">73   </span></a> 
+<a name="l74"><span class="ln">74   </span></a>At your system command line, type 'ipython -h' to see the command line 
+<a name="l75"><span class="ln">75   </span></a>options available. This document only describes interactive features. 
+<a name="l76"><span class="ln">76   </span></a> 
+<a name="l77"><span class="ln">77   </span></a>GETTING HELP 
+<a name="l78"><span class="ln">78   </span></a>------------ 
+<a name="l79"><span class="ln">79   </span></a> 
+<a name="l80"><span class="ln">80   </span></a>Within IPython you have various way to access help: 
+<a name="l81"><span class="ln">81   </span></a> 
+<a name="l82"><span class="ln">82   </span></a>  ?         -&gt; Introduction and overview of IPython's features (this screen). 
+<a name="l83"><span class="ln">83   </span></a>  object?   -&gt; Details about 'object'. 
+<a name="l84"><span class="ln">84   </span></a>  object??  -&gt; More detailed, verbose information about 'object'. 
+<a name="l85"><span class="ln">85   </span></a>  %quickref -&gt; Quick reference of all IPython specific syntax and magics. 
+<a name="l86"><span class="ln">86   </span></a>  help      -&gt; Access Python's own help system. 
+<a name="l87"><span class="ln">87   </span></a> 
+<a name="l88"><span class="ln">88   </span></a>If you are in terminal IPython you can quit this screen by pressing `q`. 
+<a name="l89"><span class="ln">89   </span></a> 
+<a name="l90"><span class="ln">90   </span></a> 
+<a name="l91"><span class="ln">91   </span></a>MAIN FEATURES 
+<a name="l92"><span class="ln">92   </span></a>------------- 
+<a name="l93"><span class="ln">93   </span></a> 
+<a name="l94"><span class="ln">94   </span></a>* Access to the standard Python help with object docstrings and the Python 
+<a name="l95"><span class="ln">95   </span></a>  manuals. Simply type 'help' (no quotes) to invoke it. 
+<a name="l96"><span class="ln">96   </span></a> 
+<a name="l97"><span class="ln">97   </span></a>* Magic commands: type %magic for information on the magic subsystem. 
+<a name="l98"><span class="ln">98   </span></a> 
+<a name="l99"><span class="ln">99   </span></a>* System command aliases, via the %alias command or the configuration file(s). 
+<a name="l100"><span class="ln">100  </span></a> 
+<a name="l101"><span class="ln">101  </span></a>* Dynamic object information: 
+<a name="l102"><span class="ln">102  </span></a> 
+<a name="l103"><span class="ln">103  </span></a>  Typing ?word or word? prints detailed information about an object. Certain 
+<a name="l104"><span class="ln">104  </span></a>  long strings (code, etc.) get snipped in the center for brevity. 
+<a name="l105"><span class="ln">105  </span></a> 
+<a name="l106"><span class="ln">106  </span></a>  Typing ??word or word?? gives access to the full information without 
+<a name="l107"><span class="ln">107  </span></a>  snipping long strings. Strings that are longer than the screen are printed 
+<a name="l108"><span class="ln">108  </span></a>  through the less pager. 
+<a name="l109"><span class="ln">109  </span></a> 
+<a name="l110"><span class="ln">110  </span></a>  The ?/?? system gives access to the full source code for any object (if 
+<a name="l111"><span class="ln">111  </span></a>  available), shows function prototypes and other useful information. 
+<a name="l112"><span class="ln">112  </span></a> 
+<a name="l113"><span class="ln">113  </span></a>  If you just want to see an object's docstring, type '%pdoc object' (without 
+<a name="l114"><span class="ln">114  </span></a>  quotes, and without % if you have automagic on). 
+<a name="l115"><span class="ln">115  </span></a> 
+<a name="l116"><span class="ln">116  </span></a>* Tab completion in the local namespace: 
+<a name="l117"><span class="ln">117  </span></a> 
+<a name="l118"><span class="ln">118  </span></a>  At any time, hitting tab will complete any available python commands or 
+<a name="l119"><span class="ln">119  </span></a>  variable names, and show you a list of the possible completions if there's 
+<a name="l120"><span class="ln">120  </span></a>  no unambiguous one. It will also complete filenames in the current directory. 
+<a name="l121"><span class="ln">121  </span></a> 
+<a name="l122"><span class="ln">122  </span></a>* Search previous command history in multiple ways: 
+<a name="l123"><span class="ln">123  </span></a> 
+<a name="l124"><span class="ln">124  </span></a>  - Start typing, and then use arrow keys up/down or (Ctrl-p/Ctrl-n) to search 
+<a name="l125"><span class="ln">125  </span></a>    through the history items that match what you've typed so far. 
+<a name="l126"><span class="ln">126  </span></a> 
+<a name="l127"><span class="ln">127  </span></a>  - Hit Ctrl-r: opens a search prompt. Begin typing and the system searches 
+<a name="l128"><span class="ln">128  </span></a>    your history for lines that match what you've typed so far, completing as 
+<a name="l129"><span class="ln">129  </span></a>    much as it can. 
+<a name="l130"><span class="ln">130  </span></a> 
+<a name="l131"><span class="ln">131  </span></a>  - %hist: search history by index. 
+<a name="l132"><span class="ln">132  </span></a> 
+<a name="l133"><span class="ln">133  </span></a>* Persistent command history across sessions. 
+<a name="l134"><span class="ln">134  </span></a> 
+<a name="l135"><span class="ln">135  </span></a>* Logging of input with the ability to save and restore a working session. 
+<a name="l136"><span class="ln">136  </span></a> 
+<a name="l137"><span class="ln">137  </span></a>* System shell with !. Typing !ls will run 'ls' in the current directory. 
+<a name="l138"><span class="ln">138  </span></a> 
+<a name="l139"><span class="ln">139  </span></a>* The reload command does a 'deep' reload of a module: changes made to the 
+<a name="l140"><span class="ln">140  </span></a>  module since you imported will actually be available without having to exit. 
+<a name="l141"><span class="ln">141  </span></a> 
+<a name="l142"><span class="ln">142  </span></a>* Verbose and colored exception traceback printouts. See the magic xmode and 
+<a name="l143"><span class="ln">143  </span></a>  xcolor functions for details (just type %magic). 
+<a name="l144"><span class="ln">144  </span></a> 
+<a name="l145"><span class="ln">145  </span></a>* Input caching system: 
+<a name="l146"><span class="ln">146  </span></a> 
+<a name="l147"><span class="ln">147  </span></a>  IPython offers numbered prompts (In/Out) with input and output caching. All 
+<a name="l148"><span class="ln">148  </span></a>  input is saved and can be retrieved as variables (besides the usual arrow 
+<a name="l149"><span class="ln">149  </span></a>  key recall). 
+<a name="l150"><span class="ln">150  </span></a> 
+<a name="l151"><span class="ln">151  </span></a>  The following GLOBAL variables always exist (so don't overwrite them!): 
+<a name="l152"><span class="ln">152  </span></a>  _i: stores previous input. 
+<a name="l153"><span class="ln">153  </span></a>  _ii: next previous. 
+<a name="l154"><span class="ln">154  </span></a>  _iii: next-next previous. 
+<a name="l155"><span class="ln">155  </span></a>  _ih : a list of all input _ih[n] is the input from line n. 
+<a name="l156"><span class="ln">156  </span></a> 
+<a name="l157"><span class="ln">157  </span></a>  Additionally, global variables named _i&lt;n&gt; are dynamically created (&lt;n&gt; 
+<a name="l158"><span class="ln">158  </span></a>  being the prompt counter), such that _i&lt;n&gt; == _ih[&lt;n&gt;] 
+<a name="l159"><span class="ln">159  </span></a> 
+<a name="l160"><span class="ln">160  </span></a>  For example, what you typed at prompt 14 is available as _i14 and _ih[14]. 
+<a name="l161"><span class="ln">161  </span></a> 
+<a name="l162"><span class="ln">162  </span></a>  You can create macros which contain multiple input lines from this history, 
+<a name="l163"><span class="ln">163  </span></a>  for later re-execution, with the %macro function. 
+<a name="l164"><span class="ln">164  </span></a> 
+<a name="l165"><span class="ln">165  </span></a>  The history function %hist allows you to see any part of your input history 
+<a name="l166"><span class="ln">166  </span></a>  by printing a range of the _i variables. Note that inputs which contain 
+<a name="l167"><span class="ln">167  </span></a>  magic functions (%) appear in the history with a prepended comment. This is 
+<a name="l168"><span class="ln">168  </span></a>  because they aren't really valid Python code, so you can't exec them. 
+<a name="l169"><span class="ln">169  </span></a> 
+<a name="l170"><span class="ln">170  </span></a>* Output caching system: 
+<a name="l171"><span class="ln">171  </span></a> 
+<a name="l172"><span class="ln">172  </span></a>  For output that is returned from actions, a system similar to the input 
+<a name="l173"><span class="ln">173  </span></a>  cache exists but using _ instead of _i. Only actions that produce a result 
+<a name="l174"><span class="ln">174  </span></a>  (NOT assignments, for example) are cached. If you are familiar with 
+<a name="l175"><span class="ln">175  </span></a>  Mathematica, IPython's _ variables behave exactly like Mathematica's % 
+<a name="l176"><span class="ln">176  </span></a>  variables. 
+<a name="l177"><span class="ln">177  </span></a> 
+<a name="l178"><span class="ln">178  </span></a>  The following GLOBAL variables always exist (so don't overwrite them!): 
+<a name="l179"><span class="ln">179  </span></a>  _ (one underscore): previous output. 
+<a name="l180"><span class="ln">180  </span></a>  __ (two underscores): next previous. 
+<a name="l181"><span class="ln">181  </span></a>  ___ (three underscores): next-next previous. 
+<a name="l182"><span class="ln">182  </span></a> 
+<a name="l183"><span class="ln">183  </span></a>  Global variables named _&lt;n&gt; are dynamically created (&lt;n&gt; being the prompt 
+<a name="l184"><span class="ln">184  </span></a>  counter), such that the result of output &lt;n&gt; is always available as _&lt;n&gt;. 
+<a name="l185"><span class="ln">185  </span></a> 
+<a name="l186"><span class="ln">186  </span></a>  Finally, a global dictionary named _oh exists with entries for all lines 
+<a name="l187"><span class="ln">187  </span></a>  which generated output. 
+<a name="l188"><span class="ln">188  </span></a> 
+<a name="l189"><span class="ln">189  </span></a>* Directory history: 
+<a name="l190"><span class="ln">190  </span></a> 
+<a name="l191"><span class="ln">191  </span></a>  Your history of visited directories is kept in the global list _dh, and the 
+<a name="l192"><span class="ln">192  </span></a>  magic %cd command can be used to go to any entry in that list. 
+<a name="l193"><span class="ln">193  </span></a> 
+<a name="l194"><span class="ln">194  </span></a>* Auto-parentheses and auto-quotes (adapted from Nathan Gray's LazyPython) 
+<a name="l195"><span class="ln">195  </span></a> 
+<a name="l196"><span class="ln">196  </span></a>  1. Auto-parentheses 
+<a name="l197"><span class="ln">197  </span></a>         
+<a name="l198"><span class="ln">198  </span></a>     Callable objects (i.e. functions, methods, etc) can be invoked like 
+<a name="l199"><span class="ln">199  </span></a>     this (notice the commas between the arguments):: 
+<a name="l200"><span class="ln">200  </span></a>        
+<a name="l201"><span class="ln">201  </span></a>         In [1]: callable_ob arg1, arg2, arg3 
+<a name="l202"><span class="ln">202  </span></a>        
+<a name="l203"><span class="ln">203  </span></a>     and the input will be translated to this:: 
+<a name="l204"><span class="ln">204  </span></a>        
+<a name="l205"><span class="ln">205  </span></a>         callable_ob(arg1, arg2, arg3) 
+<a name="l206"><span class="ln">206  </span></a>        
+<a name="l207"><span class="ln">207  </span></a>     This feature is off by default (in rare cases it can produce 
+<a name="l208"><span class="ln">208  </span></a>     undesirable side-effects), but you can activate it at the command-line 
+<a name="l209"><span class="ln">209  </span></a>     by starting IPython with `--autocall 1`, set it permanently in your 
+<a name="l210"><span class="ln">210  </span></a>     configuration file, or turn on at runtime with `%autocall 1`. 
+<a name="l211"><span class="ln">211  </span></a> 
+<a name="l212"><span class="ln">212  </span></a>     You can force auto-parentheses by using '/' as the first character 
+<a name="l213"><span class="ln">213  </span></a>     of a line.  For example:: 
+<a name="l214"><span class="ln">214  </span></a>        
+<a name="l215"><span class="ln">215  </span></a>          In [1]: /globals             # becomes 'globals()' 
+<a name="l216"><span class="ln">216  </span></a>        
+<a name="l217"><span class="ln">217  </span></a>     Note that the '/' MUST be the first character on the line!  This 
+<a name="l218"><span class="ln">218  </span></a>     won't work:: 
+<a name="l219"><span class="ln">219  </span></a>        
+<a name="l220"><span class="ln">220  </span></a>          In [2]: print /globals    # syntax error 
+<a name="l221"><span class="ln">221  </span></a> 
+<a name="l222"><span class="ln">222  </span></a>     In most cases the automatic algorithm should work, so you should 
+<a name="l223"><span class="ln">223  </span></a>     rarely need to explicitly invoke /. One notable exception is if you 
+<a name="l224"><span class="ln">224  </span></a>     are trying to call a function with a list of tuples as arguments (the 
+<a name="l225"><span class="ln">225  </span></a>     parenthesis will confuse IPython):: 
+<a name="l226"><span class="ln">226  </span></a>        
+<a name="l227"><span class="ln">227  </span></a>          In [1]: zip (1,2,3),(4,5,6)  # won't work 
+<a name="l228"><span class="ln">228  </span></a>        
+<a name="l229"><span class="ln">229  </span></a>     but this will work:: 
+<a name="l230"><span class="ln">230  </span></a>        
+<a name="l231"><span class="ln">231  </span></a>          In [2]: /zip (1,2,3),(4,5,6) 
+<a name="l232"><span class="ln">232  </span></a>          ------&gt; zip ((1,2,3),(4,5,6)) 
+<a name="l233"><span class="ln">233  </span></a>          Out[2]= [(1, 4), (2, 5), (3, 6)] 
+<a name="l234"><span class="ln">234  </span></a> 
+<a name="l235"><span class="ln">235  </span></a>     IPython tells you that it has altered your command line by 
+<a name="l236"><span class="ln">236  </span></a>     displaying the new command line preceded by --&gt;.  e.g.:: 
+<a name="l237"><span class="ln">237  </span></a>        
+<a name="l238"><span class="ln">238  </span></a>          In [18]: callable list 
+<a name="l239"><span class="ln">239  </span></a>          -------&gt; callable (list) 
+<a name="l240"><span class="ln">240  </span></a> 
+<a name="l241"><span class="ln">241  </span></a>  2. Auto-Quoting 
+<a name="l242"><span class="ln">242  </span></a>     
+<a name="l243"><span class="ln">243  </span></a>     You can force auto-quoting of a function's arguments by using ',' as 
+<a name="l244"><span class="ln">244  </span></a>     the first character of a line.  For example:: 
+<a name="l245"><span class="ln">245  </span></a>        
+<a name="l246"><span class="ln">246  </span></a>          In [1]: ,my_function /home/me   # becomes my_function(&quot;/home/me&quot;) 
+<a name="l247"><span class="ln">247  </span></a> 
+<a name="l248"><span class="ln">248  </span></a>     If you use ';' instead, the whole argument is quoted as a single 
+<a name="l249"><span class="ln">249  </span></a>     string (while ',' splits on whitespace):: 
+<a name="l250"><span class="ln">250  </span></a>        
+<a name="l251"><span class="ln">251  </span></a>          In [2]: ,my_function a b c   # becomes my_function(&quot;a&quot;,&quot;b&quot;,&quot;c&quot;) 
+<a name="l252"><span class="ln">252  </span></a>          In [3]: ;my_function a b c   # becomes my_function(&quot;a b c&quot;) 
+<a name="l253"><span class="ln">253  </span></a> 
+<a name="l254"><span class="ln">254  </span></a>     Note that the ',' MUST be the first character on the line!  This 
+<a name="l255"><span class="ln">255  </span></a>     won't work:: 
+<a name="l256"><span class="ln">256  </span></a>        
+<a name="l257"><span class="ln">257  </span></a>          In [4]: x = ,my_function /home/me    # syntax error 
+<a name="l258"><span class="ln">258  </span></a>&quot;&quot;&quot;</span>
+<a name="l259"><span class="ln">259  </span></a>
+<a name="l260"><span class="ln">260  </span></a><span class="s1">interactive_usage_min </span><span class="s4">=  </span><span class="s5">&quot;&quot;&quot;</span><span class="s3">\ 
+<a name="l261"><span class="ln">261  </span></a></span><span class="s5">An enhanced console for Python. 
+<a name="l262"><span class="ln">262  </span></a>Some of its features are: 
+<a name="l263"><span class="ln">263  </span></a>- Tab completion in the local namespace. 
+<a name="l264"><span class="ln">264  </span></a>- Logging of input, see command-line options. 
+<a name="l265"><span class="ln">265  </span></a>- System shell escape via ! , eg !ls. 
+<a name="l266"><span class="ln">266  </span></a>- Magic commands, starting with a % (like %ls, %pwd, %cd, etc.) 
+<a name="l267"><span class="ln">267  </span></a>- Keeps track of locally defined variables via %who, %whos. 
+<a name="l268"><span class="ln">268  </span></a>- Show object information with a ? eg ?x or x? (use ?? for more info). 
+<a name="l269"><span class="ln">269  </span></a>&quot;&quot;&quot;</span>
+<a name="l270"><span class="ln">270  </span></a>
+<a name="l271"><span class="ln">271  </span></a><span class="s1">quick_reference </span><span class="s4">= </span><span class="s5">r&quot;&quot;&quot; 
+<a name="l272"><span class="ln">272  </span></a>IPython -- An enhanced Interactive Python - Quick Reference Card 
+<a name="l273"><span class="ln">273  </span></a>================================================================ 
+<a name="l274"><span class="ln">274  </span></a> 
+<a name="l275"><span class="ln">275  </span></a>obj?, obj??      : Get help, or more help for object (also works as 
+<a name="l276"><span class="ln">276  </span></a>                   ?obj, ??obj). 
+<a name="l277"><span class="ln">277  </span></a>?foo.*abc*       : List names in 'foo' containing 'abc' in them. 
+<a name="l278"><span class="ln">278  </span></a>%magic           : Information about IPython's 'magic' % functions. 
+<a name="l279"><span class="ln">279  </span></a> 
+<a name="l280"><span class="ln">280  </span></a>Magic functions are prefixed by % or %%, and typically take their arguments 
+<a name="l281"><span class="ln">281  </span></a>without parentheses, quotes or even commas for convenience.  Line magics take a 
+<a name="l282"><span class="ln">282  </span></a>single % and cell magics are prefixed with two %%. 
+<a name="l283"><span class="ln">283  </span></a> 
+<a name="l284"><span class="ln">284  </span></a>Example magic function calls: 
+<a name="l285"><span class="ln">285  </span></a> 
+<a name="l286"><span class="ln">286  </span></a>%alias d ls -F   : 'd' is now an alias for 'ls -F' 
+<a name="l287"><span class="ln">287  </span></a>alias d ls -F    : Works if 'alias' not a python name 
+<a name="l288"><span class="ln">288  </span></a>alist = %alias   : Get list of aliases to 'alist' 
+<a name="l289"><span class="ln">289  </span></a>cd /usr/share    : Obvious. cd -&lt;tab&gt; to choose from visited dirs. 
+<a name="l290"><span class="ln">290  </span></a>%cd??            : See help AND source for magic %cd 
+<a name="l291"><span class="ln">291  </span></a>%timeit x=10     : time the 'x=10' statement with high precision. 
+<a name="l292"><span class="ln">292  </span></a>%%timeit x=2**100 
+<a name="l293"><span class="ln">293  </span></a>x**100           : time 'x**100' with a setup of 'x=2**100'; setup code is not 
+<a name="l294"><span class="ln">294  </span></a>                   counted.  This is an example of a cell magic. 
+<a name="l295"><span class="ln">295  </span></a> 
+<a name="l296"><span class="ln">296  </span></a>System commands: 
+<a name="l297"><span class="ln">297  </span></a> 
+<a name="l298"><span class="ln">298  </span></a>!cp a.txt b/     : System command escape, calls os.system() 
+<a name="l299"><span class="ln">299  </span></a>cp a.txt b/      : after %rehashx, most system commands work without ! 
+<a name="l300"><span class="ln">300  </span></a>cp ${f}.txt $bar : Variable expansion in magics and system commands 
+<a name="l301"><span class="ln">301  </span></a>files = !ls /usr : Capture system command output 
+<a name="l302"><span class="ln">302  </span></a>files.s, files.l, files.n: &quot;a b c&quot;, ['a','b','c'], 'a\nb\nc' 
+<a name="l303"><span class="ln">303  </span></a> 
+<a name="l304"><span class="ln">304  </span></a>History: 
+<a name="l305"><span class="ln">305  </span></a> 
+<a name="l306"><span class="ln">306  </span></a>_i, _ii, _iii    : Previous, next previous, next next previous input 
+<a name="l307"><span class="ln">307  </span></a>_i4, _ih[2:5]    : Input history line 4, lines 2-4 
+<a name="l308"><span class="ln">308  </span></a>exec(_i81)       : Execute input history line #81 again 
+<a name="l309"><span class="ln">309  </span></a>%rep 81          : Edit input history line #81 
+<a name="l310"><span class="ln">310  </span></a>_, __, ___       : previous, next previous, next next previous output 
+<a name="l311"><span class="ln">311  </span></a>_dh              : Directory history 
+<a name="l312"><span class="ln">312  </span></a>_oh              : Output history 
+<a name="l313"><span class="ln">313  </span></a>%hist            : Command history of current session. 
+<a name="l314"><span class="ln">314  </span></a>%hist -g foo     : Search command history of (almost) all sessions for 'foo'. 
+<a name="l315"><span class="ln">315  </span></a>%hist -g         : Command history of (almost) all sessions. 
+<a name="l316"><span class="ln">316  </span></a>%hist 1/2-8      : Command history containing lines 2-8 of session 1. 
+<a name="l317"><span class="ln">317  </span></a>%hist 1/ ~2/     : Command history of session 1 and 2 sessions before current. 
+<a name="l318"><span class="ln">318  </span></a>%hist ~8/1-~6/5  : Command history from line 1 of 8 sessions ago to 
+<a name="l319"><span class="ln">319  </span></a>                   line 5 of 6 sessions ago. 
+<a name="l320"><span class="ln">320  </span></a>%edit 0/         : Open editor to execute code with history of current session. 
+<a name="l321"><span class="ln">321  </span></a> 
+<a name="l322"><span class="ln">322  </span></a>Autocall: 
+<a name="l323"><span class="ln">323  </span></a> 
+<a name="l324"><span class="ln">324  </span></a>f 1,2            : f(1,2)  # Off by default, enable with %autocall magic. 
+<a name="l325"><span class="ln">325  </span></a>/f 1,2           : f(1,2) (forced autoparen) 
+<a name="l326"><span class="ln">326  </span></a>,f 1 2           : f(&quot;1&quot;,&quot;2&quot;) 
+<a name="l327"><span class="ln">327  </span></a>;f 1 2           : f(&quot;1 2&quot;) 
+<a name="l328"><span class="ln">328  </span></a> 
+<a name="l329"><span class="ln">329  </span></a>Remember: TAB completion works in many contexts, not just file names 
+<a name="l330"><span class="ln">330  </span></a>or python names. 
+<a name="l331"><span class="ln">331  </span></a> 
+<a name="l332"><span class="ln">332  </span></a>The following magic functions are currently available: 
+<a name="l333"><span class="ln">333  </span></a> 
+<a name="l334"><span class="ln">334  </span></a>&quot;&quot;&quot;</span>
+<a name="l335"><span class="ln">335  </span></a>
+<a name="l336"><span class="ln">336  </span></a><span class="s1">default_banner_parts </span><span class="s4">= [</span><span class="s5">&quot;Python %s</span><span class="s3">\n</span><span class="s5">&quot;</span><span class="s4">%</span><span class="s1">sys</span><span class="s4">.</span><span class="s1">version</span><span class="s4">.</span><span class="s1">split</span><span class="s4">(</span><span class="s5">&quot;</span><span class="s3">\n</span><span class="s5">&quot;</span><span class="s4">)[</span><span class="s6">0</span><span class="s4">],</span>
+<a name="l337"><span class="ln">337  </span></a>    <span class="s5">&quot;Type 'copyright', 'credits' or 'license' for more information</span><span class="s3">\n</span><span class="s5">&quot; </span><span class="s4">,</span>
+<a name="l338"><span class="ln">338  </span></a>    <span class="s5">&quot;IPython {version} -- An enhanced Interactive Python. Type '?' for help.</span><span class="s3">\n</span><span class="s5">&quot;</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span><span class="s1">version</span><span class="s4">=</span><span class="s1">release</span><span class="s4">.</span><span class="s1">version</span><span class="s4">),</span>
+<a name="l339"><span class="ln">339  </span></a><span class="s4">]</span>
+<a name="l340"><span class="ln">340  </span></a>
+<a name="l341"><span class="ln">341  </span></a><span class="s1">default_banner </span><span class="s4">= </span><span class="s5">''</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">default_banner_parts</span><span class="s4">)</span>
+<a name="l342"><span class="ln">342  </span></a></pre>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<html>
+<head>
+<title>tempdir.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+tempdir.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot;This module contains classes - NamedFileInTemporaryDirectory, TemporaryWorkingDirectory. 
+<a name="l2"><span class="ln">2    </span></a> 
+<a name="l3"><span class="ln">3    </span></a>These classes add extra features such as creating a named file in temporary directory and 
+<a name="l4"><span class="ln">4    </span></a>creating a context manager for the working directory which is also temporary. 
+<a name="l5"><span class="ln">5    </span></a>&quot;&quot;&quot;</span>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">import </span><span class="s1">os </span><span class="s2">as </span><span class="s1">_os</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s2">from </span><span class="s1">pathlib </span><span class="s2">import </span><span class="s1">Path</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">from </span><span class="s1">tempfile </span><span class="s2">import </span><span class="s1">TemporaryDirectory</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">class </span><span class="s1">NamedFileInTemporaryDirectory</span><span class="s3">:</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">filename</span><span class="s3">, </span><span class="s1">mode</span><span class="s3">, </span><span class="s1">bufsize</span><span class="s3">=-</span><span class="s4">1</span><span class="s3">, </span><span class="s1">add_to_syspath</span><span class="s3">=</span><span class="s2">False</span><span class="s3">, **</span><span class="s1">kwds</span><span class="s3">):</span>
+<a name="l14"><span class="ln">14   </span></a>        <span class="s0">&quot;&quot;&quot; 
+<a name="l15"><span class="ln">15   </span></a>        Open a file named `filename` in a temporary directory. 
+<a name="l16"><span class="ln">16   </span></a> 
+<a name="l17"><span class="ln">17   </span></a>        This context manager is preferred over `NamedTemporaryFile` in 
+<a name="l18"><span class="ln">18   </span></a>        stdlib `tempfile` when one needs to reopen the file. 
+<a name="l19"><span class="ln">19   </span></a> 
+<a name="l20"><span class="ln">20   </span></a>        Arguments `mode` and `bufsize` are passed to `open`. 
+<a name="l21"><span class="ln">21   </span></a>        Rest of the arguments are passed to `TemporaryDirectory`. 
+<a name="l22"><span class="ln">22   </span></a> 
+<a name="l23"><span class="ln">23   </span></a>        &quot;&quot;&quot;</span>
+<a name="l24"><span class="ln">24   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">_tmpdir </span><span class="s3">= </span><span class="s1">TemporaryDirectory</span><span class="s3">(**</span><span class="s1">kwds</span><span class="s3">)</span>
+<a name="l25"><span class="ln">25   </span></a>        <span class="s1">path </span><span class="s3">= </span><span class="s1">Path</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">_tmpdir</span><span class="s3">.</span><span class="s1">name</span><span class="s3">) / </span><span class="s1">filename</span>
+<a name="l26"><span class="ln">26   </span></a>        <span class="s1">encoding </span><span class="s3">= </span><span class="s2">None if </span><span class="s5">&quot;b&quot; </span><span class="s2">in </span><span class="s1">mode </span><span class="s2">else </span><span class="s5">&quot;utf-8&quot;</span>
+<a name="l27"><span class="ln">27   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">file </span><span class="s3">= </span><span class="s1">open</span><span class="s3">(</span><span class="s1">path</span><span class="s3">, </span><span class="s1">mode</span><span class="s3">, </span><span class="s1">bufsize</span><span class="s3">, </span><span class="s1">encoding</span><span class="s3">=</span><span class="s1">encoding</span><span class="s3">)</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s2">def </span><span class="s1">cleanup</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l30"><span class="ln">30   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">file</span><span class="s3">.</span><span class="s1">close</span><span class="s3">()</span>
+<a name="l31"><span class="ln">31   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">_tmpdir</span><span class="s3">.</span><span class="s1">cleanup</span><span class="s3">()</span>
+<a name="l32"><span class="ln">32   </span></a>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s1">__del__ </span><span class="s3">= </span><span class="s1">cleanup</span>
+<a name="l34"><span class="ln">34   </span></a>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s2">def </span><span class="s1">__enter__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l36"><span class="ln">36   </span></a>        <span class="s2">return </span><span class="s1">self</span><span class="s3">.</span><span class="s1">file</span>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s2">def </span><span class="s1">__exit__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">type</span><span class="s3">, </span><span class="s1">value</span><span class="s3">, </span><span class="s1">traceback</span><span class="s3">):</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">cleanup</span><span class="s3">()</span>
+<a name="l40"><span class="ln">40   </span></a>
+<a name="l41"><span class="ln">41   </span></a>
+<a name="l42"><span class="ln">42   </span></a><span class="s2">class </span><span class="s1">TemporaryWorkingDirectory</span><span class="s3">(</span><span class="s1">TemporaryDirectory</span><span class="s3">):</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l44"><span class="ln">44   </span></a>    Creates a temporary directory and sets the cwd to that directory. 
+<a name="l45"><span class="ln">45   </span></a>    Automatically reverts to previous cwd upon cleanup. 
+<a name="l46"><span class="ln">46   </span></a>    Usage example: 
+<a name="l47"><span class="ln">47   </span></a> 
+<a name="l48"><span class="ln">48   </span></a>        with TemporaryWorkingDirectory() as tmpdir: 
+<a name="l49"><span class="ln">49   </span></a>            ... 
+<a name="l50"><span class="ln">50   </span></a>    &quot;&quot;&quot;</span>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a>    <span class="s2">def </span><span class="s1">__enter__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">old_wd </span><span class="s3">= </span><span class="s1">Path</span><span class="s3">.</span><span class="s1">cwd</span><span class="s3">()</span>
+<a name="l54"><span class="ln">54   </span></a>        <span class="s1">_os</span><span class="s3">.</span><span class="s1">chdir</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">name</span><span class="s3">)</span>
+<a name="l55"><span class="ln">55   </span></a>        <span class="s2">return </span><span class="s1">super</span><span class="s3">(</span><span class="s1">TemporaryWorkingDirectory</span><span class="s3">, </span><span class="s1">self</span><span class="s3">).</span><span class="s1">__enter__</span><span class="s3">()</span>
+<a name="l56"><span class="ln">56   </span></a>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s2">def </span><span class="s1">__exit__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">exc</span><span class="s3">, </span><span class="s1">value</span><span class="s3">, </span><span class="s1">tb</span><span class="s3">):</span>
+<a name="l58"><span class="ln">58   </span></a>        <span class="s1">_os</span><span class="s3">.</span><span class="s1">chdir</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">old_wd</span><span class="s3">)</span>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s2">return </span><span class="s1">super</span><span class="s3">(</span><span class="s1">TemporaryWorkingDirectory</span><span class="s3">, </span><span class="s1">self</span><span class="s3">).</span><span class="s1">__exit__</span><span class="s3">(</span><span class="s1">exc</span><span class="s3">, </span><span class="s1">value</span><span class="s3">, </span><span class="s1">tb</span><span class="s3">)</span>
+<a name="l60"><span class="ln">60   </span></a></pre>
+</body>
+</html>

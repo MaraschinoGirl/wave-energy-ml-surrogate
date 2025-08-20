@@ -1,0 +1,131 @@
+<html>
+<head>
+<title>builtins.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #cf8e6d;}
+.s5 { color: #5f826b; font-style: italic;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+builtins.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># This file is part of Patsy</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># Copyright (C) 2011-2013 Nathaniel Smith &lt;njs@pobox.com&gt;</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0"># See file LICENSE.txt for license information.</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s0"># This module sets up the namespace of stuff that is available to formulas by</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0"># default. All formulas are interpreted in an environment that acts as if</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">#   from patsy.builtins import *</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0"># has been executed. (Of course, you can also execute this yourself if you</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0"># want to use these in your regular code for some reason.)</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s1">__all__ </span><span class="s2">= [</span><span class="s3">&quot;I&quot;</span><span class="s2">, </span><span class="s3">&quot;Q&quot;</span><span class="s2">]</span>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a><span class="s4">from </span><span class="s1">patsy</span><span class="s2">.</span><span class="s1">contrasts </span><span class="s4">import </span><span class="s1">ContrastMatrix</span><span class="s2">, </span><span class="s1">Treatment</span><span class="s2">, </span><span class="s1">Poly</span><span class="s2">, </span><span class="s1">Sum</span><span class="s2">, </span><span class="s1">Helmert</span><span class="s2">, </span><span class="s1">Diff</span>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a><span class="s1">__all__ </span><span class="s2">+= [</span><span class="s3">&quot;ContrastMatrix&quot;</span><span class="s2">, </span><span class="s3">&quot;Treatment&quot;</span><span class="s2">, </span><span class="s3">&quot;Poly&quot;</span><span class="s2">, </span><span class="s3">&quot;Sum&quot;</span><span class="s2">, </span><span class="s3">&quot;Helmert&quot;</span><span class="s2">, </span><span class="s3">&quot;Diff&quot;</span><span class="s2">]</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s4">from </span><span class="s1">patsy</span><span class="s2">.</span><span class="s1">categorical </span><span class="s4">import </span><span class="s1">C</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a><span class="s1">__all__ </span><span class="s2">+= [</span><span class="s3">&quot;C&quot;</span><span class="s2">]</span>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a><span class="s4">from </span><span class="s1">patsy</span><span class="s2">.</span><span class="s1">state </span><span class="s4">import </span><span class="s1">center</span><span class="s2">, </span><span class="s1">standardize</span><span class="s2">, </span><span class="s1">scale</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a><span class="s1">__all__ </span><span class="s2">+= [</span><span class="s3">&quot;center&quot;</span><span class="s2">, </span><span class="s3">&quot;standardize&quot;</span><span class="s2">, </span><span class="s3">&quot;scale&quot;</span><span class="s2">]</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a><span class="s4">from </span><span class="s1">patsy</span><span class="s2">.</span><span class="s1">splines </span><span class="s4">import </span><span class="s1">bs</span>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a><span class="s1">__all__ </span><span class="s2">+= [</span><span class="s3">&quot;bs&quot;</span><span class="s2">]</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a><span class="s4">from </span><span class="s1">patsy</span><span class="s2">.</span><span class="s1">mgcv_cubic_splines </span><span class="s4">import </span><span class="s1">cr</span><span class="s2">, </span><span class="s1">cc</span><span class="s2">, </span><span class="s1">te</span>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a><span class="s1">__all__ </span><span class="s2">+= [</span><span class="s3">&quot;cr&quot;</span><span class="s2">, </span><span class="s3">&quot;cc&quot;</span><span class="s2">, </span><span class="s3">&quot;te&quot;</span><span class="s2">]</span>
+<a name="l32"><span class="ln">32   </span></a>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a><span class="s4">def </span><span class="s1">I</span><span class="s2">(</span><span class="s1">x</span><span class="s2">):</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s5">&quot;&quot;&quot;The identity function. Simply returns its input unchanged. 
+<a name="l36"><span class="ln">36   </span></a> 
+<a name="l37"><span class="ln">37   </span></a>    Since Patsy's formula parser ignores anything inside a function call 
+<a name="l38"><span class="ln">38   </span></a>    syntax, this is useful to 'hide' arithmetic operations from it. For 
+<a name="l39"><span class="ln">39   </span></a>    instance:: 
+<a name="l40"><span class="ln">40   </span></a> 
+<a name="l41"><span class="ln">41   </span></a>      y ~ x1 + x2 
+<a name="l42"><span class="ln">42   </span></a> 
+<a name="l43"><span class="ln">43   </span></a>    has ``x1`` and ``x2`` as two separate predictors. But in:: 
+<a name="l44"><span class="ln">44   </span></a> 
+<a name="l45"><span class="ln">45   </span></a>      y ~ I(x1 + x2) 
+<a name="l46"><span class="ln">46   </span></a> 
+<a name="l47"><span class="ln">47   </span></a>    we instead have a single predictor, defined to be the sum of ``x1`` and 
+<a name="l48"><span class="ln">48   </span></a>    ``x2``.&quot;&quot;&quot;</span>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s4">return </span><span class="s1">x</span>
+<a name="l50"><span class="ln">50   </span></a>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a><span class="s4">def </span><span class="s1">test_I</span><span class="s2">():</span>
+<a name="l53"><span class="ln">53   </span></a>    <span class="s4">assert </span><span class="s1">I</span><span class="s2">(</span><span class="s6">1</span><span class="s2">) == </span><span class="s6">1</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s4">assert </span><span class="s1">I</span><span class="s2">(</span><span class="s4">None</span><span class="s2">) </span><span class="s4">is None</span>
+<a name="l55"><span class="ln">55   </span></a>
+<a name="l56"><span class="ln">56   </span></a>
+<a name="l57"><span class="ln">57   </span></a><span class="s4">def </span><span class="s1">Q</span><span class="s2">(</span><span class="s1">name</span><span class="s2">):</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s5">&quot;&quot;&quot;A way to 'quote' variable names, especially ones that do not otherwise 
+<a name="l59"><span class="ln">59   </span></a>    meet Python's variable name rules. 
+<a name="l60"><span class="ln">60   </span></a> 
+<a name="l61"><span class="ln">61   </span></a>    If ``x`` is a variable, ``Q(&quot;x&quot;)`` returns the value of ``x``. (Note that 
+<a name="l62"><span class="ln">62   </span></a>    ``Q`` takes the *string* ``&quot;x&quot;``, not the value of ``x`` itself.) This 
+<a name="l63"><span class="ln">63   </span></a>    works even if instead of ``x``, we have a variable name that would not 
+<a name="l64"><span class="ln">64   </span></a>    otherwise be legal in Python. 
+<a name="l65"><span class="ln">65   </span></a> 
+<a name="l66"><span class="ln">66   </span></a>    For example, if you have a column of data named ``weight.in.kg``, then you 
+<a name="l67"><span class="ln">67   </span></a>    can't write:: 
+<a name="l68"><span class="ln">68   </span></a> 
+<a name="l69"><span class="ln">69   </span></a>      y ~ weight.in.kg 
+<a name="l70"><span class="ln">70   </span></a> 
+<a name="l71"><span class="ln">71   </span></a>    because Python will try to find a variable named ``weight``, that has an 
+<a name="l72"><span class="ln">72   </span></a>    attribute named ``in``, that has an attribute named ``kg``. (And worse 
+<a name="l73"><span class="ln">73   </span></a>    yet, ``in`` is a reserved word, which makes this example doubly broken.) 
+<a name="l74"><span class="ln">74   </span></a>    Instead, write:: 
+<a name="l75"><span class="ln">75   </span></a> 
+<a name="l76"><span class="ln">76   </span></a>      y ~ Q(&quot;weight.in.kg&quot;) 
+<a name="l77"><span class="ln">77   </span></a> 
+<a name="l78"><span class="ln">78   </span></a>    and all will be well. Note, though, that this requires embedding a Python 
+<a name="l79"><span class="ln">79   </span></a>    string inside your formula, which may require some care with your quote 
+<a name="l80"><span class="ln">80   </span></a>    marks. Some standard options include:: 
+<a name="l81"><span class="ln">81   </span></a> 
+<a name="l82"><span class="ln">82   </span></a>      my_fit_function(&quot;y ~ Q('weight.in.kg')&quot;, ...) 
+<a name="l83"><span class="ln">83   </span></a>      my_fit_function('y ~ Q(&quot;weight.in.kg&quot;)', ...) 
+<a name="l84"><span class="ln">84   </span></a>      my_fit_function(&quot;y ~ Q(\\&quot;weight.in.kg\\&quot;)&quot;, ...) 
+<a name="l85"><span class="ln">85   </span></a> 
+<a name="l86"><span class="ln">86   </span></a>    Note also that ``Q`` is an ordinary Python function, which means that you 
+<a name="l87"><span class="ln">87   </span></a>    can use it in more complex expressions. For example, this is a legal 
+<a name="l88"><span class="ln">88   </span></a>    formula:: 
+<a name="l89"><span class="ln">89   </span></a> 
+<a name="l90"><span class="ln">90   </span></a>      y ~ np.sqrt(Q(&quot;weight.in.kg&quot;)) 
+<a name="l91"><span class="ln">91   </span></a>    &quot;&quot;&quot;</span>
+<a name="l92"><span class="ln">92   </span></a>    <span class="s4">from </span><span class="s1">patsy</span><span class="s2">.</span><span class="s1">eval </span><span class="s4">import </span><span class="s1">EvalEnvironment</span>
+<a name="l93"><span class="ln">93   </span></a>
+<a name="l94"><span class="ln">94   </span></a>    <span class="s1">env </span><span class="s2">= </span><span class="s1">EvalEnvironment</span><span class="s2">.</span><span class="s1">capture</span><span class="s2">(</span><span class="s6">1</span><span class="s2">)</span>
+<a name="l95"><span class="ln">95   </span></a>    <span class="s4">try</span><span class="s2">:</span>
+<a name="l96"><span class="ln">96   </span></a>        <span class="s4">return </span><span class="s1">env</span><span class="s2">.</span><span class="s1">namespace</span><span class="s2">[</span><span class="s1">name</span><span class="s2">]</span>
+<a name="l97"><span class="ln">97   </span></a>    <span class="s4">except </span><span class="s1">KeyError</span><span class="s2">:</span>
+<a name="l98"><span class="ln">98   </span></a>        <span class="s4">raise </span><span class="s1">NameError</span><span class="s2">(</span><span class="s3">&quot;no data named %r found&quot; </span><span class="s2">% (</span><span class="s1">name</span><span class="s2">,))</span>
+<a name="l99"><span class="ln">99   </span></a>
+<a name="l100"><span class="ln">100  </span></a>
+<a name="l101"><span class="ln">101  </span></a><span class="s4">def </span><span class="s1">test_Q</span><span class="s2">():</span>
+<a name="l102"><span class="ln">102  </span></a>    <span class="s1">a </span><span class="s2">= </span><span class="s6">1</span>
+<a name="l103"><span class="ln">103  </span></a>    <span class="s4">assert </span><span class="s1">Q</span><span class="s2">(</span><span class="s3">&quot;a&quot;</span><span class="s2">) == </span><span class="s6">1</span>
+<a name="l104"><span class="ln">104  </span></a>    <span class="s4">assert </span><span class="s1">Q</span><span class="s2">(</span><span class="s3">&quot;Q&quot;</span><span class="s2">) </span><span class="s4">is </span><span class="s1">Q</span>
+<a name="l105"><span class="ln">105  </span></a>    <span class="s4">import </span><span class="s1">pytest</span>
+<a name="l106"><span class="ln">106  </span></a>
+<a name="l107"><span class="ln">107  </span></a>    <span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">NameError</span><span class="s2">, </span><span class="s1">Q</span><span class="s2">, </span><span class="s3">&quot;asdfsadfdsad&quot;</span><span class="s2">)</span>
+<a name="l108"><span class="ln">108  </span></a></pre>
+</body>
+</html>

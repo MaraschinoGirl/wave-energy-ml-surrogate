@@ -1,0 +1,1006 @@
+<html>
+<head>
+<title>relational.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #2aacb8;}
+.s6 { color: #5f826b; font-style: italic;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+relational.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">functools </span><span class="s0">import </span><span class="s1">partial</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">import </span><span class="s1">warnings</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">import </span><span class="s1">pandas </span><span class="s0">as </span><span class="s1">pd</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">import </span><span class="s1">matplotlib </span><span class="s0">as </span><span class="s1">mpl</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">import </span><span class="s1">matplotlib</span><span class="s2">.</span><span class="s1">pyplot </span><span class="s0">as </span><span class="s1">plt</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">from </span><span class="s1">matplotlib</span><span class="s2">.</span><span class="s1">cbook </span><span class="s0">import </span><span class="s1">normalize_kwargs</span>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">from </span><span class="s2">.</span><span class="s1">_base </span><span class="s0">import </span><span class="s2">(</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s1">VectorPlotter</span><span class="s2">,</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">)</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s0">from </span><span class="s2">.</span><span class="s1">utils </span><span class="s0">import </span><span class="s2">(</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s1">adjust_legend_subtitles</span><span class="s2">,</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s1">_default_color</span><span class="s2">,</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s1">_deprecate_ci</span><span class="s2">,</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s1">_get_transform_functions</span><span class="s2">,</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s1">_scatter_legend_artist</span><span class="s2">,</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s2">)</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s0">from </span><span class="s2">.</span><span class="s1">_compat </span><span class="s0">import </span><span class="s1">groupby_apply_include_groups</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s0">from </span><span class="s2">.</span><span class="s1">_statistics </span><span class="s0">import </span><span class="s1">EstimateAggregator</span><span class="s2">, </span><span class="s1">WeightedAggregator</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s0">from </span><span class="s2">.</span><span class="s1">axisgrid </span><span class="s0">import </span><span class="s1">FacetGrid</span><span class="s2">, </span><span class="s1">_facet_docs</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s0">from </span><span class="s2">.</span><span class="s1">_docstrings </span><span class="s0">import </span><span class="s1">DocstringComponents</span><span class="s2">, </span><span class="s1">_core_docs</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a>
+<a name="l26"><span class="ln">26   </span></a><span class="s1">__all__ </span><span class="s2">= [</span><span class="s3">&quot;relplot&quot;</span><span class="s2">, </span><span class="s3">&quot;scatterplot&quot;</span><span class="s2">, </span><span class="s3">&quot;lineplot&quot;</span><span class="s2">]</span>
+<a name="l27"><span class="ln">27   </span></a>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a><span class="s1">_relational_narrative </span><span class="s2">= </span><span class="s1">DocstringComponents</span><span class="s2">(</span><span class="s1">dict</span><span class="s2">(</span>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s4"># ---  Introductory prose</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">main_api</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l33"><span class="ln">33   </span></a>The relationship between `x` and `y` can be shown for different subsets 
+<a name="l34"><span class="ln">34   </span></a>of the data using the `hue`, `size`, and `style` parameters. These 
+<a name="l35"><span class="ln">35   </span></a>parameters control what visual semantics are used to identify the different 
+<a name="l36"><span class="ln">36   </span></a>subsets. It is possible to show up to three dimensions independently by 
+<a name="l37"><span class="ln">37   </span></a>using all three semantic types, but this style of plot can be hard to 
+<a name="l38"><span class="ln">38   </span></a>interpret and is often ineffective. Using redundant semantics (i.e. both 
+<a name="l39"><span class="ln">39   </span></a>`hue` and `style` for the same variable) can be helpful for making 
+<a name="l40"><span class="ln">40   </span></a>graphics more accessible. 
+<a name="l41"><span class="ln">41   </span></a> 
+<a name="l42"><span class="ln">42   </span></a>See the :ref:`tutorial &lt;relational_tutorial&gt;` for more information. 
+<a name="l43"><span class="ln">43   </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l44"><span class="ln">44   </span></a>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s1">relational_semantic</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l46"><span class="ln">46   </span></a>The default treatment of the `hue` (and to a lesser extent, `size`) 
+<a name="l47"><span class="ln">47   </span></a>semantic, if present, depends on whether the variable is inferred to 
+<a name="l48"><span class="ln">48   </span></a>represent &quot;numeric&quot; or &quot;categorical&quot; data. In particular, numeric variables 
+<a name="l49"><span class="ln">49   </span></a>are represented with a sequential colormap by default, and the legend 
+<a name="l50"><span class="ln">50   </span></a>entries show regular &quot;ticks&quot; with values that may or may not exist in the 
+<a name="l51"><span class="ln">51   </span></a>data. This behavior can be controlled through various parameters, as 
+<a name="l52"><span class="ln">52   </span></a>described and illustrated below. 
+<a name="l53"><span class="ln">53   </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l54"><span class="ln">54   </span></a><span class="s2">))</span>
+<a name="l55"><span class="ln">55   </span></a>
+<a name="l56"><span class="ln">56   </span></a><span class="s1">_relational_docs </span><span class="s2">= </span><span class="s1">dict</span><span class="s2">(</span>
+<a name="l57"><span class="ln">57   </span></a>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s4"># --- Shared function parameters</span>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s1">data_vars</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l60"><span class="ln">60   </span></a>x, y : names of variables in `data` or vector data 
+<a name="l61"><span class="ln">61   </span></a>    Input data variables; must be numeric. Can pass data directly or 
+<a name="l62"><span class="ln">62   </span></a>    reference columns in `data`. 
+<a name="l63"><span class="ln">63   </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l64"><span class="ln">64   </span></a>    <span class="s1">data</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l65"><span class="ln">65   </span></a>data : DataFrame, array, or list of arrays 
+<a name="l66"><span class="ln">66   </span></a>    Input data structure. If `x` and `y` are specified as names, this 
+<a name="l67"><span class="ln">67   </span></a>    should be a &quot;long-form&quot; DataFrame containing those columns. Otherwise 
+<a name="l68"><span class="ln">68   </span></a>    it is treated as &quot;wide-form&quot; data and grouping variables are ignored. 
+<a name="l69"><span class="ln">69   </span></a>    See the examples for the various ways this parameter can be specified 
+<a name="l70"><span class="ln">70   </span></a>    and the different effects of each. 
+<a name="l71"><span class="ln">71   </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s1">palette</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l73"><span class="ln">73   </span></a>palette : string, list, dict, or matplotlib colormap 
+<a name="l74"><span class="ln">74   </span></a>    An object that determines how colors are chosen when `hue` is used. 
+<a name="l75"><span class="ln">75   </span></a>    It can be the name of a seaborn palette or matplotlib colormap, a list 
+<a name="l76"><span class="ln">76   </span></a>    of colors (anything matplotlib understands), a dict mapping levels 
+<a name="l77"><span class="ln">77   </span></a>    of the `hue` variable to colors, or a matplotlib colormap object. 
+<a name="l78"><span class="ln">78   </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l79"><span class="ln">79   </span></a>    <span class="s1">hue_order</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l80"><span class="ln">80   </span></a>hue_order : list 
+<a name="l81"><span class="ln">81   </span></a>    Specified order for the appearance of the `hue` variable levels, 
+<a name="l82"><span class="ln">82   </span></a>    otherwise they are determined from the data. Not relevant when the 
+<a name="l83"><span class="ln">83   </span></a>    `hue` variable is numeric. 
+<a name="l84"><span class="ln">84   </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l85"><span class="ln">85   </span></a>    <span class="s1">hue_norm</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l86"><span class="ln">86   </span></a>hue_norm : tuple or :class:`matplotlib.colors.Normalize` object 
+<a name="l87"><span class="ln">87   </span></a>    Normalization in data units for colormap applied to the `hue` 
+<a name="l88"><span class="ln">88   </span></a>    variable when it is numeric. Not relevant if `hue` is categorical. 
+<a name="l89"><span class="ln">89   </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l90"><span class="ln">90   </span></a>    <span class="s1">sizes</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l91"><span class="ln">91   </span></a>sizes : list, dict, or tuple 
+<a name="l92"><span class="ln">92   </span></a>    An object that determines how sizes are chosen when `size` is used. 
+<a name="l93"><span class="ln">93   </span></a>    List or dict arguments should provide a size for each unique data value, 
+<a name="l94"><span class="ln">94   </span></a>    which forces a categorical interpretation. The argument may also be a 
+<a name="l95"><span class="ln">95   </span></a>    min, max tuple. 
+<a name="l96"><span class="ln">96   </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l97"><span class="ln">97   </span></a>    <span class="s1">size_order</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l98"><span class="ln">98   </span></a>size_order : list 
+<a name="l99"><span class="ln">99   </span></a>    Specified order for appearance of the `size` variable levels, 
+<a name="l100"><span class="ln">100  </span></a>    otherwise they are determined from the data. Not relevant when the 
+<a name="l101"><span class="ln">101  </span></a>    `size` variable is numeric. 
+<a name="l102"><span class="ln">102  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l103"><span class="ln">103  </span></a>    <span class="s1">size_norm</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l104"><span class="ln">104  </span></a>size_norm : tuple or Normalize object 
+<a name="l105"><span class="ln">105  </span></a>    Normalization in data units for scaling plot objects when the 
+<a name="l106"><span class="ln">106  </span></a>    `size` variable is numeric. 
+<a name="l107"><span class="ln">107  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l108"><span class="ln">108  </span></a>    <span class="s1">dashes</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l109"><span class="ln">109  </span></a>dashes : boolean, list, or dictionary 
+<a name="l110"><span class="ln">110  </span></a>    Object determining how to draw the lines for different levels of the 
+<a name="l111"><span class="ln">111  </span></a>    `style` variable. Setting to `True` will use default dash codes, or 
+<a name="l112"><span class="ln">112  </span></a>    you can pass a list of dash codes or a dictionary mapping levels of the 
+<a name="l113"><span class="ln">113  </span></a>    `style` variable to dash codes. Setting to `False` will use solid 
+<a name="l114"><span class="ln">114  </span></a>    lines for all subsets. Dashes are specified as in matplotlib: a tuple 
+<a name="l115"><span class="ln">115  </span></a>    of `(segment, gap)` lengths, or an empty string to draw a solid line. 
+<a name="l116"><span class="ln">116  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l117"><span class="ln">117  </span></a>    <span class="s1">markers</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l118"><span class="ln">118  </span></a>markers : boolean, list, or dictionary 
+<a name="l119"><span class="ln">119  </span></a>    Object determining how to draw the markers for different levels of the 
+<a name="l120"><span class="ln">120  </span></a>    `style` variable. Setting to `True` will use default markers, or 
+<a name="l121"><span class="ln">121  </span></a>    you can pass a list of markers or a dictionary mapping levels of the 
+<a name="l122"><span class="ln">122  </span></a>    `style` variable to markers. Setting to `False` will draw 
+<a name="l123"><span class="ln">123  </span></a>    marker-less lines.  Markers are specified as in matplotlib. 
+<a name="l124"><span class="ln">124  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l125"><span class="ln">125  </span></a>    <span class="s1">style_order</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l126"><span class="ln">126  </span></a>style_order : list 
+<a name="l127"><span class="ln">127  </span></a>    Specified order for appearance of the `style` variable levels 
+<a name="l128"><span class="ln">128  </span></a>    otherwise they are determined from the data. Not relevant when the 
+<a name="l129"><span class="ln">129  </span></a>    `style` variable is numeric. 
+<a name="l130"><span class="ln">130  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l131"><span class="ln">131  </span></a>    <span class="s1">units</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l132"><span class="ln">132  </span></a>units : vector or key in `data` 
+<a name="l133"><span class="ln">133  </span></a>    Grouping variable identifying sampling units. When used, a separate 
+<a name="l134"><span class="ln">134  </span></a>    line will be drawn for each unit with appropriate semantics, but no 
+<a name="l135"><span class="ln">135  </span></a>    legend entry will be added. Useful for showing distribution of 
+<a name="l136"><span class="ln">136  </span></a>    experimental replicates when exact identities are not needed. 
+<a name="l137"><span class="ln">137  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l138"><span class="ln">138  </span></a>    <span class="s1">estimator</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l139"><span class="ln">139  </span></a>estimator : name of pandas method or callable or None 
+<a name="l140"><span class="ln">140  </span></a>    Method for aggregating across multiple observations of the `y` 
+<a name="l141"><span class="ln">141  </span></a>    variable at the same `x` level. If `None`, all observations will 
+<a name="l142"><span class="ln">142  </span></a>    be drawn. 
+<a name="l143"><span class="ln">143  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l144"><span class="ln">144  </span></a>    <span class="s1">ci</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l145"><span class="ln">145  </span></a>ci : int or &quot;sd&quot; or None 
+<a name="l146"><span class="ln">146  </span></a>    Size of the confidence interval to draw when aggregating. 
+<a name="l147"><span class="ln">147  </span></a> 
+<a name="l148"><span class="ln">148  </span></a>    .. deprecated:: 0.12.0 
+<a name="l149"><span class="ln">149  </span></a>        Use the new `errorbar` parameter for more flexibility. 
+<a name="l150"><span class="ln">150  </span></a> 
+<a name="l151"><span class="ln">151  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l152"><span class="ln">152  </span></a>    <span class="s1">n_boot</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l153"><span class="ln">153  </span></a>n_boot : int 
+<a name="l154"><span class="ln">154  </span></a>    Number of bootstraps to use for computing the confidence interval. 
+<a name="l155"><span class="ln">155  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l156"><span class="ln">156  </span></a>    <span class="s1">seed</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l157"><span class="ln">157  </span></a>seed : int, numpy.random.Generator, or numpy.random.RandomState 
+<a name="l158"><span class="ln">158  </span></a>    Seed or random number generator for reproducible bootstrapping. 
+<a name="l159"><span class="ln">159  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l160"><span class="ln">160  </span></a>    <span class="s1">legend</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l161"><span class="ln">161  </span></a>legend : &quot;auto&quot;, &quot;brief&quot;, &quot;full&quot;, or False 
+<a name="l162"><span class="ln">162  </span></a>    How to draw the legend. If &quot;brief&quot;, numeric `hue` and `size` 
+<a name="l163"><span class="ln">163  </span></a>    variables will be represented with a sample of evenly spaced values. 
+<a name="l164"><span class="ln">164  </span></a>    If &quot;full&quot;, every group will get an entry in the legend. If &quot;auto&quot;, 
+<a name="l165"><span class="ln">165  </span></a>    choose between brief or full representation based on number of levels. 
+<a name="l166"><span class="ln">166  </span></a>    If `False`, no legend data is added and no legend is drawn. 
+<a name="l167"><span class="ln">167  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l168"><span class="ln">168  </span></a>    <span class="s1">ax_in</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l169"><span class="ln">169  </span></a>ax : matplotlib Axes 
+<a name="l170"><span class="ln">170  </span></a>    Axes object to draw the plot onto, otherwise uses the current Axes. 
+<a name="l171"><span class="ln">171  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l172"><span class="ln">172  </span></a>    <span class="s1">ax_out</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l173"><span class="ln">173  </span></a>ax : matplotlib Axes 
+<a name="l174"><span class="ln">174  </span></a>    Returns the Axes object with the plot drawn onto it. 
+<a name="l175"><span class="ln">175  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l176"><span class="ln">176  </span></a>
+<a name="l177"><span class="ln">177  </span></a><span class="s2">)</span>
+<a name="l178"><span class="ln">178  </span></a>
+<a name="l179"><span class="ln">179  </span></a>
+<a name="l180"><span class="ln">180  </span></a><span class="s1">_param_docs </span><span class="s2">= </span><span class="s1">DocstringComponents</span><span class="s2">.</span><span class="s1">from_nested_components</span><span class="s2">(</span>
+<a name="l181"><span class="ln">181  </span></a>    <span class="s1">core</span><span class="s2">=</span><span class="s1">_core_docs</span><span class="s2">[</span><span class="s3">&quot;params&quot;</span><span class="s2">],</span>
+<a name="l182"><span class="ln">182  </span></a>    <span class="s1">facets</span><span class="s2">=</span><span class="s1">DocstringComponents</span><span class="s2">(</span><span class="s1">_facet_docs</span><span class="s2">),</span>
+<a name="l183"><span class="ln">183  </span></a>    <span class="s1">rel</span><span class="s2">=</span><span class="s1">DocstringComponents</span><span class="s2">(</span><span class="s1">_relational_docs</span><span class="s2">),</span>
+<a name="l184"><span class="ln">184  </span></a>    <span class="s1">stat</span><span class="s2">=</span><span class="s1">DocstringComponents</span><span class="s2">.</span><span class="s1">from_function_params</span><span class="s2">(</span><span class="s1">EstimateAggregator</span><span class="s2">.</span><span class="s1">__init__</span><span class="s2">),</span>
+<a name="l185"><span class="ln">185  </span></a><span class="s2">)</span>
+<a name="l186"><span class="ln">186  </span></a>
+<a name="l187"><span class="ln">187  </span></a>
+<a name="l188"><span class="ln">188  </span></a><span class="s0">class </span><span class="s1">_RelationalPlotter</span><span class="s2">(</span><span class="s1">VectorPlotter</span><span class="s2">):</span>
+<a name="l189"><span class="ln">189  </span></a>
+<a name="l190"><span class="ln">190  </span></a>    <span class="s1">wide_structure </span><span class="s2">= {</span>
+<a name="l191"><span class="ln">191  </span></a>        <span class="s3">&quot;x&quot;</span><span class="s2">: </span><span class="s3">&quot;@index&quot;</span><span class="s2">, </span><span class="s3">&quot;y&quot;</span><span class="s2">: </span><span class="s3">&quot;@values&quot;</span><span class="s2">, </span><span class="s3">&quot;hue&quot;</span><span class="s2">: </span><span class="s3">&quot;@columns&quot;</span><span class="s2">, </span><span class="s3">&quot;style&quot;</span><span class="s2">: </span><span class="s3">&quot;@columns&quot;</span><span class="s2">,</span>
+<a name="l192"><span class="ln">192  </span></a>    <span class="s2">}</span>
+<a name="l193"><span class="ln">193  </span></a>
+<a name="l194"><span class="ln">194  </span></a>    <span class="s4"># TODO where best to define default parameters?</span>
+<a name="l195"><span class="ln">195  </span></a>    <span class="s1">sort </span><span class="s2">= </span><span class="s0">True</span>
+<a name="l196"><span class="ln">196  </span></a>
+<a name="l197"><span class="ln">197  </span></a>
+<a name="l198"><span class="ln">198  </span></a><span class="s0">class </span><span class="s1">_LinePlotter</span><span class="s2">(</span><span class="s1">_RelationalPlotter</span><span class="s2">):</span>
+<a name="l199"><span class="ln">199  </span></a>
+<a name="l200"><span class="ln">200  </span></a>    <span class="s1">_legend_attributes </span><span class="s2">= [</span><span class="s3">&quot;color&quot;</span><span class="s2">, </span><span class="s3">&quot;linewidth&quot;</span><span class="s2">, </span><span class="s3">&quot;marker&quot;</span><span class="s2">, </span><span class="s3">&quot;dashes&quot;</span><span class="s2">]</span>
+<a name="l201"><span class="ln">201  </span></a>
+<a name="l202"><span class="ln">202  </span></a>    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span>
+<a name="l203"><span class="ln">203  </span></a>        <span class="s1">self</span><span class="s2">, *,</span>
+<a name="l204"><span class="ln">204  </span></a>        <span class="s1">data</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">variables</span><span class="s2">={},</span>
+<a name="l205"><span class="ln">205  </span></a>        <span class="s1">estimator</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">n_boot</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">seed</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">errorbar</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l206"><span class="ln">206  </span></a>        <span class="s1">sort</span><span class="s2">=</span><span class="s0">True</span><span class="s2">, </span><span class="s1">orient</span><span class="s2">=</span><span class="s3">&quot;x&quot;</span><span class="s2">, </span><span class="s1">err_style</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">err_kws</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">legend</span><span class="s2">=</span><span class="s0">None</span>
+<a name="l207"><span class="ln">207  </span></a>    <span class="s2">):</span>
+<a name="l208"><span class="ln">208  </span></a>
+<a name="l209"><span class="ln">209  </span></a>        <span class="s4"># TODO this is messy, we want the mapping to be agnostic about</span>
+<a name="l210"><span class="ln">210  </span></a>        <span class="s4"># the kind of plot to draw, but for the time being we need to set</span>
+<a name="l211"><span class="ln">211  </span></a>        <span class="s4"># this information so the SizeMapping can use it</span>
+<a name="l212"><span class="ln">212  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">_default_size_range </span><span class="s2">= (</span>
+<a name="l213"><span class="ln">213  </span></a>            <span class="s1">np</span><span class="s2">.</span><span class="s1">r_</span><span class="s2">[</span><span class="s5">.5</span><span class="s2">, </span><span class="s5">2</span><span class="s2">] * </span><span class="s1">mpl</span><span class="s2">.</span><span class="s1">rcParams</span><span class="s2">[</span><span class="s3">&quot;lines.linewidth&quot;</span><span class="s2">]</span>
+<a name="l214"><span class="ln">214  </span></a>        <span class="s2">)</span>
+<a name="l215"><span class="ln">215  </span></a>
+<a name="l216"><span class="ln">216  </span></a>        <span class="s1">super</span><span class="s2">().</span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">data</span><span class="s2">=</span><span class="s1">data</span><span class="s2">, </span><span class="s1">variables</span><span class="s2">=</span><span class="s1">variables</span><span class="s2">)</span>
+<a name="l217"><span class="ln">217  </span></a>
+<a name="l218"><span class="ln">218  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">estimator </span><span class="s2">= </span><span class="s1">estimator</span>
+<a name="l219"><span class="ln">219  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">errorbar </span><span class="s2">= </span><span class="s1">errorbar</span>
+<a name="l220"><span class="ln">220  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">n_boot </span><span class="s2">= </span><span class="s1">n_boot</span>
+<a name="l221"><span class="ln">221  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">seed </span><span class="s2">= </span><span class="s1">seed</span>
+<a name="l222"><span class="ln">222  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">sort </span><span class="s2">= </span><span class="s1">sort</span>
+<a name="l223"><span class="ln">223  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">orient </span><span class="s2">= </span><span class="s1">orient</span>
+<a name="l224"><span class="ln">224  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">err_style </span><span class="s2">= </span><span class="s1">err_style</span>
+<a name="l225"><span class="ln">225  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">err_kws </span><span class="s2">= {} </span><span class="s0">if </span><span class="s1">err_kws </span><span class="s0">is None else </span><span class="s1">err_kws</span>
+<a name="l226"><span class="ln">226  </span></a>
+<a name="l227"><span class="ln">227  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">legend </span><span class="s2">= </span><span class="s1">legend</span>
+<a name="l228"><span class="ln">228  </span></a>
+<a name="l229"><span class="ln">229  </span></a>    <span class="s0">def </span><span class="s1">plot</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">ax</span><span class="s2">, </span><span class="s1">kws</span><span class="s2">):</span>
+<a name="l230"><span class="ln">230  </span></a>        <span class="s6">&quot;&quot;&quot;Draw the plot onto an axes, passing matplotlib kwargs.&quot;&quot;&quot;</span>
+<a name="l231"><span class="ln">231  </span></a>
+<a name="l232"><span class="ln">232  </span></a>        <span class="s4"># Draw a test plot, using the passed in kwargs. The goal here is to</span>
+<a name="l233"><span class="ln">233  </span></a>        <span class="s4"># honor both (a) the current state of the plot cycler and (b) the</span>
+<a name="l234"><span class="ln">234  </span></a>        <span class="s4"># specified kwargs on all the lines we will draw, overriding when</span>
+<a name="l235"><span class="ln">235  </span></a>        <span class="s4"># relevant with the data semantics. Note that we won't cycle</span>
+<a name="l236"><span class="ln">236  </span></a>        <span class="s4"># internally; in other words, if `hue` is not used, all elements will</span>
+<a name="l237"><span class="ln">237  </span></a>        <span class="s4"># have the same color, but they will have the color that you would have</span>
+<a name="l238"><span class="ln">238  </span></a>        <span class="s4"># gotten from the corresponding matplotlib function, and calling the</span>
+<a name="l239"><span class="ln">239  </span></a>        <span class="s4"># function will advance the axes property cycle.</span>
+<a name="l240"><span class="ln">240  </span></a>
+<a name="l241"><span class="ln">241  </span></a>        <span class="s1">kws </span><span class="s2">= </span><span class="s1">normalize_kwargs</span><span class="s2">(</span><span class="s1">kws</span><span class="s2">, </span><span class="s1">mpl</span><span class="s2">.</span><span class="s1">lines</span><span class="s2">.</span><span class="s1">Line2D</span><span class="s2">)</span>
+<a name="l242"><span class="ln">242  </span></a>        <span class="s1">kws</span><span class="s2">.</span><span class="s1">setdefault</span><span class="s2">(</span><span class="s3">&quot;markeredgewidth&quot;</span><span class="s2">, </span><span class="s5">0.75</span><span class="s2">)</span>
+<a name="l243"><span class="ln">243  </span></a>        <span class="s1">kws</span><span class="s2">.</span><span class="s1">setdefault</span><span class="s2">(</span><span class="s3">&quot;markeredgecolor&quot;</span><span class="s2">, </span><span class="s3">&quot;w&quot;</span><span class="s2">)</span>
+<a name="l244"><span class="ln">244  </span></a>
+<a name="l245"><span class="ln">245  </span></a>        <span class="s4"># Set default error kwargs</span>
+<a name="l246"><span class="ln">246  </span></a>        <span class="s1">err_kws </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">err_kws</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">()</span>
+<a name="l247"><span class="ln">247  </span></a>        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">err_style </span><span class="s2">== </span><span class="s3">&quot;band&quot;</span><span class="s2">:</span>
+<a name="l248"><span class="ln">248  </span></a>            <span class="s1">err_kws</span><span class="s2">.</span><span class="s1">setdefault</span><span class="s2">(</span><span class="s3">&quot;alpha&quot;</span><span class="s2">, </span><span class="s5">.2</span><span class="s2">)</span>
+<a name="l249"><span class="ln">249  </span></a>        <span class="s0">elif </span><span class="s1">self</span><span class="s2">.</span><span class="s1">err_style </span><span class="s2">== </span><span class="s3">&quot;bars&quot;</span><span class="s2">:</span>
+<a name="l250"><span class="ln">250  </span></a>            <span class="s0">pass</span>
+<a name="l251"><span class="ln">251  </span></a>        <span class="s0">elif </span><span class="s1">self</span><span class="s2">.</span><span class="s1">err_style </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l252"><span class="ln">252  </span></a>            <span class="s1">err </span><span class="s2">= </span><span class="s3">&quot;`err_style` must be 'band' or 'bars', not {}&quot;</span>
+<a name="l253"><span class="ln">253  </span></a>            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s1">err</span><span class="s2">.</span><span class="s1">format</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">err_style</span><span class="s2">))</span>
+<a name="l254"><span class="ln">254  </span></a>
+<a name="l255"><span class="ln">255  </span></a>        <span class="s4"># Initialize the aggregation object</span>
+<a name="l256"><span class="ln">256  </span></a>        <span class="s1">weighted </span><span class="s2">= </span><span class="s3">&quot;weight&quot; </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">plot_data</span>
+<a name="l257"><span class="ln">257  </span></a>        <span class="s1">agg </span><span class="s2">= (</span><span class="s1">WeightedAggregator </span><span class="s0">if </span><span class="s1">weighted </span><span class="s0">else </span><span class="s1">EstimateAggregator</span><span class="s2">)(</span>
+<a name="l258"><span class="ln">258  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">estimator</span><span class="s2">, </span><span class="s1">self</span><span class="s2">.</span><span class="s1">errorbar</span><span class="s2">, </span><span class="s1">n_boot</span><span class="s2">=</span><span class="s1">self</span><span class="s2">.</span><span class="s1">n_boot</span><span class="s2">, </span><span class="s1">seed</span><span class="s2">=</span><span class="s1">self</span><span class="s2">.</span><span class="s1">seed</span><span class="s2">,</span>
+<a name="l259"><span class="ln">259  </span></a>        <span class="s2">)</span>
+<a name="l260"><span class="ln">260  </span></a>
+<a name="l261"><span class="ln">261  </span></a>        <span class="s4"># TODO abstract variable to aggregate over here-ish. Better name?</span>
+<a name="l262"><span class="ln">262  </span></a>        <span class="s1">orient </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">orient</span>
+<a name="l263"><span class="ln">263  </span></a>        <span class="s0">if </span><span class="s1">orient </span><span class="s0">not in </span><span class="s2">{</span><span class="s3">&quot;x&quot;</span><span class="s2">, </span><span class="s3">&quot;y&quot;</span><span class="s2">}:</span>
+<a name="l264"><span class="ln">264  </span></a>            <span class="s1">err </span><span class="s2">= </span><span class="s3">f&quot;`orient` must be either 'x' or 'y', not </span><span class="s0">{</span><span class="s1">orient</span><span class="s0">!r}</span><span class="s3">.&quot;</span>
+<a name="l265"><span class="ln">265  </span></a>            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s1">err</span><span class="s2">)</span>
+<a name="l266"><span class="ln">266  </span></a>        <span class="s1">other </span><span class="s2">= {</span><span class="s3">&quot;x&quot;</span><span class="s2">: </span><span class="s3">&quot;y&quot;</span><span class="s2">, </span><span class="s3">&quot;y&quot;</span><span class="s2">: </span><span class="s3">&quot;x&quot;</span><span class="s2">}[</span><span class="s1">orient</span><span class="s2">]</span>
+<a name="l267"><span class="ln">267  </span></a>
+<a name="l268"><span class="ln">268  </span></a>        <span class="s4"># TODO How to handle NA? We don't want NA to propagate through to the</span>
+<a name="l269"><span class="ln">269  </span></a>        <span class="s4"># estimate/CI when some values are present, but we would also like</span>
+<a name="l270"><span class="ln">270  </span></a>        <span class="s4"># matplotlib to show &quot;gaps&quot; in the line when all values are missing.</span>
+<a name="l271"><span class="ln">271  </span></a>        <span class="s4"># This is straightforward absent aggregation, but complicated with it.</span>
+<a name="l272"><span class="ln">272  </span></a>        <span class="s4"># If we want to use nas, we need to conditionalize dropna in iter_data.</span>
+<a name="l273"><span class="ln">273  </span></a>
+<a name="l274"><span class="ln">274  </span></a>        <span class="s4"># Loop over the semantic subsets and add to the plot</span>
+<a name="l275"><span class="ln">275  </span></a>        <span class="s1">grouping_vars </span><span class="s2">= </span><span class="s3">&quot;hue&quot;</span><span class="s2">, </span><span class="s3">&quot;size&quot;</span><span class="s2">, </span><span class="s3">&quot;style&quot;</span>
+<a name="l276"><span class="ln">276  </span></a>        <span class="s0">for </span><span class="s1">sub_vars</span><span class="s2">, </span><span class="s1">sub_data </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">iter_data</span><span class="s2">(</span><span class="s1">grouping_vars</span><span class="s2">, </span><span class="s1">from_comp_data</span><span class="s2">=</span><span class="s0">True</span><span class="s2">):</span>
+<a name="l277"><span class="ln">277  </span></a>
+<a name="l278"><span class="ln">278  </span></a>            <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">sort</span><span class="s2">:</span>
+<a name="l279"><span class="ln">279  </span></a>                <span class="s1">sort_vars </span><span class="s2">= [</span><span class="s3">&quot;units&quot;</span><span class="s2">, </span><span class="s1">orient</span><span class="s2">, </span><span class="s1">other</span><span class="s2">]</span>
+<a name="l280"><span class="ln">280  </span></a>                <span class="s1">sort_cols </span><span class="s2">= [</span><span class="s1">var </span><span class="s0">for </span><span class="s1">var </span><span class="s0">in </span><span class="s1">sort_vars </span><span class="s0">if </span><span class="s1">var </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">]</span>
+<a name="l281"><span class="ln">281  </span></a>                <span class="s1">sub_data </span><span class="s2">= </span><span class="s1">sub_data</span><span class="s2">.</span><span class="s1">sort_values</span><span class="s2">(</span><span class="s1">sort_cols</span><span class="s2">)</span>
+<a name="l282"><span class="ln">282  </span></a>
+<a name="l283"><span class="ln">283  </span></a>            <span class="s0">if </span><span class="s2">(</span>
+<a name="l284"><span class="ln">284  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">estimator </span><span class="s0">is not None</span>
+<a name="l285"><span class="ln">285  </span></a>                <span class="s0">and </span><span class="s1">sub_data</span><span class="s2">[</span><span class="s1">orient</span><span class="s2">].</span><span class="s1">value_counts</span><span class="s2">().</span><span class="s1">max</span><span class="s2">() &gt; </span><span class="s5">1</span>
+<a name="l286"><span class="ln">286  </span></a>            <span class="s2">):</span>
+<a name="l287"><span class="ln">287  </span></a>                <span class="s0">if </span><span class="s3">&quot;units&quot; </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">:</span>
+<a name="l288"><span class="ln">288  </span></a>                    <span class="s4"># TODO eventually relax this constraint</span>
+<a name="l289"><span class="ln">289  </span></a>                    <span class="s1">err </span><span class="s2">= </span><span class="s3">&quot;estimator must be None when specifying units&quot;</span>
+<a name="l290"><span class="ln">290  </span></a>                    <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s1">err</span><span class="s2">)</span>
+<a name="l291"><span class="ln">291  </span></a>                <span class="s1">grouped </span><span class="s2">= </span><span class="s1">sub_data</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s1">orient</span><span class="s2">, </span><span class="s1">sort</span><span class="s2">=</span><span class="s1">self</span><span class="s2">.</span><span class="s1">sort</span><span class="s2">)</span>
+<a name="l292"><span class="ln">292  </span></a>                <span class="s4"># Could pass as_index=False instead of reset_index,</span>
+<a name="l293"><span class="ln">293  </span></a>                <span class="s4"># but that fails on a corner case with older pandas.</span>
+<a name="l294"><span class="ln">294  </span></a>                <span class="s1">sub_data </span><span class="s2">= (</span>
+<a name="l295"><span class="ln">295  </span></a>                    <span class="s1">grouped</span>
+<a name="l296"><span class="ln">296  </span></a>                    <span class="s2">.</span><span class="s1">apply</span><span class="s2">(</span><span class="s1">agg</span><span class="s2">, </span><span class="s1">other</span><span class="s2">, **</span><span class="s1">groupby_apply_include_groups</span><span class="s2">(</span><span class="s0">False</span><span class="s2">))</span>
+<a name="l297"><span class="ln">297  </span></a>                    <span class="s2">.</span><span class="s1">reset_index</span><span class="s2">()</span>
+<a name="l298"><span class="ln">298  </span></a>                <span class="s2">)</span>
+<a name="l299"><span class="ln">299  </span></a>            <span class="s0">else</span><span class="s2">:</span>
+<a name="l300"><span class="ln">300  </span></a>                <span class="s1">sub_data</span><span class="s2">[</span><span class="s3">f&quot;</span><span class="s0">{</span><span class="s1">other</span><span class="s0">}</span><span class="s3">min&quot;</span><span class="s2">] = </span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span>
+<a name="l301"><span class="ln">301  </span></a>                <span class="s1">sub_data</span><span class="s2">[</span><span class="s3">f&quot;</span><span class="s0">{</span><span class="s1">other</span><span class="s0">}</span><span class="s3">max&quot;</span><span class="s2">] = </span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span>
+<a name="l302"><span class="ln">302  </span></a>
+<a name="l303"><span class="ln">303  </span></a>            <span class="s4"># Apply inverse axis scaling</span>
+<a name="l304"><span class="ln">304  </span></a>            <span class="s0">for </span><span class="s1">var </span><span class="s0">in </span><span class="s3">&quot;xy&quot;</span><span class="s2">:</span>
+<a name="l305"><span class="ln">305  </span></a>                <span class="s1">_</span><span class="s2">, </span><span class="s1">inv </span><span class="s2">= </span><span class="s1">_get_transform_functions</span><span class="s2">(</span><span class="s1">ax</span><span class="s2">, </span><span class="s1">var</span><span class="s2">)</span>
+<a name="l306"><span class="ln">306  </span></a>                <span class="s0">for </span><span class="s1">col </span><span class="s0">in </span><span class="s1">sub_data</span><span class="s2">.</span><span class="s1">filter</span><span class="s2">(</span><span class="s1">regex</span><span class="s2">=</span><span class="s3">f&quot;^</span><span class="s0">{</span><span class="s1">var</span><span class="s0">}</span><span class="s3">&quot;</span><span class="s2">):</span>
+<a name="l307"><span class="ln">307  </span></a>                    <span class="s1">sub_data</span><span class="s2">[</span><span class="s1">col</span><span class="s2">] = </span><span class="s1">inv</span><span class="s2">(</span><span class="s1">sub_data</span><span class="s2">[</span><span class="s1">col</span><span class="s2">])</span>
+<a name="l308"><span class="ln">308  </span></a>
+<a name="l309"><span class="ln">309  </span></a>            <span class="s4"># --- Draw the main line(s)</span>
+<a name="l310"><span class="ln">310  </span></a>
+<a name="l311"><span class="ln">311  </span></a>            <span class="s0">if </span><span class="s3">&quot;units&quot; </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">:   </span><span class="s4"># XXX why not add to grouping variables?</span>
+<a name="l312"><span class="ln">312  </span></a>                <span class="s1">lines </span><span class="s2">= []</span>
+<a name="l313"><span class="ln">313  </span></a>                <span class="s0">for </span><span class="s1">_</span><span class="s2">, </span><span class="s1">unit_data </span><span class="s0">in </span><span class="s1">sub_data</span><span class="s2">.</span><span class="s1">groupby</span><span class="s2">(</span><span class="s3">&quot;units&quot;</span><span class="s2">):</span>
+<a name="l314"><span class="ln">314  </span></a>                    <span class="s1">lines</span><span class="s2">.</span><span class="s1">extend</span><span class="s2">(</span><span class="s1">ax</span><span class="s2">.</span><span class="s1">plot</span><span class="s2">(</span><span class="s1">unit_data</span><span class="s2">[</span><span class="s3">&quot;x&quot;</span><span class="s2">], </span><span class="s1">unit_data</span><span class="s2">[</span><span class="s3">&quot;y&quot;</span><span class="s2">], **</span><span class="s1">kws</span><span class="s2">))</span>
+<a name="l315"><span class="ln">315  </span></a>            <span class="s0">else</span><span class="s2">:</span>
+<a name="l316"><span class="ln">316  </span></a>                <span class="s1">lines </span><span class="s2">= </span><span class="s1">ax</span><span class="s2">.</span><span class="s1">plot</span><span class="s2">(</span><span class="s1">sub_data</span><span class="s2">[</span><span class="s3">&quot;x&quot;</span><span class="s2">], </span><span class="s1">sub_data</span><span class="s2">[</span><span class="s3">&quot;y&quot;</span><span class="s2">], **</span><span class="s1">kws</span><span class="s2">)</span>
+<a name="l317"><span class="ln">317  </span></a>
+<a name="l318"><span class="ln">318  </span></a>            <span class="s0">for </span><span class="s1">line </span><span class="s0">in </span><span class="s1">lines</span><span class="s2">:</span>
+<a name="l319"><span class="ln">319  </span></a>
+<a name="l320"><span class="ln">320  </span></a>                <span class="s0">if </span><span class="s3">&quot;hue&quot; </span><span class="s0">in </span><span class="s1">sub_vars</span><span class="s2">:</span>
+<a name="l321"><span class="ln">321  </span></a>                    <span class="s1">line</span><span class="s2">.</span><span class="s1">set_color</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_hue_map</span><span class="s2">(</span><span class="s1">sub_vars</span><span class="s2">[</span><span class="s3">&quot;hue&quot;</span><span class="s2">]))</span>
+<a name="l322"><span class="ln">322  </span></a>
+<a name="l323"><span class="ln">323  </span></a>                <span class="s0">if </span><span class="s3">&quot;size&quot; </span><span class="s0">in </span><span class="s1">sub_vars</span><span class="s2">:</span>
+<a name="l324"><span class="ln">324  </span></a>                    <span class="s1">line</span><span class="s2">.</span><span class="s1">set_linewidth</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_size_map</span><span class="s2">(</span><span class="s1">sub_vars</span><span class="s2">[</span><span class="s3">&quot;size&quot;</span><span class="s2">]))</span>
+<a name="l325"><span class="ln">325  </span></a>
+<a name="l326"><span class="ln">326  </span></a>                <span class="s0">if </span><span class="s3">&quot;style&quot; </span><span class="s0">in </span><span class="s1">sub_vars</span><span class="s2">:</span>
+<a name="l327"><span class="ln">327  </span></a>                    <span class="s1">attributes </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_style_map</span><span class="s2">(</span><span class="s1">sub_vars</span><span class="s2">[</span><span class="s3">&quot;style&quot;</span><span class="s2">])</span>
+<a name="l328"><span class="ln">328  </span></a>                    <span class="s0">if </span><span class="s3">&quot;dashes&quot; </span><span class="s0">in </span><span class="s1">attributes</span><span class="s2">:</span>
+<a name="l329"><span class="ln">329  </span></a>                        <span class="s1">line</span><span class="s2">.</span><span class="s1">set_dashes</span><span class="s2">(</span><span class="s1">attributes</span><span class="s2">[</span><span class="s3">&quot;dashes&quot;</span><span class="s2">])</span>
+<a name="l330"><span class="ln">330  </span></a>                    <span class="s0">if </span><span class="s3">&quot;marker&quot; </span><span class="s0">in </span><span class="s1">attributes</span><span class="s2">:</span>
+<a name="l331"><span class="ln">331  </span></a>                        <span class="s1">line</span><span class="s2">.</span><span class="s1">set_marker</span><span class="s2">(</span><span class="s1">attributes</span><span class="s2">[</span><span class="s3">&quot;marker&quot;</span><span class="s2">])</span>
+<a name="l332"><span class="ln">332  </span></a>
+<a name="l333"><span class="ln">333  </span></a>            <span class="s1">line_color </span><span class="s2">= </span><span class="s1">line</span><span class="s2">.</span><span class="s1">get_color</span><span class="s2">()</span>
+<a name="l334"><span class="ln">334  </span></a>            <span class="s1">line_alpha </span><span class="s2">= </span><span class="s1">line</span><span class="s2">.</span><span class="s1">get_alpha</span><span class="s2">()</span>
+<a name="l335"><span class="ln">335  </span></a>            <span class="s1">line_capstyle </span><span class="s2">= </span><span class="s1">line</span><span class="s2">.</span><span class="s1">get_solid_capstyle</span><span class="s2">()</span>
+<a name="l336"><span class="ln">336  </span></a>
+<a name="l337"><span class="ln">337  </span></a>            <span class="s4"># --- Draw the confidence intervals</span>
+<a name="l338"><span class="ln">338  </span></a>
+<a name="l339"><span class="ln">339  </span></a>            <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">estimator </span><span class="s0">is not None and </span><span class="s1">self</span><span class="s2">.</span><span class="s1">errorbar </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l340"><span class="ln">340  </span></a>
+<a name="l341"><span class="ln">341  </span></a>                <span class="s4"># TODO handling of orientation will need to happen here</span>
+<a name="l342"><span class="ln">342  </span></a>
+<a name="l343"><span class="ln">343  </span></a>                <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">err_style </span><span class="s2">== </span><span class="s3">&quot;band&quot;</span><span class="s2">:</span>
+<a name="l344"><span class="ln">344  </span></a>
+<a name="l345"><span class="ln">345  </span></a>                    <span class="s1">func </span><span class="s2">= {</span><span class="s3">&quot;x&quot;</span><span class="s2">: </span><span class="s1">ax</span><span class="s2">.</span><span class="s1">fill_between</span><span class="s2">, </span><span class="s3">&quot;y&quot;</span><span class="s2">: </span><span class="s1">ax</span><span class="s2">.</span><span class="s1">fill_betweenx</span><span class="s2">}[</span><span class="s1">orient</span><span class="s2">]</span>
+<a name="l346"><span class="ln">346  </span></a>                    <span class="s1">func</span><span class="s2">(</span>
+<a name="l347"><span class="ln">347  </span></a>                        <span class="s1">sub_data</span><span class="s2">[</span><span class="s1">orient</span><span class="s2">],</span>
+<a name="l348"><span class="ln">348  </span></a>                        <span class="s1">sub_data</span><span class="s2">[</span><span class="s3">f&quot;</span><span class="s0">{</span><span class="s1">other</span><span class="s0">}</span><span class="s3">min&quot;</span><span class="s2">], </span><span class="s1">sub_data</span><span class="s2">[</span><span class="s3">f&quot;</span><span class="s0">{</span><span class="s1">other</span><span class="s0">}</span><span class="s3">max&quot;</span><span class="s2">],</span>
+<a name="l349"><span class="ln">349  </span></a>                        <span class="s1">color</span><span class="s2">=</span><span class="s1">line_color</span><span class="s2">, **</span><span class="s1">err_kws</span>
+<a name="l350"><span class="ln">350  </span></a>                    <span class="s2">)</span>
+<a name="l351"><span class="ln">351  </span></a>
+<a name="l352"><span class="ln">352  </span></a>                <span class="s0">elif </span><span class="s1">self</span><span class="s2">.</span><span class="s1">err_style </span><span class="s2">== </span><span class="s3">&quot;bars&quot;</span><span class="s2">:</span>
+<a name="l353"><span class="ln">353  </span></a>
+<a name="l354"><span class="ln">354  </span></a>                    <span class="s1">error_param </span><span class="s2">= {</span>
+<a name="l355"><span class="ln">355  </span></a>                        <span class="s3">f&quot;</span><span class="s0">{</span><span class="s1">other</span><span class="s0">}</span><span class="s3">err&quot;</span><span class="s2">: (</span>
+<a name="l356"><span class="ln">356  </span></a>                            <span class="s1">sub_data</span><span class="s2">[</span><span class="s1">other</span><span class="s2">] - </span><span class="s1">sub_data</span><span class="s2">[</span><span class="s3">f&quot;</span><span class="s0">{</span><span class="s1">other</span><span class="s0">}</span><span class="s3">min&quot;</span><span class="s2">],</span>
+<a name="l357"><span class="ln">357  </span></a>                            <span class="s1">sub_data</span><span class="s2">[</span><span class="s3">f&quot;</span><span class="s0">{</span><span class="s1">other</span><span class="s0">}</span><span class="s3">max&quot;</span><span class="s2">] - </span><span class="s1">sub_data</span><span class="s2">[</span><span class="s1">other</span><span class="s2">],</span>
+<a name="l358"><span class="ln">358  </span></a>                        <span class="s2">)</span>
+<a name="l359"><span class="ln">359  </span></a>                    <span class="s2">}</span>
+<a name="l360"><span class="ln">360  </span></a>                    <span class="s1">ebars </span><span class="s2">= </span><span class="s1">ax</span><span class="s2">.</span><span class="s1">errorbar</span><span class="s2">(</span>
+<a name="l361"><span class="ln">361  </span></a>                        <span class="s1">sub_data</span><span class="s2">[</span><span class="s3">&quot;x&quot;</span><span class="s2">], </span><span class="s1">sub_data</span><span class="s2">[</span><span class="s3">&quot;y&quot;</span><span class="s2">], **</span><span class="s1">error_param</span><span class="s2">,</span>
+<a name="l362"><span class="ln">362  </span></a>                        <span class="s1">linestyle</span><span class="s2">=</span><span class="s3">&quot;&quot;</span><span class="s2">, </span><span class="s1">color</span><span class="s2">=</span><span class="s1">line_color</span><span class="s2">, </span><span class="s1">alpha</span><span class="s2">=</span><span class="s1">line_alpha</span><span class="s2">,</span>
+<a name="l363"><span class="ln">363  </span></a>                        <span class="s2">**</span><span class="s1">err_kws</span>
+<a name="l364"><span class="ln">364  </span></a>                    <span class="s2">)</span>
+<a name="l365"><span class="ln">365  </span></a>
+<a name="l366"><span class="ln">366  </span></a>                    <span class="s4"># Set the capstyle properly on the error bars</span>
+<a name="l367"><span class="ln">367  </span></a>                    <span class="s0">for </span><span class="s1">obj </span><span class="s0">in </span><span class="s1">ebars</span><span class="s2">.</span><span class="s1">get_children</span><span class="s2">():</span>
+<a name="l368"><span class="ln">368  </span></a>                        <span class="s0">if </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">obj</span><span class="s2">, </span><span class="s1">mpl</span><span class="s2">.</span><span class="s1">collections</span><span class="s2">.</span><span class="s1">LineCollection</span><span class="s2">):</span>
+<a name="l369"><span class="ln">369  </span></a>                            <span class="s1">obj</span><span class="s2">.</span><span class="s1">set_capstyle</span><span class="s2">(</span><span class="s1">line_capstyle</span><span class="s2">)</span>
+<a name="l370"><span class="ln">370  </span></a>
+<a name="l371"><span class="ln">371  </span></a>        <span class="s4"># Finalize the axes details</span>
+<a name="l372"><span class="ln">372  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">_add_axis_labels</span><span class="s2">(</span><span class="s1">ax</span><span class="s2">)</span>
+<a name="l373"><span class="ln">373  </span></a>        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">legend</span><span class="s2">:</span>
+<a name="l374"><span class="ln">374  </span></a>            <span class="s1">legend_artist </span><span class="s2">= </span><span class="s1">partial</span><span class="s2">(</span><span class="s1">mpl</span><span class="s2">.</span><span class="s1">lines</span><span class="s2">.</span><span class="s1">Line2D</span><span class="s2">, </span><span class="s1">xdata</span><span class="s2">=[], </span><span class="s1">ydata</span><span class="s2">=[])</span>
+<a name="l375"><span class="ln">375  </span></a>            <span class="s1">attrs </span><span class="s2">= {</span><span class="s3">&quot;hue&quot;</span><span class="s2">: </span><span class="s3">&quot;color&quot;</span><span class="s2">, </span><span class="s3">&quot;size&quot;</span><span class="s2">: </span><span class="s3">&quot;linewidth&quot;</span><span class="s2">, </span><span class="s3">&quot;style&quot;</span><span class="s2">: </span><span class="s0">None</span><span class="s2">}</span>
+<a name="l376"><span class="ln">376  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">add_legend_data</span><span class="s2">(</span><span class="s1">ax</span><span class="s2">, </span><span class="s1">legend_artist</span><span class="s2">, </span><span class="s1">kws</span><span class="s2">, </span><span class="s1">attrs</span><span class="s2">)</span>
+<a name="l377"><span class="ln">377  </span></a>            <span class="s1">handles</span><span class="s2">, </span><span class="s1">_ </span><span class="s2">= </span><span class="s1">ax</span><span class="s2">.</span><span class="s1">get_legend_handles_labels</span><span class="s2">()</span>
+<a name="l378"><span class="ln">378  </span></a>            <span class="s0">if </span><span class="s1">handles</span><span class="s2">:</span>
+<a name="l379"><span class="ln">379  </span></a>                <span class="s1">legend </span><span class="s2">= </span><span class="s1">ax</span><span class="s2">.</span><span class="s1">legend</span><span class="s2">(</span><span class="s1">title</span><span class="s2">=</span><span class="s1">self</span><span class="s2">.</span><span class="s1">legend_title</span><span class="s2">)</span>
+<a name="l380"><span class="ln">380  </span></a>                <span class="s1">adjust_legend_subtitles</span><span class="s2">(</span><span class="s1">legend</span><span class="s2">)</span>
+<a name="l381"><span class="ln">381  </span></a>
+<a name="l382"><span class="ln">382  </span></a>
+<a name="l383"><span class="ln">383  </span></a><span class="s0">class </span><span class="s1">_ScatterPlotter</span><span class="s2">(</span><span class="s1">_RelationalPlotter</span><span class="s2">):</span>
+<a name="l384"><span class="ln">384  </span></a>
+<a name="l385"><span class="ln">385  </span></a>    <span class="s1">_legend_attributes </span><span class="s2">= [</span><span class="s3">&quot;color&quot;</span><span class="s2">, </span><span class="s3">&quot;s&quot;</span><span class="s2">, </span><span class="s3">&quot;marker&quot;</span><span class="s2">]</span>
+<a name="l386"><span class="ln">386  </span></a>
+<a name="l387"><span class="ln">387  </span></a>    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, *, </span><span class="s1">data</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">variables</span><span class="s2">={}, </span><span class="s1">legend</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+<a name="l388"><span class="ln">388  </span></a>
+<a name="l389"><span class="ln">389  </span></a>        <span class="s4"># TODO this is messy, we want the mapping to be agnostic about</span>
+<a name="l390"><span class="ln">390  </span></a>        <span class="s4"># the kind of plot to draw, but for the time being we need to set</span>
+<a name="l391"><span class="ln">391  </span></a>        <span class="s4"># this information so the SizeMapping can use it</span>
+<a name="l392"><span class="ln">392  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">_default_size_range </span><span class="s2">= (</span>
+<a name="l393"><span class="ln">393  </span></a>            <span class="s1">np</span><span class="s2">.</span><span class="s1">r_</span><span class="s2">[</span><span class="s5">.5</span><span class="s2">, </span><span class="s5">2</span><span class="s2">] * </span><span class="s1">np</span><span class="s2">.</span><span class="s1">square</span><span class="s2">(</span><span class="s1">mpl</span><span class="s2">.</span><span class="s1">rcParams</span><span class="s2">[</span><span class="s3">&quot;lines.markersize&quot;</span><span class="s2">])</span>
+<a name="l394"><span class="ln">394  </span></a>        <span class="s2">)</span>
+<a name="l395"><span class="ln">395  </span></a>
+<a name="l396"><span class="ln">396  </span></a>        <span class="s1">super</span><span class="s2">().</span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">data</span><span class="s2">=</span><span class="s1">data</span><span class="s2">, </span><span class="s1">variables</span><span class="s2">=</span><span class="s1">variables</span><span class="s2">)</span>
+<a name="l397"><span class="ln">397  </span></a>
+<a name="l398"><span class="ln">398  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">legend </span><span class="s2">= </span><span class="s1">legend</span>
+<a name="l399"><span class="ln">399  </span></a>
+<a name="l400"><span class="ln">400  </span></a>    <span class="s0">def </span><span class="s1">plot</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">ax</span><span class="s2">, </span><span class="s1">kws</span><span class="s2">):</span>
+<a name="l401"><span class="ln">401  </span></a>
+<a name="l402"><span class="ln">402  </span></a>        <span class="s4"># --- Determine the visual attributes of the plot</span>
+<a name="l403"><span class="ln">403  </span></a>
+<a name="l404"><span class="ln">404  </span></a>        <span class="s1">data </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">comp_data</span><span class="s2">.</span><span class="s1">dropna</span><span class="s2">()</span>
+<a name="l405"><span class="ln">405  </span></a>        <span class="s0">if </span><span class="s1">data</span><span class="s2">.</span><span class="s1">empty</span><span class="s2">:</span>
+<a name="l406"><span class="ln">406  </span></a>            <span class="s0">return</span>
+<a name="l407"><span class="ln">407  </span></a>
+<a name="l408"><span class="ln">408  </span></a>        <span class="s1">kws </span><span class="s2">= </span><span class="s1">normalize_kwargs</span><span class="s2">(</span><span class="s1">kws</span><span class="s2">, </span><span class="s1">mpl</span><span class="s2">.</span><span class="s1">collections</span><span class="s2">.</span><span class="s1">PathCollection</span><span class="s2">)</span>
+<a name="l409"><span class="ln">409  </span></a>
+<a name="l410"><span class="ln">410  </span></a>        <span class="s4"># Define the vectors of x and y positions</span>
+<a name="l411"><span class="ln">411  </span></a>        <span class="s1">empty </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">full</span><span class="s2">(</span><span class="s1">len</span><span class="s2">(</span><span class="s1">data</span><span class="s2">), </span><span class="s1">np</span><span class="s2">.</span><span class="s1">nan</span><span class="s2">)</span>
+<a name="l412"><span class="ln">412  </span></a>        <span class="s1">x </span><span class="s2">= </span><span class="s1">data</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s3">&quot;x&quot;</span><span class="s2">, </span><span class="s1">empty</span><span class="s2">)</span>
+<a name="l413"><span class="ln">413  </span></a>        <span class="s1">y </span><span class="s2">= </span><span class="s1">data</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s3">&quot;y&quot;</span><span class="s2">, </span><span class="s1">empty</span><span class="s2">)</span>
+<a name="l414"><span class="ln">414  </span></a>
+<a name="l415"><span class="ln">415  </span></a>        <span class="s4"># Apply inverse scaling to the coordinate variables</span>
+<a name="l416"><span class="ln">416  </span></a>        <span class="s1">_</span><span class="s2">, </span><span class="s1">inv_x </span><span class="s2">= </span><span class="s1">_get_transform_functions</span><span class="s2">(</span><span class="s1">ax</span><span class="s2">, </span><span class="s3">&quot;x&quot;</span><span class="s2">)</span>
+<a name="l417"><span class="ln">417  </span></a>        <span class="s1">_</span><span class="s2">, </span><span class="s1">inv_y </span><span class="s2">= </span><span class="s1">_get_transform_functions</span><span class="s2">(</span><span class="s1">ax</span><span class="s2">, </span><span class="s3">&quot;y&quot;</span><span class="s2">)</span>
+<a name="l418"><span class="ln">418  </span></a>        <span class="s1">x</span><span class="s2">, </span><span class="s1">y </span><span class="s2">= </span><span class="s1">inv_x</span><span class="s2">(</span><span class="s1">x</span><span class="s2">), </span><span class="s1">inv_y</span><span class="s2">(</span><span class="s1">y</span><span class="s2">)</span>
+<a name="l419"><span class="ln">419  </span></a>
+<a name="l420"><span class="ln">420  </span></a>        <span class="s0">if </span><span class="s3">&quot;style&quot; </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">:</span>
+<a name="l421"><span class="ln">421  </span></a>            <span class="s4"># Use a representative marker so scatter sets the edgecolor</span>
+<a name="l422"><span class="ln">422  </span></a>            <span class="s4"># properly for line art markers. We currently enforce either</span>
+<a name="l423"><span class="ln">423  </span></a>            <span class="s4"># all or none line art so this works.</span>
+<a name="l424"><span class="ln">424  </span></a>            <span class="s1">example_level </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_style_map</span><span class="s2">.</span><span class="s1">levels</span><span class="s2">[</span><span class="s5">0</span><span class="s2">]</span>
+<a name="l425"><span class="ln">425  </span></a>            <span class="s1">example_marker </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_style_map</span><span class="s2">(</span><span class="s1">example_level</span><span class="s2">, </span><span class="s3">&quot;marker&quot;</span><span class="s2">)</span>
+<a name="l426"><span class="ln">426  </span></a>            <span class="s1">kws</span><span class="s2">.</span><span class="s1">setdefault</span><span class="s2">(</span><span class="s3">&quot;marker&quot;</span><span class="s2">, </span><span class="s1">example_marker</span><span class="s2">)</span>
+<a name="l427"><span class="ln">427  </span></a>
+<a name="l428"><span class="ln">428  </span></a>        <span class="s4"># Conditionally set the marker edgecolor based on whether the marker is &quot;filled&quot;</span>
+<a name="l429"><span class="ln">429  </span></a>        <span class="s4"># See https://github.com/matplotlib/matplotlib/issues/17849 for context</span>
+<a name="l430"><span class="ln">430  </span></a>        <span class="s1">m </span><span class="s2">= </span><span class="s1">kws</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s3">&quot;marker&quot;</span><span class="s2">, </span><span class="s1">mpl</span><span class="s2">.</span><span class="s1">rcParams</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s3">&quot;marker&quot;</span><span class="s2">, </span><span class="s3">&quot;o&quot;</span><span class="s2">))</span>
+<a name="l431"><span class="ln">431  </span></a>        <span class="s0">if not </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">m</span><span class="s2">, </span><span class="s1">mpl</span><span class="s2">.</span><span class="s1">markers</span><span class="s2">.</span><span class="s1">MarkerStyle</span><span class="s2">):</span>
+<a name="l432"><span class="ln">432  </span></a>            <span class="s4"># TODO in more recent matplotlib (which?) can pass a MarkerStyle here</span>
+<a name="l433"><span class="ln">433  </span></a>            <span class="s1">m </span><span class="s2">= </span><span class="s1">mpl</span><span class="s2">.</span><span class="s1">markers</span><span class="s2">.</span><span class="s1">MarkerStyle</span><span class="s2">(</span><span class="s1">m</span><span class="s2">)</span>
+<a name="l434"><span class="ln">434  </span></a>        <span class="s0">if </span><span class="s1">m</span><span class="s2">.</span><span class="s1">is_filled</span><span class="s2">():</span>
+<a name="l435"><span class="ln">435  </span></a>            <span class="s1">kws</span><span class="s2">.</span><span class="s1">setdefault</span><span class="s2">(</span><span class="s3">&quot;edgecolor&quot;</span><span class="s2">, </span><span class="s3">&quot;w&quot;</span><span class="s2">)</span>
+<a name="l436"><span class="ln">436  </span></a>
+<a name="l437"><span class="ln">437  </span></a>        <span class="s4"># Draw the scatter plot</span>
+<a name="l438"><span class="ln">438  </span></a>        <span class="s1">points </span><span class="s2">= </span><span class="s1">ax</span><span class="s2">.</span><span class="s1">scatter</span><span class="s2">(</span><span class="s1">x</span><span class="s2">=</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">=</span><span class="s1">y</span><span class="s2">, **</span><span class="s1">kws</span><span class="s2">)</span>
+<a name="l439"><span class="ln">439  </span></a>
+<a name="l440"><span class="ln">440  </span></a>        <span class="s4"># Apply the mapping from semantic variables to artist attributes</span>
+<a name="l441"><span class="ln">441  </span></a>
+<a name="l442"><span class="ln">442  </span></a>        <span class="s0">if </span><span class="s3">&quot;hue&quot; </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">:</span>
+<a name="l443"><span class="ln">443  </span></a>            <span class="s1">points</span><span class="s2">.</span><span class="s1">set_facecolors</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_hue_map</span><span class="s2">(</span><span class="s1">data</span><span class="s2">[</span><span class="s3">&quot;hue&quot;</span><span class="s2">]))</span>
+<a name="l444"><span class="ln">444  </span></a>
+<a name="l445"><span class="ln">445  </span></a>        <span class="s0">if </span><span class="s3">&quot;size&quot; </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">:</span>
+<a name="l446"><span class="ln">446  </span></a>            <span class="s1">points</span><span class="s2">.</span><span class="s1">set_sizes</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_size_map</span><span class="s2">(</span><span class="s1">data</span><span class="s2">[</span><span class="s3">&quot;size&quot;</span><span class="s2">]))</span>
+<a name="l447"><span class="ln">447  </span></a>
+<a name="l448"><span class="ln">448  </span></a>        <span class="s0">if </span><span class="s3">&quot;style&quot; </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">:</span>
+<a name="l449"><span class="ln">449  </span></a>            <span class="s1">p </span><span class="s2">= [</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_style_map</span><span class="s2">(</span><span class="s1">val</span><span class="s2">, </span><span class="s3">&quot;path&quot;</span><span class="s2">) </span><span class="s0">for </span><span class="s1">val </span><span class="s0">in </span><span class="s1">data</span><span class="s2">[</span><span class="s3">&quot;style&quot;</span><span class="s2">]]</span>
+<a name="l450"><span class="ln">450  </span></a>            <span class="s1">points</span><span class="s2">.</span><span class="s1">set_paths</span><span class="s2">(</span><span class="s1">p</span><span class="s2">)</span>
+<a name="l451"><span class="ln">451  </span></a>
+<a name="l452"><span class="ln">452  </span></a>        <span class="s4"># Apply dependent default attributes</span>
+<a name="l453"><span class="ln">453  </span></a>
+<a name="l454"><span class="ln">454  </span></a>        <span class="s0">if </span><span class="s3">&quot;linewidth&quot; </span><span class="s0">not in </span><span class="s1">kws</span><span class="s2">:</span>
+<a name="l455"><span class="ln">455  </span></a>            <span class="s1">sizes </span><span class="s2">= </span><span class="s1">points</span><span class="s2">.</span><span class="s1">get_sizes</span><span class="s2">()</span>
+<a name="l456"><span class="ln">456  </span></a>            <span class="s1">linewidth </span><span class="s2">= </span><span class="s5">.08 </span><span class="s2">* </span><span class="s1">np</span><span class="s2">.</span><span class="s1">sqrt</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">percentile</span><span class="s2">(</span><span class="s1">sizes</span><span class="s2">, </span><span class="s5">10</span><span class="s2">))</span>
+<a name="l457"><span class="ln">457  </span></a>            <span class="s1">points</span><span class="s2">.</span><span class="s1">set_linewidths</span><span class="s2">(</span><span class="s1">linewidth</span><span class="s2">)</span>
+<a name="l458"><span class="ln">458  </span></a>            <span class="s1">kws</span><span class="s2">[</span><span class="s3">&quot;linewidth&quot;</span><span class="s2">] = </span><span class="s1">linewidth</span>
+<a name="l459"><span class="ln">459  </span></a>
+<a name="l460"><span class="ln">460  </span></a>        <span class="s4"># Finalize the axes details</span>
+<a name="l461"><span class="ln">461  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">_add_axis_labels</span><span class="s2">(</span><span class="s1">ax</span><span class="s2">)</span>
+<a name="l462"><span class="ln">462  </span></a>        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">legend</span><span class="s2">:</span>
+<a name="l463"><span class="ln">463  </span></a>            <span class="s1">attrs </span><span class="s2">= {</span><span class="s3">&quot;hue&quot;</span><span class="s2">: </span><span class="s3">&quot;color&quot;</span><span class="s2">, </span><span class="s3">&quot;size&quot;</span><span class="s2">: </span><span class="s3">&quot;s&quot;</span><span class="s2">, </span><span class="s3">&quot;style&quot;</span><span class="s2">: </span><span class="s0">None</span><span class="s2">}</span>
+<a name="l464"><span class="ln">464  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">add_legend_data</span><span class="s2">(</span><span class="s1">ax</span><span class="s2">, </span><span class="s1">_scatter_legend_artist</span><span class="s2">, </span><span class="s1">kws</span><span class="s2">, </span><span class="s1">attrs</span><span class="s2">)</span>
+<a name="l465"><span class="ln">465  </span></a>            <span class="s1">handles</span><span class="s2">, </span><span class="s1">_ </span><span class="s2">= </span><span class="s1">ax</span><span class="s2">.</span><span class="s1">get_legend_handles_labels</span><span class="s2">()</span>
+<a name="l466"><span class="ln">466  </span></a>            <span class="s0">if </span><span class="s1">handles</span><span class="s2">:</span>
+<a name="l467"><span class="ln">467  </span></a>                <span class="s1">legend </span><span class="s2">= </span><span class="s1">ax</span><span class="s2">.</span><span class="s1">legend</span><span class="s2">(</span><span class="s1">title</span><span class="s2">=</span><span class="s1">self</span><span class="s2">.</span><span class="s1">legend_title</span><span class="s2">)</span>
+<a name="l468"><span class="ln">468  </span></a>                <span class="s1">adjust_legend_subtitles</span><span class="s2">(</span><span class="s1">legend</span><span class="s2">)</span>
+<a name="l469"><span class="ln">469  </span></a>
+<a name="l470"><span class="ln">470  </span></a>
+<a name="l471"><span class="ln">471  </span></a><span class="s0">def </span><span class="s1">lineplot</span><span class="s2">(</span>
+<a name="l472"><span class="ln">472  </span></a>    <span class="s1">data</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, *,</span>
+<a name="l473"><span class="ln">473  </span></a>    <span class="s1">x</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">y</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">hue</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">style</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">units</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">weights</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l474"><span class="ln">474  </span></a>    <span class="s1">palette</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">hue_order</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">hue_norm</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l475"><span class="ln">475  </span></a>    <span class="s1">sizes</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">size_order</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">size_norm</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l476"><span class="ln">476  </span></a>    <span class="s1">dashes</span><span class="s2">=</span><span class="s0">True</span><span class="s2">, </span><span class="s1">markers</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">style_order</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l477"><span class="ln">477  </span></a>    <span class="s1">estimator</span><span class="s2">=</span><span class="s3">&quot;mean&quot;</span><span class="s2">, </span><span class="s1">errorbar</span><span class="s2">=(</span><span class="s3">&quot;ci&quot;</span><span class="s2">, </span><span class="s5">95</span><span class="s2">), </span><span class="s1">n_boot</span><span class="s2">=</span><span class="s5">1000</span><span class="s2">, </span><span class="s1">seed</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l478"><span class="ln">478  </span></a>    <span class="s1">orient</span><span class="s2">=</span><span class="s3">&quot;x&quot;</span><span class="s2">, </span><span class="s1">sort</span><span class="s2">=</span><span class="s0">True</span><span class="s2">, </span><span class="s1">err_style</span><span class="s2">=</span><span class="s3">&quot;band&quot;</span><span class="s2">, </span><span class="s1">err_kws</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l479"><span class="ln">479  </span></a>    <span class="s1">legend</span><span class="s2">=</span><span class="s3">&quot;auto&quot;</span><span class="s2">, </span><span class="s1">ci</span><span class="s2">=</span><span class="s3">&quot;deprecated&quot;</span><span class="s2">, </span><span class="s1">ax</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, **</span><span class="s1">kwargs</span>
+<a name="l480"><span class="ln">480  </span></a><span class="s2">):</span>
+<a name="l481"><span class="ln">481  </span></a>
+<a name="l482"><span class="ln">482  </span></a>    <span class="s4"># Handle deprecation of ci parameter</span>
+<a name="l483"><span class="ln">483  </span></a>    <span class="s1">errorbar </span><span class="s2">= </span><span class="s1">_deprecate_ci</span><span class="s2">(</span><span class="s1">errorbar</span><span class="s2">, </span><span class="s1">ci</span><span class="s2">)</span>
+<a name="l484"><span class="ln">484  </span></a>
+<a name="l485"><span class="ln">485  </span></a>    <span class="s1">p </span><span class="s2">= </span><span class="s1">_LinePlotter</span><span class="s2">(</span>
+<a name="l486"><span class="ln">486  </span></a>        <span class="s1">data</span><span class="s2">=</span><span class="s1">data</span><span class="s2">,</span>
+<a name="l487"><span class="ln">487  </span></a>        <span class="s1">variables</span><span class="s2">=</span><span class="s1">dict</span><span class="s2">(</span>
+<a name="l488"><span class="ln">488  </span></a>            <span class="s1">x</span><span class="s2">=</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">=</span><span class="s1">y</span><span class="s2">, </span><span class="s1">hue</span><span class="s2">=</span><span class="s1">hue</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=</span><span class="s1">size</span><span class="s2">, </span><span class="s1">style</span><span class="s2">=</span><span class="s1">style</span><span class="s2">, </span><span class="s1">units</span><span class="s2">=</span><span class="s1">units</span><span class="s2">, </span><span class="s1">weight</span><span class="s2">=</span><span class="s1">weights</span>
+<a name="l489"><span class="ln">489  </span></a>        <span class="s2">),</span>
+<a name="l490"><span class="ln">490  </span></a>        <span class="s1">estimator</span><span class="s2">=</span><span class="s1">estimator</span><span class="s2">, </span><span class="s1">n_boot</span><span class="s2">=</span><span class="s1">n_boot</span><span class="s2">, </span><span class="s1">seed</span><span class="s2">=</span><span class="s1">seed</span><span class="s2">, </span><span class="s1">errorbar</span><span class="s2">=</span><span class="s1">errorbar</span><span class="s2">,</span>
+<a name="l491"><span class="ln">491  </span></a>        <span class="s1">sort</span><span class="s2">=</span><span class="s1">sort</span><span class="s2">, </span><span class="s1">orient</span><span class="s2">=</span><span class="s1">orient</span><span class="s2">, </span><span class="s1">err_style</span><span class="s2">=</span><span class="s1">err_style</span><span class="s2">, </span><span class="s1">err_kws</span><span class="s2">=</span><span class="s1">err_kws</span><span class="s2">,</span>
+<a name="l492"><span class="ln">492  </span></a>        <span class="s1">legend</span><span class="s2">=</span><span class="s1">legend</span><span class="s2">,</span>
+<a name="l493"><span class="ln">493  </span></a>    <span class="s2">)</span>
+<a name="l494"><span class="ln">494  </span></a>
+<a name="l495"><span class="ln">495  </span></a>    <span class="s1">p</span><span class="s2">.</span><span class="s1">map_hue</span><span class="s2">(</span><span class="s1">palette</span><span class="s2">=</span><span class="s1">palette</span><span class="s2">, </span><span class="s1">order</span><span class="s2">=</span><span class="s1">hue_order</span><span class="s2">, </span><span class="s1">norm</span><span class="s2">=</span><span class="s1">hue_norm</span><span class="s2">)</span>
+<a name="l496"><span class="ln">496  </span></a>    <span class="s1">p</span><span class="s2">.</span><span class="s1">map_size</span><span class="s2">(</span><span class="s1">sizes</span><span class="s2">=</span><span class="s1">sizes</span><span class="s2">, </span><span class="s1">order</span><span class="s2">=</span><span class="s1">size_order</span><span class="s2">, </span><span class="s1">norm</span><span class="s2">=</span><span class="s1">size_norm</span><span class="s2">)</span>
+<a name="l497"><span class="ln">497  </span></a>    <span class="s1">p</span><span class="s2">.</span><span class="s1">map_style</span><span class="s2">(</span><span class="s1">markers</span><span class="s2">=</span><span class="s1">markers</span><span class="s2">, </span><span class="s1">dashes</span><span class="s2">=</span><span class="s1">dashes</span><span class="s2">, </span><span class="s1">order</span><span class="s2">=</span><span class="s1">style_order</span><span class="s2">)</span>
+<a name="l498"><span class="ln">498  </span></a>
+<a name="l499"><span class="ln">499  </span></a>    <span class="s0">if </span><span class="s1">ax </span><span class="s0">is None</span><span class="s2">:</span>
+<a name="l500"><span class="ln">500  </span></a>        <span class="s1">ax </span><span class="s2">= </span><span class="s1">plt</span><span class="s2">.</span><span class="s1">gca</span><span class="s2">()</span>
+<a name="l501"><span class="ln">501  </span></a>
+<a name="l502"><span class="ln">502  </span></a>    <span class="s0">if </span><span class="s3">&quot;style&quot; </span><span class="s0">not in </span><span class="s1">p</span><span class="s2">.</span><span class="s1">variables </span><span class="s0">and not </span><span class="s2">{</span><span class="s3">&quot;ls&quot;</span><span class="s2">, </span><span class="s3">&quot;linestyle&quot;</span><span class="s2">} &amp; </span><span class="s1">set</span><span class="s2">(</span><span class="s1">kwargs</span><span class="s2">):  </span><span class="s4"># XXX</span>
+<a name="l503"><span class="ln">503  </span></a>        <span class="s1">kwargs</span><span class="s2">[</span><span class="s3">&quot;dashes&quot;</span><span class="s2">] = </span><span class="s3">&quot;&quot; </span><span class="s0">if </span><span class="s1">dashes </span><span class="s0">is None or </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">dashes</span><span class="s2">, </span><span class="s1">bool</span><span class="s2">) </span><span class="s0">else </span><span class="s1">dashes</span>
+<a name="l504"><span class="ln">504  </span></a>
+<a name="l505"><span class="ln">505  </span></a>    <span class="s0">if not </span><span class="s1">p</span><span class="s2">.</span><span class="s1">has_xy_data</span><span class="s2">:</span>
+<a name="l506"><span class="ln">506  </span></a>        <span class="s0">return </span><span class="s1">ax</span>
+<a name="l507"><span class="ln">507  </span></a>
+<a name="l508"><span class="ln">508  </span></a>    <span class="s1">p</span><span class="s2">.</span><span class="s1">_attach</span><span class="s2">(</span><span class="s1">ax</span><span class="s2">)</span>
+<a name="l509"><span class="ln">509  </span></a>
+<a name="l510"><span class="ln">510  </span></a>    <span class="s4"># Other functions have color as an explicit param,</span>
+<a name="l511"><span class="ln">511  </span></a>    <span class="s4"># and we should probably do that here too</span>
+<a name="l512"><span class="ln">512  </span></a>    <span class="s1">color </span><span class="s2">= </span><span class="s1">kwargs</span><span class="s2">.</span><span class="s1">pop</span><span class="s2">(</span><span class="s3">&quot;color&quot;</span><span class="s2">, </span><span class="s1">kwargs</span><span class="s2">.</span><span class="s1">pop</span><span class="s2">(</span><span class="s3">&quot;c&quot;</span><span class="s2">, </span><span class="s0">None</span><span class="s2">))</span>
+<a name="l513"><span class="ln">513  </span></a>    <span class="s1">kwargs</span><span class="s2">[</span><span class="s3">&quot;color&quot;</span><span class="s2">] = </span><span class="s1">_default_color</span><span class="s2">(</span><span class="s1">ax</span><span class="s2">.</span><span class="s1">plot</span><span class="s2">, </span><span class="s1">hue</span><span class="s2">, </span><span class="s1">color</span><span class="s2">, </span><span class="s1">kwargs</span><span class="s2">)</span>
+<a name="l514"><span class="ln">514  </span></a>
+<a name="l515"><span class="ln">515  </span></a>    <span class="s1">p</span><span class="s2">.</span><span class="s1">plot</span><span class="s2">(</span><span class="s1">ax</span><span class="s2">, </span><span class="s1">kwargs</span><span class="s2">)</span>
+<a name="l516"><span class="ln">516  </span></a>    <span class="s0">return </span><span class="s1">ax</span>
+<a name="l517"><span class="ln">517  </span></a>
+<a name="l518"><span class="ln">518  </span></a>
+<a name="l519"><span class="ln">519  </span></a><span class="s1">lineplot</span><span class="s2">.</span><span class="s1">__doc__ </span><span class="s2">= </span><span class="s3">&quot;&quot;&quot;</span><span class="s0">\ 
+<a name="l520"><span class="ln">520  </span></a></span><span class="s3">Draw a line plot with possibility of several semantic groupings. 
+<a name="l521"><span class="ln">521  </span></a> 
+<a name="l522"><span class="ln">522  </span></a>{narrative.main_api} 
+<a name="l523"><span class="ln">523  </span></a> 
+<a name="l524"><span class="ln">524  </span></a>{narrative.relational_semantic} 
+<a name="l525"><span class="ln">525  </span></a> 
+<a name="l526"><span class="ln">526  </span></a>By default, the plot aggregates over multiple `y` values at each value of 
+<a name="l527"><span class="ln">527  </span></a>`x` and shows an estimate of the central tendency and a confidence 
+<a name="l528"><span class="ln">528  </span></a>interval for that estimate. 
+<a name="l529"><span class="ln">529  </span></a> 
+<a name="l530"><span class="ln">530  </span></a>Parameters 
+<a name="l531"><span class="ln">531  </span></a>---------- 
+<a name="l532"><span class="ln">532  </span></a>{params.core.data} 
+<a name="l533"><span class="ln">533  </span></a>{params.core.xy} 
+<a name="l534"><span class="ln">534  </span></a>hue : vector or key in `data` 
+<a name="l535"><span class="ln">535  </span></a>    Grouping variable that will produce lines with different colors. 
+<a name="l536"><span class="ln">536  </span></a>    Can be either categorical or numeric, although color mapping will 
+<a name="l537"><span class="ln">537  </span></a>    behave differently in latter case. 
+<a name="l538"><span class="ln">538  </span></a>size : vector or key in `data` 
+<a name="l539"><span class="ln">539  </span></a>    Grouping variable that will produce lines with different widths. 
+<a name="l540"><span class="ln">540  </span></a>    Can be either categorical or numeric, although size mapping will 
+<a name="l541"><span class="ln">541  </span></a>    behave differently in latter case. 
+<a name="l542"><span class="ln">542  </span></a>style : vector or key in `data` 
+<a name="l543"><span class="ln">543  </span></a>    Grouping variable that will produce lines with different dashes 
+<a name="l544"><span class="ln">544  </span></a>    and/or markers. Can have a numeric dtype but will always be treated 
+<a name="l545"><span class="ln">545  </span></a>    as categorical. 
+<a name="l546"><span class="ln">546  </span></a>{params.rel.units} 
+<a name="l547"><span class="ln">547  </span></a>weights : vector or key in `data` 
+<a name="l548"><span class="ln">548  </span></a>    Data values or column used to compute weighted estimation. 
+<a name="l549"><span class="ln">549  </span></a>    Note that use of weights currently limits the choice of statistics 
+<a name="l550"><span class="ln">550  </span></a>    to a 'mean' estimator and 'ci' errorbar. 
+<a name="l551"><span class="ln">551  </span></a>{params.core.palette} 
+<a name="l552"><span class="ln">552  </span></a>{params.core.hue_order} 
+<a name="l553"><span class="ln">553  </span></a>{params.core.hue_norm} 
+<a name="l554"><span class="ln">554  </span></a>{params.rel.sizes} 
+<a name="l555"><span class="ln">555  </span></a>{params.rel.size_order} 
+<a name="l556"><span class="ln">556  </span></a>{params.rel.size_norm} 
+<a name="l557"><span class="ln">557  </span></a>{params.rel.dashes} 
+<a name="l558"><span class="ln">558  </span></a>{params.rel.markers} 
+<a name="l559"><span class="ln">559  </span></a>{params.rel.style_order} 
+<a name="l560"><span class="ln">560  </span></a>{params.rel.estimator} 
+<a name="l561"><span class="ln">561  </span></a>{params.stat.errorbar} 
+<a name="l562"><span class="ln">562  </span></a>{params.rel.n_boot} 
+<a name="l563"><span class="ln">563  </span></a>{params.rel.seed} 
+<a name="l564"><span class="ln">564  </span></a>orient : &quot;x&quot; or &quot;y&quot; 
+<a name="l565"><span class="ln">565  </span></a>    Dimension along which the data are sorted / aggregated. Equivalently, 
+<a name="l566"><span class="ln">566  </span></a>    the &quot;independent variable&quot; of the resulting function. 
+<a name="l567"><span class="ln">567  </span></a>sort : boolean 
+<a name="l568"><span class="ln">568  </span></a>    If True, the data will be sorted by the x and y variables, otherwise 
+<a name="l569"><span class="ln">569  </span></a>    lines will connect points in the order they appear in the dataset. 
+<a name="l570"><span class="ln">570  </span></a>err_style : &quot;band&quot; or &quot;bars&quot; 
+<a name="l571"><span class="ln">571  </span></a>    Whether to draw the confidence intervals with translucent error bands 
+<a name="l572"><span class="ln">572  </span></a>    or discrete error bars. 
+<a name="l573"><span class="ln">573  </span></a>err_kws : dict of keyword arguments 
+<a name="l574"><span class="ln">574  </span></a>    Additional parameters to control the aesthetics of the error bars. The 
+<a name="l575"><span class="ln">575  </span></a>    kwargs are passed either to :meth:`matplotlib.axes.Axes.fill_between` 
+<a name="l576"><span class="ln">576  </span></a>    or :meth:`matplotlib.axes.Axes.errorbar`, depending on `err_style`. 
+<a name="l577"><span class="ln">577  </span></a>{params.rel.legend} 
+<a name="l578"><span class="ln">578  </span></a>{params.rel.ci} 
+<a name="l579"><span class="ln">579  </span></a>{params.core.ax} 
+<a name="l580"><span class="ln">580  </span></a>kwargs : key, value mappings 
+<a name="l581"><span class="ln">581  </span></a>    Other keyword arguments are passed down to 
+<a name="l582"><span class="ln">582  </span></a>    :meth:`matplotlib.axes.Axes.plot`. 
+<a name="l583"><span class="ln">583  </span></a> 
+<a name="l584"><span class="ln">584  </span></a>Returns 
+<a name="l585"><span class="ln">585  </span></a>------- 
+<a name="l586"><span class="ln">586  </span></a>{returns.ax} 
+<a name="l587"><span class="ln">587  </span></a> 
+<a name="l588"><span class="ln">588  </span></a>See Also 
+<a name="l589"><span class="ln">589  </span></a>-------- 
+<a name="l590"><span class="ln">590  </span></a>{seealso.scatterplot} 
+<a name="l591"><span class="ln">591  </span></a>{seealso.pointplot} 
+<a name="l592"><span class="ln">592  </span></a> 
+<a name="l593"><span class="ln">593  </span></a>Examples 
+<a name="l594"><span class="ln">594  </span></a>-------- 
+<a name="l595"><span class="ln">595  </span></a> 
+<a name="l596"><span class="ln">596  </span></a>.. include:: ../docstrings/lineplot.rst 
+<a name="l597"><span class="ln">597  </span></a> 
+<a name="l598"><span class="ln">598  </span></a>&quot;&quot;&quot;</span><span class="s2">.</span><span class="s1">format</span><span class="s2">(</span>
+<a name="l599"><span class="ln">599  </span></a>    <span class="s1">narrative</span><span class="s2">=</span><span class="s1">_relational_narrative</span><span class="s2">,</span>
+<a name="l600"><span class="ln">600  </span></a>    <span class="s1">params</span><span class="s2">=</span><span class="s1">_param_docs</span><span class="s2">,</span>
+<a name="l601"><span class="ln">601  </span></a>    <span class="s1">returns</span><span class="s2">=</span><span class="s1">_core_docs</span><span class="s2">[</span><span class="s3">&quot;returns&quot;</span><span class="s2">],</span>
+<a name="l602"><span class="ln">602  </span></a>    <span class="s1">seealso</span><span class="s2">=</span><span class="s1">_core_docs</span><span class="s2">[</span><span class="s3">&quot;seealso&quot;</span><span class="s2">],</span>
+<a name="l603"><span class="ln">603  </span></a><span class="s2">)</span>
+<a name="l604"><span class="ln">604  </span></a>
+<a name="l605"><span class="ln">605  </span></a>
+<a name="l606"><span class="ln">606  </span></a><span class="s0">def </span><span class="s1">scatterplot</span><span class="s2">(</span>
+<a name="l607"><span class="ln">607  </span></a>    <span class="s1">data</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, *,</span>
+<a name="l608"><span class="ln">608  </span></a>    <span class="s1">x</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">y</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">hue</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">style</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l609"><span class="ln">609  </span></a>    <span class="s1">palette</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">hue_order</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">hue_norm</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l610"><span class="ln">610  </span></a>    <span class="s1">sizes</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">size_order</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">size_norm</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l611"><span class="ln">611  </span></a>    <span class="s1">markers</span><span class="s2">=</span><span class="s0">True</span><span class="s2">, </span><span class="s1">style_order</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">legend</span><span class="s2">=</span><span class="s3">&quot;auto&quot;</span><span class="s2">, </span><span class="s1">ax</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l612"><span class="ln">612  </span></a>    <span class="s2">**</span><span class="s1">kwargs</span>
+<a name="l613"><span class="ln">613  </span></a><span class="s2">):</span>
+<a name="l614"><span class="ln">614  </span></a>
+<a name="l615"><span class="ln">615  </span></a>    <span class="s1">p </span><span class="s2">= </span><span class="s1">_ScatterPlotter</span><span class="s2">(</span>
+<a name="l616"><span class="ln">616  </span></a>        <span class="s1">data</span><span class="s2">=</span><span class="s1">data</span><span class="s2">,</span>
+<a name="l617"><span class="ln">617  </span></a>        <span class="s1">variables</span><span class="s2">=</span><span class="s1">dict</span><span class="s2">(</span><span class="s1">x</span><span class="s2">=</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">=</span><span class="s1">y</span><span class="s2">, </span><span class="s1">hue</span><span class="s2">=</span><span class="s1">hue</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=</span><span class="s1">size</span><span class="s2">, </span><span class="s1">style</span><span class="s2">=</span><span class="s1">style</span><span class="s2">),</span>
+<a name="l618"><span class="ln">618  </span></a>        <span class="s1">legend</span><span class="s2">=</span><span class="s1">legend</span>
+<a name="l619"><span class="ln">619  </span></a>    <span class="s2">)</span>
+<a name="l620"><span class="ln">620  </span></a>
+<a name="l621"><span class="ln">621  </span></a>    <span class="s1">p</span><span class="s2">.</span><span class="s1">map_hue</span><span class="s2">(</span><span class="s1">palette</span><span class="s2">=</span><span class="s1">palette</span><span class="s2">, </span><span class="s1">order</span><span class="s2">=</span><span class="s1">hue_order</span><span class="s2">, </span><span class="s1">norm</span><span class="s2">=</span><span class="s1">hue_norm</span><span class="s2">)</span>
+<a name="l622"><span class="ln">622  </span></a>    <span class="s1">p</span><span class="s2">.</span><span class="s1">map_size</span><span class="s2">(</span><span class="s1">sizes</span><span class="s2">=</span><span class="s1">sizes</span><span class="s2">, </span><span class="s1">order</span><span class="s2">=</span><span class="s1">size_order</span><span class="s2">, </span><span class="s1">norm</span><span class="s2">=</span><span class="s1">size_norm</span><span class="s2">)</span>
+<a name="l623"><span class="ln">623  </span></a>    <span class="s1">p</span><span class="s2">.</span><span class="s1">map_style</span><span class="s2">(</span><span class="s1">markers</span><span class="s2">=</span><span class="s1">markers</span><span class="s2">, </span><span class="s1">order</span><span class="s2">=</span><span class="s1">style_order</span><span class="s2">)</span>
+<a name="l624"><span class="ln">624  </span></a>
+<a name="l625"><span class="ln">625  </span></a>    <span class="s0">if </span><span class="s1">ax </span><span class="s0">is None</span><span class="s2">:</span>
+<a name="l626"><span class="ln">626  </span></a>        <span class="s1">ax </span><span class="s2">= </span><span class="s1">plt</span><span class="s2">.</span><span class="s1">gca</span><span class="s2">()</span>
+<a name="l627"><span class="ln">627  </span></a>
+<a name="l628"><span class="ln">628  </span></a>    <span class="s0">if not </span><span class="s1">p</span><span class="s2">.</span><span class="s1">has_xy_data</span><span class="s2">:</span>
+<a name="l629"><span class="ln">629  </span></a>        <span class="s0">return </span><span class="s1">ax</span>
+<a name="l630"><span class="ln">630  </span></a>
+<a name="l631"><span class="ln">631  </span></a>    <span class="s1">p</span><span class="s2">.</span><span class="s1">_attach</span><span class="s2">(</span><span class="s1">ax</span><span class="s2">)</span>
+<a name="l632"><span class="ln">632  </span></a>
+<a name="l633"><span class="ln">633  </span></a>    <span class="s1">color </span><span class="s2">= </span><span class="s1">kwargs</span><span class="s2">.</span><span class="s1">pop</span><span class="s2">(</span><span class="s3">&quot;color&quot;</span><span class="s2">, </span><span class="s0">None</span><span class="s2">)</span>
+<a name="l634"><span class="ln">634  </span></a>    <span class="s1">kwargs</span><span class="s2">[</span><span class="s3">&quot;color&quot;</span><span class="s2">] = </span><span class="s1">_default_color</span><span class="s2">(</span><span class="s1">ax</span><span class="s2">.</span><span class="s1">scatter</span><span class="s2">, </span><span class="s1">hue</span><span class="s2">, </span><span class="s1">color</span><span class="s2">, </span><span class="s1">kwargs</span><span class="s2">)</span>
+<a name="l635"><span class="ln">635  </span></a>
+<a name="l636"><span class="ln">636  </span></a>    <span class="s1">p</span><span class="s2">.</span><span class="s1">plot</span><span class="s2">(</span><span class="s1">ax</span><span class="s2">, </span><span class="s1">kwargs</span><span class="s2">)</span>
+<a name="l637"><span class="ln">637  </span></a>
+<a name="l638"><span class="ln">638  </span></a>    <span class="s0">return </span><span class="s1">ax</span>
+<a name="l639"><span class="ln">639  </span></a>
+<a name="l640"><span class="ln">640  </span></a>
+<a name="l641"><span class="ln">641  </span></a><span class="s1">scatterplot</span><span class="s2">.</span><span class="s1">__doc__ </span><span class="s2">= </span><span class="s3">&quot;&quot;&quot;</span><span class="s0">\ 
+<a name="l642"><span class="ln">642  </span></a></span><span class="s3">Draw a scatter plot with possibility of several semantic groupings. 
+<a name="l643"><span class="ln">643  </span></a> 
+<a name="l644"><span class="ln">644  </span></a>{narrative.main_api} 
+<a name="l645"><span class="ln">645  </span></a> 
+<a name="l646"><span class="ln">646  </span></a>{narrative.relational_semantic} 
+<a name="l647"><span class="ln">647  </span></a> 
+<a name="l648"><span class="ln">648  </span></a>Parameters 
+<a name="l649"><span class="ln">649  </span></a>---------- 
+<a name="l650"><span class="ln">650  </span></a>{params.core.data} 
+<a name="l651"><span class="ln">651  </span></a>{params.core.xy} 
+<a name="l652"><span class="ln">652  </span></a>hue : vector or key in `data` 
+<a name="l653"><span class="ln">653  </span></a>    Grouping variable that will produce points with different colors. 
+<a name="l654"><span class="ln">654  </span></a>    Can be either categorical or numeric, although color mapping will 
+<a name="l655"><span class="ln">655  </span></a>    behave differently in latter case. 
+<a name="l656"><span class="ln">656  </span></a>size : vector or key in `data` 
+<a name="l657"><span class="ln">657  </span></a>    Grouping variable that will produce points with different sizes. 
+<a name="l658"><span class="ln">658  </span></a>    Can be either categorical or numeric, although size mapping will 
+<a name="l659"><span class="ln">659  </span></a>    behave differently in latter case. 
+<a name="l660"><span class="ln">660  </span></a>style : vector or key in `data` 
+<a name="l661"><span class="ln">661  </span></a>    Grouping variable that will produce points with different markers. 
+<a name="l662"><span class="ln">662  </span></a>    Can have a numeric dtype but will always be treated as categorical. 
+<a name="l663"><span class="ln">663  </span></a>{params.core.palette} 
+<a name="l664"><span class="ln">664  </span></a>{params.core.hue_order} 
+<a name="l665"><span class="ln">665  </span></a>{params.core.hue_norm} 
+<a name="l666"><span class="ln">666  </span></a>{params.rel.sizes} 
+<a name="l667"><span class="ln">667  </span></a>{params.rel.size_order} 
+<a name="l668"><span class="ln">668  </span></a>{params.rel.size_norm} 
+<a name="l669"><span class="ln">669  </span></a>{params.rel.markers} 
+<a name="l670"><span class="ln">670  </span></a>{params.rel.style_order} 
+<a name="l671"><span class="ln">671  </span></a>{params.rel.legend} 
+<a name="l672"><span class="ln">672  </span></a>{params.core.ax} 
+<a name="l673"><span class="ln">673  </span></a>kwargs : key, value mappings 
+<a name="l674"><span class="ln">674  </span></a>    Other keyword arguments are passed down to 
+<a name="l675"><span class="ln">675  </span></a>    :meth:`matplotlib.axes.Axes.scatter`. 
+<a name="l676"><span class="ln">676  </span></a> 
+<a name="l677"><span class="ln">677  </span></a>Returns 
+<a name="l678"><span class="ln">678  </span></a>------- 
+<a name="l679"><span class="ln">679  </span></a>{returns.ax} 
+<a name="l680"><span class="ln">680  </span></a> 
+<a name="l681"><span class="ln">681  </span></a>See Also 
+<a name="l682"><span class="ln">682  </span></a>-------- 
+<a name="l683"><span class="ln">683  </span></a>{seealso.lineplot} 
+<a name="l684"><span class="ln">684  </span></a>{seealso.stripplot} 
+<a name="l685"><span class="ln">685  </span></a>{seealso.swarmplot} 
+<a name="l686"><span class="ln">686  </span></a> 
+<a name="l687"><span class="ln">687  </span></a>Examples 
+<a name="l688"><span class="ln">688  </span></a>-------- 
+<a name="l689"><span class="ln">689  </span></a> 
+<a name="l690"><span class="ln">690  </span></a>.. include:: ../docstrings/scatterplot.rst 
+<a name="l691"><span class="ln">691  </span></a> 
+<a name="l692"><span class="ln">692  </span></a>&quot;&quot;&quot;</span><span class="s2">.</span><span class="s1">format</span><span class="s2">(</span>
+<a name="l693"><span class="ln">693  </span></a>    <span class="s1">narrative</span><span class="s2">=</span><span class="s1">_relational_narrative</span><span class="s2">,</span>
+<a name="l694"><span class="ln">694  </span></a>    <span class="s1">params</span><span class="s2">=</span><span class="s1">_param_docs</span><span class="s2">,</span>
+<a name="l695"><span class="ln">695  </span></a>    <span class="s1">returns</span><span class="s2">=</span><span class="s1">_core_docs</span><span class="s2">[</span><span class="s3">&quot;returns&quot;</span><span class="s2">],</span>
+<a name="l696"><span class="ln">696  </span></a>    <span class="s1">seealso</span><span class="s2">=</span><span class="s1">_core_docs</span><span class="s2">[</span><span class="s3">&quot;seealso&quot;</span><span class="s2">],</span>
+<a name="l697"><span class="ln">697  </span></a><span class="s2">)</span>
+<a name="l698"><span class="ln">698  </span></a>
+<a name="l699"><span class="ln">699  </span></a>
+<a name="l700"><span class="ln">700  </span></a><span class="s0">def </span><span class="s1">relplot</span><span class="s2">(</span>
+<a name="l701"><span class="ln">701  </span></a>    <span class="s1">data</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, *,</span>
+<a name="l702"><span class="ln">702  </span></a>    <span class="s1">x</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">y</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">hue</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">style</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">units</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">weights</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l703"><span class="ln">703  </span></a>    <span class="s1">row</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">col</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">col_wrap</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">row_order</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">col_order</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l704"><span class="ln">704  </span></a>    <span class="s1">palette</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">hue_order</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">hue_norm</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l705"><span class="ln">705  </span></a>    <span class="s1">sizes</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">size_order</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">size_norm</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l706"><span class="ln">706  </span></a>    <span class="s1">markers</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">dashes</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">style_order</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l707"><span class="ln">707  </span></a>    <span class="s1">legend</span><span class="s2">=</span><span class="s3">&quot;auto&quot;</span><span class="s2">, </span><span class="s1">kind</span><span class="s2">=</span><span class="s3">&quot;scatter&quot;</span><span class="s2">, </span><span class="s1">height</span><span class="s2">=</span><span class="s5">5</span><span class="s2">, </span><span class="s1">aspect</span><span class="s2">=</span><span class="s5">1</span><span class="s2">, </span><span class="s1">facet_kws</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l708"><span class="ln">708  </span></a>    <span class="s2">**</span><span class="s1">kwargs</span>
+<a name="l709"><span class="ln">709  </span></a><span class="s2">):</span>
+<a name="l710"><span class="ln">710  </span></a>
+<a name="l711"><span class="ln">711  </span></a>    <span class="s0">if </span><span class="s1">kind </span><span class="s2">== </span><span class="s3">&quot;scatter&quot;</span><span class="s2">:</span>
+<a name="l712"><span class="ln">712  </span></a>
+<a name="l713"><span class="ln">713  </span></a>        <span class="s1">Plotter </span><span class="s2">= </span><span class="s1">_ScatterPlotter</span>
+<a name="l714"><span class="ln">714  </span></a>        <span class="s1">func </span><span class="s2">= </span><span class="s1">scatterplot</span>
+<a name="l715"><span class="ln">715  </span></a>        <span class="s1">markers </span><span class="s2">= </span><span class="s0">True if </span><span class="s1">markers </span><span class="s0">is None else </span><span class="s1">markers</span>
+<a name="l716"><span class="ln">716  </span></a>
+<a name="l717"><span class="ln">717  </span></a>    <span class="s0">elif </span><span class="s1">kind </span><span class="s2">== </span><span class="s3">&quot;line&quot;</span><span class="s2">:</span>
+<a name="l718"><span class="ln">718  </span></a>
+<a name="l719"><span class="ln">719  </span></a>        <span class="s1">Plotter </span><span class="s2">= </span><span class="s1">_LinePlotter</span>
+<a name="l720"><span class="ln">720  </span></a>        <span class="s1">func </span><span class="s2">= </span><span class="s1">lineplot</span>
+<a name="l721"><span class="ln">721  </span></a>        <span class="s1">dashes </span><span class="s2">= </span><span class="s0">True if </span><span class="s1">dashes </span><span class="s0">is None else </span><span class="s1">dashes</span>
+<a name="l722"><span class="ln">722  </span></a>
+<a name="l723"><span class="ln">723  </span></a>    <span class="s0">else</span><span class="s2">:</span>
+<a name="l724"><span class="ln">724  </span></a>        <span class="s1">err </span><span class="s2">= </span><span class="s3">f&quot;Plot kind </span><span class="s0">{</span><span class="s1">kind</span><span class="s0">} </span><span class="s3">not recognized&quot;</span>
+<a name="l725"><span class="ln">725  </span></a>        <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s1">err</span><span class="s2">)</span>
+<a name="l726"><span class="ln">726  </span></a>
+<a name="l727"><span class="ln">727  </span></a>    <span class="s4"># Check for attempt to plot onto specific axes and warn</span>
+<a name="l728"><span class="ln">728  </span></a>    <span class="s0">if </span><span class="s3">&quot;ax&quot; </span><span class="s0">in </span><span class="s1">kwargs</span><span class="s2">:</span>
+<a name="l729"><span class="ln">729  </span></a>        <span class="s1">msg </span><span class="s2">= (</span>
+<a name="l730"><span class="ln">730  </span></a>            <span class="s3">&quot;relplot is a figure-level function and does not accept &quot;</span>
+<a name="l731"><span class="ln">731  </span></a>            <span class="s3">&quot;the `ax` parameter. You may wish to try {}&quot;</span><span class="s2">.</span><span class="s1">format</span><span class="s2">(</span><span class="s1">kind </span><span class="s2">+ </span><span class="s3">&quot;plot&quot;</span><span class="s2">)</span>
+<a name="l732"><span class="ln">732  </span></a>        <span class="s2">)</span>
+<a name="l733"><span class="ln">733  </span></a>        <span class="s1">warnings</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span><span class="s1">msg</span><span class="s2">, </span><span class="s1">UserWarning</span><span class="s2">)</span>
+<a name="l734"><span class="ln">734  </span></a>        <span class="s1">kwargs</span><span class="s2">.</span><span class="s1">pop</span><span class="s2">(</span><span class="s3">&quot;ax&quot;</span><span class="s2">)</span>
+<a name="l735"><span class="ln">735  </span></a>
+<a name="l736"><span class="ln">736  </span></a>    <span class="s4"># Use the full dataset to map the semantics</span>
+<a name="l737"><span class="ln">737  </span></a>    <span class="s1">variables </span><span class="s2">= </span><span class="s1">dict</span><span class="s2">(</span><span class="s1">x</span><span class="s2">=</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">=</span><span class="s1">y</span><span class="s2">, </span><span class="s1">hue</span><span class="s2">=</span><span class="s1">hue</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=</span><span class="s1">size</span><span class="s2">, </span><span class="s1">style</span><span class="s2">=</span><span class="s1">style</span><span class="s2">)</span>
+<a name="l738"><span class="ln">738  </span></a>    <span class="s0">if </span><span class="s1">kind </span><span class="s2">== </span><span class="s3">&quot;line&quot;</span><span class="s2">:</span>
+<a name="l739"><span class="ln">739  </span></a>        <span class="s1">variables</span><span class="s2">[</span><span class="s3">&quot;units&quot;</span><span class="s2">] = </span><span class="s1">units</span>
+<a name="l740"><span class="ln">740  </span></a>        <span class="s1">variables</span><span class="s2">[</span><span class="s3">&quot;weight&quot;</span><span class="s2">] = </span><span class="s1">weights</span>
+<a name="l741"><span class="ln">741  </span></a>    <span class="s0">else</span><span class="s2">:</span>
+<a name="l742"><span class="ln">742  </span></a>        <span class="s0">if </span><span class="s1">units </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l743"><span class="ln">743  </span></a>            <span class="s1">msg </span><span class="s2">= </span><span class="s3">&quot;The `units` parameter has no effect with kind='scatter'.&quot;</span>
+<a name="l744"><span class="ln">744  </span></a>            <span class="s1">warnings</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span><span class="s1">msg</span><span class="s2">, </span><span class="s1">stacklevel</span><span class="s2">=</span><span class="s5">2</span><span class="s2">)</span>
+<a name="l745"><span class="ln">745  </span></a>        <span class="s0">if </span><span class="s1">weights </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l746"><span class="ln">746  </span></a>            <span class="s1">msg </span><span class="s2">= </span><span class="s3">&quot;The `weights` parameter has no effect with kind='scatter'.&quot;</span>
+<a name="l747"><span class="ln">747  </span></a>            <span class="s1">warnings</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span><span class="s1">msg</span><span class="s2">, </span><span class="s1">stacklevel</span><span class="s2">=</span><span class="s5">2</span><span class="s2">)</span>
+<a name="l748"><span class="ln">748  </span></a>    <span class="s1">p </span><span class="s2">= </span><span class="s1">Plotter</span><span class="s2">(</span>
+<a name="l749"><span class="ln">749  </span></a>        <span class="s1">data</span><span class="s2">=</span><span class="s1">data</span><span class="s2">,</span>
+<a name="l750"><span class="ln">750  </span></a>        <span class="s1">variables</span><span class="s2">=</span><span class="s1">variables</span><span class="s2">,</span>
+<a name="l751"><span class="ln">751  </span></a>        <span class="s1">legend</span><span class="s2">=</span><span class="s1">legend</span><span class="s2">,</span>
+<a name="l752"><span class="ln">752  </span></a>    <span class="s2">)</span>
+<a name="l753"><span class="ln">753  </span></a>    <span class="s1">p</span><span class="s2">.</span><span class="s1">map_hue</span><span class="s2">(</span><span class="s1">palette</span><span class="s2">=</span><span class="s1">palette</span><span class="s2">, </span><span class="s1">order</span><span class="s2">=</span><span class="s1">hue_order</span><span class="s2">, </span><span class="s1">norm</span><span class="s2">=</span><span class="s1">hue_norm</span><span class="s2">)</span>
+<a name="l754"><span class="ln">754  </span></a>    <span class="s1">p</span><span class="s2">.</span><span class="s1">map_size</span><span class="s2">(</span><span class="s1">sizes</span><span class="s2">=</span><span class="s1">sizes</span><span class="s2">, </span><span class="s1">order</span><span class="s2">=</span><span class="s1">size_order</span><span class="s2">, </span><span class="s1">norm</span><span class="s2">=</span><span class="s1">size_norm</span><span class="s2">)</span>
+<a name="l755"><span class="ln">755  </span></a>    <span class="s1">p</span><span class="s2">.</span><span class="s1">map_style</span><span class="s2">(</span><span class="s1">markers</span><span class="s2">=</span><span class="s1">markers</span><span class="s2">, </span><span class="s1">dashes</span><span class="s2">=</span><span class="s1">dashes</span><span class="s2">, </span><span class="s1">order</span><span class="s2">=</span><span class="s1">style_order</span><span class="s2">)</span>
+<a name="l756"><span class="ln">756  </span></a>
+<a name="l757"><span class="ln">757  </span></a>    <span class="s4"># Extract the semantic mappings</span>
+<a name="l758"><span class="ln">758  </span></a>    <span class="s0">if </span><span class="s3">&quot;hue&quot; </span><span class="s0">in </span><span class="s1">p</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">:</span>
+<a name="l759"><span class="ln">759  </span></a>        <span class="s1">palette </span><span class="s2">= </span><span class="s1">p</span><span class="s2">.</span><span class="s1">_hue_map</span><span class="s2">.</span><span class="s1">lookup_table</span>
+<a name="l760"><span class="ln">760  </span></a>        <span class="s1">hue_order </span><span class="s2">= </span><span class="s1">p</span><span class="s2">.</span><span class="s1">_hue_map</span><span class="s2">.</span><span class="s1">levels</span>
+<a name="l761"><span class="ln">761  </span></a>        <span class="s1">hue_norm </span><span class="s2">= </span><span class="s1">p</span><span class="s2">.</span><span class="s1">_hue_map</span><span class="s2">.</span><span class="s1">norm</span>
+<a name="l762"><span class="ln">762  </span></a>    <span class="s0">else</span><span class="s2">:</span>
+<a name="l763"><span class="ln">763  </span></a>        <span class="s1">palette </span><span class="s2">= </span><span class="s1">hue_order </span><span class="s2">= </span><span class="s1">hue_norm </span><span class="s2">= </span><span class="s0">None</span>
+<a name="l764"><span class="ln">764  </span></a>
+<a name="l765"><span class="ln">765  </span></a>    <span class="s0">if </span><span class="s3">&quot;size&quot; </span><span class="s0">in </span><span class="s1">p</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">:</span>
+<a name="l766"><span class="ln">766  </span></a>        <span class="s1">sizes </span><span class="s2">= </span><span class="s1">p</span><span class="s2">.</span><span class="s1">_size_map</span><span class="s2">.</span><span class="s1">lookup_table</span>
+<a name="l767"><span class="ln">767  </span></a>        <span class="s1">size_order </span><span class="s2">= </span><span class="s1">p</span><span class="s2">.</span><span class="s1">_size_map</span><span class="s2">.</span><span class="s1">levels</span>
+<a name="l768"><span class="ln">768  </span></a>        <span class="s1">size_norm </span><span class="s2">= </span><span class="s1">p</span><span class="s2">.</span><span class="s1">_size_map</span><span class="s2">.</span><span class="s1">norm</span>
+<a name="l769"><span class="ln">769  </span></a>
+<a name="l770"><span class="ln">770  </span></a>    <span class="s0">if </span><span class="s3">&quot;style&quot; </span><span class="s0">in </span><span class="s1">p</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">:</span>
+<a name="l771"><span class="ln">771  </span></a>        <span class="s1">style_order </span><span class="s2">= </span><span class="s1">p</span><span class="s2">.</span><span class="s1">_style_map</span><span class="s2">.</span><span class="s1">levels</span>
+<a name="l772"><span class="ln">772  </span></a>        <span class="s0">if </span><span class="s1">markers</span><span class="s2">:</span>
+<a name="l773"><span class="ln">773  </span></a>            <span class="s1">markers </span><span class="s2">= {</span><span class="s1">k</span><span class="s2">: </span><span class="s1">p</span><span class="s2">.</span><span class="s1">_style_map</span><span class="s2">(</span><span class="s1">k</span><span class="s2">, </span><span class="s3">&quot;marker&quot;</span><span class="s2">) </span><span class="s0">for </span><span class="s1">k </span><span class="s0">in </span><span class="s1">style_order</span><span class="s2">}</span>
+<a name="l774"><span class="ln">774  </span></a>        <span class="s0">else</span><span class="s2">:</span>
+<a name="l775"><span class="ln">775  </span></a>            <span class="s1">markers </span><span class="s2">= </span><span class="s0">None</span>
+<a name="l776"><span class="ln">776  </span></a>        <span class="s0">if </span><span class="s1">dashes</span><span class="s2">:</span>
+<a name="l777"><span class="ln">777  </span></a>            <span class="s1">dashes </span><span class="s2">= {</span><span class="s1">k</span><span class="s2">: </span><span class="s1">p</span><span class="s2">.</span><span class="s1">_style_map</span><span class="s2">(</span><span class="s1">k</span><span class="s2">, </span><span class="s3">&quot;dashes&quot;</span><span class="s2">) </span><span class="s0">for </span><span class="s1">k </span><span class="s0">in </span><span class="s1">style_order</span><span class="s2">}</span>
+<a name="l778"><span class="ln">778  </span></a>        <span class="s0">else</span><span class="s2">:</span>
+<a name="l779"><span class="ln">779  </span></a>            <span class="s1">dashes </span><span class="s2">= </span><span class="s0">None</span>
+<a name="l780"><span class="ln">780  </span></a>    <span class="s0">else</span><span class="s2">:</span>
+<a name="l781"><span class="ln">781  </span></a>        <span class="s1">markers </span><span class="s2">= </span><span class="s1">dashes </span><span class="s2">= </span><span class="s1">style_order </span><span class="s2">= </span><span class="s0">None</span>
+<a name="l782"><span class="ln">782  </span></a>
+<a name="l783"><span class="ln">783  </span></a>    <span class="s4"># Now extract the data that would be used to draw a single plot</span>
+<a name="l784"><span class="ln">784  </span></a>    <span class="s1">variables </span><span class="s2">= </span><span class="s1">p</span><span class="s2">.</span><span class="s1">variables</span>
+<a name="l785"><span class="ln">785  </span></a>    <span class="s1">plot_data </span><span class="s2">= </span><span class="s1">p</span><span class="s2">.</span><span class="s1">plot_data</span>
+<a name="l786"><span class="ln">786  </span></a>
+<a name="l787"><span class="ln">787  </span></a>    <span class="s4"># Define the common plotting parameters</span>
+<a name="l788"><span class="ln">788  </span></a>    <span class="s1">plot_kws </span><span class="s2">= </span><span class="s1">dict</span><span class="s2">(</span>
+<a name="l789"><span class="ln">789  </span></a>        <span class="s1">palette</span><span class="s2">=</span><span class="s1">palette</span><span class="s2">, </span><span class="s1">hue_order</span><span class="s2">=</span><span class="s1">hue_order</span><span class="s2">, </span><span class="s1">hue_norm</span><span class="s2">=</span><span class="s1">hue_norm</span><span class="s2">,</span>
+<a name="l790"><span class="ln">790  </span></a>        <span class="s1">sizes</span><span class="s2">=</span><span class="s1">sizes</span><span class="s2">, </span><span class="s1">size_order</span><span class="s2">=</span><span class="s1">size_order</span><span class="s2">, </span><span class="s1">size_norm</span><span class="s2">=</span><span class="s1">size_norm</span><span class="s2">,</span>
+<a name="l791"><span class="ln">791  </span></a>        <span class="s1">markers</span><span class="s2">=</span><span class="s1">markers</span><span class="s2">, </span><span class="s1">dashes</span><span class="s2">=</span><span class="s1">dashes</span><span class="s2">, </span><span class="s1">style_order</span><span class="s2">=</span><span class="s1">style_order</span><span class="s2">,</span>
+<a name="l792"><span class="ln">792  </span></a>        <span class="s1">legend</span><span class="s2">=</span><span class="s0">False</span><span class="s2">,</span>
+<a name="l793"><span class="ln">793  </span></a>    <span class="s2">)</span>
+<a name="l794"><span class="ln">794  </span></a>    <span class="s1">plot_kws</span><span class="s2">.</span><span class="s1">update</span><span class="s2">(</span><span class="s1">kwargs</span><span class="s2">)</span>
+<a name="l795"><span class="ln">795  </span></a>    <span class="s0">if </span><span class="s1">kind </span><span class="s2">== </span><span class="s3">&quot;scatter&quot;</span><span class="s2">:</span>
+<a name="l796"><span class="ln">796  </span></a>        <span class="s1">plot_kws</span><span class="s2">.</span><span class="s1">pop</span><span class="s2">(</span><span class="s3">&quot;dashes&quot;</span><span class="s2">)</span>
+<a name="l797"><span class="ln">797  </span></a>
+<a name="l798"><span class="ln">798  </span></a>    <span class="s4"># Add the grid semantics onto the plotter</span>
+<a name="l799"><span class="ln">799  </span></a>    <span class="s1">grid_variables </span><span class="s2">= </span><span class="s1">dict</span><span class="s2">(</span>
+<a name="l800"><span class="ln">800  </span></a>        <span class="s1">x</span><span class="s2">=</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">=</span><span class="s1">y</span><span class="s2">, </span><span class="s1">row</span><span class="s2">=</span><span class="s1">row</span><span class="s2">, </span><span class="s1">col</span><span class="s2">=</span><span class="s1">col</span><span class="s2">, </span><span class="s1">hue</span><span class="s2">=</span><span class="s1">hue</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=</span><span class="s1">size</span><span class="s2">, </span><span class="s1">style</span><span class="s2">=</span><span class="s1">style</span><span class="s2">,</span>
+<a name="l801"><span class="ln">801  </span></a>    <span class="s2">)</span>
+<a name="l802"><span class="ln">802  </span></a>    <span class="s0">if </span><span class="s1">kind </span><span class="s2">== </span><span class="s3">&quot;line&quot;</span><span class="s2">:</span>
+<a name="l803"><span class="ln">803  </span></a>        <span class="s1">grid_variables</span><span class="s2">.</span><span class="s1">update</span><span class="s2">(</span><span class="s1">units</span><span class="s2">=</span><span class="s1">units</span><span class="s2">, </span><span class="s1">weights</span><span class="s2">=</span><span class="s1">weights</span><span class="s2">)</span>
+<a name="l804"><span class="ln">804  </span></a>    <span class="s1">p</span><span class="s2">.</span><span class="s1">assign_variables</span><span class="s2">(</span><span class="s1">data</span><span class="s2">, </span><span class="s1">grid_variables</span><span class="s2">)</span>
+<a name="l805"><span class="ln">805  </span></a>
+<a name="l806"><span class="ln">806  </span></a>    <span class="s4"># Define the named variables for plotting on each facet</span>
+<a name="l807"><span class="ln">807  </span></a>    <span class="s4"># Rename the variables with a leading underscore to avoid</span>
+<a name="l808"><span class="ln">808  </span></a>    <span class="s4"># collisions with faceting variable names</span>
+<a name="l809"><span class="ln">809  </span></a>    <span class="s1">plot_variables </span><span class="s2">= {</span><span class="s1">v</span><span class="s2">: </span><span class="s3">f&quot;_</span><span class="s0">{</span><span class="s1">v</span><span class="s0">}</span><span class="s3">&quot; </span><span class="s0">for </span><span class="s1">v </span><span class="s0">in </span><span class="s1">variables</span><span class="s2">}</span>
+<a name="l810"><span class="ln">810  </span></a>    <span class="s0">if </span><span class="s3">&quot;weight&quot; </span><span class="s0">in </span><span class="s1">plot_variables</span><span class="s2">:</span>
+<a name="l811"><span class="ln">811  </span></a>        <span class="s1">plot_variables</span><span class="s2">[</span><span class="s3">&quot;weights&quot;</span><span class="s2">] = </span><span class="s1">plot_variables</span><span class="s2">.</span><span class="s1">pop</span><span class="s2">(</span><span class="s3">&quot;weight&quot;</span><span class="s2">)</span>
+<a name="l812"><span class="ln">812  </span></a>    <span class="s1">plot_kws</span><span class="s2">.</span><span class="s1">update</span><span class="s2">(</span><span class="s1">plot_variables</span><span class="s2">)</span>
+<a name="l813"><span class="ln">813  </span></a>
+<a name="l814"><span class="ln">814  </span></a>    <span class="s4"># Pass the row/col variables to FacetGrid with their original</span>
+<a name="l815"><span class="ln">815  </span></a>    <span class="s4"># names so that the axes titles render correctly</span>
+<a name="l816"><span class="ln">816  </span></a>    <span class="s0">for </span><span class="s1">var </span><span class="s0">in </span><span class="s2">[</span><span class="s3">&quot;row&quot;</span><span class="s2">, </span><span class="s3">&quot;col&quot;</span><span class="s2">]:</span>
+<a name="l817"><span class="ln">817  </span></a>        <span class="s4"># Handle faceting variables that lack name information</span>
+<a name="l818"><span class="ln">818  </span></a>        <span class="s0">if </span><span class="s1">var </span><span class="s0">in </span><span class="s1">p</span><span class="s2">.</span><span class="s1">variables </span><span class="s0">and </span><span class="s1">p</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">[</span><span class="s1">var</span><span class="s2">] </span><span class="s0">is None</span><span class="s2">:</span>
+<a name="l819"><span class="ln">819  </span></a>            <span class="s1">p</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">[</span><span class="s1">var</span><span class="s2">] = </span><span class="s3">f&quot;_</span><span class="s0">{</span><span class="s1">var</span><span class="s0">}</span><span class="s3">_&quot;</span>
+<a name="l820"><span class="ln">820  </span></a>    <span class="s1">grid_kws </span><span class="s2">= {</span><span class="s1">v</span><span class="s2">: </span><span class="s1">p</span><span class="s2">.</span><span class="s1">variables</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s1">v</span><span class="s2">) </span><span class="s0">for </span><span class="s1">v </span><span class="s0">in </span><span class="s2">[</span><span class="s3">&quot;row&quot;</span><span class="s2">, </span><span class="s3">&quot;col&quot;</span><span class="s2">]}</span>
+<a name="l821"><span class="ln">821  </span></a>
+<a name="l822"><span class="ln">822  </span></a>    <span class="s4"># Rename the columns of the plot_data structure appropriately</span>
+<a name="l823"><span class="ln">823  </span></a>    <span class="s1">new_cols </span><span class="s2">= </span><span class="s1">plot_variables</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">()</span>
+<a name="l824"><span class="ln">824  </span></a>    <span class="s1">new_cols</span><span class="s2">.</span><span class="s1">update</span><span class="s2">(</span><span class="s1">grid_kws</span><span class="s2">)</span>
+<a name="l825"><span class="ln">825  </span></a>    <span class="s1">full_data </span><span class="s2">= </span><span class="s1">p</span><span class="s2">.</span><span class="s1">plot_data</span><span class="s2">.</span><span class="s1">rename</span><span class="s2">(</span><span class="s1">columns</span><span class="s2">=</span><span class="s1">new_cols</span><span class="s2">)</span>
+<a name="l826"><span class="ln">826  </span></a>
+<a name="l827"><span class="ln">827  </span></a>    <span class="s4"># Set up the FacetGrid object</span>
+<a name="l828"><span class="ln">828  </span></a>    <span class="s1">facet_kws </span><span class="s2">= {} </span><span class="s0">if </span><span class="s1">facet_kws </span><span class="s0">is None else </span><span class="s1">facet_kws</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">()</span>
+<a name="l829"><span class="ln">829  </span></a>    <span class="s1">g </span><span class="s2">= </span><span class="s1">FacetGrid</span><span class="s2">(</span>
+<a name="l830"><span class="ln">830  </span></a>        <span class="s1">data</span><span class="s2">=</span><span class="s1">full_data</span><span class="s2">.</span><span class="s1">dropna</span><span class="s2">(</span><span class="s1">axis</span><span class="s2">=</span><span class="s5">1</span><span class="s2">, </span><span class="s1">how</span><span class="s2">=</span><span class="s3">&quot;all&quot;</span><span class="s2">),</span>
+<a name="l831"><span class="ln">831  </span></a>        <span class="s2">**</span><span class="s1">grid_kws</span><span class="s2">,</span>
+<a name="l832"><span class="ln">832  </span></a>        <span class="s1">col_wrap</span><span class="s2">=</span><span class="s1">col_wrap</span><span class="s2">, </span><span class="s1">row_order</span><span class="s2">=</span><span class="s1">row_order</span><span class="s2">, </span><span class="s1">col_order</span><span class="s2">=</span><span class="s1">col_order</span><span class="s2">,</span>
+<a name="l833"><span class="ln">833  </span></a>        <span class="s1">height</span><span class="s2">=</span><span class="s1">height</span><span class="s2">, </span><span class="s1">aspect</span><span class="s2">=</span><span class="s1">aspect</span><span class="s2">, </span><span class="s1">dropna</span><span class="s2">=</span><span class="s0">False</span><span class="s2">,</span>
+<a name="l834"><span class="ln">834  </span></a>        <span class="s2">**</span><span class="s1">facet_kws</span>
+<a name="l835"><span class="ln">835  </span></a>    <span class="s2">)</span>
+<a name="l836"><span class="ln">836  </span></a>
+<a name="l837"><span class="ln">837  </span></a>    <span class="s4"># Draw the plot</span>
+<a name="l838"><span class="ln">838  </span></a>    <span class="s1">g</span><span class="s2">.</span><span class="s1">map_dataframe</span><span class="s2">(</span><span class="s1">func</span><span class="s2">, **</span><span class="s1">plot_kws</span><span class="s2">)</span>
+<a name="l839"><span class="ln">839  </span></a>
+<a name="l840"><span class="ln">840  </span></a>    <span class="s4"># Label the axes, using the original variables</span>
+<a name="l841"><span class="ln">841  </span></a>    <span class="s4"># Pass &quot;&quot; when the variable name is None to overwrite internal variables</span>
+<a name="l842"><span class="ln">842  </span></a>    <span class="s1">g</span><span class="s2">.</span><span class="s1">set_axis_labels</span><span class="s2">(</span><span class="s1">variables</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s3">&quot;x&quot;</span><span class="s2">) </span><span class="s0">or </span><span class="s3">&quot;&quot;</span><span class="s2">, </span><span class="s1">variables</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s3">&quot;y&quot;</span><span class="s2">) </span><span class="s0">or </span><span class="s3">&quot;&quot;</span><span class="s2">)</span>
+<a name="l843"><span class="ln">843  </span></a>
+<a name="l844"><span class="ln">844  </span></a>    <span class="s0">if </span><span class="s1">legend</span><span class="s2">:</span>
+<a name="l845"><span class="ln">845  </span></a>        <span class="s4"># Replace the original plot data so the legend uses numeric data with</span>
+<a name="l846"><span class="ln">846  </span></a>        <span class="s4"># the correct type, since we force a categorical mapping above.</span>
+<a name="l847"><span class="ln">847  </span></a>        <span class="s1">p</span><span class="s2">.</span><span class="s1">plot_data </span><span class="s2">= </span><span class="s1">plot_data</span>
+<a name="l848"><span class="ln">848  </span></a>
+<a name="l849"><span class="ln">849  </span></a>        <span class="s4"># Handle the additional non-semantic keyword arguments out here.</span>
+<a name="l850"><span class="ln">850  </span></a>        <span class="s4"># We're selective because some kwargs may be seaborn function specific</span>
+<a name="l851"><span class="ln">851  </span></a>        <span class="s4"># and not relevant to the matplotlib artists going into the legend.</span>
+<a name="l852"><span class="ln">852  </span></a>        <span class="s4"># Ideally, we will have a better solution where we don't need to re-make</span>
+<a name="l853"><span class="ln">853  </span></a>        <span class="s4"># the legend out here and will have parity with the axes-level functions.</span>
+<a name="l854"><span class="ln">854  </span></a>        <span class="s1">keys </span><span class="s2">= [</span><span class="s3">&quot;c&quot;</span><span class="s2">, </span><span class="s3">&quot;color&quot;</span><span class="s2">, </span><span class="s3">&quot;alpha&quot;</span><span class="s2">, </span><span class="s3">&quot;m&quot;</span><span class="s2">, </span><span class="s3">&quot;marker&quot;</span><span class="s2">]</span>
+<a name="l855"><span class="ln">855  </span></a>        <span class="s0">if </span><span class="s1">kind </span><span class="s2">== </span><span class="s3">&quot;scatter&quot;</span><span class="s2">:</span>
+<a name="l856"><span class="ln">856  </span></a>            <span class="s1">legend_artist </span><span class="s2">= </span><span class="s1">_scatter_legend_artist</span>
+<a name="l857"><span class="ln">857  </span></a>            <span class="s1">keys </span><span class="s2">+= [</span><span class="s3">&quot;s&quot;</span><span class="s2">, </span><span class="s3">&quot;facecolor&quot;</span><span class="s2">, </span><span class="s3">&quot;fc&quot;</span><span class="s2">, </span><span class="s3">&quot;edgecolor&quot;</span><span class="s2">, </span><span class="s3">&quot;ec&quot;</span><span class="s2">, </span><span class="s3">&quot;linewidth&quot;</span><span class="s2">, </span><span class="s3">&quot;lw&quot;</span><span class="s2">]</span>
+<a name="l858"><span class="ln">858  </span></a>        <span class="s0">else</span><span class="s2">:</span>
+<a name="l859"><span class="ln">859  </span></a>            <span class="s1">legend_artist </span><span class="s2">= </span><span class="s1">partial</span><span class="s2">(</span><span class="s1">mpl</span><span class="s2">.</span><span class="s1">lines</span><span class="s2">.</span><span class="s1">Line2D</span><span class="s2">, </span><span class="s1">xdata</span><span class="s2">=[], </span><span class="s1">ydata</span><span class="s2">=[])</span>
+<a name="l860"><span class="ln">860  </span></a>            <span class="s1">keys </span><span class="s2">+= [</span>
+<a name="l861"><span class="ln">861  </span></a>                <span class="s3">&quot;markersize&quot;</span><span class="s2">, </span><span class="s3">&quot;ms&quot;</span><span class="s2">,</span>
+<a name="l862"><span class="ln">862  </span></a>                <span class="s3">&quot;markeredgewidth&quot;</span><span class="s2">, </span><span class="s3">&quot;mew&quot;</span><span class="s2">,</span>
+<a name="l863"><span class="ln">863  </span></a>                <span class="s3">&quot;markeredgecolor&quot;</span><span class="s2">, </span><span class="s3">&quot;mec&quot;</span><span class="s2">,</span>
+<a name="l864"><span class="ln">864  </span></a>                <span class="s3">&quot;linestyle&quot;</span><span class="s2">, </span><span class="s3">&quot;ls&quot;</span><span class="s2">,</span>
+<a name="l865"><span class="ln">865  </span></a>                <span class="s3">&quot;linewidth&quot;</span><span class="s2">, </span><span class="s3">&quot;lw&quot;</span><span class="s2">,</span>
+<a name="l866"><span class="ln">866  </span></a>            <span class="s2">]</span>
+<a name="l867"><span class="ln">867  </span></a>
+<a name="l868"><span class="ln">868  </span></a>        <span class="s1">common_kws </span><span class="s2">= {</span><span class="s1">k</span><span class="s2">: </span><span class="s1">v </span><span class="s0">for </span><span class="s1">k</span><span class="s2">, </span><span class="s1">v </span><span class="s0">in </span><span class="s1">kwargs</span><span class="s2">.</span><span class="s1">items</span><span class="s2">() </span><span class="s0">if </span><span class="s1">k </span><span class="s0">in </span><span class="s1">keys</span><span class="s2">}</span>
+<a name="l869"><span class="ln">869  </span></a>        <span class="s1">attrs </span><span class="s2">= {</span><span class="s3">&quot;hue&quot;</span><span class="s2">: </span><span class="s3">&quot;color&quot;</span><span class="s2">, </span><span class="s3">&quot;style&quot;</span><span class="s2">: </span><span class="s0">None</span><span class="s2">}</span>
+<a name="l870"><span class="ln">870  </span></a>        <span class="s0">if </span><span class="s1">kind </span><span class="s2">== </span><span class="s3">&quot;scatter&quot;</span><span class="s2">:</span>
+<a name="l871"><span class="ln">871  </span></a>            <span class="s1">attrs</span><span class="s2">[</span><span class="s3">&quot;size&quot;</span><span class="s2">] = </span><span class="s3">&quot;s&quot;</span>
+<a name="l872"><span class="ln">872  </span></a>        <span class="s0">elif </span><span class="s1">kind </span><span class="s2">== </span><span class="s3">&quot;line&quot;</span><span class="s2">:</span>
+<a name="l873"><span class="ln">873  </span></a>            <span class="s1">attrs</span><span class="s2">[</span><span class="s3">&quot;size&quot;</span><span class="s2">] = </span><span class="s3">&quot;linewidth&quot;</span>
+<a name="l874"><span class="ln">874  </span></a>        <span class="s1">p</span><span class="s2">.</span><span class="s1">add_legend_data</span><span class="s2">(</span><span class="s1">g</span><span class="s2">.</span><span class="s1">axes</span><span class="s2">.</span><span class="s1">flat</span><span class="s2">[</span><span class="s5">0</span><span class="s2">], </span><span class="s1">legend_artist</span><span class="s2">, </span><span class="s1">common_kws</span><span class="s2">, </span><span class="s1">attrs</span><span class="s2">)</span>
+<a name="l875"><span class="ln">875  </span></a>        <span class="s0">if </span><span class="s1">p</span><span class="s2">.</span><span class="s1">legend_data</span><span class="s2">:</span>
+<a name="l876"><span class="ln">876  </span></a>            <span class="s1">g</span><span class="s2">.</span><span class="s1">add_legend</span><span class="s2">(</span><span class="s1">legend_data</span><span class="s2">=</span><span class="s1">p</span><span class="s2">.</span><span class="s1">legend_data</span><span class="s2">,</span>
+<a name="l877"><span class="ln">877  </span></a>                         <span class="s1">label_order</span><span class="s2">=</span><span class="s1">p</span><span class="s2">.</span><span class="s1">legend_order</span><span class="s2">,</span>
+<a name="l878"><span class="ln">878  </span></a>                         <span class="s1">title</span><span class="s2">=</span><span class="s1">p</span><span class="s2">.</span><span class="s1">legend_title</span><span class="s2">,</span>
+<a name="l879"><span class="ln">879  </span></a>                         <span class="s1">adjust_subtitles</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+<a name="l880"><span class="ln">880  </span></a>
+<a name="l881"><span class="ln">881  </span></a>    <span class="s4"># Rename the columns of the FacetGrid's `data` attribute</span>
+<a name="l882"><span class="ln">882  </span></a>    <span class="s4"># to match the original column names</span>
+<a name="l883"><span class="ln">883  </span></a>    <span class="s1">orig_cols </span><span class="s2">= {</span>
+<a name="l884"><span class="ln">884  </span></a>        <span class="s3">f&quot;_</span><span class="s0">{</span><span class="s1">k</span><span class="s0">}</span><span class="s3">&quot;</span><span class="s2">: </span><span class="s3">f&quot;_</span><span class="s0">{</span><span class="s1">k</span><span class="s0">}</span><span class="s3">_&quot; </span><span class="s0">if </span><span class="s1">v </span><span class="s0">is None else </span><span class="s1">v </span><span class="s0">for </span><span class="s1">k</span><span class="s2">, </span><span class="s1">v </span><span class="s0">in </span><span class="s1">variables</span><span class="s2">.</span><span class="s1">items</span><span class="s2">()</span>
+<a name="l885"><span class="ln">885  </span></a>    <span class="s2">}</span>
+<a name="l886"><span class="ln">886  </span></a>    <span class="s1">grid_data </span><span class="s2">= </span><span class="s1">g</span><span class="s2">.</span><span class="s1">data</span><span class="s2">.</span><span class="s1">rename</span><span class="s2">(</span><span class="s1">columns</span><span class="s2">=</span><span class="s1">orig_cols</span><span class="s2">)</span>
+<a name="l887"><span class="ln">887  </span></a>    <span class="s0">if </span><span class="s1">data </span><span class="s0">is not None and </span><span class="s2">(</span><span class="s1">x </span><span class="s0">is not None or </span><span class="s1">y </span><span class="s0">is not None</span><span class="s2">):</span>
+<a name="l888"><span class="ln">888  </span></a>        <span class="s0">if not </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">data</span><span class="s2">, </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">DataFrame</span><span class="s2">):</span>
+<a name="l889"><span class="ln">889  </span></a>            <span class="s1">data </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">DataFrame</span><span class="s2">(</span><span class="s1">data</span><span class="s2">)</span>
+<a name="l890"><span class="ln">890  </span></a>        <span class="s1">g</span><span class="s2">.</span><span class="s1">data </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">merge</span><span class="s2">(</span>
+<a name="l891"><span class="ln">891  </span></a>            <span class="s1">data</span><span class="s2">,</span>
+<a name="l892"><span class="ln">892  </span></a>            <span class="s1">grid_data</span><span class="s2">[</span><span class="s1">grid_data</span><span class="s2">.</span><span class="s1">columns</span><span class="s2">.</span><span class="s1">difference</span><span class="s2">(</span><span class="s1">data</span><span class="s2">.</span><span class="s1">columns</span><span class="s2">)],</span>
+<a name="l893"><span class="ln">893  </span></a>            <span class="s1">left_index</span><span class="s2">=</span><span class="s0">True</span><span class="s2">,</span>
+<a name="l894"><span class="ln">894  </span></a>            <span class="s1">right_index</span><span class="s2">=</span><span class="s0">True</span><span class="s2">,</span>
+<a name="l895"><span class="ln">895  </span></a>        <span class="s2">)</span>
+<a name="l896"><span class="ln">896  </span></a>    <span class="s0">else</span><span class="s2">:</span>
+<a name="l897"><span class="ln">897  </span></a>        <span class="s1">g</span><span class="s2">.</span><span class="s1">data </span><span class="s2">= </span><span class="s1">grid_data</span>
+<a name="l898"><span class="ln">898  </span></a>
+<a name="l899"><span class="ln">899  </span></a>    <span class="s0">return </span><span class="s1">g</span>
+<a name="l900"><span class="ln">900  </span></a>
+<a name="l901"><span class="ln">901  </span></a>
+<a name="l902"><span class="ln">902  </span></a><span class="s1">relplot</span><span class="s2">.</span><span class="s1">__doc__ </span><span class="s2">= </span><span class="s3">&quot;&quot;&quot;</span><span class="s0">\ 
+<a name="l903"><span class="ln">903  </span></a></span><span class="s3">Figure-level interface for drawing relational plots onto a FacetGrid. 
+<a name="l904"><span class="ln">904  </span></a> 
+<a name="l905"><span class="ln">905  </span></a>This function provides access to several different axes-level functions 
+<a name="l906"><span class="ln">906  </span></a>that show the relationship between two variables with semantic mappings 
+<a name="l907"><span class="ln">907  </span></a>of subsets. The `kind` parameter selects the underlying axes-level 
+<a name="l908"><span class="ln">908  </span></a>function to use: 
+<a name="l909"><span class="ln">909  </span></a> 
+<a name="l910"><span class="ln">910  </span></a>- :func:`scatterplot` (with `kind=&quot;scatter&quot;`; the default) 
+<a name="l911"><span class="ln">911  </span></a>- :func:`lineplot` (with `kind=&quot;line&quot;`) 
+<a name="l912"><span class="ln">912  </span></a> 
+<a name="l913"><span class="ln">913  </span></a>Extra keyword arguments are passed to the underlying function, so you 
+<a name="l914"><span class="ln">914  </span></a>should refer to the documentation for each to see kind-specific options. 
+<a name="l915"><span class="ln">915  </span></a> 
+<a name="l916"><span class="ln">916  </span></a>{narrative.main_api} 
+<a name="l917"><span class="ln">917  </span></a> 
+<a name="l918"><span class="ln">918  </span></a>{narrative.relational_semantic} 
+<a name="l919"><span class="ln">919  </span></a> 
+<a name="l920"><span class="ln">920  </span></a>After plotting, the :class:`FacetGrid` with the plot is returned and can 
+<a name="l921"><span class="ln">921  </span></a>be used directly to tweak supporting plot details or add other layers. 
+<a name="l922"><span class="ln">922  </span></a> 
+<a name="l923"><span class="ln">923  </span></a>Parameters 
+<a name="l924"><span class="ln">924  </span></a>---------- 
+<a name="l925"><span class="ln">925  </span></a>{params.core.data} 
+<a name="l926"><span class="ln">926  </span></a>{params.core.xy} 
+<a name="l927"><span class="ln">927  </span></a>hue : vector or key in `data` 
+<a name="l928"><span class="ln">928  </span></a>    Grouping variable that will produce elements with different colors. 
+<a name="l929"><span class="ln">929  </span></a>    Can be either categorical or numeric, although color mapping will 
+<a name="l930"><span class="ln">930  </span></a>    behave differently in latter case. 
+<a name="l931"><span class="ln">931  </span></a>size : vector or key in `data` 
+<a name="l932"><span class="ln">932  </span></a>    Grouping variable that will produce elements with different sizes. 
+<a name="l933"><span class="ln">933  </span></a>    Can be either categorical or numeric, although size mapping will 
+<a name="l934"><span class="ln">934  </span></a>    behave differently in latter case. 
+<a name="l935"><span class="ln">935  </span></a>style : vector or key in `data` 
+<a name="l936"><span class="ln">936  </span></a>    Grouping variable that will produce elements with different styles. 
+<a name="l937"><span class="ln">937  </span></a>    Can have a numeric dtype but will always be treated as categorical. 
+<a name="l938"><span class="ln">938  </span></a>{params.rel.units} 
+<a name="l939"><span class="ln">939  </span></a>weights : vector or key in `data` 
+<a name="l940"><span class="ln">940  </span></a>    Data values or column used to compute weighted estimation. 
+<a name="l941"><span class="ln">941  </span></a>    Note that use of weights currently limits the choice of statistics 
+<a name="l942"><span class="ln">942  </span></a>    to a 'mean' estimator and 'ci' errorbar. 
+<a name="l943"><span class="ln">943  </span></a>{params.facets.rowcol} 
+<a name="l944"><span class="ln">944  </span></a>{params.facets.col_wrap} 
+<a name="l945"><span class="ln">945  </span></a>row_order, col_order : lists of strings 
+<a name="l946"><span class="ln">946  </span></a>    Order to organize the rows and/or columns of the grid in, otherwise the 
+<a name="l947"><span class="ln">947  </span></a>    orders are inferred from the data objects. 
+<a name="l948"><span class="ln">948  </span></a>{params.core.palette} 
+<a name="l949"><span class="ln">949  </span></a>{params.core.hue_order} 
+<a name="l950"><span class="ln">950  </span></a>{params.core.hue_norm} 
+<a name="l951"><span class="ln">951  </span></a>{params.rel.sizes} 
+<a name="l952"><span class="ln">952  </span></a>{params.rel.size_order} 
+<a name="l953"><span class="ln">953  </span></a>{params.rel.size_norm} 
+<a name="l954"><span class="ln">954  </span></a>{params.rel.style_order} 
+<a name="l955"><span class="ln">955  </span></a>{params.rel.dashes} 
+<a name="l956"><span class="ln">956  </span></a>{params.rel.markers} 
+<a name="l957"><span class="ln">957  </span></a>{params.rel.legend} 
+<a name="l958"><span class="ln">958  </span></a>kind : string 
+<a name="l959"><span class="ln">959  </span></a>    Kind of plot to draw, corresponding to a seaborn relational plot. 
+<a name="l960"><span class="ln">960  </span></a>    Options are `&quot;scatter&quot;` or `&quot;line&quot;`. 
+<a name="l961"><span class="ln">961  </span></a>{params.facets.height} 
+<a name="l962"><span class="ln">962  </span></a>{params.facets.aspect} 
+<a name="l963"><span class="ln">963  </span></a>facet_kws : dict 
+<a name="l964"><span class="ln">964  </span></a>    Dictionary of other keyword arguments to pass to :class:`FacetGrid`. 
+<a name="l965"><span class="ln">965  </span></a>kwargs : key, value pairings 
+<a name="l966"><span class="ln">966  </span></a>    Other keyword arguments are passed through to the underlying plotting 
+<a name="l967"><span class="ln">967  </span></a>    function. 
+<a name="l968"><span class="ln">968  </span></a> 
+<a name="l969"><span class="ln">969  </span></a>Returns 
+<a name="l970"><span class="ln">970  </span></a>------- 
+<a name="l971"><span class="ln">971  </span></a>{returns.facetgrid} 
+<a name="l972"><span class="ln">972  </span></a> 
+<a name="l973"><span class="ln">973  </span></a>Examples 
+<a name="l974"><span class="ln">974  </span></a>-------- 
+<a name="l975"><span class="ln">975  </span></a> 
+<a name="l976"><span class="ln">976  </span></a>.. include:: ../docstrings/relplot.rst 
+<a name="l977"><span class="ln">977  </span></a> 
+<a name="l978"><span class="ln">978  </span></a>&quot;&quot;&quot;</span><span class="s2">.</span><span class="s1">format</span><span class="s2">(</span>
+<a name="l979"><span class="ln">979  </span></a>    <span class="s1">narrative</span><span class="s2">=</span><span class="s1">_relational_narrative</span><span class="s2">,</span>
+<a name="l980"><span class="ln">980  </span></a>    <span class="s1">params</span><span class="s2">=</span><span class="s1">_param_docs</span><span class="s2">,</span>
+<a name="l981"><span class="ln">981  </span></a>    <span class="s1">returns</span><span class="s2">=</span><span class="s1">_core_docs</span><span class="s2">[</span><span class="s3">&quot;returns&quot;</span><span class="s2">],</span>
+<a name="l982"><span class="ln">982  </span></a><span class="s2">)</span>
+<a name="l983"><span class="ln">983  </span></a></pre>
+</body>
+</html>

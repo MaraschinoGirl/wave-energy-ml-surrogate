@@ -1,0 +1,28 @@
+<html>
+<head>
+<title>macurl2path.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+macurl2path.pyi</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">import </span><span class="s1">sys</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Union</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">version_info </span><span class="s2">&lt; (</span><span class="s3">3</span><span class="s2">, </span><span class="s3">7</span><span class="s2">):</span>
+<a name="l5"><span class="ln">5    </span></a>    <span class="s0">def </span><span class="s1">url2pathname</span><span class="s2">(</span><span class="s1">pathname</span><span class="s2">: </span><span class="s1">str</span><span class="s2">) </span><span class="s1">-&gt; str</span><span class="s2">: ...</span>
+<a name="l6"><span class="ln">6    </span></a>    <span class="s0">def </span><span class="s1">pathname2url</span><span class="s2">(</span><span class="s1">pathname</span><span class="s2">: </span><span class="s1">str</span><span class="s2">) </span><span class="s1">-&gt; str</span><span class="s2">: ...</span>
+<a name="l7"><span class="ln">7    </span></a>    <span class="s0">def </span><span class="s1">_pncomp2url</span><span class="s2">(</span><span class="s1">component</span><span class="s2">: </span><span class="s1">Union</span><span class="s2">[</span><span class="s1">str</span><span class="s2">, </span><span class="s1">bytes</span><span class="s2">]) </span><span class="s1">-&gt; str</span><span class="s2">: ...</span>
+<a name="l8"><span class="ln">8    </span></a></pre>
+</body>
+</html>

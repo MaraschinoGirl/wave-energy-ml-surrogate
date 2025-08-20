@@ -1,0 +1,115 @@
+<html>
+<head>
+<title>preprocessors.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+preprocessors.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Python Markdown</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0"># A Python implementation of John Gruber's Markdown.</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s0"># Documentation: https://python-markdown.github.io/</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0"># GitHub: https://github.com/Python-Markdown/markdown/</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0"># PyPI: https://pypi.org/project/Markdown/</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s0"># Started by Manfred Stienstra (http://www.dwerg.net/).</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0"># Maintained for a few years by Yuri Takhteyev (http://www.freewisdom.org).</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s0"># Currently maintained by Waylan Limberg (https://github.com/waylan),</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0"># Dmitry Shachnev (https://github.com/mitya57) and Isaac Muse (https://github.com/facelessuser).</span>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a><span class="s0"># Copyright 2007-2023 The Python Markdown Project (v. 1.7 and later)</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s0"># Copyright 2004, 2005, 2006 Yuri Takhteyev (v. 0.2-1.6b)</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s0"># Copyright 2004 Manfred Stienstra (the original version)</span>
+<a name="l17"><span class="ln">17   </span></a>
+<a name="l18"><span class="ln">18   </span></a><span class="s0"># License: BSD (see LICENSE.md for details).</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s2">&quot;&quot;&quot; 
+<a name="l21"><span class="ln">21   </span></a>Preprocessors work on source text before it is broken down into its individual parts. 
+<a name="l22"><span class="ln">22   </span></a>This is an excellent place to clean up bad characters or to extract portions for later 
+<a name="l23"><span class="ln">23   </span></a>processing that the parser may otherwise choke on. 
+<a name="l24"><span class="ln">24   </span></a>&quot;&quot;&quot;</span>
+<a name="l25"><span class="ln">25   </span></a>
+<a name="l26"><span class="ln">26   </span></a><span class="s3">from </span><span class="s1">__future__ </span><span class="s3">import </span><span class="s1">annotations</span>
+<a name="l27"><span class="ln">27   </span></a>
+<a name="l28"><span class="ln">28   </span></a><span class="s3">from </span><span class="s1">typing </span><span class="s3">import </span><span class="s1">TYPE_CHECKING</span><span class="s4">, </span><span class="s1">Any</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s3">from </span><span class="s4">. </span><span class="s3">import </span><span class="s1">util</span>
+<a name="l30"><span class="ln">30   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">htmlparser </span><span class="s3">import </span><span class="s1">HTMLExtractor</span>
+<a name="l31"><span class="ln">31   </span></a><span class="s3">import </span><span class="s1">re</span>
+<a name="l32"><span class="ln">32   </span></a>
+<a name="l33"><span class="ln">33   </span></a><span class="s3">if </span><span class="s1">TYPE_CHECKING</span><span class="s4">:  </span><span class="s0"># pragma: no cover</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s3">from </span><span class="s1">markdown </span><span class="s3">import </span><span class="s1">Markdown</span>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a><span class="s3">def </span><span class="s1">build_preprocessors</span><span class="s4">(</span><span class="s1">md</span><span class="s4">: </span><span class="s1">Markdown</span><span class="s4">, **</span><span class="s1">kwargs</span><span class="s4">: </span><span class="s1">Any</span><span class="s4">) </span><span class="s1">-&gt; util</span><span class="s4">.</span><span class="s1">Registry</span><span class="s4">[</span><span class="s1">Preprocessor</span><span class="s4">]:</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s2">&quot;&quot;&quot; Build and return the default set of preprocessors used by Markdown. &quot;&quot;&quot;</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s1">preprocessors </span><span class="s4">= </span><span class="s1">util</span><span class="s4">.</span><span class="s1">Registry</span><span class="s4">()</span>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s1">preprocessors</span><span class="s4">.</span><span class="s1">register</span><span class="s4">(</span><span class="s1">NormalizeWhitespace</span><span class="s4">(</span><span class="s1">md</span><span class="s4">), </span><span class="s5">'normalize_whitespace'</span><span class="s4">, </span><span class="s6">30</span><span class="s4">)</span>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s1">preprocessors</span><span class="s4">.</span><span class="s1">register</span><span class="s4">(</span><span class="s1">HtmlBlockPreprocessor</span><span class="s4">(</span><span class="s1">md</span><span class="s4">), </span><span class="s5">'html_block'</span><span class="s4">, </span><span class="s6">20</span><span class="s4">)</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s3">return </span><span class="s1">preprocessors</span>
+<a name="l43"><span class="ln">43   </span></a>
+<a name="l44"><span class="ln">44   </span></a>
+<a name="l45"><span class="ln">45   </span></a><span class="s3">class </span><span class="s1">Preprocessor</span><span class="s4">(</span><span class="s1">util</span><span class="s4">.</span><span class="s1">Processor</span><span class="s4">):</span>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s2">&quot;&quot;&quot; 
+<a name="l47"><span class="ln">47   </span></a>    Preprocessors are run after the text is broken into lines. 
+<a name="l48"><span class="ln">48   </span></a> 
+<a name="l49"><span class="ln">49   </span></a>    Each preprocessor implements a `run` method that takes a pointer to a 
+<a name="l50"><span class="ln">50   </span></a>    list of lines of the document, modifies it as necessary and returns 
+<a name="l51"><span class="ln">51   </span></a>    either the same pointer or a pointer to a new list. 
+<a name="l52"><span class="ln">52   </span></a> 
+<a name="l53"><span class="ln">53   </span></a>    Preprocessors must extend `Preprocessor`. 
+<a name="l54"><span class="ln">54   </span></a> 
+<a name="l55"><span class="ln">55   </span></a>    &quot;&quot;&quot;</span>
+<a name="l56"><span class="ln">56   </span></a>    <span class="s3">def </span><span class="s1">run</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">lines</span><span class="s4">: </span><span class="s1">list</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]) </span><span class="s1">-&gt; list</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]:</span>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s2">&quot;&quot;&quot; 
+<a name="l58"><span class="ln">58   </span></a>        Each subclass of `Preprocessor` should override the `run` method, which 
+<a name="l59"><span class="ln">59   </span></a>        takes the document as a list of strings split by newlines and returns 
+<a name="l60"><span class="ln">60   </span></a>        the (possibly modified) list of lines. 
+<a name="l61"><span class="ln">61   </span></a> 
+<a name="l62"><span class="ln">62   </span></a>        &quot;&quot;&quot;</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s3">pass  </span><span class="s0"># pragma: no cover</span>
+<a name="l64"><span class="ln">64   </span></a>
+<a name="l65"><span class="ln">65   </span></a>
+<a name="l66"><span class="ln">66   </span></a><span class="s3">class </span><span class="s1">NormalizeWhitespace</span><span class="s4">(</span><span class="s1">Preprocessor</span><span class="s4">):</span>
+<a name="l67"><span class="ln">67   </span></a>    <span class="s2">&quot;&quot;&quot; Normalize whitespace for consistent parsing. &quot;&quot;&quot;</span>
+<a name="l68"><span class="ln">68   </span></a>
+<a name="l69"><span class="ln">69   </span></a>    <span class="s3">def </span><span class="s1">run</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">lines</span><span class="s4">: </span><span class="s1">list</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]) </span><span class="s1">-&gt; list</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]:</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s1">source </span><span class="s4">= </span><span class="s5">'</span><span class="s3">\n</span><span class="s5">'</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">lines</span><span class="s4">)</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s1">source </span><span class="s4">= </span><span class="s1">source</span><span class="s4">.</span><span class="s1">replace</span><span class="s4">(</span><span class="s1">util</span><span class="s4">.</span><span class="s1">STX</span><span class="s4">, </span><span class="s5">&quot;&quot;</span><span class="s4">).</span><span class="s1">replace</span><span class="s4">(</span><span class="s1">util</span><span class="s4">.</span><span class="s1">ETX</span><span class="s4">, </span><span class="s5">&quot;&quot;</span><span class="s4">)</span>
+<a name="l72"><span class="ln">72   </span></a>        <span class="s1">source </span><span class="s4">= </span><span class="s1">source</span><span class="s4">.</span><span class="s1">replace</span><span class="s4">(</span><span class="s5">&quot;</span><span class="s3">\r\n</span><span class="s5">&quot;</span><span class="s4">, </span><span class="s5">&quot;</span><span class="s3">\n</span><span class="s5">&quot;</span><span class="s4">).</span><span class="s1">replace</span><span class="s4">(</span><span class="s5">&quot;</span><span class="s3">\r</span><span class="s5">&quot;</span><span class="s4">, </span><span class="s5">&quot;</span><span class="s3">\n</span><span class="s5">&quot;</span><span class="s4">) + </span><span class="s5">&quot;</span><span class="s3">\n\n</span><span class="s5">&quot;</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s1">source </span><span class="s4">= </span><span class="s1">source</span><span class="s4">.</span><span class="s1">expandtabs</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">md</span><span class="s4">.</span><span class="s1">tab_length</span><span class="s4">)</span>
+<a name="l74"><span class="ln">74   </span></a>        <span class="s1">source </span><span class="s4">= </span><span class="s1">re</span><span class="s4">.</span><span class="s1">sub</span><span class="s4">(</span><span class="s5">r'(?&lt;=\n) +\n'</span><span class="s4">, </span><span class="s5">'</span><span class="s3">\n</span><span class="s5">'</span><span class="s4">, </span><span class="s1">source</span><span class="s4">)</span>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s3">return </span><span class="s1">source</span><span class="s4">.</span><span class="s1">split</span><span class="s4">(</span><span class="s5">'</span><span class="s3">\n</span><span class="s5">'</span><span class="s4">)</span>
+<a name="l76"><span class="ln">76   </span></a>
+<a name="l77"><span class="ln">77   </span></a>
+<a name="l78"><span class="ln">78   </span></a><span class="s3">class </span><span class="s1">HtmlBlockPreprocessor</span><span class="s4">(</span><span class="s1">Preprocessor</span><span class="s4">):</span>
+<a name="l79"><span class="ln">79   </span></a>    <span class="s2">&quot;&quot;&quot; 
+<a name="l80"><span class="ln">80   </span></a>    Remove html blocks from the text and store them for later retrieval. 
+<a name="l81"><span class="ln">81   </span></a> 
+<a name="l82"><span class="ln">82   </span></a>    The raw HTML is stored in the [`htmlStash`][markdown.util.HtmlStash] of the 
+<a name="l83"><span class="ln">83   </span></a>    [`Markdown`][markdown.Markdown] instance. 
+<a name="l84"><span class="ln">84   </span></a>    &quot;&quot;&quot;</span>
+<a name="l85"><span class="ln">85   </span></a>
+<a name="l86"><span class="ln">86   </span></a>    <span class="s3">def </span><span class="s1">run</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">lines</span><span class="s4">: </span><span class="s1">list</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]) </span><span class="s1">-&gt; list</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]:</span>
+<a name="l87"><span class="ln">87   </span></a>        <span class="s1">source </span><span class="s4">= </span><span class="s5">'</span><span class="s3">\n</span><span class="s5">'</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">lines</span><span class="s4">)</span>
+<a name="l88"><span class="ln">88   </span></a>        <span class="s1">parser </span><span class="s4">= </span><span class="s1">HTMLExtractor</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">md</span><span class="s4">)</span>
+<a name="l89"><span class="ln">89   </span></a>        <span class="s1">parser</span><span class="s4">.</span><span class="s1">feed</span><span class="s4">(</span><span class="s1">source</span><span class="s4">)</span>
+<a name="l90"><span class="ln">90   </span></a>        <span class="s1">parser</span><span class="s4">.</span><span class="s1">close</span><span class="s4">()</span>
+<a name="l91"><span class="ln">91   </span></a>        <span class="s3">return </span><span class="s5">''</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">parser</span><span class="s4">.</span><span class="s1">cleandoc</span><span class="s4">).</span><span class="s1">split</span><span class="s4">(</span><span class="s5">'</span><span class="s3">\n</span><span class="s5">'</span><span class="s4">)</span>
+<a name="l92"><span class="ln">92   </span></a></pre>
+</body>
+</html>

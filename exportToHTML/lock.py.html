@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>lock.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #2aacb8;}
+.s4 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+lock.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">import </span><span class="s1">sys</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">if </span><span class="s1">sys</span><span class="s2">.</span><span class="s1">version_info </span><span class="s2">&lt; (</span><span class="s3">3</span><span class="s2">,):</span>
+<a name="l4"><span class="ln">4    </span></a>    <span class="s0">try</span><span class="s2">:</span>
+<a name="l5"><span class="ln">5    </span></a>        <span class="s0">from </span><span class="s1">thread </span><span class="s0">import </span><span class="s1">allocate_lock</span>
+<a name="l6"><span class="ln">6    </span></a>    <span class="s0">except </span><span class="s1">ImportError</span><span class="s2">:</span>
+<a name="l7"><span class="ln">7    </span></a>        <span class="s0">from </span><span class="s1">dummy_thread </span><span class="s0">import </span><span class="s1">allocate_lock</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">else</span><span class="s2">:</span>
+<a name="l9"><span class="ln">9    </span></a>    <span class="s0">try</span><span class="s2">:</span>
+<a name="l10"><span class="ln">10   </span></a>        <span class="s0">from </span><span class="s1">_thread </span><span class="s0">import </span><span class="s1">allocate_lock</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s0">except </span><span class="s1">ImportError</span><span class="s2">:</span>
+<a name="l12"><span class="ln">12   </span></a>        <span class="s0">from </span><span class="s1">_dummy_thread </span><span class="s0">import </span><span class="s1">allocate_lock</span>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a><span class="s4">##import sys</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s4">##l1 = allocate_lock</span>
+<a name="l17"><span class="ln">17   </span></a>
+<a name="l18"><span class="ln">18   </span></a><span class="s4">##class allocate_lock(object):</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s4">##    def __init__(self):</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s4">##        self._real = l1()</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s4">##    def __enter__(self):</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s4">##        for i in range(4, 0, -1):</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s4">##            print sys._getframe(i).f_code</span>
+<a name="l24"><span class="ln">24   </span></a><span class="s4">##        print</span>
+<a name="l25"><span class="ln">25   </span></a><span class="s4">##        return self._real.__enter__()</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s4">##    def __exit__(self, *args):</span>
+<a name="l27"><span class="ln">27   </span></a><span class="s4">##        return self._real.__exit__(*args)</span>
+<a name="l28"><span class="ln">28   </span></a><span class="s4">##    def acquire(self, f):</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s4">##        assert f is False</span>
+<a name="l30"><span class="ln">30   </span></a><span class="s4">##        return self._real.acquire(f)</span>
+<a name="l31"><span class="ln">31   </span></a></pre>
+</body>
+</html>

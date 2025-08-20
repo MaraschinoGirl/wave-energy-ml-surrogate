@@ -1,0 +1,203 @@
+<html>
+<head>
+<title>_plotting.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_plotting.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Authors: The scikit-learn developers</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># SPDX-License-Identifier: BSD-3-Clause</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">import </span><span class="s1">numpy </span><span class="s2">as </span><span class="s1">np</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">from </span><span class="s3">. </span><span class="s2">import </span><span class="s1">check_consistent_length</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">from </span><span class="s3">.</span><span class="s1">_optional_dependencies </span><span class="s2">import </span><span class="s1">check_matplotlib_support</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s2">from </span><span class="s3">.</span><span class="s1">_response </span><span class="s2">import </span><span class="s1">_get_response_values_binary</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">from </span><span class="s3">.</span><span class="s1">multiclass </span><span class="s2">import </span><span class="s1">type_of_target</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s2">from </span><span class="s3">.</span><span class="s1">validation </span><span class="s2">import </span><span class="s1">_check_pos_label_consistency</span>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a><span class="s2">class </span><span class="s1">_BinaryClassifierCurveDisplayMixin</span><span class="s3">:</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s4">&quot;&quot;&quot;Mixin class to be used in Displays requiring a binary classifier. 
+<a name="l15"><span class="ln">15   </span></a> 
+<a name="l16"><span class="ln">16   </span></a>    The aim of this class is to centralize some validations regarding the estimator and 
+<a name="l17"><span class="ln">17   </span></a>    the target and gather the response of the estimator. 
+<a name="l18"><span class="ln">18   </span></a>    &quot;&quot;&quot;</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s2">def </span><span class="s1">_validate_plot_params</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, *, </span><span class="s1">ax</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">name</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+<a name="l21"><span class="ln">21   </span></a>        <span class="s1">check_matplotlib_support</span><span class="s3">(</span><span class="s5">f&quot;</span><span class="s2">{</span><span class="s1">self</span><span class="s3">.</span><span class="s1">__class__</span><span class="s3">.</span><span class="s1">__name__</span><span class="s2">}</span><span class="s5">.plot&quot;</span><span class="s3">)</span>
+<a name="l22"><span class="ln">22   </span></a>        <span class="s2">import </span><span class="s1">matplotlib</span><span class="s3">.</span><span class="s1">pyplot </span><span class="s2">as </span><span class="s1">plt</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a>        <span class="s2">if </span><span class="s1">ax </span><span class="s2">is None</span><span class="s3">:</span>
+<a name="l25"><span class="ln">25   </span></a>            <span class="s1">_</span><span class="s3">, </span><span class="s1">ax </span><span class="s3">= </span><span class="s1">plt</span><span class="s3">.</span><span class="s1">subplots</span><span class="s3">()</span>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a>        <span class="s1">name </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">estimator_name </span><span class="s2">if </span><span class="s1">name </span><span class="s2">is None else </span><span class="s1">name</span>
+<a name="l28"><span class="ln">28   </span></a>        <span class="s2">return </span><span class="s1">ax</span><span class="s3">, </span><span class="s1">ax</span><span class="s3">.</span><span class="s1">figure</span><span class="s3">, </span><span class="s1">name</span>
+<a name="l29"><span class="ln">29   </span></a>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s3">@</span><span class="s1">classmethod</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s2">def </span><span class="s1">_validate_and_get_response_values</span><span class="s3">(</span>
+<a name="l32"><span class="ln">32   </span></a>        <span class="s1">cls</span><span class="s3">, </span><span class="s1">estimator</span><span class="s3">, </span><span class="s1">X</span><span class="s3">, </span><span class="s1">y</span><span class="s3">, *, </span><span class="s1">response_method</span><span class="s3">=</span><span class="s5">&quot;auto&quot;</span><span class="s3">, </span><span class="s1">pos_label</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">name</span><span class="s3">=</span><span class="s2">None</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s3">):</span>
+<a name="l34"><span class="ln">34   </span></a>        <span class="s1">check_matplotlib_support</span><span class="s3">(</span><span class="s5">f&quot;</span><span class="s2">{</span><span class="s1">cls</span><span class="s3">.</span><span class="s1">__name__</span><span class="s2">}</span><span class="s5">.from_estimator&quot;</span><span class="s3">)</span>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a>        <span class="s1">name </span><span class="s3">= </span><span class="s1">estimator</span><span class="s3">.</span><span class="s1">__class__</span><span class="s3">.</span><span class="s1">__name__ </span><span class="s2">if </span><span class="s1">name </span><span class="s2">is None else </span><span class="s1">name</span>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a>        <span class="s1">y_pred</span><span class="s3">, </span><span class="s1">pos_label </span><span class="s3">= </span><span class="s1">_get_response_values_binary</span><span class="s3">(</span>
+<a name="l39"><span class="ln">39   </span></a>            <span class="s1">estimator</span><span class="s3">,</span>
+<a name="l40"><span class="ln">40   </span></a>            <span class="s1">X</span><span class="s3">,</span>
+<a name="l41"><span class="ln">41   </span></a>            <span class="s1">response_method</span><span class="s3">=</span><span class="s1">response_method</span><span class="s3">,</span>
+<a name="l42"><span class="ln">42   </span></a>            <span class="s1">pos_label</span><span class="s3">=</span><span class="s1">pos_label</span><span class="s3">,</span>
+<a name="l43"><span class="ln">43   </span></a>        <span class="s3">)</span>
+<a name="l44"><span class="ln">44   </span></a>
+<a name="l45"><span class="ln">45   </span></a>        <span class="s2">return </span><span class="s1">y_pred</span><span class="s3">, </span><span class="s1">pos_label</span><span class="s3">, </span><span class="s1">name</span>
+<a name="l46"><span class="ln">46   </span></a>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s3">@</span><span class="s1">classmethod</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s2">def </span><span class="s1">_validate_from_predictions_params</span><span class="s3">(</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s1">cls</span><span class="s3">, </span><span class="s1">y_true</span><span class="s3">, </span><span class="s1">y_pred</span><span class="s3">, *, </span><span class="s1">sample_weight</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">pos_label</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">name</span><span class="s3">=</span><span class="s2">None</span>
+<a name="l50"><span class="ln">50   </span></a>    <span class="s3">):</span>
+<a name="l51"><span class="ln">51   </span></a>        <span class="s1">check_matplotlib_support</span><span class="s3">(</span><span class="s5">f&quot;</span><span class="s2">{</span><span class="s1">cls</span><span class="s3">.</span><span class="s1">__name__</span><span class="s2">}</span><span class="s5">.from_predictions&quot;</span><span class="s3">)</span>
+<a name="l52"><span class="ln">52   </span></a>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s2">if </span><span class="s1">type_of_target</span><span class="s3">(</span><span class="s1">y_true</span><span class="s3">) != </span><span class="s5">&quot;binary&quot;</span><span class="s3">:</span>
+<a name="l54"><span class="ln">54   </span></a>            <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span>
+<a name="l55"><span class="ln">55   </span></a>                <span class="s5">f&quot;The target y is not binary. Got </span><span class="s2">{</span><span class="s1">type_of_target</span><span class="s3">(</span><span class="s1">y_true</span><span class="s3">)</span><span class="s2">} </span><span class="s5">type of&quot;</span>
+<a name="l56"><span class="ln">56   </span></a>                <span class="s5">&quot; target.&quot;</span>
+<a name="l57"><span class="ln">57   </span></a>            <span class="s3">)</span>
+<a name="l58"><span class="ln">58   </span></a>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s1">check_consistent_length</span><span class="s3">(</span><span class="s1">y_true</span><span class="s3">, </span><span class="s1">y_pred</span><span class="s3">, </span><span class="s1">sample_weight</span><span class="s3">)</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s1">pos_label </span><span class="s3">= </span><span class="s1">_check_pos_label_consistency</span><span class="s3">(</span><span class="s1">pos_label</span><span class="s3">, </span><span class="s1">y_true</span><span class="s3">)</span>
+<a name="l61"><span class="ln">61   </span></a>
+<a name="l62"><span class="ln">62   </span></a>        <span class="s1">name </span><span class="s3">= </span><span class="s1">name </span><span class="s2">if </span><span class="s1">name </span><span class="s2">is not None else </span><span class="s5">&quot;Classifier&quot;</span>
+<a name="l63"><span class="ln">63   </span></a>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s2">return </span><span class="s1">pos_label</span><span class="s3">, </span><span class="s1">name</span>
+<a name="l65"><span class="ln">65   </span></a>
+<a name="l66"><span class="ln">66   </span></a>
+<a name="l67"><span class="ln">67   </span></a><span class="s2">def </span><span class="s1">_validate_score_name</span><span class="s3">(</span><span class="s1">score_name</span><span class="s3">, </span><span class="s1">scoring</span><span class="s3">, </span><span class="s1">negate_score</span><span class="s3">):</span>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s4">&quot;&quot;&quot;Validate the `score_name` parameter. 
+<a name="l69"><span class="ln">69   </span></a> 
+<a name="l70"><span class="ln">70   </span></a>    If `score_name` is provided, we just return it as-is. 
+<a name="l71"><span class="ln">71   </span></a>    If `score_name` is `None`, we use `Score` if `negate_score` is `False` and 
+<a name="l72"><span class="ln">72   </span></a>    `Negative score` otherwise. 
+<a name="l73"><span class="ln">73   </span></a>    If `score_name` is a string or a callable, we infer the name. We replace `_` by 
+<a name="l74"><span class="ln">74   </span></a>    spaces and capitalize the first letter. We remove `neg_` and replace it by 
+<a name="l75"><span class="ln">75   </span></a>    `&quot;Negative&quot;` if `negate_score` is `False` or just remove it otherwise. 
+<a name="l76"><span class="ln">76   </span></a>    &quot;&quot;&quot;</span>
+<a name="l77"><span class="ln">77   </span></a>    <span class="s2">if </span><span class="s1">score_name </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l78"><span class="ln">78   </span></a>        <span class="s2">return </span><span class="s1">score_name</span>
+<a name="l79"><span class="ln">79   </span></a>    <span class="s2">elif </span><span class="s1">scoring </span><span class="s2">is None</span><span class="s3">:</span>
+<a name="l80"><span class="ln">80   </span></a>        <span class="s2">return </span><span class="s5">&quot;Negative score&quot; </span><span class="s2">if </span><span class="s1">negate_score </span><span class="s2">else </span><span class="s5">&quot;Score&quot;</span>
+<a name="l81"><span class="ln">81   </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l82"><span class="ln">82   </span></a>        <span class="s1">score_name </span><span class="s3">= </span><span class="s1">scoring</span><span class="s3">.</span><span class="s1">__name__ </span><span class="s2">if </span><span class="s1">callable</span><span class="s3">(</span><span class="s1">scoring</span><span class="s3">) </span><span class="s2">else </span><span class="s1">scoring</span>
+<a name="l83"><span class="ln">83   </span></a>        <span class="s2">if </span><span class="s1">negate_score</span><span class="s3">:</span>
+<a name="l84"><span class="ln">84   </span></a>            <span class="s2">if </span><span class="s1">score_name</span><span class="s3">.</span><span class="s1">startswith</span><span class="s3">(</span><span class="s5">&quot;neg_&quot;</span><span class="s3">):</span>
+<a name="l85"><span class="ln">85   </span></a>                <span class="s1">score_name </span><span class="s3">= </span><span class="s1">score_name</span><span class="s3">[</span><span class="s6">4</span><span class="s3">:]</span>
+<a name="l86"><span class="ln">86   </span></a>            <span class="s2">else</span><span class="s3">:</span>
+<a name="l87"><span class="ln">87   </span></a>                <span class="s1">score_name </span><span class="s3">= </span><span class="s5">f&quot;Negative </span><span class="s2">{</span><span class="s1">score_name</span><span class="s2">}</span><span class="s5">&quot;</span>
+<a name="l88"><span class="ln">88   </span></a>        <span class="s2">elif </span><span class="s1">score_name</span><span class="s3">.</span><span class="s1">startswith</span><span class="s3">(</span><span class="s5">&quot;neg_&quot;</span><span class="s3">):</span>
+<a name="l89"><span class="ln">89   </span></a>            <span class="s1">score_name </span><span class="s3">= </span><span class="s5">f&quot;Negative </span><span class="s2">{</span><span class="s1">score_name</span><span class="s3">[</span><span class="s6">4</span><span class="s3">:]</span><span class="s2">}</span><span class="s5">&quot;</span>
+<a name="l90"><span class="ln">90   </span></a>        <span class="s1">score_name </span><span class="s3">= </span><span class="s1">score_name</span><span class="s3">.</span><span class="s1">replace</span><span class="s3">(</span><span class="s5">&quot;_&quot;</span><span class="s3">, </span><span class="s5">&quot; &quot;</span><span class="s3">)</span>
+<a name="l91"><span class="ln">91   </span></a>        <span class="s2">return </span><span class="s1">score_name</span><span class="s3">.</span><span class="s1">capitalize</span><span class="s3">()</span>
+<a name="l92"><span class="ln">92   </span></a>
+<a name="l93"><span class="ln">93   </span></a>
+<a name="l94"><span class="ln">94   </span></a><span class="s2">def </span><span class="s1">_interval_max_min_ratio</span><span class="s3">(</span><span class="s1">data</span><span class="s3">):</span>
+<a name="l95"><span class="ln">95   </span></a>    <span class="s4">&quot;&quot;&quot;Compute the ratio between the largest and smallest inter-point distances. 
+<a name="l96"><span class="ln">96   </span></a> 
+<a name="l97"><span class="ln">97   </span></a>    A value larger than 5 typically indicates that the parameter range would 
+<a name="l98"><span class="ln">98   </span></a>    better be displayed with a log scale while a linear scale would be more 
+<a name="l99"><span class="ln">99   </span></a>    suitable otherwise. 
+<a name="l100"><span class="ln">100  </span></a>    &quot;&quot;&quot;</span>
+<a name="l101"><span class="ln">101  </span></a>    <span class="s1">diff </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">diff</span><span class="s3">(</span><span class="s1">np</span><span class="s3">.</span><span class="s1">sort</span><span class="s3">(</span><span class="s1">data</span><span class="s3">))</span>
+<a name="l102"><span class="ln">102  </span></a>    <span class="s2">return </span><span class="s1">diff</span><span class="s3">.</span><span class="s1">max</span><span class="s3">() / </span><span class="s1">diff</span><span class="s3">.</span><span class="s1">min</span><span class="s3">()</span>
+<a name="l103"><span class="ln">103  </span></a>
+<a name="l104"><span class="ln">104  </span></a>
+<a name="l105"><span class="ln">105  </span></a><span class="s2">def </span><span class="s1">_validate_style_kwargs</span><span class="s3">(</span><span class="s1">default_style_kwargs</span><span class="s3">, </span><span class="s1">user_style_kwargs</span><span class="s3">):</span>
+<a name="l106"><span class="ln">106  </span></a>    <span class="s4">&quot;&quot;&quot;Create valid style kwargs by avoiding Matplotlib alias errors. 
+<a name="l107"><span class="ln">107  </span></a> 
+<a name="l108"><span class="ln">108  </span></a>    Matplotlib raises an error when, for example, 'color' and 'c', or 'linestyle' and 
+<a name="l109"><span class="ln">109  </span></a>    'ls', are specified together. To avoid this, we automatically keep only the one 
+<a name="l110"><span class="ln">110  </span></a>    specified by the user and raise an error if the user specifies both. 
+<a name="l111"><span class="ln">111  </span></a> 
+<a name="l112"><span class="ln">112  </span></a>    Parameters 
+<a name="l113"><span class="ln">113  </span></a>    ---------- 
+<a name="l114"><span class="ln">114  </span></a>    default_style_kwargs : dict 
+<a name="l115"><span class="ln">115  </span></a>        The Matplotlib style kwargs used by default in the scikit-learn display. 
+<a name="l116"><span class="ln">116  </span></a>    user_style_kwargs : dict 
+<a name="l117"><span class="ln">117  </span></a>        The user-defined Matplotlib style kwargs. 
+<a name="l118"><span class="ln">118  </span></a> 
+<a name="l119"><span class="ln">119  </span></a>    Returns 
+<a name="l120"><span class="ln">120  </span></a>    ------- 
+<a name="l121"><span class="ln">121  </span></a>    valid_style_kwargs : dict 
+<a name="l122"><span class="ln">122  </span></a>        The validated style kwargs taking into account both default and user-defined 
+<a name="l123"><span class="ln">123  </span></a>        Matplotlib style kwargs. 
+<a name="l124"><span class="ln">124  </span></a>    &quot;&quot;&quot;</span>
+<a name="l125"><span class="ln">125  </span></a>
+<a name="l126"><span class="ln">126  </span></a>    <span class="s1">invalid_to_valid_kw </span><span class="s3">= {</span>
+<a name="l127"><span class="ln">127  </span></a>        <span class="s5">&quot;ls&quot;</span><span class="s3">: </span><span class="s5">&quot;linestyle&quot;</span><span class="s3">,</span>
+<a name="l128"><span class="ln">128  </span></a>        <span class="s5">&quot;c&quot;</span><span class="s3">: </span><span class="s5">&quot;color&quot;</span><span class="s3">,</span>
+<a name="l129"><span class="ln">129  </span></a>        <span class="s5">&quot;ec&quot;</span><span class="s3">: </span><span class="s5">&quot;edgecolor&quot;</span><span class="s3">,</span>
+<a name="l130"><span class="ln">130  </span></a>        <span class="s5">&quot;fc&quot;</span><span class="s3">: </span><span class="s5">&quot;facecolor&quot;</span><span class="s3">,</span>
+<a name="l131"><span class="ln">131  </span></a>        <span class="s5">&quot;lw&quot;</span><span class="s3">: </span><span class="s5">&quot;linewidth&quot;</span><span class="s3">,</span>
+<a name="l132"><span class="ln">132  </span></a>        <span class="s5">&quot;mec&quot;</span><span class="s3">: </span><span class="s5">&quot;markeredgecolor&quot;</span><span class="s3">,</span>
+<a name="l133"><span class="ln">133  </span></a>        <span class="s5">&quot;mfcalt&quot;</span><span class="s3">: </span><span class="s5">&quot;markerfacecoloralt&quot;</span><span class="s3">,</span>
+<a name="l134"><span class="ln">134  </span></a>        <span class="s5">&quot;ms&quot;</span><span class="s3">: </span><span class="s5">&quot;markersize&quot;</span><span class="s3">,</span>
+<a name="l135"><span class="ln">135  </span></a>        <span class="s5">&quot;mew&quot;</span><span class="s3">: </span><span class="s5">&quot;markeredgewidth&quot;</span><span class="s3">,</span>
+<a name="l136"><span class="ln">136  </span></a>        <span class="s5">&quot;mfc&quot;</span><span class="s3">: </span><span class="s5">&quot;markerfacecolor&quot;</span><span class="s3">,</span>
+<a name="l137"><span class="ln">137  </span></a>        <span class="s5">&quot;aa&quot;</span><span class="s3">: </span><span class="s5">&quot;antialiased&quot;</span><span class="s3">,</span>
+<a name="l138"><span class="ln">138  </span></a>        <span class="s5">&quot;ds&quot;</span><span class="s3">: </span><span class="s5">&quot;drawstyle&quot;</span><span class="s3">,</span>
+<a name="l139"><span class="ln">139  </span></a>        <span class="s5">&quot;font&quot;</span><span class="s3">: </span><span class="s5">&quot;fontproperties&quot;</span><span class="s3">,</span>
+<a name="l140"><span class="ln">140  </span></a>        <span class="s5">&quot;family&quot;</span><span class="s3">: </span><span class="s5">&quot;fontfamily&quot;</span><span class="s3">,</span>
+<a name="l141"><span class="ln">141  </span></a>        <span class="s5">&quot;name&quot;</span><span class="s3">: </span><span class="s5">&quot;fontname&quot;</span><span class="s3">,</span>
+<a name="l142"><span class="ln">142  </span></a>        <span class="s5">&quot;size&quot;</span><span class="s3">: </span><span class="s5">&quot;fontsize&quot;</span><span class="s3">,</span>
+<a name="l143"><span class="ln">143  </span></a>        <span class="s5">&quot;stretch&quot;</span><span class="s3">: </span><span class="s5">&quot;fontstretch&quot;</span><span class="s3">,</span>
+<a name="l144"><span class="ln">144  </span></a>        <span class="s5">&quot;style&quot;</span><span class="s3">: </span><span class="s5">&quot;fontstyle&quot;</span><span class="s3">,</span>
+<a name="l145"><span class="ln">145  </span></a>        <span class="s5">&quot;variant&quot;</span><span class="s3">: </span><span class="s5">&quot;fontvariant&quot;</span><span class="s3">,</span>
+<a name="l146"><span class="ln">146  </span></a>        <span class="s5">&quot;weight&quot;</span><span class="s3">: </span><span class="s5">&quot;fontweight&quot;</span><span class="s3">,</span>
+<a name="l147"><span class="ln">147  </span></a>        <span class="s5">&quot;ha&quot;</span><span class="s3">: </span><span class="s5">&quot;horizontalalignment&quot;</span><span class="s3">,</span>
+<a name="l148"><span class="ln">148  </span></a>        <span class="s5">&quot;va&quot;</span><span class="s3">: </span><span class="s5">&quot;verticalalignment&quot;</span><span class="s3">,</span>
+<a name="l149"><span class="ln">149  </span></a>        <span class="s5">&quot;ma&quot;</span><span class="s3">: </span><span class="s5">&quot;multialignment&quot;</span><span class="s3">,</span>
+<a name="l150"><span class="ln">150  </span></a>    <span class="s3">}</span>
+<a name="l151"><span class="ln">151  </span></a>    <span class="s2">for </span><span class="s1">invalid_key</span><span class="s3">, </span><span class="s1">valid_key </span><span class="s2">in </span><span class="s1">invalid_to_valid_kw</span><span class="s3">.</span><span class="s1">items</span><span class="s3">():</span>
+<a name="l152"><span class="ln">152  </span></a>        <span class="s2">if </span><span class="s1">invalid_key </span><span class="s2">in </span><span class="s1">user_style_kwargs </span><span class="s2">and </span><span class="s1">valid_key </span><span class="s2">in </span><span class="s1">user_style_kwargs</span><span class="s3">:</span>
+<a name="l153"><span class="ln">153  </span></a>            <span class="s2">raise </span><span class="s1">TypeError</span><span class="s3">(</span>
+<a name="l154"><span class="ln">154  </span></a>                <span class="s5">f&quot;Got both </span><span class="s2">{</span><span class="s1">invalid_key</span><span class="s2">} </span><span class="s5">and </span><span class="s2">{</span><span class="s1">valid_key</span><span class="s2">}</span><span class="s5">, which are aliases of one &quot;</span>
+<a name="l155"><span class="ln">155  </span></a>                <span class="s5">&quot;another&quot;</span>
+<a name="l156"><span class="ln">156  </span></a>            <span class="s3">)</span>
+<a name="l157"><span class="ln">157  </span></a>    <span class="s1">valid_style_kwargs </span><span class="s3">= </span><span class="s1">default_style_kwargs</span><span class="s3">.</span><span class="s1">copy</span><span class="s3">()</span>
+<a name="l158"><span class="ln">158  </span></a>
+<a name="l159"><span class="ln">159  </span></a>    <span class="s2">for </span><span class="s1">key </span><span class="s2">in </span><span class="s1">user_style_kwargs</span><span class="s3">.</span><span class="s1">keys</span><span class="s3">():</span>
+<a name="l160"><span class="ln">160  </span></a>        <span class="s2">if </span><span class="s1">key </span><span class="s2">in </span><span class="s1">invalid_to_valid_kw</span><span class="s3">:</span>
+<a name="l161"><span class="ln">161  </span></a>            <span class="s1">valid_style_kwargs</span><span class="s3">[</span><span class="s1">invalid_to_valid_kw</span><span class="s3">[</span><span class="s1">key</span><span class="s3">]] = </span><span class="s1">user_style_kwargs</span><span class="s3">[</span><span class="s1">key</span><span class="s3">]</span>
+<a name="l162"><span class="ln">162  </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l163"><span class="ln">163  </span></a>            <span class="s1">valid_style_kwargs</span><span class="s3">[</span><span class="s1">key</span><span class="s3">] = </span><span class="s1">user_style_kwargs</span><span class="s3">[</span><span class="s1">key</span><span class="s3">]</span>
+<a name="l164"><span class="ln">164  </span></a>
+<a name="l165"><span class="ln">165  </span></a>    <span class="s2">return </span><span class="s1">valid_style_kwargs</span>
+<a name="l166"><span class="ln">166  </span></a>
+<a name="l167"><span class="ln">167  </span></a>
+<a name="l168"><span class="ln">168  </span></a><span class="s2">def </span><span class="s1">_despine</span><span class="s3">(</span><span class="s1">ax</span><span class="s3">):</span>
+<a name="l169"><span class="ln">169  </span></a>    <span class="s4">&quot;&quot;&quot;Remove the top and right spines of the plot. 
+<a name="l170"><span class="ln">170  </span></a> 
+<a name="l171"><span class="ln">171  </span></a>    Parameters 
+<a name="l172"><span class="ln">172  </span></a>    ---------- 
+<a name="l173"><span class="ln">173  </span></a>    ax : matplotlib.axes.Axes 
+<a name="l174"><span class="ln">174  </span></a>        The axes of the plot to despine. 
+<a name="l175"><span class="ln">175  </span></a>    &quot;&quot;&quot;</span>
+<a name="l176"><span class="ln">176  </span></a>    <span class="s2">for </span><span class="s1">s </span><span class="s2">in </span><span class="s3">[</span><span class="s5">&quot;top&quot;</span><span class="s3">, </span><span class="s5">&quot;right&quot;</span><span class="s3">]:</span>
+<a name="l177"><span class="ln">177  </span></a>        <span class="s1">ax</span><span class="s3">.</span><span class="s1">spines</span><span class="s3">[</span><span class="s1">s</span><span class="s3">].</span><span class="s1">set_visible</span><span class="s3">(</span><span class="s2">False</span><span class="s3">)</span>
+<a name="l178"><span class="ln">178  </span></a>    <span class="s2">for </span><span class="s1">s </span><span class="s2">in </span><span class="s3">[</span><span class="s5">&quot;bottom&quot;</span><span class="s3">, </span><span class="s5">&quot;left&quot;</span><span class="s3">]:</span>
+<a name="l179"><span class="ln">179  </span></a>        <span class="s1">ax</span><span class="s3">.</span><span class="s1">spines</span><span class="s3">[</span><span class="s1">s</span><span class="s3">].</span><span class="s1">set_bounds</span><span class="s3">(</span><span class="s6">0</span><span class="s3">, </span><span class="s6">1</span><span class="s3">)</span>
+<a name="l180"><span class="ln">180  </span></a></pre>
+</body>
+</html>

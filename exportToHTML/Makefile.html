@@ -1,0 +1,48 @@
+<html>
+<head>
+<title>Makefile</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #bcbec4;}
+.s2 { color: #c77dbb;}
+.s3 { color: #c77dbb; font-style: italic;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #cf8e6d;}
+.s6 { color: #cf8e6d; font-style: italic;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Makefile</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">TPLS := </span><span class="s2">$(patsubst </span><span class="s3">%</span><span class="s2">.tpl,../latex/skeleton/</span><span class="s3">%</span><span class="s2">.tplx,$(wildcard </span><span class="s3">*</span><span class="s2">.tpl))</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s1">all</span><span class="s0">: </span><span class="s1">clean </span><span class="s2">$(TPLS)</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s4"># Convert standard Jinja2 syntax to LaTeX safe Jinja2</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s4"># see http://flask.pocoo.org/snippets/55/ for more info</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s1">../latex/skeleton/%.tplx</span><span class="s0">: </span><span class="s3">%</span><span class="s1">.tpl</span>
+<a name="l8"><span class="ln">8    </span></a>	<span class="s5">@</span><span class="s1">echo 'generating tex equivalent of </span><span class="s0">$^</span><span class="s1">: </span><span class="s0">$@</span><span class="s1">' 
+<a name="l9"><span class="ln">9    </span></a>	</span><span class="s5">@</span><span class="s1">echo '((=- Auto-generated template file, DO NOT edit directly!\n' </span><span class="s6">\ 
+<a name="l10"><span class="ln">10   </span></a>		  </span><span class="s1">'   To edit this file, please refer to ../../skeleton/README.md' </span><span class="s6">\ 
+<a name="l11"><span class="ln">11   </span></a>		  </span><span class="s1">'-=))\n\n' &gt; </span><span class="s0">$@</span>
+<a name="l12"><span class="ln">12   </span></a>	<span class="s5">@</span><span class="s1">sed </span><span class="s6">\ 
+<a name="l13"><span class="ln">13   </span></a>		</span><span class="s1">-e 's/{%/((*/g' </span><span class="s6">\ 
+<a name="l14"><span class="ln">14   </span></a>		</span><span class="s1">-e 's/%}/*))/g' </span><span class="s6">\ 
+<a name="l15"><span class="ln">15   </span></a>		</span><span class="s1">-e 's/{{/(((/g' </span><span class="s6">\ 
+<a name="l16"><span class="ln">16   </span></a>		</span><span class="s1">-e 's/}}/)))/g' </span><span class="s6">\ 
+<a name="l17"><span class="ln">17   </span></a>		</span><span class="s1">-e 's/{#/((=/g' </span><span class="s6">\ 
+<a name="l18"><span class="ln">18   </span></a>		</span><span class="s1">-e 's/#}/=))/g' </span><span class="s6">\ 
+<a name="l19"><span class="ln">19   </span></a>		</span><span class="s1">-e &quot;s/tpl'/tplx'/g&quot; </span><span class="s6">\ 
+<a name="l20"><span class="ln">20   </span></a>		</span><span class="s0">$^ </span><span class="s1">&gt;&gt; </span><span class="s0">$@</span>
+<a name="l21"><span class="ln">21   </span></a>
+<a name="l22"><span class="ln">22   </span></a><span class="s1">clean</span><span class="s0">:</span>
+<a name="l23"><span class="ln">23   </span></a>	<span class="s5">@</span><span class="s1">echo &quot;cleaning generated tplx files...&quot; 
+<a name="l24"><span class="ln">24   </span></a>	</span><span class="s5">@-</span><span class="s1">rm ../latex/skeleton/*.tplx 
+<a name="l25"><span class="ln">25   </span></a></span></pre>
+</body>
+</html>

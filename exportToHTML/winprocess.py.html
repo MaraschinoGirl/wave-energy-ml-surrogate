@@ -1,0 +1,254 @@
+<html>
+<head>
+<title>winprocess.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+.s6 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+winprocess.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>Windows Process Control 
+<a name="l3"><span class="ln">3    </span></a> 
+<a name="l4"><span class="ln">4    </span></a>winprocess.run launches a child process and returns the exit code. 
+<a name="l5"><span class="ln">5    </span></a>Optionally, it can: 
+<a name="l6"><span class="ln">6    </span></a>  redirect stdin, stdout &amp; stderr to files 
+<a name="l7"><span class="ln">7    </span></a>  run the command as another user 
+<a name="l8"><span class="ln">8    </span></a>  limit the process's running time 
+<a name="l9"><span class="ln">9    </span></a>  control the process window (location, size, window state, desktop) 
+<a name="l10"><span class="ln">10   </span></a>Works on Windows NT, 2000 &amp; XP. Requires Mark Hammond's win32 
+<a name="l11"><span class="ln">11   </span></a>extensions. 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>This code is free for any purpose, with no warranty of any kind. 
+<a name="l14"><span class="ln">14   </span></a>-- John B. Dell'Aquila &lt;jbd@alum.mit.edu&gt; 
+<a name="l15"><span class="ln">15   </span></a>&quot;&quot;&quot;</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s2">import </span><span class="s1">msvcrt</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s2">import </span><span class="s1">os</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s2">import </span><span class="s1">win32api</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s2">import </span><span class="s1">win32con</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s2">import </span><span class="s1">win32event</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s2">import </span><span class="s1">win32gui</span>
+<a name="l24"><span class="ln">24   </span></a><span class="s2">import </span><span class="s1">win32process</span>
+<a name="l25"><span class="ln">25   </span></a><span class="s2">import </span><span class="s1">win32security</span>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a>
+<a name="l28"><span class="ln">28   </span></a><span class="s2">def </span><span class="s1">logonUser</span><span class="s3">(</span><span class="s1">loginString</span><span class="s3">):</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l30"><span class="ln">30   </span></a>    Login as specified user and return handle. 
+<a name="l31"><span class="ln">31   </span></a>    loginString:  'Domain\nUser\nPassword'; for local 
+<a name="l32"><span class="ln">32   </span></a>        login use . or empty string as domain 
+<a name="l33"><span class="ln">33   </span></a>        e.g. '.\nadministrator\nsecret_password' 
+<a name="l34"><span class="ln">34   </span></a>    &quot;&quot;&quot;</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s1">domain</span><span class="s3">, </span><span class="s1">user</span><span class="s3">, </span><span class="s1">passwd </span><span class="s3">= </span><span class="s1">loginString</span><span class="s3">.</span><span class="s1">split</span><span class="s3">(</span><span class="s4">&quot;</span><span class="s2">\n</span><span class="s4">&quot;</span><span class="s3">)</span>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s2">return </span><span class="s1">win32security</span><span class="s3">.</span><span class="s1">LogonUser</span><span class="s3">(</span>
+<a name="l37"><span class="ln">37   </span></a>        <span class="s1">user</span><span class="s3">,</span>
+<a name="l38"><span class="ln">38   </span></a>        <span class="s1">domain</span><span class="s3">,</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s1">passwd</span><span class="s3">,</span>
+<a name="l40"><span class="ln">40   </span></a>        <span class="s1">win32con</span><span class="s3">.</span><span class="s1">LOGON32_LOGON_INTERACTIVE</span><span class="s3">,</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s1">win32con</span><span class="s3">.</span><span class="s1">LOGON32_PROVIDER_DEFAULT</span><span class="s3">,</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s3">)</span>
+<a name="l43"><span class="ln">43   </span></a>
+<a name="l44"><span class="ln">44   </span></a>
+<a name="l45"><span class="ln">45   </span></a><span class="s2">class </span><span class="s1">Process</span><span class="s3">:</span>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l47"><span class="ln">47   </span></a>    A Windows process. 
+<a name="l48"><span class="ln">48   </span></a>    &quot;&quot;&quot;</span>
+<a name="l49"><span class="ln">49   </span></a>
+<a name="l50"><span class="ln">50   </span></a>    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span>
+<a name="l51"><span class="ln">51   </span></a>        <span class="s1">self</span><span class="s3">,</span>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s1">cmd</span><span class="s3">,</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s1">login</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l54"><span class="ln">54   </span></a>        <span class="s1">hStdin</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l55"><span class="ln">55   </span></a>        <span class="s1">hStdout</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s1">hStderr</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s1">show</span><span class="s3">=</span><span class="s5">1</span><span class="s3">,</span>
+<a name="l58"><span class="ln">58   </span></a>        <span class="s1">xy</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s1">xySize</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s1">desktop</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s3">):</span>
+<a name="l62"><span class="ln">62   </span></a>        <span class="s0">&quot;&quot;&quot; 
+<a name="l63"><span class="ln">63   </span></a>        Create a Windows process. 
+<a name="l64"><span class="ln">64   </span></a>        cmd:     command to run 
+<a name="l65"><span class="ln">65   </span></a>        login:   run as user 'Domain\nUser\nPassword' 
+<a name="l66"><span class="ln">66   </span></a>        hStdin, hStdout, hStderr: 
+<a name="l67"><span class="ln">67   </span></a>                 handles for process I/O; default is caller's stdin, 
+<a name="l68"><span class="ln">68   </span></a>                 stdout &amp; stderr 
+<a name="l69"><span class="ln">69   </span></a>        show:    wShowWindow (0=SW_HIDE, 1=SW_NORMAL, ...) 
+<a name="l70"><span class="ln">70   </span></a>        xy:      window offset (x, y) of upper left corner in pixels 
+<a name="l71"><span class="ln">71   </span></a>        xySize:  window size (width, height) in pixels 
+<a name="l72"><span class="ln">72   </span></a>        desktop: lpDesktop - name of desktop e.g. 'winsta0\\default' 
+<a name="l73"><span class="ln">73   </span></a>                 None = inherit current desktop 
+<a name="l74"><span class="ln">74   </span></a>                 '' = create new desktop if necessary 
+<a name="l75"><span class="ln">75   </span></a> 
+<a name="l76"><span class="ln">76   </span></a>        User calling login requires additional privileges: 
+<a name="l77"><span class="ln">77   </span></a>          Act as part of the operating system [not needed on Windows XP] 
+<a name="l78"><span class="ln">78   </span></a>          Increase quotas 
+<a name="l79"><span class="ln">79   </span></a>          Replace a process level token 
+<a name="l80"><span class="ln">80   </span></a>        Login string must EITHER be an administrator's account 
+<a name="l81"><span class="ln">81   </span></a>        (ordinary user can't access current desktop - see Microsoft 
+<a name="l82"><span class="ln">82   </span></a>        Q165194) OR use desktop='' to run another desktop invisibly 
+<a name="l83"><span class="ln">83   </span></a>        (may be very slow to startup &amp; finalize). 
+<a name="l84"><span class="ln">84   </span></a>        &quot;&quot;&quot;</span>
+<a name="l85"><span class="ln">85   </span></a>        <span class="s1">si </span><span class="s3">= </span><span class="s1">win32process</span><span class="s3">.</span><span class="s1">STARTUPINFO</span><span class="s3">()</span>
+<a name="l86"><span class="ln">86   </span></a>        <span class="s1">si</span><span class="s3">.</span><span class="s1">dwFlags </span><span class="s3">= </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">STARTF_USESTDHANDLES </span><span class="s3">^ </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">STARTF_USESHOWWINDOW</span>
+<a name="l87"><span class="ln">87   </span></a>        <span class="s2">if </span><span class="s1">hStdin </span><span class="s2">is None</span><span class="s3">:</span>
+<a name="l88"><span class="ln">88   </span></a>            <span class="s1">si</span><span class="s3">.</span><span class="s1">hStdInput </span><span class="s3">= </span><span class="s1">win32api</span><span class="s3">.</span><span class="s1">GetStdHandle</span><span class="s3">(</span><span class="s1">win32api</span><span class="s3">.</span><span class="s1">STD_INPUT_HANDLE</span><span class="s3">)</span>
+<a name="l89"><span class="ln">89   </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l90"><span class="ln">90   </span></a>            <span class="s1">si</span><span class="s3">.</span><span class="s1">hStdInput </span><span class="s3">= </span><span class="s1">hStdin</span>
+<a name="l91"><span class="ln">91   </span></a>        <span class="s2">if </span><span class="s1">hStdout </span><span class="s2">is None</span><span class="s3">:</span>
+<a name="l92"><span class="ln">92   </span></a>            <span class="s1">si</span><span class="s3">.</span><span class="s1">hStdOutput </span><span class="s3">= </span><span class="s1">win32api</span><span class="s3">.</span><span class="s1">GetStdHandle</span><span class="s3">(</span><span class="s1">win32api</span><span class="s3">.</span><span class="s1">STD_OUTPUT_HANDLE</span><span class="s3">)</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l94"><span class="ln">94   </span></a>            <span class="s1">si</span><span class="s3">.</span><span class="s1">hStdOutput </span><span class="s3">= </span><span class="s1">hStdout</span>
+<a name="l95"><span class="ln">95   </span></a>        <span class="s2">if </span><span class="s1">hStderr </span><span class="s2">is None</span><span class="s3">:</span>
+<a name="l96"><span class="ln">96   </span></a>            <span class="s1">si</span><span class="s3">.</span><span class="s1">hStdError </span><span class="s3">= </span><span class="s1">win32api</span><span class="s3">.</span><span class="s1">GetStdHandle</span><span class="s3">(</span><span class="s1">win32api</span><span class="s3">.</span><span class="s1">STD_ERROR_HANDLE</span><span class="s3">)</span>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l98"><span class="ln">98   </span></a>            <span class="s1">si</span><span class="s3">.</span><span class="s1">hStdError </span><span class="s3">= </span><span class="s1">hStderr</span>
+<a name="l99"><span class="ln">99   </span></a>        <span class="s1">si</span><span class="s3">.</span><span class="s1">wShowWindow </span><span class="s3">= </span><span class="s1">show</span>
+<a name="l100"><span class="ln">100  </span></a>        <span class="s2">if </span><span class="s1">xy </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l101"><span class="ln">101  </span></a>            <span class="s1">si</span><span class="s3">.</span><span class="s1">dwX</span><span class="s3">, </span><span class="s1">si</span><span class="s3">.</span><span class="s1">dwY </span><span class="s3">= </span><span class="s1">xy</span>
+<a name="l102"><span class="ln">102  </span></a>            <span class="s1">si</span><span class="s3">.</span><span class="s1">dwFlags </span><span class="s3">^= </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">STARTF_USEPOSITION</span>
+<a name="l103"><span class="ln">103  </span></a>        <span class="s2">if </span><span class="s1">xySize </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l104"><span class="ln">104  </span></a>            <span class="s1">si</span><span class="s3">.</span><span class="s1">dwXSize</span><span class="s3">, </span><span class="s1">si</span><span class="s3">.</span><span class="s1">dwYSize </span><span class="s3">= </span><span class="s1">xySize</span>
+<a name="l105"><span class="ln">105  </span></a>            <span class="s1">si</span><span class="s3">.</span><span class="s1">dwFlags </span><span class="s3">^= </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">STARTF_USESIZE</span>
+<a name="l106"><span class="ln">106  </span></a>        <span class="s2">if </span><span class="s1">desktop </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l107"><span class="ln">107  </span></a>            <span class="s1">si</span><span class="s3">.</span><span class="s1">lpDesktop </span><span class="s3">= </span><span class="s1">desktop</span>
+<a name="l108"><span class="ln">108  </span></a>        <span class="s1">procArgs </span><span class="s3">= (</span>
+<a name="l109"><span class="ln">109  </span></a>            <span class="s2">None</span><span class="s3">,  </span><span class="s6"># appName</span>
+<a name="l110"><span class="ln">110  </span></a>            <span class="s1">cmd</span><span class="s3">,  </span><span class="s6"># commandLine</span>
+<a name="l111"><span class="ln">111  </span></a>            <span class="s2">None</span><span class="s3">,  </span><span class="s6"># processAttributes</span>
+<a name="l112"><span class="ln">112  </span></a>            <span class="s2">None</span><span class="s3">,  </span><span class="s6"># threadAttributes</span>
+<a name="l113"><span class="ln">113  </span></a>            <span class="s5">1</span><span class="s3">,  </span><span class="s6"># bInheritHandles</span>
+<a name="l114"><span class="ln">114  </span></a>            <span class="s1">win32process</span><span class="s3">.</span><span class="s1">CREATE_NEW_CONSOLE</span><span class="s3">,  </span><span class="s6"># dwCreationFlags</span>
+<a name="l115"><span class="ln">115  </span></a>            <span class="s2">None</span><span class="s3">,  </span><span class="s6"># newEnvironment</span>
+<a name="l116"><span class="ln">116  </span></a>            <span class="s2">None</span><span class="s3">,  </span><span class="s6"># currentDirectory</span>
+<a name="l117"><span class="ln">117  </span></a>            <span class="s1">si</span><span class="s3">,</span>
+<a name="l118"><span class="ln">118  </span></a>        <span class="s3">)  </span><span class="s6"># startupinfo</span>
+<a name="l119"><span class="ln">119  </span></a>        <span class="s2">if </span><span class="s1">login </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l120"><span class="ln">120  </span></a>            <span class="s1">hUser </span><span class="s3">= </span><span class="s1">logonUser</span><span class="s3">(</span><span class="s1">login</span><span class="s3">)</span>
+<a name="l121"><span class="ln">121  </span></a>            <span class="s1">win32security</span><span class="s3">.</span><span class="s1">ImpersonateLoggedOnUser</span><span class="s3">(</span><span class="s1">hUser</span><span class="s3">)</span>
+<a name="l122"><span class="ln">122  </span></a>            <span class="s1">procHandles </span><span class="s3">= </span><span class="s1">win32process</span><span class="s3">.</span><span class="s1">CreateProcessAsUser</span><span class="s3">(</span><span class="s1">hUser</span><span class="s3">, *</span><span class="s1">procArgs</span><span class="s3">)</span>
+<a name="l123"><span class="ln">123  </span></a>            <span class="s1">win32security</span><span class="s3">.</span><span class="s1">RevertToSelf</span><span class="s3">()</span>
+<a name="l124"><span class="ln">124  </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l125"><span class="ln">125  </span></a>            <span class="s1">procHandles </span><span class="s3">= </span><span class="s1">win32process</span><span class="s3">.</span><span class="s1">CreateProcess</span><span class="s3">(*</span><span class="s1">procArgs</span><span class="s3">)</span>
+<a name="l126"><span class="ln">126  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">hProcess</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">hThread</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">PId</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">TId </span><span class="s3">= </span><span class="s1">procHandles</span>
+<a name="l127"><span class="ln">127  </span></a>
+<a name="l128"><span class="ln">128  </span></a>    <span class="s2">def </span><span class="s1">wait</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">mSec</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+<a name="l129"><span class="ln">129  </span></a>        <span class="s0">&quot;&quot;&quot; 
+<a name="l130"><span class="ln">130  </span></a>        Wait for process to finish or for specified number of 
+<a name="l131"><span class="ln">131  </span></a>        milliseconds to elapse. 
+<a name="l132"><span class="ln">132  </span></a>        &quot;&quot;&quot;</span>
+<a name="l133"><span class="ln">133  </span></a>        <span class="s2">if </span><span class="s1">mSec </span><span class="s2">is None</span><span class="s3">:</span>
+<a name="l134"><span class="ln">134  </span></a>            <span class="s1">mSec </span><span class="s3">= </span><span class="s1">win32event</span><span class="s3">.</span><span class="s1">INFINITE</span>
+<a name="l135"><span class="ln">135  </span></a>        <span class="s2">return </span><span class="s1">win32event</span><span class="s3">.</span><span class="s1">WaitForSingleObject</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">hProcess</span><span class="s3">, </span><span class="s1">mSec</span><span class="s3">)</span>
+<a name="l136"><span class="ln">136  </span></a>
+<a name="l137"><span class="ln">137  </span></a>    <span class="s2">def </span><span class="s1">kill</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">gracePeriod</span><span class="s3">=</span><span class="s5">5000</span><span class="s3">):</span>
+<a name="l138"><span class="ln">138  </span></a>        <span class="s0">&quot;&quot;&quot; 
+<a name="l139"><span class="ln">139  </span></a>        Kill process. Try for an orderly shutdown via WM_CLOSE.  If 
+<a name="l140"><span class="ln">140  </span></a>        still running after gracePeriod (5 sec. default), terminate. 
+<a name="l141"><span class="ln">141  </span></a>        &quot;&quot;&quot;</span>
+<a name="l142"><span class="ln">142  </span></a>        <span class="s1">win32gui</span><span class="s3">.</span><span class="s1">EnumWindows</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">__close__</span><span class="s3">, </span><span class="s5">0</span><span class="s3">)</span>
+<a name="l143"><span class="ln">143  </span></a>        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">wait</span><span class="s3">(</span><span class="s1">gracePeriod</span><span class="s3">) != </span><span class="s1">win32event</span><span class="s3">.</span><span class="s1">WAIT_OBJECT_0</span><span class="s3">:</span>
+<a name="l144"><span class="ln">144  </span></a>            <span class="s1">win32process</span><span class="s3">.</span><span class="s1">TerminateProcess</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">hProcess</span><span class="s3">, </span><span class="s5">0</span><span class="s3">)</span>
+<a name="l145"><span class="ln">145  </span></a>            <span class="s1">win32api</span><span class="s3">.</span><span class="s1">Sleep</span><span class="s3">(</span><span class="s5">100</span><span class="s3">)  </span><span class="s6"># wait for resources to be released</span>
+<a name="l146"><span class="ln">146  </span></a>
+<a name="l147"><span class="ln">147  </span></a>    <span class="s2">def </span><span class="s1">__close__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">hwnd</span><span class="s3">, </span><span class="s1">dummy</span><span class="s3">):</span>
+<a name="l148"><span class="ln">148  </span></a>        <span class="s0">&quot;&quot;&quot; 
+<a name="l149"><span class="ln">149  </span></a>        EnumWindows callback - sends WM_CLOSE to any window 
+<a name="l150"><span class="ln">150  </span></a>        owned by this process. 
+<a name="l151"><span class="ln">151  </span></a>        &quot;&quot;&quot;</span>
+<a name="l152"><span class="ln">152  </span></a>        <span class="s1">TId</span><span class="s3">, </span><span class="s1">PId </span><span class="s3">= </span><span class="s1">win32process</span><span class="s3">.</span><span class="s1">GetWindowThreadProcessId</span><span class="s3">(</span><span class="s1">hwnd</span><span class="s3">)</span>
+<a name="l153"><span class="ln">153  </span></a>        <span class="s2">if </span><span class="s1">PId </span><span class="s3">== </span><span class="s1">self</span><span class="s3">.</span><span class="s1">PId</span><span class="s3">:</span>
+<a name="l154"><span class="ln">154  </span></a>            <span class="s1">win32gui</span><span class="s3">.</span><span class="s1">PostMessage</span><span class="s3">(</span><span class="s1">hwnd</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">WM_CLOSE</span><span class="s3">, </span><span class="s5">0</span><span class="s3">, </span><span class="s5">0</span><span class="s3">)</span>
+<a name="l155"><span class="ln">155  </span></a>
+<a name="l156"><span class="ln">156  </span></a>    <span class="s2">def </span><span class="s1">exitCode</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l157"><span class="ln">157  </span></a>        <span class="s0">&quot;&quot;&quot; 
+<a name="l158"><span class="ln">158  </span></a>        Return process exit code. 
+<a name="l159"><span class="ln">159  </span></a>        &quot;&quot;&quot;</span>
+<a name="l160"><span class="ln">160  </span></a>        <span class="s2">return </span><span class="s1">win32process</span><span class="s3">.</span><span class="s1">GetExitCodeProcess</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">hProcess</span><span class="s3">)</span>
+<a name="l161"><span class="ln">161  </span></a>
+<a name="l162"><span class="ln">162  </span></a>
+<a name="l163"><span class="ln">163  </span></a><span class="s2">def </span><span class="s1">run</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">, </span><span class="s1">mSec</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">stdin</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">stdout</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, </span><span class="s1">stderr</span><span class="s3">=</span><span class="s2">None</span><span class="s3">, **</span><span class="s1">kw</span><span class="s3">):</span>
+<a name="l164"><span class="ln">164  </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l165"><span class="ln">165  </span></a>    Run cmd as a child process and return exit code. 
+<a name="l166"><span class="ln">166  </span></a>    mSec:  terminate cmd after specified number of milliseconds 
+<a name="l167"><span class="ln">167  </span></a>    stdin, stdout, stderr: 
+<a name="l168"><span class="ln">168  </span></a>           file objects for child I/O (use hStdin etc. to attach 
+<a name="l169"><span class="ln">169  </span></a>           handles instead of files); default is caller's stdin, 
+<a name="l170"><span class="ln">170  </span></a>           stdout &amp; stderr; 
+<a name="l171"><span class="ln">171  </span></a>    kw:    see Process.__init__ for more keyword options 
+<a name="l172"><span class="ln">172  </span></a>    &quot;&quot;&quot;</span>
+<a name="l173"><span class="ln">173  </span></a>    <span class="s2">if </span><span class="s1">stdin </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l174"><span class="ln">174  </span></a>        <span class="s1">kw</span><span class="s3">[</span><span class="s4">&quot;hStdin&quot;</span><span class="s3">] = </span><span class="s1">msvcrt</span><span class="s3">.</span><span class="s1">get_osfhandle</span><span class="s3">(</span><span class="s1">stdin</span><span class="s3">.</span><span class="s1">fileno</span><span class="s3">())</span>
+<a name="l175"><span class="ln">175  </span></a>    <span class="s2">if </span><span class="s1">stdout </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l176"><span class="ln">176  </span></a>        <span class="s1">kw</span><span class="s3">[</span><span class="s4">&quot;hStdout&quot;</span><span class="s3">] = </span><span class="s1">msvcrt</span><span class="s3">.</span><span class="s1">get_osfhandle</span><span class="s3">(</span><span class="s1">stdout</span><span class="s3">.</span><span class="s1">fileno</span><span class="s3">())</span>
+<a name="l177"><span class="ln">177  </span></a>    <span class="s2">if </span><span class="s1">stderr </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l178"><span class="ln">178  </span></a>        <span class="s1">kw</span><span class="s3">[</span><span class="s4">&quot;hStderr&quot;</span><span class="s3">] = </span><span class="s1">msvcrt</span><span class="s3">.</span><span class="s1">get_osfhandle</span><span class="s3">(</span><span class="s1">stderr</span><span class="s3">.</span><span class="s1">fileno</span><span class="s3">())</span>
+<a name="l179"><span class="ln">179  </span></a>    <span class="s1">child </span><span class="s3">= </span><span class="s1">Process</span><span class="s3">(</span><span class="s1">cmd</span><span class="s3">, **</span><span class="s1">kw</span><span class="s3">)</span>
+<a name="l180"><span class="ln">180  </span></a>    <span class="s2">if </span><span class="s1">child</span><span class="s3">.</span><span class="s1">wait</span><span class="s3">(</span><span class="s1">mSec</span><span class="s3">) != </span><span class="s1">win32event</span><span class="s3">.</span><span class="s1">WAIT_OBJECT_0</span><span class="s3">:</span>
+<a name="l181"><span class="ln">181  </span></a>        <span class="s1">child</span><span class="s3">.</span><span class="s1">kill</span><span class="s3">()</span>
+<a name="l182"><span class="ln">182  </span></a>        <span class="s2">raise </span><span class="s1">OSError</span><span class="s3">(</span><span class="s4">&quot;process timeout exceeded&quot;</span><span class="s3">)</span>
+<a name="l183"><span class="ln">183  </span></a>    <span class="s2">return </span><span class="s1">child</span><span class="s3">.</span><span class="s1">exitCode</span><span class="s3">()</span>
+<a name="l184"><span class="ln">184  </span></a>
+<a name="l185"><span class="ln">185  </span></a>
+<a name="l186"><span class="ln">186  </span></a><span class="s2">if </span><span class="s1">__name__ </span><span class="s3">== </span><span class="s4">&quot;__main__&quot;</span><span class="s3">:</span>
+<a name="l187"><span class="ln">187  </span></a>    <span class="s6"># Pipe commands to a shell and display the output in notepad</span>
+<a name="l188"><span class="ln">188  </span></a>    <span class="s1">print</span><span class="s3">(</span><span class="s4">&quot;Testing winprocess.py...&quot;</span><span class="s3">)</span>
+<a name="l189"><span class="ln">189  </span></a>
+<a name="l190"><span class="ln">190  </span></a>    <span class="s2">import </span><span class="s1">tempfile</span>
+<a name="l191"><span class="ln">191  </span></a>
+<a name="l192"><span class="ln">192  </span></a>    <span class="s1">timeoutSeconds </span><span class="s3">= </span><span class="s5">15</span>
+<a name="l193"><span class="ln">193  </span></a>    <span class="s1">cmdString </span><span class="s3">= (</span>
+<a name="l194"><span class="ln">194  </span></a>        <span class="s4">&quot;&quot;&quot;</span><span class="s2">\ 
+<a name="l195"><span class="ln">195  </span></a></span><span class="s4">REM      Test of winprocess.py piping commands to a shell.</span><span class="s2">\r</span>
+<a name="l196"><span class="ln">196  </span></a><span class="s4">REM      This 'notepad' process will terminate in %d seconds.</span><span class="s2">\r</span>
+<a name="l197"><span class="ln">197  </span></a><span class="s4">vol</span><span class="s2">\r</span>
+<a name="l198"><span class="ln">198  </span></a><span class="s4">net user</span><span class="s2">\r</span>
+<a name="l199"><span class="ln">199  </span></a><span class="s4">_this_is_a_test_of_stderr_</span><span class="s2">\r</span>
+<a name="l200"><span class="ln">200  </span></a><span class="s4">&quot;&quot;&quot;</span>
+<a name="l201"><span class="ln">201  </span></a>        <span class="s3">% </span><span class="s1">timeoutSeconds</span>
+<a name="l202"><span class="ln">202  </span></a>    <span class="s3">)</span>
+<a name="l203"><span class="ln">203  </span></a>
+<a name="l204"><span class="ln">204  </span></a>    <span class="s1">cmd_name </span><span class="s3">= </span><span class="s1">tempfile</span><span class="s3">.</span><span class="s1">mktemp</span><span class="s3">()</span>
+<a name="l205"><span class="ln">205  </span></a>    <span class="s1">out_name </span><span class="s3">= </span><span class="s1">cmd_name </span><span class="s3">+ </span><span class="s4">&quot;.txt&quot;</span>
+<a name="l206"><span class="ln">206  </span></a>    <span class="s2">try</span><span class="s3">:</span>
+<a name="l207"><span class="ln">207  </span></a>        <span class="s1">cmd </span><span class="s3">= </span><span class="s1">open</span><span class="s3">(</span><span class="s1">cmd_name</span><span class="s3">, </span><span class="s4">&quot;w+b&quot;</span><span class="s3">)</span>
+<a name="l208"><span class="ln">208  </span></a>        <span class="s1">out </span><span class="s3">= </span><span class="s1">open</span><span class="s3">(</span><span class="s1">out_name</span><span class="s3">, </span><span class="s4">&quot;w+b&quot;</span><span class="s3">)</span>
+<a name="l209"><span class="ln">209  </span></a>        <span class="s1">cmd</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s1">cmdString</span><span class="s3">.</span><span class="s1">encode</span><span class="s3">(</span><span class="s4">&quot;mbcs&quot;</span><span class="s3">))</span>
+<a name="l210"><span class="ln">210  </span></a>        <span class="s1">cmd</span><span class="s3">.</span><span class="s1">seek</span><span class="s3">(</span><span class="s5">0</span><span class="s3">)</span>
+<a name="l211"><span class="ln">211  </span></a>        <span class="s1">print</span><span class="s3">(</span>
+<a name="l212"><span class="ln">212  </span></a>            <span class="s4">&quot;CMD.EXE exit code:&quot;</span><span class="s3">,</span>
+<a name="l213"><span class="ln">213  </span></a>            <span class="s1">run</span><span class="s3">(</span><span class="s4">&quot;cmd.exe&quot;</span><span class="s3">, </span><span class="s1">show</span><span class="s3">=</span><span class="s5">0</span><span class="s3">, </span><span class="s1">stdin</span><span class="s3">=</span><span class="s1">cmd</span><span class="s3">, </span><span class="s1">stdout</span><span class="s3">=</span><span class="s1">out</span><span class="s3">, </span><span class="s1">stderr</span><span class="s3">=</span><span class="s1">out</span><span class="s3">),</span>
+<a name="l214"><span class="ln">214  </span></a>        <span class="s3">)</span>
+<a name="l215"><span class="ln">215  </span></a>        <span class="s1">cmd</span><span class="s3">.</span><span class="s1">close</span><span class="s3">()</span>
+<a name="l216"><span class="ln">216  </span></a>        <span class="s1">print</span><span class="s3">(</span>
+<a name="l217"><span class="ln">217  </span></a>            <span class="s4">&quot;NOTEPAD exit code:&quot;</span><span class="s3">,</span>
+<a name="l218"><span class="ln">218  </span></a>            <span class="s1">run</span><span class="s3">(</span>
+<a name="l219"><span class="ln">219  </span></a>                <span class="s4">&quot;notepad.exe %s&quot; </span><span class="s3">% </span><span class="s1">out</span><span class="s3">.</span><span class="s1">name</span><span class="s3">,</span>
+<a name="l220"><span class="ln">220  </span></a>                <span class="s1">show</span><span class="s3">=</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">SW_MAXIMIZE</span><span class="s3">,</span>
+<a name="l221"><span class="ln">221  </span></a>                <span class="s1">mSec</span><span class="s3">=</span><span class="s1">timeoutSeconds </span><span class="s3">* </span><span class="s5">1000</span><span class="s3">,</span>
+<a name="l222"><span class="ln">222  </span></a>            <span class="s3">),</span>
+<a name="l223"><span class="ln">223  </span></a>        <span class="s3">)</span>
+<a name="l224"><span class="ln">224  </span></a>        <span class="s1">out</span><span class="s3">.</span><span class="s1">close</span><span class="s3">()</span>
+<a name="l225"><span class="ln">225  </span></a>    <span class="s2">finally</span><span class="s3">:</span>
+<a name="l226"><span class="ln">226  </span></a>        <span class="s2">for </span><span class="s1">n </span><span class="s2">in </span><span class="s3">(</span><span class="s1">cmd_name</span><span class="s3">, </span><span class="s1">out_name</span><span class="s3">):</span>
+<a name="l227"><span class="ln">227  </span></a>            <span class="s2">try</span><span class="s3">:</span>
+<a name="l228"><span class="ln">228  </span></a>                <span class="s1">os</span><span class="s3">.</span><span class="s1">unlink</span><span class="s3">(</span><span class="s1">cmd_name</span><span class="s3">)</span>
+<a name="l229"><span class="ln">229  </span></a>            <span class="s2">except </span><span class="s1">OSError</span><span class="s3">:</span>
+<a name="l230"><span class="ln">230  </span></a>                <span class="s2">pass</span>
+<a name="l231"><span class="ln">231  </span></a></pre>
+</body>
+</html>

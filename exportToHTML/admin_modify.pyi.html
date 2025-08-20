@@ -1,0 +1,36 @@
+<html>
+<head>
+<title>admin_modify.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+admin_modify.pyi</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Any</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">from </span><span class="s1">django</span><span class="s2">.</span><span class="s1">contrib</span><span class="s2">.</span><span class="s1">admin</span><span class="s2">.</span><span class="s1">helpers </span><span class="s0">import </span><span class="s1">InlineAdminForm</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">from </span><span class="s1">django</span><span class="s2">.</span><span class="s1">template</span><span class="s2">.</span><span class="s1">base </span><span class="s0">import </span><span class="s1">Parser</span><span class="s2">, </span><span class="s1">Token</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">from </span><span class="s1">django</span><span class="s2">.</span><span class="s1">template</span><span class="s2">.</span><span class="s1">context </span><span class="s0">import </span><span class="s1">Context</span><span class="s2">, </span><span class="s1">RequestContext</span>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">from </span><span class="s2">.</span><span class="s1">base </span><span class="s0">import </span><span class="s1">InclusionAdminNode</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s1">register</span><span class="s2">: </span><span class="s1">Any</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s0">def </span><span class="s1">prepopulated_fields_js</span><span class="s2">(</span><span class="s1">context</span><span class="s2">: </span><span class="s1">RequestContext</span><span class="s2">) </span><span class="s1">-&gt; RequestContext</span><span class="s2">: ...</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0">def </span><span class="s1">prepopulated_fields_js_tag</span><span class="s2">(</span><span class="s1">parser</span><span class="s2">: </span><span class="s1">Parser</span><span class="s2">, </span><span class="s1">token</span><span class="s2">: </span><span class="s1">Token</span><span class="s2">) </span><span class="s1">-&gt; InclusionAdminNode</span><span class="s2">: ...</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s0">def </span><span class="s1">submit_row</span><span class="s2">(</span><span class="s1">context</span><span class="s2">: </span><span class="s1">RequestContext</span><span class="s2">) </span><span class="s1">-&gt; Context</span><span class="s2">: ...</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s0">def </span><span class="s1">submit_row_tag</span><span class="s2">(</span><span class="s1">parser</span><span class="s2">: </span><span class="s1">Parser</span><span class="s2">, </span><span class="s1">token</span><span class="s2">: </span><span class="s1">Token</span><span class="s2">) </span><span class="s1">-&gt; InclusionAdminNode</span><span class="s2">: ...</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s0">def </span><span class="s1">change_form_object_tools_tag</span><span class="s2">(</span><span class="s1">parser</span><span class="s2">: </span><span class="s1">Parser</span><span class="s2">, </span><span class="s1">token</span><span class="s2">: </span><span class="s1">Token</span><span class="s2">) </span><span class="s1">-&gt; InclusionAdminNode</span><span class="s2">: ...</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s0">def </span><span class="s1">cell_count</span><span class="s2">(</span><span class="s1">inline_admin_form</span><span class="s2">: </span><span class="s1">InlineAdminForm</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">: ...</span>
+<a name="l17"><span class="ln">17   </span></a></pre>
+</body>
+</html>

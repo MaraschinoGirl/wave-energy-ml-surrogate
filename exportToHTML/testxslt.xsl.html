@@ -1,0 +1,76 @@
+<html>
+<head>
+<title>testxslt.xsl</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #d5b778;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+testxslt.xsl</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&lt;!-- include in the xsl:stylesheet element: 
+<a name="l2"><span class="ln">2    </span></a>     (a) the version attribute as usual 
+<a name="l3"><span class="ln">3    </span></a>     (b) the XSLT namespace declaration as usual 
+<a name="l4"><span class="ln">4    </span></a>     (c) the MSXSL namespace declaration 
+<a name="l5"><span class="ln">5    </span></a>     (d) a namespace declaration to identify your functions 
+<a name="l6"><span class="ln">6    </span></a>     (e) the 'extension-element-prefixes' attribute to give the 
+<a name="l7"><span class="ln">7    </span></a>         namespace prefixes that indicate extension elements 
+<a name="l8"><span class="ln">8    </span></a>         (i.e. 'msxsl') 
+<a name="l9"><span class="ln">9    </span></a>     (f) the 'exclude-result-prefixes' attribute to indicate the 
+<a name="l10"><span class="ln">10   </span></a>         namespaces that aren't supposed to be part of the result 
+<a name="l11"><span class="ln">11   </span></a>         tree (i.e. 'foo') --&gt;</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">&lt;xsl:stylesheet </span><span class="s3">version</span><span class="s4">=&quot;1.0&quot;</span>
+<a name="l13"><span class="ln">13   </span></a>                <span class="s3">xmlns:xsl</span><span class="s4">=&quot;http://www.w3.org/1999/XSL/Transform&quot;</span>
+<a name="l14"><span class="ln">14   </span></a>                <span class="s3">xmlns:msxsl</span><span class="s4">=&quot;urn:schemas-microsoft-com:xslt&quot;</span>
+<a name="l15"><span class="ln">15   </span></a>                <span class="s3">xmlns:foo</span><span class="s4">=&quot;http://www.pythoncom-test.com/foo&quot;</span>
+<a name="l16"><span class="ln">16   </span></a>                <span class="s3">xmlns:bar</span><span class="s4">=&quot;http://www.pythoncom-test.com/bar&quot;</span>
+<a name="l17"><span class="ln">17   </span></a>                <span class="s3">extension-element-prefixes</span><span class="s4">=&quot;msxsl&quot;</span>
+<a name="l18"><span class="ln">18   </span></a>                <span class="s3">exclude-result-prefixes</span><span class="s4">=&quot;foo bar&quot;</span><span class="s2">&gt;</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s0">&lt;!-- do whatever output you want - you can use full XSLT functionality 
+<a name="l21"><span class="ln">21   </span></a>     --&gt;</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s2">&lt;xsl:output </span><span class="s3">method</span><span class="s4">=&quot;html&quot; </span><span class="s2">/&gt;</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a><span class="s0">&lt;!-- define the Javascript functions that you want to include within 
+<a name="l25"><span class="ln">25   </span></a>     a msxsl:script element. 
+<a name="l26"><span class="ln">26   </span></a>     - language indicates the scripting language 
+<a name="l27"><span class="ln">27   </span></a>     - implements-prefix gives the namespace prefix that you declared 
+<a name="l28"><span class="ln">28   </span></a>       for your function (i.e. foo) --&gt;</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s2">&lt;msxsl:script </span><span class="s3">language</span><span class="s4">=&quot;javascript&quot;</span>
+<a name="l30"><span class="ln">30   </span></a>              <span class="s3">implements-prefix</span><span class="s4">=&quot;foo&quot;</span><span class="s2">&gt;</span>
+<a name="l31"><span class="ln">31   </span></a>   <span class="s1">function worked() {</span>
+<a name="l32"><span class="ln">32   </span></a>      <span class="s1">return &quot;The jscript test worked&quot;;</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s1">}</span>
+<a name="l34"><span class="ln">34   </span></a><span class="s2">&lt;/msxsl:script&gt;</span>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a><span class="s0">&lt;!-- ditto for Python, using the 'bar' namespace 
+<a name="l37"><span class="ln">37   </span></a>--&gt;</span>
+<a name="l38"><span class="ln">38   </span></a><span class="s2">&lt;msxsl:script </span><span class="s3">language</span><span class="s4">=&quot;python&quot;</span>
+<a name="l39"><span class="ln">39   </span></a>              <span class="s3">implements-prefix</span><span class="s4">=&quot;bar&quot;</span><span class="s2">&gt;</span>
+<a name="l40"><span class="ln">40   </span></a><span class="s1">def worked():</span>
+<a name="l41"><span class="ln">41   </span></a>  <span class="s1">return &quot;The Python test worked&quot;</span>
+<a name="l42"><span class="ln">42   </span></a><span class="s2">&lt;/msxsl:script&gt;</span>
+<a name="l43"><span class="ln">43   </span></a>
+<a name="l44"><span class="ln">44   </span></a><span class="s2">&lt;xsl:template </span><span class="s3">match</span><span class="s4">=&quot;/&quot;</span><span class="s2">&gt;</span>
+<a name="l45"><span class="ln">45   </span></a><span class="s0">&lt;!-- The output template.  Keep whitespace down as our test matches text exactly --&gt;</span>
+<a name="l46"><span class="ln">46   </span></a><span class="s0">&lt;!-- call your functions using the prefix that you've used (i.e. 
+<a name="l47"><span class="ln">47   </span></a>     foo) anywhere you can normally use an XPath function, but 
+<a name="l48"><span class="ln">48   </span></a>     make sure it's returning the right kind of object --&gt;</span>
+<a name="l49"><span class="ln">49   </span></a><span class="s2">&lt;xsl:value-of </span><span class="s3">select</span><span class="s4">=&quot;foo:worked()&quot; </span><span class="s2">/&gt;</span><span class="s1">.</span>
+<a name="l50"><span class="ln">50   </span></a><span class="s2">&lt;xsl:value-of </span><span class="s3">select</span><span class="s4">=&quot;bar:worked()&quot; </span><span class="s2">/&gt;</span>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a><span class="s2">&lt;/xsl:template&gt;</span>
+<a name="l53"><span class="ln">53   </span></a>
+<a name="l54"><span class="ln">54   </span></a><span class="s2">&lt;/xsl:stylesheet&gt;</span>
+<a name="l55"><span class="ln">55   </span></a></pre>
+</body>
+</html>

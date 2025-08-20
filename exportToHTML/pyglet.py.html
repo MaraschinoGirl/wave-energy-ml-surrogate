@@ -1,0 +1,91 @@
+<html>
+<head>
+<title>pyglet.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #7a7e85;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+pyglet.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot;Enable pyglet to be used interactively with prompt_toolkit&quot;&quot;&quot;</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s2">import </span><span class="s1">sys</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">import </span><span class="s1">time</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s2">from </span><span class="s1">timeit </span><span class="s2">import </span><span class="s1">default_timer </span><span class="s2">as </span><span class="s1">clock</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">import </span><span class="s1">pyglet</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a><span class="s3"># On linux only, window.flip() has a bug that causes an AttributeError on</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s3"># window close.  For details, see:</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s3"># http://groups.google.com/group/pyglet-users/browse_thread/thread/47c1aab9aa4a3d23/c22f9e819826799e?#c22f9e819826799e</span>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">if </span><span class="s1">sys</span><span class="s4">.</span><span class="s1">platform</span><span class="s4">.</span><span class="s1">startswith</span><span class="s4">(</span><span class="s5">&quot;linux&quot;</span><span class="s4">):</span>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s2">def </span><span class="s1">flip</span><span class="s4">(</span><span class="s1">window</span><span class="s4">):</span>
+<a name="l15"><span class="ln">15   </span></a>        <span class="s2">try</span><span class="s4">:</span>
+<a name="l16"><span class="ln">16   </span></a>            <span class="s1">window</span><span class="s4">.</span><span class="s1">flip</span><span class="s4">()</span>
+<a name="l17"><span class="ln">17   </span></a>        <span class="s2">except </span><span class="s1">AttributeError</span><span class="s4">:</span>
+<a name="l18"><span class="ln">18   </span></a>            <span class="s2">pass</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s2">else</span><span class="s4">:</span>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s2">def </span><span class="s1">flip</span><span class="s4">(</span><span class="s1">window</span><span class="s4">):</span>
+<a name="l22"><span class="ln">22   </span></a>        <span class="s1">window</span><span class="s4">.</span><span class="s1">flip</span><span class="s4">()</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a><span class="s2">def </span><span class="s1">inputhook</span><span class="s4">(</span><span class="s1">context</span><span class="s4">):</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s0">&quot;&quot;&quot;Run the pyglet event loop by processing pending events only. 
+<a name="l27"><span class="ln">27   </span></a> 
+<a name="l28"><span class="ln">28   </span></a>    This keeps processing pending events until stdin is ready.  After 
+<a name="l29"><span class="ln">29   </span></a>    processing all pending events, a call to time.sleep is inserted.  This is 
+<a name="l30"><span class="ln">30   </span></a>    needed, otherwise, CPU usage is at 100%.  This sleep time should be tuned 
+<a name="l31"><span class="ln">31   </span></a>    though for best performance. 
+<a name="l32"><span class="ln">32   </span></a>    &quot;&quot;&quot;</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s3"># We need to protect against a user pressing Control-C when IPython is</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s3"># idle and this is running. We trap KeyboardInterrupt and pass.</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s2">try</span><span class="s4">:</span>
+<a name="l36"><span class="ln">36   </span></a>        <span class="s1">t </span><span class="s4">= </span><span class="s1">clock</span><span class="s4">()</span>
+<a name="l37"><span class="ln">37   </span></a>        <span class="s2">while not </span><span class="s1">context</span><span class="s4">.</span><span class="s1">input_is_ready</span><span class="s4">():</span>
+<a name="l38"><span class="ln">38   </span></a>            <span class="s1">pyglet</span><span class="s4">.</span><span class="s1">clock</span><span class="s4">.</span><span class="s1">tick</span><span class="s4">()</span>
+<a name="l39"><span class="ln">39   </span></a>            <span class="s2">for </span><span class="s1">window </span><span class="s2">in </span><span class="s1">pyglet</span><span class="s4">.</span><span class="s1">app</span><span class="s4">.</span><span class="s1">windows</span><span class="s4">:</span>
+<a name="l40"><span class="ln">40   </span></a>                <span class="s1">window</span><span class="s4">.</span><span class="s1">switch_to</span><span class="s4">()</span>
+<a name="l41"><span class="ln">41   </span></a>                <span class="s1">window</span><span class="s4">.</span><span class="s1">dispatch_events</span><span class="s4">()</span>
+<a name="l42"><span class="ln">42   </span></a>                <span class="s1">window</span><span class="s4">.</span><span class="s1">dispatch_event</span><span class="s4">(</span><span class="s5">&quot;on_draw&quot;</span><span class="s4">)</span>
+<a name="l43"><span class="ln">43   </span></a>                <span class="s1">flip</span><span class="s4">(</span><span class="s1">window</span><span class="s4">)</span>
+<a name="l44"><span class="ln">44   </span></a>
+<a name="l45"><span class="ln">45   </span></a>            <span class="s3"># We need to sleep at this point to keep the idle CPU load</span>
+<a name="l46"><span class="ln">46   </span></a>            <span class="s3"># low.  However, if sleep to long, GUI response is poor.  As</span>
+<a name="l47"><span class="ln">47   </span></a>            <span class="s3"># a compromise, we watch how often GUI events are being processed</span>
+<a name="l48"><span class="ln">48   </span></a>            <span class="s3"># and switch between a short and long sleep time.  Here are some</span>
+<a name="l49"><span class="ln">49   </span></a>            <span class="s3"># stats useful in helping to tune this.</span>
+<a name="l50"><span class="ln">50   </span></a>            <span class="s3"># time    CPU load</span>
+<a name="l51"><span class="ln">51   </span></a>            <span class="s3"># 0.001   13%</span>
+<a name="l52"><span class="ln">52   </span></a>            <span class="s3"># 0.005   3%</span>
+<a name="l53"><span class="ln">53   </span></a>            <span class="s3"># 0.01    1.5%</span>
+<a name="l54"><span class="ln">54   </span></a>            <span class="s3"># 0.05    0.5%</span>
+<a name="l55"><span class="ln">55   </span></a>            <span class="s1">used_time </span><span class="s4">= </span><span class="s1">clock</span><span class="s4">() - </span><span class="s1">t</span>
+<a name="l56"><span class="ln">56   </span></a>            <span class="s2">if </span><span class="s1">used_time </span><span class="s4">&gt; </span><span class="s6">10.0</span><span class="s4">:</span>
+<a name="l57"><span class="ln">57   </span></a>                <span class="s3"># print('Sleep for 1 s')  # dbg</span>
+<a name="l58"><span class="ln">58   </span></a>                <span class="s1">time</span><span class="s4">.</span><span class="s1">sleep</span><span class="s4">(</span><span class="s6">1.0</span><span class="s4">)</span>
+<a name="l59"><span class="ln">59   </span></a>            <span class="s2">elif </span><span class="s1">used_time </span><span class="s4">&gt; </span><span class="s6">0.1</span><span class="s4">:</span>
+<a name="l60"><span class="ln">60   </span></a>                <span class="s3"># Few GUI events coming in, so we can sleep longer</span>
+<a name="l61"><span class="ln">61   </span></a>                <span class="s3"># print('Sleep for 0.05 s')  # dbg</span>
+<a name="l62"><span class="ln">62   </span></a>                <span class="s1">time</span><span class="s4">.</span><span class="s1">sleep</span><span class="s4">(</span><span class="s6">0.05</span><span class="s4">)</span>
+<a name="l63"><span class="ln">63   </span></a>            <span class="s2">else</span><span class="s4">:</span>
+<a name="l64"><span class="ln">64   </span></a>                <span class="s3"># Many GUI events coming in, so sleep only very little</span>
+<a name="l65"><span class="ln">65   </span></a>                <span class="s1">time</span><span class="s4">.</span><span class="s1">sleep</span><span class="s4">(</span><span class="s6">0.001</span><span class="s4">)</span>
+<a name="l66"><span class="ln">66   </span></a>    <span class="s2">except </span><span class="s1">KeyboardInterrupt</span><span class="s4">:</span>
+<a name="l67"><span class="ln">67   </span></a>        <span class="s2">pass</span>
+<a name="l68"><span class="ln">68   </span></a></pre>
+</body>
+</html>

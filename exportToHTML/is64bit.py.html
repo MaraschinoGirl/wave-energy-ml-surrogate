@@ -1,0 +1,58 @@
+<html>
+<head>
+<title>is64bit.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+.s6 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+is64bit.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot;is64bit.Python() --&gt; boolean value of detected Python word size. is64bit.os() --&gt; os build version&quot;&quot;&quot;</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s2">import </span><span class="s1">sys</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">def </span><span class="s1">Python</span><span class="s3">():</span>
+<a name="l7"><span class="ln">7    </span></a>    <span class="s2">return </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">maxsize </span><span class="s3">&gt; </span><span class="s4">2147483647</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s2">def </span><span class="s1">os</span><span class="s3">():</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s2">import </span><span class="s1">platform</span>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s1">pm </span><span class="s3">= </span><span class="s1">platform</span><span class="s3">.</span><span class="s1">machine</span><span class="s3">()</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s2">if </span><span class="s1">pm </span><span class="s3">!= </span><span class="s5">&quot;..&quot; </span><span class="s2">and </span><span class="s1">pm</span><span class="s3">.</span><span class="s1">endswith</span><span class="s3">(</span><span class="s5">&quot;64&quot;</span><span class="s3">):  </span><span class="s6"># recent 64 bit Python</span>
+<a name="l15"><span class="ln">15   </span></a>        <span class="s2">return True</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l17"><span class="ln">17   </span></a>        <span class="s2">import </span><span class="s1">os</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a>        <span class="s2">if </span><span class="s5">&quot;PROCESSOR_ARCHITEW6432&quot; </span><span class="s2">in </span><span class="s1">os</span><span class="s3">.</span><span class="s1">environ</span><span class="s3">:</span>
+<a name="l20"><span class="ln">20   </span></a>            <span class="s2">return True  </span><span class="s6"># 32 bit program running on 64 bit Windows</span>
+<a name="l21"><span class="ln">21   </span></a>        <span class="s2">try</span><span class="s3">:</span>
+<a name="l22"><span class="ln">22   </span></a>            <span class="s2">return </span><span class="s1">os</span><span class="s3">.</span><span class="s1">environ</span><span class="s3">[</span><span class="s5">&quot;PROCESSOR_ARCHITECTURE&quot;</span><span class="s3">].</span><span class="s1">endswith</span><span class="s3">(</span>
+<a name="l23"><span class="ln">23   </span></a>                <span class="s5">&quot;64&quot;</span>
+<a name="l24"><span class="ln">24   </span></a>            <span class="s3">)  </span><span class="s6"># 64 bit Windows 64 bit program</span>
+<a name="l25"><span class="ln">25   </span></a>        <span class="s2">except </span><span class="s1">IndexError</span><span class="s3">:</span>
+<a name="l26"><span class="ln">26   </span></a>            <span class="s2">pass  </span><span class="s6"># not Windows</span>
+<a name="l27"><span class="ln">27   </span></a>        <span class="s2">try</span><span class="s3">:</span>
+<a name="l28"><span class="ln">28   </span></a>            <span class="s2">return </span><span class="s5">&quot;64&quot; </span><span class="s2">in </span><span class="s1">platform</span><span class="s3">.</span><span class="s1">architecture</span><span class="s3">()[</span><span class="s4">0</span><span class="s3">]  </span><span class="s6"># this often works in Linux</span>
+<a name="l29"><span class="ln">29   </span></a>        <span class="s2">except</span><span class="s3">:</span>
+<a name="l30"><span class="ln">30   </span></a>            <span class="s2">return False  </span><span class="s6"># is an older version of Python, assume also an older os (best we can guess)</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a>
+<a name="l33"><span class="ln">33   </span></a><span class="s2">if </span><span class="s1">__name__ </span><span class="s3">== </span><span class="s5">&quot;__main__&quot;</span><span class="s3">:</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s1">print</span><span class="s3">(</span><span class="s5">&quot;is64bit.Python() =&quot;</span><span class="s3">, </span><span class="s1">Python</span><span class="s3">(), </span><span class="s5">&quot;is64bit.os() =&quot;</span><span class="s3">, </span><span class="s1">os</span><span class="s3">())</span>
+<a name="l35"><span class="ln">35   </span></a></pre>
+</body>
+</html>

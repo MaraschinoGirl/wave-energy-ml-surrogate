@@ -1,0 +1,969 @@
+<html>
+<head>
+<title>xkcd_rgb.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #bcbec4;}
+.s2 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+xkcd_rgb.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">xkcd_rgb </span><span class="s1">= {</span><span class="s2">'acid green'</span><span class="s1">: </span><span class="s2">'#8ffe09'</span><span class="s1">,</span>
+<a name="l2"><span class="ln">2    </span></a>            <span class="s2">'adobe'</span><span class="s1">: </span><span class="s2">'#bd6c48'</span><span class="s1">,</span>
+<a name="l3"><span class="ln">3    </span></a>            <span class="s2">'algae'</span><span class="s1">: </span><span class="s2">'#54ac68'</span><span class="s1">,</span>
+<a name="l4"><span class="ln">4    </span></a>            <span class="s2">'algae green'</span><span class="s1">: </span><span class="s2">'#21c36f'</span><span class="s1">,</span>
+<a name="l5"><span class="ln">5    </span></a>            <span class="s2">'almost black'</span><span class="s1">: </span><span class="s2">'#070d0d'</span><span class="s1">,</span>
+<a name="l6"><span class="ln">6    </span></a>            <span class="s2">'amber'</span><span class="s1">: </span><span class="s2">'#feb308'</span><span class="s1">,</span>
+<a name="l7"><span class="ln">7    </span></a>            <span class="s2">'amethyst'</span><span class="s1">: </span><span class="s2">'#9b5fc0'</span><span class="s1">,</span>
+<a name="l8"><span class="ln">8    </span></a>            <span class="s2">'apple'</span><span class="s1">: </span><span class="s2">'#6ecb3c'</span><span class="s1">,</span>
+<a name="l9"><span class="ln">9    </span></a>            <span class="s2">'apple green'</span><span class="s1">: </span><span class="s2">'#76cd26'</span><span class="s1">,</span>
+<a name="l10"><span class="ln">10   </span></a>            <span class="s2">'apricot'</span><span class="s1">: </span><span class="s2">'#ffb16d'</span><span class="s1">,</span>
+<a name="l11"><span class="ln">11   </span></a>            <span class="s2">'aqua'</span><span class="s1">: </span><span class="s2">'#13eac9'</span><span class="s1">,</span>
+<a name="l12"><span class="ln">12   </span></a>            <span class="s2">'aqua blue'</span><span class="s1">: </span><span class="s2">'#02d8e9'</span><span class="s1">,</span>
+<a name="l13"><span class="ln">13   </span></a>            <span class="s2">'aqua green'</span><span class="s1">: </span><span class="s2">'#12e193'</span><span class="s1">,</span>
+<a name="l14"><span class="ln">14   </span></a>            <span class="s2">'aqua marine'</span><span class="s1">: </span><span class="s2">'#2ee8bb'</span><span class="s1">,</span>
+<a name="l15"><span class="ln">15   </span></a>            <span class="s2">'aquamarine'</span><span class="s1">: </span><span class="s2">'#04d8b2'</span><span class="s1">,</span>
+<a name="l16"><span class="ln">16   </span></a>            <span class="s2">'army green'</span><span class="s1">: </span><span class="s2">'#4b5d16'</span><span class="s1">,</span>
+<a name="l17"><span class="ln">17   </span></a>            <span class="s2">'asparagus'</span><span class="s1">: </span><span class="s2">'#77ab56'</span><span class="s1">,</span>
+<a name="l18"><span class="ln">18   </span></a>            <span class="s2">'aubergine'</span><span class="s1">: </span><span class="s2">'#3d0734'</span><span class="s1">,</span>
+<a name="l19"><span class="ln">19   </span></a>            <span class="s2">'auburn'</span><span class="s1">: </span><span class="s2">'#9a3001'</span><span class="s1">,</span>
+<a name="l20"><span class="ln">20   </span></a>            <span class="s2">'avocado'</span><span class="s1">: </span><span class="s2">'#90b134'</span><span class="s1">,</span>
+<a name="l21"><span class="ln">21   </span></a>            <span class="s2">'avocado green'</span><span class="s1">: </span><span class="s2">'#87a922'</span><span class="s1">,</span>
+<a name="l22"><span class="ln">22   </span></a>            <span class="s2">'azul'</span><span class="s1">: </span><span class="s2">'#1d5dec'</span><span class="s1">,</span>
+<a name="l23"><span class="ln">23   </span></a>            <span class="s2">'azure'</span><span class="s1">: </span><span class="s2">'#069af3'</span><span class="s1">,</span>
+<a name="l24"><span class="ln">24   </span></a>            <span class="s2">'baby blue'</span><span class="s1">: </span><span class="s2">'#a2cffe'</span><span class="s1">,</span>
+<a name="l25"><span class="ln">25   </span></a>            <span class="s2">'baby green'</span><span class="s1">: </span><span class="s2">'#8cff9e'</span><span class="s1">,</span>
+<a name="l26"><span class="ln">26   </span></a>            <span class="s2">'baby pink'</span><span class="s1">: </span><span class="s2">'#ffb7ce'</span><span class="s1">,</span>
+<a name="l27"><span class="ln">27   </span></a>            <span class="s2">'baby poo'</span><span class="s1">: </span><span class="s2">'#ab9004'</span><span class="s1">,</span>
+<a name="l28"><span class="ln">28   </span></a>            <span class="s2">'baby poop'</span><span class="s1">: </span><span class="s2">'#937c00'</span><span class="s1">,</span>
+<a name="l29"><span class="ln">29   </span></a>            <span class="s2">'baby poop green'</span><span class="s1">: </span><span class="s2">'#8f9805'</span><span class="s1">,</span>
+<a name="l30"><span class="ln">30   </span></a>            <span class="s2">'baby puke green'</span><span class="s1">: </span><span class="s2">'#b6c406'</span><span class="s1">,</span>
+<a name="l31"><span class="ln">31   </span></a>            <span class="s2">'baby purple'</span><span class="s1">: </span><span class="s2">'#ca9bf7'</span><span class="s1">,</span>
+<a name="l32"><span class="ln">32   </span></a>            <span class="s2">'baby shit brown'</span><span class="s1">: </span><span class="s2">'#ad900d'</span><span class="s1">,</span>
+<a name="l33"><span class="ln">33   </span></a>            <span class="s2">'baby shit green'</span><span class="s1">: </span><span class="s2">'#889717'</span><span class="s1">,</span>
+<a name="l34"><span class="ln">34   </span></a>            <span class="s2">'banana'</span><span class="s1">: </span><span class="s2">'#ffff7e'</span><span class="s1">,</span>
+<a name="l35"><span class="ln">35   </span></a>            <span class="s2">'banana yellow'</span><span class="s1">: </span><span class="s2">'#fafe4b'</span><span class="s1">,</span>
+<a name="l36"><span class="ln">36   </span></a>            <span class="s2">'barbie pink'</span><span class="s1">: </span><span class="s2">'#fe46a5'</span><span class="s1">,</span>
+<a name="l37"><span class="ln">37   </span></a>            <span class="s2">'barf green'</span><span class="s1">: </span><span class="s2">'#94ac02'</span><span class="s1">,</span>
+<a name="l38"><span class="ln">38   </span></a>            <span class="s2">'barney'</span><span class="s1">: </span><span class="s2">'#ac1db8'</span><span class="s1">,</span>
+<a name="l39"><span class="ln">39   </span></a>            <span class="s2">'barney purple'</span><span class="s1">: </span><span class="s2">'#a00498'</span><span class="s1">,</span>
+<a name="l40"><span class="ln">40   </span></a>            <span class="s2">'battleship grey'</span><span class="s1">: </span><span class="s2">'#6b7c85'</span><span class="s1">,</span>
+<a name="l41"><span class="ln">41   </span></a>            <span class="s2">'beige'</span><span class="s1">: </span><span class="s2">'#e6daa6'</span><span class="s1">,</span>
+<a name="l42"><span class="ln">42   </span></a>            <span class="s2">'berry'</span><span class="s1">: </span><span class="s2">'#990f4b'</span><span class="s1">,</span>
+<a name="l43"><span class="ln">43   </span></a>            <span class="s2">'bile'</span><span class="s1">: </span><span class="s2">'#b5c306'</span><span class="s1">,</span>
+<a name="l44"><span class="ln">44   </span></a>            <span class="s2">'black'</span><span class="s1">: </span><span class="s2">'#000000'</span><span class="s1">,</span>
+<a name="l45"><span class="ln">45   </span></a>            <span class="s2">'bland'</span><span class="s1">: </span><span class="s2">'#afa88b'</span><span class="s1">,</span>
+<a name="l46"><span class="ln">46   </span></a>            <span class="s2">'blood'</span><span class="s1">: </span><span class="s2">'#770001'</span><span class="s1">,</span>
+<a name="l47"><span class="ln">47   </span></a>            <span class="s2">'blood orange'</span><span class="s1">: </span><span class="s2">'#fe4b03'</span><span class="s1">,</span>
+<a name="l48"><span class="ln">48   </span></a>            <span class="s2">'blood red'</span><span class="s1">: </span><span class="s2">'#980002'</span><span class="s1">,</span>
+<a name="l49"><span class="ln">49   </span></a>            <span class="s2">'blue'</span><span class="s1">: </span><span class="s2">'#0343df'</span><span class="s1">,</span>
+<a name="l50"><span class="ln">50   </span></a>            <span class="s2">'blue blue'</span><span class="s1">: </span><span class="s2">'#2242c7'</span><span class="s1">,</span>
+<a name="l51"><span class="ln">51   </span></a>            <span class="s2">'blue green'</span><span class="s1">: </span><span class="s2">'#137e6d'</span><span class="s1">,</span>
+<a name="l52"><span class="ln">52   </span></a>            <span class="s2">'blue grey'</span><span class="s1">: </span><span class="s2">'#607c8e'</span><span class="s1">,</span>
+<a name="l53"><span class="ln">53   </span></a>            <span class="s2">'blue purple'</span><span class="s1">: </span><span class="s2">'#5729ce'</span><span class="s1">,</span>
+<a name="l54"><span class="ln">54   </span></a>            <span class="s2">'blue violet'</span><span class="s1">: </span><span class="s2">'#5d06e9'</span><span class="s1">,</span>
+<a name="l55"><span class="ln">55   </span></a>            <span class="s2">'blue with a hint of purple'</span><span class="s1">: </span><span class="s2">'#533cc6'</span><span class="s1">,</span>
+<a name="l56"><span class="ln">56   </span></a>            <span class="s2">'blue/green'</span><span class="s1">: </span><span class="s2">'#0f9b8e'</span><span class="s1">,</span>
+<a name="l57"><span class="ln">57   </span></a>            <span class="s2">'blue/grey'</span><span class="s1">: </span><span class="s2">'#758da3'</span><span class="s1">,</span>
+<a name="l58"><span class="ln">58   </span></a>            <span class="s2">'blue/purple'</span><span class="s1">: </span><span class="s2">'#5a06ef'</span><span class="s1">,</span>
+<a name="l59"><span class="ln">59   </span></a>            <span class="s2">'blueberry'</span><span class="s1">: </span><span class="s2">'#464196'</span><span class="s1">,</span>
+<a name="l60"><span class="ln">60   </span></a>            <span class="s2">'bluegreen'</span><span class="s1">: </span><span class="s2">'#017a79'</span><span class="s1">,</span>
+<a name="l61"><span class="ln">61   </span></a>            <span class="s2">'bluegrey'</span><span class="s1">: </span><span class="s2">'#85a3b2'</span><span class="s1">,</span>
+<a name="l62"><span class="ln">62   </span></a>            <span class="s2">'bluey green'</span><span class="s1">: </span><span class="s2">'#2bb179'</span><span class="s1">,</span>
+<a name="l63"><span class="ln">63   </span></a>            <span class="s2">'bluey grey'</span><span class="s1">: </span><span class="s2">'#89a0b0'</span><span class="s1">,</span>
+<a name="l64"><span class="ln">64   </span></a>            <span class="s2">'bluey purple'</span><span class="s1">: </span><span class="s2">'#6241c7'</span><span class="s1">,</span>
+<a name="l65"><span class="ln">65   </span></a>            <span class="s2">'bluish'</span><span class="s1">: </span><span class="s2">'#2976bb'</span><span class="s1">,</span>
+<a name="l66"><span class="ln">66   </span></a>            <span class="s2">'bluish green'</span><span class="s1">: </span><span class="s2">'#10a674'</span><span class="s1">,</span>
+<a name="l67"><span class="ln">67   </span></a>            <span class="s2">'bluish grey'</span><span class="s1">: </span><span class="s2">'#748b97'</span><span class="s1">,</span>
+<a name="l68"><span class="ln">68   </span></a>            <span class="s2">'bluish purple'</span><span class="s1">: </span><span class="s2">'#703be7'</span><span class="s1">,</span>
+<a name="l69"><span class="ln">69   </span></a>            <span class="s2">'blurple'</span><span class="s1">: </span><span class="s2">'#5539cc'</span><span class="s1">,</span>
+<a name="l70"><span class="ln">70   </span></a>            <span class="s2">'blush'</span><span class="s1">: </span><span class="s2">'#f29e8e'</span><span class="s1">,</span>
+<a name="l71"><span class="ln">71   </span></a>            <span class="s2">'blush pink'</span><span class="s1">: </span><span class="s2">'#fe828c'</span><span class="s1">,</span>
+<a name="l72"><span class="ln">72   </span></a>            <span class="s2">'booger'</span><span class="s1">: </span><span class="s2">'#9bb53c'</span><span class="s1">,</span>
+<a name="l73"><span class="ln">73   </span></a>            <span class="s2">'booger green'</span><span class="s1">: </span><span class="s2">'#96b403'</span><span class="s1">,</span>
+<a name="l74"><span class="ln">74   </span></a>            <span class="s2">'bordeaux'</span><span class="s1">: </span><span class="s2">'#7b002c'</span><span class="s1">,</span>
+<a name="l75"><span class="ln">75   </span></a>            <span class="s2">'boring green'</span><span class="s1">: </span><span class="s2">'#63b365'</span><span class="s1">,</span>
+<a name="l76"><span class="ln">76   </span></a>            <span class="s2">'bottle green'</span><span class="s1">: </span><span class="s2">'#044a05'</span><span class="s1">,</span>
+<a name="l77"><span class="ln">77   </span></a>            <span class="s2">'brick'</span><span class="s1">: </span><span class="s2">'#a03623'</span><span class="s1">,</span>
+<a name="l78"><span class="ln">78   </span></a>            <span class="s2">'brick orange'</span><span class="s1">: </span><span class="s2">'#c14a09'</span><span class="s1">,</span>
+<a name="l79"><span class="ln">79   </span></a>            <span class="s2">'brick red'</span><span class="s1">: </span><span class="s2">'#8f1402'</span><span class="s1">,</span>
+<a name="l80"><span class="ln">80   </span></a>            <span class="s2">'bright aqua'</span><span class="s1">: </span><span class="s2">'#0bf9ea'</span><span class="s1">,</span>
+<a name="l81"><span class="ln">81   </span></a>            <span class="s2">'bright blue'</span><span class="s1">: </span><span class="s2">'#0165fc'</span><span class="s1">,</span>
+<a name="l82"><span class="ln">82   </span></a>            <span class="s2">'bright cyan'</span><span class="s1">: </span><span class="s2">'#41fdfe'</span><span class="s1">,</span>
+<a name="l83"><span class="ln">83   </span></a>            <span class="s2">'bright green'</span><span class="s1">: </span><span class="s2">'#01ff07'</span><span class="s1">,</span>
+<a name="l84"><span class="ln">84   </span></a>            <span class="s2">'bright lavender'</span><span class="s1">: </span><span class="s2">'#c760ff'</span><span class="s1">,</span>
+<a name="l85"><span class="ln">85   </span></a>            <span class="s2">'bright light blue'</span><span class="s1">: </span><span class="s2">'#26f7fd'</span><span class="s1">,</span>
+<a name="l86"><span class="ln">86   </span></a>            <span class="s2">'bright light green'</span><span class="s1">: </span><span class="s2">'#2dfe54'</span><span class="s1">,</span>
+<a name="l87"><span class="ln">87   </span></a>            <span class="s2">'bright lilac'</span><span class="s1">: </span><span class="s2">'#c95efb'</span><span class="s1">,</span>
+<a name="l88"><span class="ln">88   </span></a>            <span class="s2">'bright lime'</span><span class="s1">: </span><span class="s2">'#87fd05'</span><span class="s1">,</span>
+<a name="l89"><span class="ln">89   </span></a>            <span class="s2">'bright lime green'</span><span class="s1">: </span><span class="s2">'#65fe08'</span><span class="s1">,</span>
+<a name="l90"><span class="ln">90   </span></a>            <span class="s2">'bright magenta'</span><span class="s1">: </span><span class="s2">'#ff08e8'</span><span class="s1">,</span>
+<a name="l91"><span class="ln">91   </span></a>            <span class="s2">'bright olive'</span><span class="s1">: </span><span class="s2">'#9cbb04'</span><span class="s1">,</span>
+<a name="l92"><span class="ln">92   </span></a>            <span class="s2">'bright orange'</span><span class="s1">: </span><span class="s2">'#ff5b00'</span><span class="s1">,</span>
+<a name="l93"><span class="ln">93   </span></a>            <span class="s2">'bright pink'</span><span class="s1">: </span><span class="s2">'#fe01b1'</span><span class="s1">,</span>
+<a name="l94"><span class="ln">94   </span></a>            <span class="s2">'bright purple'</span><span class="s1">: </span><span class="s2">'#be03fd'</span><span class="s1">,</span>
+<a name="l95"><span class="ln">95   </span></a>            <span class="s2">'bright red'</span><span class="s1">: </span><span class="s2">'#ff000d'</span><span class="s1">,</span>
+<a name="l96"><span class="ln">96   </span></a>            <span class="s2">'bright sea green'</span><span class="s1">: </span><span class="s2">'#05ffa6'</span><span class="s1">,</span>
+<a name="l97"><span class="ln">97   </span></a>            <span class="s2">'bright sky blue'</span><span class="s1">: </span><span class="s2">'#02ccfe'</span><span class="s1">,</span>
+<a name="l98"><span class="ln">98   </span></a>            <span class="s2">'bright teal'</span><span class="s1">: </span><span class="s2">'#01f9c6'</span><span class="s1">,</span>
+<a name="l99"><span class="ln">99   </span></a>            <span class="s2">'bright turquoise'</span><span class="s1">: </span><span class="s2">'#0ffef9'</span><span class="s1">,</span>
+<a name="l100"><span class="ln">100  </span></a>            <span class="s2">'bright violet'</span><span class="s1">: </span><span class="s2">'#ad0afd'</span><span class="s1">,</span>
+<a name="l101"><span class="ln">101  </span></a>            <span class="s2">'bright yellow'</span><span class="s1">: </span><span class="s2">'#fffd01'</span><span class="s1">,</span>
+<a name="l102"><span class="ln">102  </span></a>            <span class="s2">'bright yellow green'</span><span class="s1">: </span><span class="s2">'#9dff00'</span><span class="s1">,</span>
+<a name="l103"><span class="ln">103  </span></a>            <span class="s2">'british racing green'</span><span class="s1">: </span><span class="s2">'#05480d'</span><span class="s1">,</span>
+<a name="l104"><span class="ln">104  </span></a>            <span class="s2">'bronze'</span><span class="s1">: </span><span class="s2">'#a87900'</span><span class="s1">,</span>
+<a name="l105"><span class="ln">105  </span></a>            <span class="s2">'brown'</span><span class="s1">: </span><span class="s2">'#653700'</span><span class="s1">,</span>
+<a name="l106"><span class="ln">106  </span></a>            <span class="s2">'brown green'</span><span class="s1">: </span><span class="s2">'#706c11'</span><span class="s1">,</span>
+<a name="l107"><span class="ln">107  </span></a>            <span class="s2">'brown grey'</span><span class="s1">: </span><span class="s2">'#8d8468'</span><span class="s1">,</span>
+<a name="l108"><span class="ln">108  </span></a>            <span class="s2">'brown orange'</span><span class="s1">: </span><span class="s2">'#b96902'</span><span class="s1">,</span>
+<a name="l109"><span class="ln">109  </span></a>            <span class="s2">'brown red'</span><span class="s1">: </span><span class="s2">'#922b05'</span><span class="s1">,</span>
+<a name="l110"><span class="ln">110  </span></a>            <span class="s2">'brown yellow'</span><span class="s1">: </span><span class="s2">'#b29705'</span><span class="s1">,</span>
+<a name="l111"><span class="ln">111  </span></a>            <span class="s2">'brownish'</span><span class="s1">: </span><span class="s2">'#9c6d57'</span><span class="s1">,</span>
+<a name="l112"><span class="ln">112  </span></a>            <span class="s2">'brownish green'</span><span class="s1">: </span><span class="s2">'#6a6e09'</span><span class="s1">,</span>
+<a name="l113"><span class="ln">113  </span></a>            <span class="s2">'brownish grey'</span><span class="s1">: </span><span class="s2">'#86775f'</span><span class="s1">,</span>
+<a name="l114"><span class="ln">114  </span></a>            <span class="s2">'brownish orange'</span><span class="s1">: </span><span class="s2">'#cb7723'</span><span class="s1">,</span>
+<a name="l115"><span class="ln">115  </span></a>            <span class="s2">'brownish pink'</span><span class="s1">: </span><span class="s2">'#c27e79'</span><span class="s1">,</span>
+<a name="l116"><span class="ln">116  </span></a>            <span class="s2">'brownish purple'</span><span class="s1">: </span><span class="s2">'#76424e'</span><span class="s1">,</span>
+<a name="l117"><span class="ln">117  </span></a>            <span class="s2">'brownish red'</span><span class="s1">: </span><span class="s2">'#9e3623'</span><span class="s1">,</span>
+<a name="l118"><span class="ln">118  </span></a>            <span class="s2">'brownish yellow'</span><span class="s1">: </span><span class="s2">'#c9b003'</span><span class="s1">,</span>
+<a name="l119"><span class="ln">119  </span></a>            <span class="s2">'browny green'</span><span class="s1">: </span><span class="s2">'#6f6c0a'</span><span class="s1">,</span>
+<a name="l120"><span class="ln">120  </span></a>            <span class="s2">'browny orange'</span><span class="s1">: </span><span class="s2">'#ca6b02'</span><span class="s1">,</span>
+<a name="l121"><span class="ln">121  </span></a>            <span class="s2">'bruise'</span><span class="s1">: </span><span class="s2">'#7e4071'</span><span class="s1">,</span>
+<a name="l122"><span class="ln">122  </span></a>            <span class="s2">'bubble gum pink'</span><span class="s1">: </span><span class="s2">'#ff69af'</span><span class="s1">,</span>
+<a name="l123"><span class="ln">123  </span></a>            <span class="s2">'bubblegum'</span><span class="s1">: </span><span class="s2">'#ff6cb5'</span><span class="s1">,</span>
+<a name="l124"><span class="ln">124  </span></a>            <span class="s2">'bubblegum pink'</span><span class="s1">: </span><span class="s2">'#fe83cc'</span><span class="s1">,</span>
+<a name="l125"><span class="ln">125  </span></a>            <span class="s2">'buff'</span><span class="s1">: </span><span class="s2">'#fef69e'</span><span class="s1">,</span>
+<a name="l126"><span class="ln">126  </span></a>            <span class="s2">'burgundy'</span><span class="s1">: </span><span class="s2">'#610023'</span><span class="s1">,</span>
+<a name="l127"><span class="ln">127  </span></a>            <span class="s2">'burnt orange'</span><span class="s1">: </span><span class="s2">'#c04e01'</span><span class="s1">,</span>
+<a name="l128"><span class="ln">128  </span></a>            <span class="s2">'burnt red'</span><span class="s1">: </span><span class="s2">'#9f2305'</span><span class="s1">,</span>
+<a name="l129"><span class="ln">129  </span></a>            <span class="s2">'burnt siena'</span><span class="s1">: </span><span class="s2">'#b75203'</span><span class="s1">,</span>
+<a name="l130"><span class="ln">130  </span></a>            <span class="s2">'burnt sienna'</span><span class="s1">: </span><span class="s2">'#b04e0f'</span><span class="s1">,</span>
+<a name="l131"><span class="ln">131  </span></a>            <span class="s2">'burnt umber'</span><span class="s1">: </span><span class="s2">'#a0450e'</span><span class="s1">,</span>
+<a name="l132"><span class="ln">132  </span></a>            <span class="s2">'burnt yellow'</span><span class="s1">: </span><span class="s2">'#d5ab09'</span><span class="s1">,</span>
+<a name="l133"><span class="ln">133  </span></a>            <span class="s2">'burple'</span><span class="s1">: </span><span class="s2">'#6832e3'</span><span class="s1">,</span>
+<a name="l134"><span class="ln">134  </span></a>            <span class="s2">'butter'</span><span class="s1">: </span><span class="s2">'#ffff81'</span><span class="s1">,</span>
+<a name="l135"><span class="ln">135  </span></a>            <span class="s2">'butter yellow'</span><span class="s1">: </span><span class="s2">'#fffd74'</span><span class="s1">,</span>
+<a name="l136"><span class="ln">136  </span></a>            <span class="s2">'butterscotch'</span><span class="s1">: </span><span class="s2">'#fdb147'</span><span class="s1">,</span>
+<a name="l137"><span class="ln">137  </span></a>            <span class="s2">'cadet blue'</span><span class="s1">: </span><span class="s2">'#4e7496'</span><span class="s1">,</span>
+<a name="l138"><span class="ln">138  </span></a>            <span class="s2">'camel'</span><span class="s1">: </span><span class="s2">'#c69f59'</span><span class="s1">,</span>
+<a name="l139"><span class="ln">139  </span></a>            <span class="s2">'camo'</span><span class="s1">: </span><span class="s2">'#7f8f4e'</span><span class="s1">,</span>
+<a name="l140"><span class="ln">140  </span></a>            <span class="s2">'camo green'</span><span class="s1">: </span><span class="s2">'#526525'</span><span class="s1">,</span>
+<a name="l141"><span class="ln">141  </span></a>            <span class="s2">'camouflage green'</span><span class="s1">: </span><span class="s2">'#4b6113'</span><span class="s1">,</span>
+<a name="l142"><span class="ln">142  </span></a>            <span class="s2">'canary'</span><span class="s1">: </span><span class="s2">'#fdff63'</span><span class="s1">,</span>
+<a name="l143"><span class="ln">143  </span></a>            <span class="s2">'canary yellow'</span><span class="s1">: </span><span class="s2">'#fffe40'</span><span class="s1">,</span>
+<a name="l144"><span class="ln">144  </span></a>            <span class="s2">'candy pink'</span><span class="s1">: </span><span class="s2">'#ff63e9'</span><span class="s1">,</span>
+<a name="l145"><span class="ln">145  </span></a>            <span class="s2">'caramel'</span><span class="s1">: </span><span class="s2">'#af6f09'</span><span class="s1">,</span>
+<a name="l146"><span class="ln">146  </span></a>            <span class="s2">'carmine'</span><span class="s1">: </span><span class="s2">'#9d0216'</span><span class="s1">,</span>
+<a name="l147"><span class="ln">147  </span></a>            <span class="s2">'carnation'</span><span class="s1">: </span><span class="s2">'#fd798f'</span><span class="s1">,</span>
+<a name="l148"><span class="ln">148  </span></a>            <span class="s2">'carnation pink'</span><span class="s1">: </span><span class="s2">'#ff7fa7'</span><span class="s1">,</span>
+<a name="l149"><span class="ln">149  </span></a>            <span class="s2">'carolina blue'</span><span class="s1">: </span><span class="s2">'#8ab8fe'</span><span class="s1">,</span>
+<a name="l150"><span class="ln">150  </span></a>            <span class="s2">'celadon'</span><span class="s1">: </span><span class="s2">'#befdb7'</span><span class="s1">,</span>
+<a name="l151"><span class="ln">151  </span></a>            <span class="s2">'celery'</span><span class="s1">: </span><span class="s2">'#c1fd95'</span><span class="s1">,</span>
+<a name="l152"><span class="ln">152  </span></a>            <span class="s2">'cement'</span><span class="s1">: </span><span class="s2">'#a5a391'</span><span class="s1">,</span>
+<a name="l153"><span class="ln">153  </span></a>            <span class="s2">'cerise'</span><span class="s1">: </span><span class="s2">'#de0c62'</span><span class="s1">,</span>
+<a name="l154"><span class="ln">154  </span></a>            <span class="s2">'cerulean'</span><span class="s1">: </span><span class="s2">'#0485d1'</span><span class="s1">,</span>
+<a name="l155"><span class="ln">155  </span></a>            <span class="s2">'cerulean blue'</span><span class="s1">: </span><span class="s2">'#056eee'</span><span class="s1">,</span>
+<a name="l156"><span class="ln">156  </span></a>            <span class="s2">'charcoal'</span><span class="s1">: </span><span class="s2">'#343837'</span><span class="s1">,</span>
+<a name="l157"><span class="ln">157  </span></a>            <span class="s2">'charcoal grey'</span><span class="s1">: </span><span class="s2">'#3c4142'</span><span class="s1">,</span>
+<a name="l158"><span class="ln">158  </span></a>            <span class="s2">'chartreuse'</span><span class="s1">: </span><span class="s2">'#c1f80a'</span><span class="s1">,</span>
+<a name="l159"><span class="ln">159  </span></a>            <span class="s2">'cherry'</span><span class="s1">: </span><span class="s2">'#cf0234'</span><span class="s1">,</span>
+<a name="l160"><span class="ln">160  </span></a>            <span class="s2">'cherry red'</span><span class="s1">: </span><span class="s2">'#f7022a'</span><span class="s1">,</span>
+<a name="l161"><span class="ln">161  </span></a>            <span class="s2">'chestnut'</span><span class="s1">: </span><span class="s2">'#742802'</span><span class="s1">,</span>
+<a name="l162"><span class="ln">162  </span></a>            <span class="s2">'chocolate'</span><span class="s1">: </span><span class="s2">'#3d1c02'</span><span class="s1">,</span>
+<a name="l163"><span class="ln">163  </span></a>            <span class="s2">'chocolate brown'</span><span class="s1">: </span><span class="s2">'#411900'</span><span class="s1">,</span>
+<a name="l164"><span class="ln">164  </span></a>            <span class="s2">'cinnamon'</span><span class="s1">: </span><span class="s2">'#ac4f06'</span><span class="s1">,</span>
+<a name="l165"><span class="ln">165  </span></a>            <span class="s2">'claret'</span><span class="s1">: </span><span class="s2">'#680018'</span><span class="s1">,</span>
+<a name="l166"><span class="ln">166  </span></a>            <span class="s2">'clay'</span><span class="s1">: </span><span class="s2">'#b66a50'</span><span class="s1">,</span>
+<a name="l167"><span class="ln">167  </span></a>            <span class="s2">'clay brown'</span><span class="s1">: </span><span class="s2">'#b2713d'</span><span class="s1">,</span>
+<a name="l168"><span class="ln">168  </span></a>            <span class="s2">'clear blue'</span><span class="s1">: </span><span class="s2">'#247afd'</span><span class="s1">,</span>
+<a name="l169"><span class="ln">169  </span></a>            <span class="s2">'cloudy blue'</span><span class="s1">: </span><span class="s2">'#acc2d9'</span><span class="s1">,</span>
+<a name="l170"><span class="ln">170  </span></a>            <span class="s2">'cobalt'</span><span class="s1">: </span><span class="s2">'#1e488f'</span><span class="s1">,</span>
+<a name="l171"><span class="ln">171  </span></a>            <span class="s2">'cobalt blue'</span><span class="s1">: </span><span class="s2">'#030aa7'</span><span class="s1">,</span>
+<a name="l172"><span class="ln">172  </span></a>            <span class="s2">'cocoa'</span><span class="s1">: </span><span class="s2">'#875f42'</span><span class="s1">,</span>
+<a name="l173"><span class="ln">173  </span></a>            <span class="s2">'coffee'</span><span class="s1">: </span><span class="s2">'#a6814c'</span><span class="s1">,</span>
+<a name="l174"><span class="ln">174  </span></a>            <span class="s2">'cool blue'</span><span class="s1">: </span><span class="s2">'#4984b8'</span><span class="s1">,</span>
+<a name="l175"><span class="ln">175  </span></a>            <span class="s2">'cool green'</span><span class="s1">: </span><span class="s2">'#33b864'</span><span class="s1">,</span>
+<a name="l176"><span class="ln">176  </span></a>            <span class="s2">'cool grey'</span><span class="s1">: </span><span class="s2">'#95a3a6'</span><span class="s1">,</span>
+<a name="l177"><span class="ln">177  </span></a>            <span class="s2">'copper'</span><span class="s1">: </span><span class="s2">'#b66325'</span><span class="s1">,</span>
+<a name="l178"><span class="ln">178  </span></a>            <span class="s2">'coral'</span><span class="s1">: </span><span class="s2">'#fc5a50'</span><span class="s1">,</span>
+<a name="l179"><span class="ln">179  </span></a>            <span class="s2">'coral pink'</span><span class="s1">: </span><span class="s2">'#ff6163'</span><span class="s1">,</span>
+<a name="l180"><span class="ln">180  </span></a>            <span class="s2">'cornflower'</span><span class="s1">: </span><span class="s2">'#6a79f7'</span><span class="s1">,</span>
+<a name="l181"><span class="ln">181  </span></a>            <span class="s2">'cornflower blue'</span><span class="s1">: </span><span class="s2">'#5170d7'</span><span class="s1">,</span>
+<a name="l182"><span class="ln">182  </span></a>            <span class="s2">'cranberry'</span><span class="s1">: </span><span class="s2">'#9e003a'</span><span class="s1">,</span>
+<a name="l183"><span class="ln">183  </span></a>            <span class="s2">'cream'</span><span class="s1">: </span><span class="s2">'#ffffc2'</span><span class="s1">,</span>
+<a name="l184"><span class="ln">184  </span></a>            <span class="s2">'creme'</span><span class="s1">: </span><span class="s2">'#ffffb6'</span><span class="s1">,</span>
+<a name="l185"><span class="ln">185  </span></a>            <span class="s2">'crimson'</span><span class="s1">: </span><span class="s2">'#8c000f'</span><span class="s1">,</span>
+<a name="l186"><span class="ln">186  </span></a>            <span class="s2">'custard'</span><span class="s1">: </span><span class="s2">'#fffd78'</span><span class="s1">,</span>
+<a name="l187"><span class="ln">187  </span></a>            <span class="s2">'cyan'</span><span class="s1">: </span><span class="s2">'#00ffff'</span><span class="s1">,</span>
+<a name="l188"><span class="ln">188  </span></a>            <span class="s2">'dandelion'</span><span class="s1">: </span><span class="s2">'#fedf08'</span><span class="s1">,</span>
+<a name="l189"><span class="ln">189  </span></a>            <span class="s2">'dark'</span><span class="s1">: </span><span class="s2">'#1b2431'</span><span class="s1">,</span>
+<a name="l190"><span class="ln">190  </span></a>            <span class="s2">'dark aqua'</span><span class="s1">: </span><span class="s2">'#05696b'</span><span class="s1">,</span>
+<a name="l191"><span class="ln">191  </span></a>            <span class="s2">'dark aquamarine'</span><span class="s1">: </span><span class="s2">'#017371'</span><span class="s1">,</span>
+<a name="l192"><span class="ln">192  </span></a>            <span class="s2">'dark beige'</span><span class="s1">: </span><span class="s2">'#ac9362'</span><span class="s1">,</span>
+<a name="l193"><span class="ln">193  </span></a>            <span class="s2">'dark blue'</span><span class="s1">: </span><span class="s2">'#00035b'</span><span class="s1">,</span>
+<a name="l194"><span class="ln">194  </span></a>            <span class="s2">'dark blue green'</span><span class="s1">: </span><span class="s2">'#005249'</span><span class="s1">,</span>
+<a name="l195"><span class="ln">195  </span></a>            <span class="s2">'dark blue grey'</span><span class="s1">: </span><span class="s2">'#1f3b4d'</span><span class="s1">,</span>
+<a name="l196"><span class="ln">196  </span></a>            <span class="s2">'dark brown'</span><span class="s1">: </span><span class="s2">'#341c02'</span><span class="s1">,</span>
+<a name="l197"><span class="ln">197  </span></a>            <span class="s2">'dark coral'</span><span class="s1">: </span><span class="s2">'#cf524e'</span><span class="s1">,</span>
+<a name="l198"><span class="ln">198  </span></a>            <span class="s2">'dark cream'</span><span class="s1">: </span><span class="s2">'#fff39a'</span><span class="s1">,</span>
+<a name="l199"><span class="ln">199  </span></a>            <span class="s2">'dark cyan'</span><span class="s1">: </span><span class="s2">'#0a888a'</span><span class="s1">,</span>
+<a name="l200"><span class="ln">200  </span></a>            <span class="s2">'dark forest green'</span><span class="s1">: </span><span class="s2">'#002d04'</span><span class="s1">,</span>
+<a name="l201"><span class="ln">201  </span></a>            <span class="s2">'dark fuchsia'</span><span class="s1">: </span><span class="s2">'#9d0759'</span><span class="s1">,</span>
+<a name="l202"><span class="ln">202  </span></a>            <span class="s2">'dark gold'</span><span class="s1">: </span><span class="s2">'#b59410'</span><span class="s1">,</span>
+<a name="l203"><span class="ln">203  </span></a>            <span class="s2">'dark grass green'</span><span class="s1">: </span><span class="s2">'#388004'</span><span class="s1">,</span>
+<a name="l204"><span class="ln">204  </span></a>            <span class="s2">'dark green'</span><span class="s1">: </span><span class="s2">'#033500'</span><span class="s1">,</span>
+<a name="l205"><span class="ln">205  </span></a>            <span class="s2">'dark green blue'</span><span class="s1">: </span><span class="s2">'#1f6357'</span><span class="s1">,</span>
+<a name="l206"><span class="ln">206  </span></a>            <span class="s2">'dark grey'</span><span class="s1">: </span><span class="s2">'#363737'</span><span class="s1">,</span>
+<a name="l207"><span class="ln">207  </span></a>            <span class="s2">'dark grey blue'</span><span class="s1">: </span><span class="s2">'#29465b'</span><span class="s1">,</span>
+<a name="l208"><span class="ln">208  </span></a>            <span class="s2">'dark hot pink'</span><span class="s1">: </span><span class="s2">'#d90166'</span><span class="s1">,</span>
+<a name="l209"><span class="ln">209  </span></a>            <span class="s2">'dark indigo'</span><span class="s1">: </span><span class="s2">'#1f0954'</span><span class="s1">,</span>
+<a name="l210"><span class="ln">210  </span></a>            <span class="s2">'dark khaki'</span><span class="s1">: </span><span class="s2">'#9b8f55'</span><span class="s1">,</span>
+<a name="l211"><span class="ln">211  </span></a>            <span class="s2">'dark lavender'</span><span class="s1">: </span><span class="s2">'#856798'</span><span class="s1">,</span>
+<a name="l212"><span class="ln">212  </span></a>            <span class="s2">'dark lilac'</span><span class="s1">: </span><span class="s2">'#9c6da5'</span><span class="s1">,</span>
+<a name="l213"><span class="ln">213  </span></a>            <span class="s2">'dark lime'</span><span class="s1">: </span><span class="s2">'#84b701'</span><span class="s1">,</span>
+<a name="l214"><span class="ln">214  </span></a>            <span class="s2">'dark lime green'</span><span class="s1">: </span><span class="s2">'#7ebd01'</span><span class="s1">,</span>
+<a name="l215"><span class="ln">215  </span></a>            <span class="s2">'dark magenta'</span><span class="s1">: </span><span class="s2">'#960056'</span><span class="s1">,</span>
+<a name="l216"><span class="ln">216  </span></a>            <span class="s2">'dark maroon'</span><span class="s1">: </span><span class="s2">'#3c0008'</span><span class="s1">,</span>
+<a name="l217"><span class="ln">217  </span></a>            <span class="s2">'dark mauve'</span><span class="s1">: </span><span class="s2">'#874c62'</span><span class="s1">,</span>
+<a name="l218"><span class="ln">218  </span></a>            <span class="s2">'dark mint'</span><span class="s1">: </span><span class="s2">'#48c072'</span><span class="s1">,</span>
+<a name="l219"><span class="ln">219  </span></a>            <span class="s2">'dark mint green'</span><span class="s1">: </span><span class="s2">'#20c073'</span><span class="s1">,</span>
+<a name="l220"><span class="ln">220  </span></a>            <span class="s2">'dark mustard'</span><span class="s1">: </span><span class="s2">'#a88905'</span><span class="s1">,</span>
+<a name="l221"><span class="ln">221  </span></a>            <span class="s2">'dark navy'</span><span class="s1">: </span><span class="s2">'#000435'</span><span class="s1">,</span>
+<a name="l222"><span class="ln">222  </span></a>            <span class="s2">'dark navy blue'</span><span class="s1">: </span><span class="s2">'#00022e'</span><span class="s1">,</span>
+<a name="l223"><span class="ln">223  </span></a>            <span class="s2">'dark olive'</span><span class="s1">: </span><span class="s2">'#373e02'</span><span class="s1">,</span>
+<a name="l224"><span class="ln">224  </span></a>            <span class="s2">'dark olive green'</span><span class="s1">: </span><span class="s2">'#3c4d03'</span><span class="s1">,</span>
+<a name="l225"><span class="ln">225  </span></a>            <span class="s2">'dark orange'</span><span class="s1">: </span><span class="s2">'#c65102'</span><span class="s1">,</span>
+<a name="l226"><span class="ln">226  </span></a>            <span class="s2">'dark pastel green'</span><span class="s1">: </span><span class="s2">'#56ae57'</span><span class="s1">,</span>
+<a name="l227"><span class="ln">227  </span></a>            <span class="s2">'dark peach'</span><span class="s1">: </span><span class="s2">'#de7e5d'</span><span class="s1">,</span>
+<a name="l228"><span class="ln">228  </span></a>            <span class="s2">'dark periwinkle'</span><span class="s1">: </span><span class="s2">'#665fd1'</span><span class="s1">,</span>
+<a name="l229"><span class="ln">229  </span></a>            <span class="s2">'dark pink'</span><span class="s1">: </span><span class="s2">'#cb416b'</span><span class="s1">,</span>
+<a name="l230"><span class="ln">230  </span></a>            <span class="s2">'dark plum'</span><span class="s1">: </span><span class="s2">'#3f012c'</span><span class="s1">,</span>
+<a name="l231"><span class="ln">231  </span></a>            <span class="s2">'dark purple'</span><span class="s1">: </span><span class="s2">'#35063e'</span><span class="s1">,</span>
+<a name="l232"><span class="ln">232  </span></a>            <span class="s2">'dark red'</span><span class="s1">: </span><span class="s2">'#840000'</span><span class="s1">,</span>
+<a name="l233"><span class="ln">233  </span></a>            <span class="s2">'dark rose'</span><span class="s1">: </span><span class="s2">'#b5485d'</span><span class="s1">,</span>
+<a name="l234"><span class="ln">234  </span></a>            <span class="s2">'dark royal blue'</span><span class="s1">: </span><span class="s2">'#02066f'</span><span class="s1">,</span>
+<a name="l235"><span class="ln">235  </span></a>            <span class="s2">'dark sage'</span><span class="s1">: </span><span class="s2">'#598556'</span><span class="s1">,</span>
+<a name="l236"><span class="ln">236  </span></a>            <span class="s2">'dark salmon'</span><span class="s1">: </span><span class="s2">'#c85a53'</span><span class="s1">,</span>
+<a name="l237"><span class="ln">237  </span></a>            <span class="s2">'dark sand'</span><span class="s1">: </span><span class="s2">'#a88f59'</span><span class="s1">,</span>
+<a name="l238"><span class="ln">238  </span></a>            <span class="s2">'dark sea green'</span><span class="s1">: </span><span class="s2">'#11875d'</span><span class="s1">,</span>
+<a name="l239"><span class="ln">239  </span></a>            <span class="s2">'dark seafoam'</span><span class="s1">: </span><span class="s2">'#1fb57a'</span><span class="s1">,</span>
+<a name="l240"><span class="ln">240  </span></a>            <span class="s2">'dark seafoam green'</span><span class="s1">: </span><span class="s2">'#3eaf76'</span><span class="s1">,</span>
+<a name="l241"><span class="ln">241  </span></a>            <span class="s2">'dark sky blue'</span><span class="s1">: </span><span class="s2">'#448ee4'</span><span class="s1">,</span>
+<a name="l242"><span class="ln">242  </span></a>            <span class="s2">'dark slate blue'</span><span class="s1">: </span><span class="s2">'#214761'</span><span class="s1">,</span>
+<a name="l243"><span class="ln">243  </span></a>            <span class="s2">'dark tan'</span><span class="s1">: </span><span class="s2">'#af884a'</span><span class="s1">,</span>
+<a name="l244"><span class="ln">244  </span></a>            <span class="s2">'dark taupe'</span><span class="s1">: </span><span class="s2">'#7f684e'</span><span class="s1">,</span>
+<a name="l245"><span class="ln">245  </span></a>            <span class="s2">'dark teal'</span><span class="s1">: </span><span class="s2">'#014d4e'</span><span class="s1">,</span>
+<a name="l246"><span class="ln">246  </span></a>            <span class="s2">'dark turquoise'</span><span class="s1">: </span><span class="s2">'#045c5a'</span><span class="s1">,</span>
+<a name="l247"><span class="ln">247  </span></a>            <span class="s2">'dark violet'</span><span class="s1">: </span><span class="s2">'#34013f'</span><span class="s1">,</span>
+<a name="l248"><span class="ln">248  </span></a>            <span class="s2">'dark yellow'</span><span class="s1">: </span><span class="s2">'#d5b60a'</span><span class="s1">,</span>
+<a name="l249"><span class="ln">249  </span></a>            <span class="s2">'dark yellow green'</span><span class="s1">: </span><span class="s2">'#728f02'</span><span class="s1">,</span>
+<a name="l250"><span class="ln">250  </span></a>            <span class="s2">'darkblue'</span><span class="s1">: </span><span class="s2">'#030764'</span><span class="s1">,</span>
+<a name="l251"><span class="ln">251  </span></a>            <span class="s2">'darkgreen'</span><span class="s1">: </span><span class="s2">'#054907'</span><span class="s1">,</span>
+<a name="l252"><span class="ln">252  </span></a>            <span class="s2">'darkish blue'</span><span class="s1">: </span><span class="s2">'#014182'</span><span class="s1">,</span>
+<a name="l253"><span class="ln">253  </span></a>            <span class="s2">'darkish green'</span><span class="s1">: </span><span class="s2">'#287c37'</span><span class="s1">,</span>
+<a name="l254"><span class="ln">254  </span></a>            <span class="s2">'darkish pink'</span><span class="s1">: </span><span class="s2">'#da467d'</span><span class="s1">,</span>
+<a name="l255"><span class="ln">255  </span></a>            <span class="s2">'darkish purple'</span><span class="s1">: </span><span class="s2">'#751973'</span><span class="s1">,</span>
+<a name="l256"><span class="ln">256  </span></a>            <span class="s2">'darkish red'</span><span class="s1">: </span><span class="s2">'#a90308'</span><span class="s1">,</span>
+<a name="l257"><span class="ln">257  </span></a>            <span class="s2">'deep aqua'</span><span class="s1">: </span><span class="s2">'#08787f'</span><span class="s1">,</span>
+<a name="l258"><span class="ln">258  </span></a>            <span class="s2">'deep blue'</span><span class="s1">: </span><span class="s2">'#040273'</span><span class="s1">,</span>
+<a name="l259"><span class="ln">259  </span></a>            <span class="s2">'deep brown'</span><span class="s1">: </span><span class="s2">'#410200'</span><span class="s1">,</span>
+<a name="l260"><span class="ln">260  </span></a>            <span class="s2">'deep green'</span><span class="s1">: </span><span class="s2">'#02590f'</span><span class="s1">,</span>
+<a name="l261"><span class="ln">261  </span></a>            <span class="s2">'deep lavender'</span><span class="s1">: </span><span class="s2">'#8d5eb7'</span><span class="s1">,</span>
+<a name="l262"><span class="ln">262  </span></a>            <span class="s2">'deep lilac'</span><span class="s1">: </span><span class="s2">'#966ebd'</span><span class="s1">,</span>
+<a name="l263"><span class="ln">263  </span></a>            <span class="s2">'deep magenta'</span><span class="s1">: </span><span class="s2">'#a0025c'</span><span class="s1">,</span>
+<a name="l264"><span class="ln">264  </span></a>            <span class="s2">'deep orange'</span><span class="s1">: </span><span class="s2">'#dc4d01'</span><span class="s1">,</span>
+<a name="l265"><span class="ln">265  </span></a>            <span class="s2">'deep pink'</span><span class="s1">: </span><span class="s2">'#cb0162'</span><span class="s1">,</span>
+<a name="l266"><span class="ln">266  </span></a>            <span class="s2">'deep purple'</span><span class="s1">: </span><span class="s2">'#36013f'</span><span class="s1">,</span>
+<a name="l267"><span class="ln">267  </span></a>            <span class="s2">'deep red'</span><span class="s1">: </span><span class="s2">'#9a0200'</span><span class="s1">,</span>
+<a name="l268"><span class="ln">268  </span></a>            <span class="s2">'deep rose'</span><span class="s1">: </span><span class="s2">'#c74767'</span><span class="s1">,</span>
+<a name="l269"><span class="ln">269  </span></a>            <span class="s2">'deep sea blue'</span><span class="s1">: </span><span class="s2">'#015482'</span><span class="s1">,</span>
+<a name="l270"><span class="ln">270  </span></a>            <span class="s2">'deep sky blue'</span><span class="s1">: </span><span class="s2">'#0d75f8'</span><span class="s1">,</span>
+<a name="l271"><span class="ln">271  </span></a>            <span class="s2">'deep teal'</span><span class="s1">: </span><span class="s2">'#00555a'</span><span class="s1">,</span>
+<a name="l272"><span class="ln">272  </span></a>            <span class="s2">'deep turquoise'</span><span class="s1">: </span><span class="s2">'#017374'</span><span class="s1">,</span>
+<a name="l273"><span class="ln">273  </span></a>            <span class="s2">'deep violet'</span><span class="s1">: </span><span class="s2">'#490648'</span><span class="s1">,</span>
+<a name="l274"><span class="ln">274  </span></a>            <span class="s2">'denim'</span><span class="s1">: </span><span class="s2">'#3b638c'</span><span class="s1">,</span>
+<a name="l275"><span class="ln">275  </span></a>            <span class="s2">'denim blue'</span><span class="s1">: </span><span class="s2">'#3b5b92'</span><span class="s1">,</span>
+<a name="l276"><span class="ln">276  </span></a>            <span class="s2">'desert'</span><span class="s1">: </span><span class="s2">'#ccad60'</span><span class="s1">,</span>
+<a name="l277"><span class="ln">277  </span></a>            <span class="s2">'diarrhea'</span><span class="s1">: </span><span class="s2">'#9f8303'</span><span class="s1">,</span>
+<a name="l278"><span class="ln">278  </span></a>            <span class="s2">'dirt'</span><span class="s1">: </span><span class="s2">'#8a6e45'</span><span class="s1">,</span>
+<a name="l279"><span class="ln">279  </span></a>            <span class="s2">'dirt brown'</span><span class="s1">: </span><span class="s2">'#836539'</span><span class="s1">,</span>
+<a name="l280"><span class="ln">280  </span></a>            <span class="s2">'dirty blue'</span><span class="s1">: </span><span class="s2">'#3f829d'</span><span class="s1">,</span>
+<a name="l281"><span class="ln">281  </span></a>            <span class="s2">'dirty green'</span><span class="s1">: </span><span class="s2">'#667e2c'</span><span class="s1">,</span>
+<a name="l282"><span class="ln">282  </span></a>            <span class="s2">'dirty orange'</span><span class="s1">: </span><span class="s2">'#c87606'</span><span class="s1">,</span>
+<a name="l283"><span class="ln">283  </span></a>            <span class="s2">'dirty pink'</span><span class="s1">: </span><span class="s2">'#ca7b80'</span><span class="s1">,</span>
+<a name="l284"><span class="ln">284  </span></a>            <span class="s2">'dirty purple'</span><span class="s1">: </span><span class="s2">'#734a65'</span><span class="s1">,</span>
+<a name="l285"><span class="ln">285  </span></a>            <span class="s2">'dirty yellow'</span><span class="s1">: </span><span class="s2">'#cdc50a'</span><span class="s1">,</span>
+<a name="l286"><span class="ln">286  </span></a>            <span class="s2">'dodger blue'</span><span class="s1">: </span><span class="s2">'#3e82fc'</span><span class="s1">,</span>
+<a name="l287"><span class="ln">287  </span></a>            <span class="s2">'drab'</span><span class="s1">: </span><span class="s2">'#828344'</span><span class="s1">,</span>
+<a name="l288"><span class="ln">288  </span></a>            <span class="s2">'drab green'</span><span class="s1">: </span><span class="s2">'#749551'</span><span class="s1">,</span>
+<a name="l289"><span class="ln">289  </span></a>            <span class="s2">'dried blood'</span><span class="s1">: </span><span class="s2">'#4b0101'</span><span class="s1">,</span>
+<a name="l290"><span class="ln">290  </span></a>            <span class="s2">'duck egg blue'</span><span class="s1">: </span><span class="s2">'#c3fbf4'</span><span class="s1">,</span>
+<a name="l291"><span class="ln">291  </span></a>            <span class="s2">'dull blue'</span><span class="s1">: </span><span class="s2">'#49759c'</span><span class="s1">,</span>
+<a name="l292"><span class="ln">292  </span></a>            <span class="s2">'dull brown'</span><span class="s1">: </span><span class="s2">'#876e4b'</span><span class="s1">,</span>
+<a name="l293"><span class="ln">293  </span></a>            <span class="s2">'dull green'</span><span class="s1">: </span><span class="s2">'#74a662'</span><span class="s1">,</span>
+<a name="l294"><span class="ln">294  </span></a>            <span class="s2">'dull orange'</span><span class="s1">: </span><span class="s2">'#d8863b'</span><span class="s1">,</span>
+<a name="l295"><span class="ln">295  </span></a>            <span class="s2">'dull pink'</span><span class="s1">: </span><span class="s2">'#d5869d'</span><span class="s1">,</span>
+<a name="l296"><span class="ln">296  </span></a>            <span class="s2">'dull purple'</span><span class="s1">: </span><span class="s2">'#84597e'</span><span class="s1">,</span>
+<a name="l297"><span class="ln">297  </span></a>            <span class="s2">'dull red'</span><span class="s1">: </span><span class="s2">'#bb3f3f'</span><span class="s1">,</span>
+<a name="l298"><span class="ln">298  </span></a>            <span class="s2">'dull teal'</span><span class="s1">: </span><span class="s2">'#5f9e8f'</span><span class="s1">,</span>
+<a name="l299"><span class="ln">299  </span></a>            <span class="s2">'dull yellow'</span><span class="s1">: </span><span class="s2">'#eedc5b'</span><span class="s1">,</span>
+<a name="l300"><span class="ln">300  </span></a>            <span class="s2">'dusk'</span><span class="s1">: </span><span class="s2">'#4e5481'</span><span class="s1">,</span>
+<a name="l301"><span class="ln">301  </span></a>            <span class="s2">'dusk blue'</span><span class="s1">: </span><span class="s2">'#26538d'</span><span class="s1">,</span>
+<a name="l302"><span class="ln">302  </span></a>            <span class="s2">'dusky blue'</span><span class="s1">: </span><span class="s2">'#475f94'</span><span class="s1">,</span>
+<a name="l303"><span class="ln">303  </span></a>            <span class="s2">'dusky pink'</span><span class="s1">: </span><span class="s2">'#cc7a8b'</span><span class="s1">,</span>
+<a name="l304"><span class="ln">304  </span></a>            <span class="s2">'dusky purple'</span><span class="s1">: </span><span class="s2">'#895b7b'</span><span class="s1">,</span>
+<a name="l305"><span class="ln">305  </span></a>            <span class="s2">'dusky rose'</span><span class="s1">: </span><span class="s2">'#ba6873'</span><span class="s1">,</span>
+<a name="l306"><span class="ln">306  </span></a>            <span class="s2">'dust'</span><span class="s1">: </span><span class="s2">'#b2996e'</span><span class="s1">,</span>
+<a name="l307"><span class="ln">307  </span></a>            <span class="s2">'dusty blue'</span><span class="s1">: </span><span class="s2">'#5a86ad'</span><span class="s1">,</span>
+<a name="l308"><span class="ln">308  </span></a>            <span class="s2">'dusty green'</span><span class="s1">: </span><span class="s2">'#76a973'</span><span class="s1">,</span>
+<a name="l309"><span class="ln">309  </span></a>            <span class="s2">'dusty lavender'</span><span class="s1">: </span><span class="s2">'#ac86a8'</span><span class="s1">,</span>
+<a name="l310"><span class="ln">310  </span></a>            <span class="s2">'dusty orange'</span><span class="s1">: </span><span class="s2">'#f0833a'</span><span class="s1">,</span>
+<a name="l311"><span class="ln">311  </span></a>            <span class="s2">'dusty pink'</span><span class="s1">: </span><span class="s2">'#d58a94'</span><span class="s1">,</span>
+<a name="l312"><span class="ln">312  </span></a>            <span class="s2">'dusty purple'</span><span class="s1">: </span><span class="s2">'#825f87'</span><span class="s1">,</span>
+<a name="l313"><span class="ln">313  </span></a>            <span class="s2">'dusty red'</span><span class="s1">: </span><span class="s2">'#b9484e'</span><span class="s1">,</span>
+<a name="l314"><span class="ln">314  </span></a>            <span class="s2">'dusty rose'</span><span class="s1">: </span><span class="s2">'#c0737a'</span><span class="s1">,</span>
+<a name="l315"><span class="ln">315  </span></a>            <span class="s2">'dusty teal'</span><span class="s1">: </span><span class="s2">'#4c9085'</span><span class="s1">,</span>
+<a name="l316"><span class="ln">316  </span></a>            <span class="s2">'earth'</span><span class="s1">: </span><span class="s2">'#a2653e'</span><span class="s1">,</span>
+<a name="l317"><span class="ln">317  </span></a>            <span class="s2">'easter green'</span><span class="s1">: </span><span class="s2">'#8cfd7e'</span><span class="s1">,</span>
+<a name="l318"><span class="ln">318  </span></a>            <span class="s2">'easter purple'</span><span class="s1">: </span><span class="s2">'#c071fe'</span><span class="s1">,</span>
+<a name="l319"><span class="ln">319  </span></a>            <span class="s2">'ecru'</span><span class="s1">: </span><span class="s2">'#feffca'</span><span class="s1">,</span>
+<a name="l320"><span class="ln">320  </span></a>            <span class="s2">'egg shell'</span><span class="s1">: </span><span class="s2">'#fffcc4'</span><span class="s1">,</span>
+<a name="l321"><span class="ln">321  </span></a>            <span class="s2">'eggplant'</span><span class="s1">: </span><span class="s2">'#380835'</span><span class="s1">,</span>
+<a name="l322"><span class="ln">322  </span></a>            <span class="s2">'eggplant purple'</span><span class="s1">: </span><span class="s2">'#430541'</span><span class="s1">,</span>
+<a name="l323"><span class="ln">323  </span></a>            <span class="s2">'eggshell'</span><span class="s1">: </span><span class="s2">'#ffffd4'</span><span class="s1">,</span>
+<a name="l324"><span class="ln">324  </span></a>            <span class="s2">'eggshell blue'</span><span class="s1">: </span><span class="s2">'#c4fff7'</span><span class="s1">,</span>
+<a name="l325"><span class="ln">325  </span></a>            <span class="s2">'electric blue'</span><span class="s1">: </span><span class="s2">'#0652ff'</span><span class="s1">,</span>
+<a name="l326"><span class="ln">326  </span></a>            <span class="s2">'electric green'</span><span class="s1">: </span><span class="s2">'#21fc0d'</span><span class="s1">,</span>
+<a name="l327"><span class="ln">327  </span></a>            <span class="s2">'electric lime'</span><span class="s1">: </span><span class="s2">'#a8ff04'</span><span class="s1">,</span>
+<a name="l328"><span class="ln">328  </span></a>            <span class="s2">'electric pink'</span><span class="s1">: </span><span class="s2">'#ff0490'</span><span class="s1">,</span>
+<a name="l329"><span class="ln">329  </span></a>            <span class="s2">'electric purple'</span><span class="s1">: </span><span class="s2">'#aa23ff'</span><span class="s1">,</span>
+<a name="l330"><span class="ln">330  </span></a>            <span class="s2">'emerald'</span><span class="s1">: </span><span class="s2">'#01a049'</span><span class="s1">,</span>
+<a name="l331"><span class="ln">331  </span></a>            <span class="s2">'emerald green'</span><span class="s1">: </span><span class="s2">'#028f1e'</span><span class="s1">,</span>
+<a name="l332"><span class="ln">332  </span></a>            <span class="s2">'evergreen'</span><span class="s1">: </span><span class="s2">'#05472a'</span><span class="s1">,</span>
+<a name="l333"><span class="ln">333  </span></a>            <span class="s2">'faded blue'</span><span class="s1">: </span><span class="s2">'#658cbb'</span><span class="s1">,</span>
+<a name="l334"><span class="ln">334  </span></a>            <span class="s2">'faded green'</span><span class="s1">: </span><span class="s2">'#7bb274'</span><span class="s1">,</span>
+<a name="l335"><span class="ln">335  </span></a>            <span class="s2">'faded orange'</span><span class="s1">: </span><span class="s2">'#f0944d'</span><span class="s1">,</span>
+<a name="l336"><span class="ln">336  </span></a>            <span class="s2">'faded pink'</span><span class="s1">: </span><span class="s2">'#de9dac'</span><span class="s1">,</span>
+<a name="l337"><span class="ln">337  </span></a>            <span class="s2">'faded purple'</span><span class="s1">: </span><span class="s2">'#916e99'</span><span class="s1">,</span>
+<a name="l338"><span class="ln">338  </span></a>            <span class="s2">'faded red'</span><span class="s1">: </span><span class="s2">'#d3494e'</span><span class="s1">,</span>
+<a name="l339"><span class="ln">339  </span></a>            <span class="s2">'faded yellow'</span><span class="s1">: </span><span class="s2">'#feff7f'</span><span class="s1">,</span>
+<a name="l340"><span class="ln">340  </span></a>            <span class="s2">'fawn'</span><span class="s1">: </span><span class="s2">'#cfaf7b'</span><span class="s1">,</span>
+<a name="l341"><span class="ln">341  </span></a>            <span class="s2">'fern'</span><span class="s1">: </span><span class="s2">'#63a950'</span><span class="s1">,</span>
+<a name="l342"><span class="ln">342  </span></a>            <span class="s2">'fern green'</span><span class="s1">: </span><span class="s2">'#548d44'</span><span class="s1">,</span>
+<a name="l343"><span class="ln">343  </span></a>            <span class="s2">'fire engine red'</span><span class="s1">: </span><span class="s2">'#fe0002'</span><span class="s1">,</span>
+<a name="l344"><span class="ln">344  </span></a>            <span class="s2">'flat blue'</span><span class="s1">: </span><span class="s2">'#3c73a8'</span><span class="s1">,</span>
+<a name="l345"><span class="ln">345  </span></a>            <span class="s2">'flat green'</span><span class="s1">: </span><span class="s2">'#699d4c'</span><span class="s1">,</span>
+<a name="l346"><span class="ln">346  </span></a>            <span class="s2">'fluorescent green'</span><span class="s1">: </span><span class="s2">'#08ff08'</span><span class="s1">,</span>
+<a name="l347"><span class="ln">347  </span></a>            <span class="s2">'fluro green'</span><span class="s1">: </span><span class="s2">'#0aff02'</span><span class="s1">,</span>
+<a name="l348"><span class="ln">348  </span></a>            <span class="s2">'foam green'</span><span class="s1">: </span><span class="s2">'#90fda9'</span><span class="s1">,</span>
+<a name="l349"><span class="ln">349  </span></a>            <span class="s2">'forest'</span><span class="s1">: </span><span class="s2">'#0b5509'</span><span class="s1">,</span>
+<a name="l350"><span class="ln">350  </span></a>            <span class="s2">'forest green'</span><span class="s1">: </span><span class="s2">'#06470c'</span><span class="s1">,</span>
+<a name="l351"><span class="ln">351  </span></a>            <span class="s2">'forrest green'</span><span class="s1">: </span><span class="s2">'#154406'</span><span class="s1">,</span>
+<a name="l352"><span class="ln">352  </span></a>            <span class="s2">'french blue'</span><span class="s1">: </span><span class="s2">'#436bad'</span><span class="s1">,</span>
+<a name="l353"><span class="ln">353  </span></a>            <span class="s2">'fresh green'</span><span class="s1">: </span><span class="s2">'#69d84f'</span><span class="s1">,</span>
+<a name="l354"><span class="ln">354  </span></a>            <span class="s2">'frog green'</span><span class="s1">: </span><span class="s2">'#58bc08'</span><span class="s1">,</span>
+<a name="l355"><span class="ln">355  </span></a>            <span class="s2">'fuchsia'</span><span class="s1">: </span><span class="s2">'#ed0dd9'</span><span class="s1">,</span>
+<a name="l356"><span class="ln">356  </span></a>            <span class="s2">'gold'</span><span class="s1">: </span><span class="s2">'#dbb40c'</span><span class="s1">,</span>
+<a name="l357"><span class="ln">357  </span></a>            <span class="s2">'golden'</span><span class="s1">: </span><span class="s2">'#f5bf03'</span><span class="s1">,</span>
+<a name="l358"><span class="ln">358  </span></a>            <span class="s2">'golden brown'</span><span class="s1">: </span><span class="s2">'#b27a01'</span><span class="s1">,</span>
+<a name="l359"><span class="ln">359  </span></a>            <span class="s2">'golden rod'</span><span class="s1">: </span><span class="s2">'#f9bc08'</span><span class="s1">,</span>
+<a name="l360"><span class="ln">360  </span></a>            <span class="s2">'golden yellow'</span><span class="s1">: </span><span class="s2">'#fec615'</span><span class="s1">,</span>
+<a name="l361"><span class="ln">361  </span></a>            <span class="s2">'goldenrod'</span><span class="s1">: </span><span class="s2">'#fac205'</span><span class="s1">,</span>
+<a name="l362"><span class="ln">362  </span></a>            <span class="s2">'grape'</span><span class="s1">: </span><span class="s2">'#6c3461'</span><span class="s1">,</span>
+<a name="l363"><span class="ln">363  </span></a>            <span class="s2">'grape purple'</span><span class="s1">: </span><span class="s2">'#5d1451'</span><span class="s1">,</span>
+<a name="l364"><span class="ln">364  </span></a>            <span class="s2">'grapefruit'</span><span class="s1">: </span><span class="s2">'#fd5956'</span><span class="s1">,</span>
+<a name="l365"><span class="ln">365  </span></a>            <span class="s2">'grass'</span><span class="s1">: </span><span class="s2">'#5cac2d'</span><span class="s1">,</span>
+<a name="l366"><span class="ln">366  </span></a>            <span class="s2">'grass green'</span><span class="s1">: </span><span class="s2">'#3f9b0b'</span><span class="s1">,</span>
+<a name="l367"><span class="ln">367  </span></a>            <span class="s2">'grassy green'</span><span class="s1">: </span><span class="s2">'#419c03'</span><span class="s1">,</span>
+<a name="l368"><span class="ln">368  </span></a>            <span class="s2">'green'</span><span class="s1">: </span><span class="s2">'#15b01a'</span><span class="s1">,</span>
+<a name="l369"><span class="ln">369  </span></a>            <span class="s2">'green apple'</span><span class="s1">: </span><span class="s2">'#5edc1f'</span><span class="s1">,</span>
+<a name="l370"><span class="ln">370  </span></a>            <span class="s2">'green blue'</span><span class="s1">: </span><span class="s2">'#06b48b'</span><span class="s1">,</span>
+<a name="l371"><span class="ln">371  </span></a>            <span class="s2">'green brown'</span><span class="s1">: </span><span class="s2">'#544e03'</span><span class="s1">,</span>
+<a name="l372"><span class="ln">372  </span></a>            <span class="s2">'green grey'</span><span class="s1">: </span><span class="s2">'#77926f'</span><span class="s1">,</span>
+<a name="l373"><span class="ln">373  </span></a>            <span class="s2">'green teal'</span><span class="s1">: </span><span class="s2">'#0cb577'</span><span class="s1">,</span>
+<a name="l374"><span class="ln">374  </span></a>            <span class="s2">'green yellow'</span><span class="s1">: </span><span class="s2">'#c9ff27'</span><span class="s1">,</span>
+<a name="l375"><span class="ln">375  </span></a>            <span class="s2">'green/blue'</span><span class="s1">: </span><span class="s2">'#01c08d'</span><span class="s1">,</span>
+<a name="l376"><span class="ln">376  </span></a>            <span class="s2">'green/yellow'</span><span class="s1">: </span><span class="s2">'#b5ce08'</span><span class="s1">,</span>
+<a name="l377"><span class="ln">377  </span></a>            <span class="s2">'greenblue'</span><span class="s1">: </span><span class="s2">'#23c48b'</span><span class="s1">,</span>
+<a name="l378"><span class="ln">378  </span></a>            <span class="s2">'greenish'</span><span class="s1">: </span><span class="s2">'#40a368'</span><span class="s1">,</span>
+<a name="l379"><span class="ln">379  </span></a>            <span class="s2">'greenish beige'</span><span class="s1">: </span><span class="s2">'#c9d179'</span><span class="s1">,</span>
+<a name="l380"><span class="ln">380  </span></a>            <span class="s2">'greenish blue'</span><span class="s1">: </span><span class="s2">'#0b8b87'</span><span class="s1">,</span>
+<a name="l381"><span class="ln">381  </span></a>            <span class="s2">'greenish brown'</span><span class="s1">: </span><span class="s2">'#696112'</span><span class="s1">,</span>
+<a name="l382"><span class="ln">382  </span></a>            <span class="s2">'greenish cyan'</span><span class="s1">: </span><span class="s2">'#2afeb7'</span><span class="s1">,</span>
+<a name="l383"><span class="ln">383  </span></a>            <span class="s2">'greenish grey'</span><span class="s1">: </span><span class="s2">'#96ae8d'</span><span class="s1">,</span>
+<a name="l384"><span class="ln">384  </span></a>            <span class="s2">'greenish tan'</span><span class="s1">: </span><span class="s2">'#bccb7a'</span><span class="s1">,</span>
+<a name="l385"><span class="ln">385  </span></a>            <span class="s2">'greenish teal'</span><span class="s1">: </span><span class="s2">'#32bf84'</span><span class="s1">,</span>
+<a name="l386"><span class="ln">386  </span></a>            <span class="s2">'greenish turquoise'</span><span class="s1">: </span><span class="s2">'#00fbb0'</span><span class="s1">,</span>
+<a name="l387"><span class="ln">387  </span></a>            <span class="s2">'greenish yellow'</span><span class="s1">: </span><span class="s2">'#cdfd02'</span><span class="s1">,</span>
+<a name="l388"><span class="ln">388  </span></a>            <span class="s2">'greeny blue'</span><span class="s1">: </span><span class="s2">'#42b395'</span><span class="s1">,</span>
+<a name="l389"><span class="ln">389  </span></a>            <span class="s2">'greeny brown'</span><span class="s1">: </span><span class="s2">'#696006'</span><span class="s1">,</span>
+<a name="l390"><span class="ln">390  </span></a>            <span class="s2">'greeny grey'</span><span class="s1">: </span><span class="s2">'#7ea07a'</span><span class="s1">,</span>
+<a name="l391"><span class="ln">391  </span></a>            <span class="s2">'greeny yellow'</span><span class="s1">: </span><span class="s2">'#c6f808'</span><span class="s1">,</span>
+<a name="l392"><span class="ln">392  </span></a>            <span class="s2">'grey'</span><span class="s1">: </span><span class="s2">'#929591'</span><span class="s1">,</span>
+<a name="l393"><span class="ln">393  </span></a>            <span class="s2">'grey blue'</span><span class="s1">: </span><span class="s2">'#6b8ba4'</span><span class="s1">,</span>
+<a name="l394"><span class="ln">394  </span></a>            <span class="s2">'grey brown'</span><span class="s1">: </span><span class="s2">'#7f7053'</span><span class="s1">,</span>
+<a name="l395"><span class="ln">395  </span></a>            <span class="s2">'grey green'</span><span class="s1">: </span><span class="s2">'#789b73'</span><span class="s1">,</span>
+<a name="l396"><span class="ln">396  </span></a>            <span class="s2">'grey pink'</span><span class="s1">: </span><span class="s2">'#c3909b'</span><span class="s1">,</span>
+<a name="l397"><span class="ln">397  </span></a>            <span class="s2">'grey purple'</span><span class="s1">: </span><span class="s2">'#826d8c'</span><span class="s1">,</span>
+<a name="l398"><span class="ln">398  </span></a>            <span class="s2">'grey teal'</span><span class="s1">: </span><span class="s2">'#5e9b8a'</span><span class="s1">,</span>
+<a name="l399"><span class="ln">399  </span></a>            <span class="s2">'grey/blue'</span><span class="s1">: </span><span class="s2">'#647d8e'</span><span class="s1">,</span>
+<a name="l400"><span class="ln">400  </span></a>            <span class="s2">'grey/green'</span><span class="s1">: </span><span class="s2">'#86a17d'</span><span class="s1">,</span>
+<a name="l401"><span class="ln">401  </span></a>            <span class="s2">'greyblue'</span><span class="s1">: </span><span class="s2">'#77a1b5'</span><span class="s1">,</span>
+<a name="l402"><span class="ln">402  </span></a>            <span class="s2">'greyish'</span><span class="s1">: </span><span class="s2">'#a8a495'</span><span class="s1">,</span>
+<a name="l403"><span class="ln">403  </span></a>            <span class="s2">'greyish blue'</span><span class="s1">: </span><span class="s2">'#5e819d'</span><span class="s1">,</span>
+<a name="l404"><span class="ln">404  </span></a>            <span class="s2">'greyish brown'</span><span class="s1">: </span><span class="s2">'#7a6a4f'</span><span class="s1">,</span>
+<a name="l405"><span class="ln">405  </span></a>            <span class="s2">'greyish green'</span><span class="s1">: </span><span class="s2">'#82a67d'</span><span class="s1">,</span>
+<a name="l406"><span class="ln">406  </span></a>            <span class="s2">'greyish pink'</span><span class="s1">: </span><span class="s2">'#c88d94'</span><span class="s1">,</span>
+<a name="l407"><span class="ln">407  </span></a>            <span class="s2">'greyish purple'</span><span class="s1">: </span><span class="s2">'#887191'</span><span class="s1">,</span>
+<a name="l408"><span class="ln">408  </span></a>            <span class="s2">'greyish teal'</span><span class="s1">: </span><span class="s2">'#719f91'</span><span class="s1">,</span>
+<a name="l409"><span class="ln">409  </span></a>            <span class="s2">'gross green'</span><span class="s1">: </span><span class="s2">'#a0bf16'</span><span class="s1">,</span>
+<a name="l410"><span class="ln">410  </span></a>            <span class="s2">'gunmetal'</span><span class="s1">: </span><span class="s2">'#536267'</span><span class="s1">,</span>
+<a name="l411"><span class="ln">411  </span></a>            <span class="s2">'hazel'</span><span class="s1">: </span><span class="s2">'#8e7618'</span><span class="s1">,</span>
+<a name="l412"><span class="ln">412  </span></a>            <span class="s2">'heather'</span><span class="s1">: </span><span class="s2">'#a484ac'</span><span class="s1">,</span>
+<a name="l413"><span class="ln">413  </span></a>            <span class="s2">'heliotrope'</span><span class="s1">: </span><span class="s2">'#d94ff5'</span><span class="s1">,</span>
+<a name="l414"><span class="ln">414  </span></a>            <span class="s2">'highlighter green'</span><span class="s1">: </span><span class="s2">'#1bfc06'</span><span class="s1">,</span>
+<a name="l415"><span class="ln">415  </span></a>            <span class="s2">'hospital green'</span><span class="s1">: </span><span class="s2">'#9be5aa'</span><span class="s1">,</span>
+<a name="l416"><span class="ln">416  </span></a>            <span class="s2">'hot green'</span><span class="s1">: </span><span class="s2">'#25ff29'</span><span class="s1">,</span>
+<a name="l417"><span class="ln">417  </span></a>            <span class="s2">'hot magenta'</span><span class="s1">: </span><span class="s2">'#f504c9'</span><span class="s1">,</span>
+<a name="l418"><span class="ln">418  </span></a>            <span class="s2">'hot pink'</span><span class="s1">: </span><span class="s2">'#ff028d'</span><span class="s1">,</span>
+<a name="l419"><span class="ln">419  </span></a>            <span class="s2">'hot purple'</span><span class="s1">: </span><span class="s2">'#cb00f5'</span><span class="s1">,</span>
+<a name="l420"><span class="ln">420  </span></a>            <span class="s2">'hunter green'</span><span class="s1">: </span><span class="s2">'#0b4008'</span><span class="s1">,</span>
+<a name="l421"><span class="ln">421  </span></a>            <span class="s2">'ice'</span><span class="s1">: </span><span class="s2">'#d6fffa'</span><span class="s1">,</span>
+<a name="l422"><span class="ln">422  </span></a>            <span class="s2">'ice blue'</span><span class="s1">: </span><span class="s2">'#d7fffe'</span><span class="s1">,</span>
+<a name="l423"><span class="ln">423  </span></a>            <span class="s2">'icky green'</span><span class="s1">: </span><span class="s2">'#8fae22'</span><span class="s1">,</span>
+<a name="l424"><span class="ln">424  </span></a>            <span class="s2">'indian red'</span><span class="s1">: </span><span class="s2">'#850e04'</span><span class="s1">,</span>
+<a name="l425"><span class="ln">425  </span></a>            <span class="s2">'indigo'</span><span class="s1">: </span><span class="s2">'#380282'</span><span class="s1">,</span>
+<a name="l426"><span class="ln">426  </span></a>            <span class="s2">'indigo blue'</span><span class="s1">: </span><span class="s2">'#3a18b1'</span><span class="s1">,</span>
+<a name="l427"><span class="ln">427  </span></a>            <span class="s2">'iris'</span><span class="s1">: </span><span class="s2">'#6258c4'</span><span class="s1">,</span>
+<a name="l428"><span class="ln">428  </span></a>            <span class="s2">'irish green'</span><span class="s1">: </span><span class="s2">'#019529'</span><span class="s1">,</span>
+<a name="l429"><span class="ln">429  </span></a>            <span class="s2">'ivory'</span><span class="s1">: </span><span class="s2">'#ffffcb'</span><span class="s1">,</span>
+<a name="l430"><span class="ln">430  </span></a>            <span class="s2">'jade'</span><span class="s1">: </span><span class="s2">'#1fa774'</span><span class="s1">,</span>
+<a name="l431"><span class="ln">431  </span></a>            <span class="s2">'jade green'</span><span class="s1">: </span><span class="s2">'#2baf6a'</span><span class="s1">,</span>
+<a name="l432"><span class="ln">432  </span></a>            <span class="s2">'jungle green'</span><span class="s1">: </span><span class="s2">'#048243'</span><span class="s1">,</span>
+<a name="l433"><span class="ln">433  </span></a>            <span class="s2">'kelley green'</span><span class="s1">: </span><span class="s2">'#009337'</span><span class="s1">,</span>
+<a name="l434"><span class="ln">434  </span></a>            <span class="s2">'kelly green'</span><span class="s1">: </span><span class="s2">'#02ab2e'</span><span class="s1">,</span>
+<a name="l435"><span class="ln">435  </span></a>            <span class="s2">'kermit green'</span><span class="s1">: </span><span class="s2">'#5cb200'</span><span class="s1">,</span>
+<a name="l436"><span class="ln">436  </span></a>            <span class="s2">'key lime'</span><span class="s1">: </span><span class="s2">'#aeff6e'</span><span class="s1">,</span>
+<a name="l437"><span class="ln">437  </span></a>            <span class="s2">'khaki'</span><span class="s1">: </span><span class="s2">'#aaa662'</span><span class="s1">,</span>
+<a name="l438"><span class="ln">438  </span></a>            <span class="s2">'khaki green'</span><span class="s1">: </span><span class="s2">'#728639'</span><span class="s1">,</span>
+<a name="l439"><span class="ln">439  </span></a>            <span class="s2">'kiwi'</span><span class="s1">: </span><span class="s2">'#9cef43'</span><span class="s1">,</span>
+<a name="l440"><span class="ln">440  </span></a>            <span class="s2">'kiwi green'</span><span class="s1">: </span><span class="s2">'#8ee53f'</span><span class="s1">,</span>
+<a name="l441"><span class="ln">441  </span></a>            <span class="s2">'lavender'</span><span class="s1">: </span><span class="s2">'#c79fef'</span><span class="s1">,</span>
+<a name="l442"><span class="ln">442  </span></a>            <span class="s2">'lavender blue'</span><span class="s1">: </span><span class="s2">'#8b88f8'</span><span class="s1">,</span>
+<a name="l443"><span class="ln">443  </span></a>            <span class="s2">'lavender pink'</span><span class="s1">: </span><span class="s2">'#dd85d7'</span><span class="s1">,</span>
+<a name="l444"><span class="ln">444  </span></a>            <span class="s2">'lawn green'</span><span class="s1">: </span><span class="s2">'#4da409'</span><span class="s1">,</span>
+<a name="l445"><span class="ln">445  </span></a>            <span class="s2">'leaf'</span><span class="s1">: </span><span class="s2">'#71aa34'</span><span class="s1">,</span>
+<a name="l446"><span class="ln">446  </span></a>            <span class="s2">'leaf green'</span><span class="s1">: </span><span class="s2">'#5ca904'</span><span class="s1">,</span>
+<a name="l447"><span class="ln">447  </span></a>            <span class="s2">'leafy green'</span><span class="s1">: </span><span class="s2">'#51b73b'</span><span class="s1">,</span>
+<a name="l448"><span class="ln">448  </span></a>            <span class="s2">'leather'</span><span class="s1">: </span><span class="s2">'#ac7434'</span><span class="s1">,</span>
+<a name="l449"><span class="ln">449  </span></a>            <span class="s2">'lemon'</span><span class="s1">: </span><span class="s2">'#fdff52'</span><span class="s1">,</span>
+<a name="l450"><span class="ln">450  </span></a>            <span class="s2">'lemon green'</span><span class="s1">: </span><span class="s2">'#adf802'</span><span class="s1">,</span>
+<a name="l451"><span class="ln">451  </span></a>            <span class="s2">'lemon lime'</span><span class="s1">: </span><span class="s2">'#bffe28'</span><span class="s1">,</span>
+<a name="l452"><span class="ln">452  </span></a>            <span class="s2">'lemon yellow'</span><span class="s1">: </span><span class="s2">'#fdff38'</span><span class="s1">,</span>
+<a name="l453"><span class="ln">453  </span></a>            <span class="s2">'lichen'</span><span class="s1">: </span><span class="s2">'#8fb67b'</span><span class="s1">,</span>
+<a name="l454"><span class="ln">454  </span></a>            <span class="s2">'light aqua'</span><span class="s1">: </span><span class="s2">'#8cffdb'</span><span class="s1">,</span>
+<a name="l455"><span class="ln">455  </span></a>            <span class="s2">'light aquamarine'</span><span class="s1">: </span><span class="s2">'#7bfdc7'</span><span class="s1">,</span>
+<a name="l456"><span class="ln">456  </span></a>            <span class="s2">'light beige'</span><span class="s1">: </span><span class="s2">'#fffeb6'</span><span class="s1">,</span>
+<a name="l457"><span class="ln">457  </span></a>            <span class="s2">'light blue'</span><span class="s1">: </span><span class="s2">'#95d0fc'</span><span class="s1">,</span>
+<a name="l458"><span class="ln">458  </span></a>            <span class="s2">'light blue green'</span><span class="s1">: </span><span class="s2">'#7efbb3'</span><span class="s1">,</span>
+<a name="l459"><span class="ln">459  </span></a>            <span class="s2">'light blue grey'</span><span class="s1">: </span><span class="s2">'#b7c9e2'</span><span class="s1">,</span>
+<a name="l460"><span class="ln">460  </span></a>            <span class="s2">'light bluish green'</span><span class="s1">: </span><span class="s2">'#76fda8'</span><span class="s1">,</span>
+<a name="l461"><span class="ln">461  </span></a>            <span class="s2">'light bright green'</span><span class="s1">: </span><span class="s2">'#53fe5c'</span><span class="s1">,</span>
+<a name="l462"><span class="ln">462  </span></a>            <span class="s2">'light brown'</span><span class="s1">: </span><span class="s2">'#ad8150'</span><span class="s1">,</span>
+<a name="l463"><span class="ln">463  </span></a>            <span class="s2">'light burgundy'</span><span class="s1">: </span><span class="s2">'#a8415b'</span><span class="s1">,</span>
+<a name="l464"><span class="ln">464  </span></a>            <span class="s2">'light cyan'</span><span class="s1">: </span><span class="s2">'#acfffc'</span><span class="s1">,</span>
+<a name="l465"><span class="ln">465  </span></a>            <span class="s2">'light eggplant'</span><span class="s1">: </span><span class="s2">'#894585'</span><span class="s1">,</span>
+<a name="l466"><span class="ln">466  </span></a>            <span class="s2">'light forest green'</span><span class="s1">: </span><span class="s2">'#4f9153'</span><span class="s1">,</span>
+<a name="l467"><span class="ln">467  </span></a>            <span class="s2">'light gold'</span><span class="s1">: </span><span class="s2">'#fddc5c'</span><span class="s1">,</span>
+<a name="l468"><span class="ln">468  </span></a>            <span class="s2">'light grass green'</span><span class="s1">: </span><span class="s2">'#9af764'</span><span class="s1">,</span>
+<a name="l469"><span class="ln">469  </span></a>            <span class="s2">'light green'</span><span class="s1">: </span><span class="s2">'#96f97b'</span><span class="s1">,</span>
+<a name="l470"><span class="ln">470  </span></a>            <span class="s2">'light green blue'</span><span class="s1">: </span><span class="s2">'#56fca2'</span><span class="s1">,</span>
+<a name="l471"><span class="ln">471  </span></a>            <span class="s2">'light greenish blue'</span><span class="s1">: </span><span class="s2">'#63f7b4'</span><span class="s1">,</span>
+<a name="l472"><span class="ln">472  </span></a>            <span class="s2">'light grey'</span><span class="s1">: </span><span class="s2">'#d8dcd6'</span><span class="s1">,</span>
+<a name="l473"><span class="ln">473  </span></a>            <span class="s2">'light grey blue'</span><span class="s1">: </span><span class="s2">'#9dbcd4'</span><span class="s1">,</span>
+<a name="l474"><span class="ln">474  </span></a>            <span class="s2">'light grey green'</span><span class="s1">: </span><span class="s2">'#b7e1a1'</span><span class="s1">,</span>
+<a name="l475"><span class="ln">475  </span></a>            <span class="s2">'light indigo'</span><span class="s1">: </span><span class="s2">'#6d5acf'</span><span class="s1">,</span>
+<a name="l476"><span class="ln">476  </span></a>            <span class="s2">'light khaki'</span><span class="s1">: </span><span class="s2">'#e6f2a2'</span><span class="s1">,</span>
+<a name="l477"><span class="ln">477  </span></a>            <span class="s2">'light lavendar'</span><span class="s1">: </span><span class="s2">'#efc0fe'</span><span class="s1">,</span>
+<a name="l478"><span class="ln">478  </span></a>            <span class="s2">'light lavender'</span><span class="s1">: </span><span class="s2">'#dfc5fe'</span><span class="s1">,</span>
+<a name="l479"><span class="ln">479  </span></a>            <span class="s2">'light light blue'</span><span class="s1">: </span><span class="s2">'#cafffb'</span><span class="s1">,</span>
+<a name="l480"><span class="ln">480  </span></a>            <span class="s2">'light light green'</span><span class="s1">: </span><span class="s2">'#c8ffb0'</span><span class="s1">,</span>
+<a name="l481"><span class="ln">481  </span></a>            <span class="s2">'light lilac'</span><span class="s1">: </span><span class="s2">'#edc8ff'</span><span class="s1">,</span>
+<a name="l482"><span class="ln">482  </span></a>            <span class="s2">'light lime'</span><span class="s1">: </span><span class="s2">'#aefd6c'</span><span class="s1">,</span>
+<a name="l483"><span class="ln">483  </span></a>            <span class="s2">'light lime green'</span><span class="s1">: </span><span class="s2">'#b9ff66'</span><span class="s1">,</span>
+<a name="l484"><span class="ln">484  </span></a>            <span class="s2">'light magenta'</span><span class="s1">: </span><span class="s2">'#fa5ff7'</span><span class="s1">,</span>
+<a name="l485"><span class="ln">485  </span></a>            <span class="s2">'light maroon'</span><span class="s1">: </span><span class="s2">'#a24857'</span><span class="s1">,</span>
+<a name="l486"><span class="ln">486  </span></a>            <span class="s2">'light mauve'</span><span class="s1">: </span><span class="s2">'#c292a1'</span><span class="s1">,</span>
+<a name="l487"><span class="ln">487  </span></a>            <span class="s2">'light mint'</span><span class="s1">: </span><span class="s2">'#b6ffbb'</span><span class="s1">,</span>
+<a name="l488"><span class="ln">488  </span></a>            <span class="s2">'light mint green'</span><span class="s1">: </span><span class="s2">'#a6fbb2'</span><span class="s1">,</span>
+<a name="l489"><span class="ln">489  </span></a>            <span class="s2">'light moss green'</span><span class="s1">: </span><span class="s2">'#a6c875'</span><span class="s1">,</span>
+<a name="l490"><span class="ln">490  </span></a>            <span class="s2">'light mustard'</span><span class="s1">: </span><span class="s2">'#f7d560'</span><span class="s1">,</span>
+<a name="l491"><span class="ln">491  </span></a>            <span class="s2">'light navy'</span><span class="s1">: </span><span class="s2">'#155084'</span><span class="s1">,</span>
+<a name="l492"><span class="ln">492  </span></a>            <span class="s2">'light navy blue'</span><span class="s1">: </span><span class="s2">'#2e5a88'</span><span class="s1">,</span>
+<a name="l493"><span class="ln">493  </span></a>            <span class="s2">'light neon green'</span><span class="s1">: </span><span class="s2">'#4efd54'</span><span class="s1">,</span>
+<a name="l494"><span class="ln">494  </span></a>            <span class="s2">'light olive'</span><span class="s1">: </span><span class="s2">'#acbf69'</span><span class="s1">,</span>
+<a name="l495"><span class="ln">495  </span></a>            <span class="s2">'light olive green'</span><span class="s1">: </span><span class="s2">'#a4be5c'</span><span class="s1">,</span>
+<a name="l496"><span class="ln">496  </span></a>            <span class="s2">'light orange'</span><span class="s1">: </span><span class="s2">'#fdaa48'</span><span class="s1">,</span>
+<a name="l497"><span class="ln">497  </span></a>            <span class="s2">'light pastel green'</span><span class="s1">: </span><span class="s2">'#b2fba5'</span><span class="s1">,</span>
+<a name="l498"><span class="ln">498  </span></a>            <span class="s2">'light pea green'</span><span class="s1">: </span><span class="s2">'#c4fe82'</span><span class="s1">,</span>
+<a name="l499"><span class="ln">499  </span></a>            <span class="s2">'light peach'</span><span class="s1">: </span><span class="s2">'#ffd8b1'</span><span class="s1">,</span>
+<a name="l500"><span class="ln">500  </span></a>            <span class="s2">'light periwinkle'</span><span class="s1">: </span><span class="s2">'#c1c6fc'</span><span class="s1">,</span>
+<a name="l501"><span class="ln">501  </span></a>            <span class="s2">'light pink'</span><span class="s1">: </span><span class="s2">'#ffd1df'</span><span class="s1">,</span>
+<a name="l502"><span class="ln">502  </span></a>            <span class="s2">'light plum'</span><span class="s1">: </span><span class="s2">'#9d5783'</span><span class="s1">,</span>
+<a name="l503"><span class="ln">503  </span></a>            <span class="s2">'light purple'</span><span class="s1">: </span><span class="s2">'#bf77f6'</span><span class="s1">,</span>
+<a name="l504"><span class="ln">504  </span></a>            <span class="s2">'light red'</span><span class="s1">: </span><span class="s2">'#ff474c'</span><span class="s1">,</span>
+<a name="l505"><span class="ln">505  </span></a>            <span class="s2">'light rose'</span><span class="s1">: </span><span class="s2">'#ffc5cb'</span><span class="s1">,</span>
+<a name="l506"><span class="ln">506  </span></a>            <span class="s2">'light royal blue'</span><span class="s1">: </span><span class="s2">'#3a2efe'</span><span class="s1">,</span>
+<a name="l507"><span class="ln">507  </span></a>            <span class="s2">'light sage'</span><span class="s1">: </span><span class="s2">'#bcecac'</span><span class="s1">,</span>
+<a name="l508"><span class="ln">508  </span></a>            <span class="s2">'light salmon'</span><span class="s1">: </span><span class="s2">'#fea993'</span><span class="s1">,</span>
+<a name="l509"><span class="ln">509  </span></a>            <span class="s2">'light sea green'</span><span class="s1">: </span><span class="s2">'#98f6b0'</span><span class="s1">,</span>
+<a name="l510"><span class="ln">510  </span></a>            <span class="s2">'light seafoam'</span><span class="s1">: </span><span class="s2">'#a0febf'</span><span class="s1">,</span>
+<a name="l511"><span class="ln">511  </span></a>            <span class="s2">'light seafoam green'</span><span class="s1">: </span><span class="s2">'#a7ffb5'</span><span class="s1">,</span>
+<a name="l512"><span class="ln">512  </span></a>            <span class="s2">'light sky blue'</span><span class="s1">: </span><span class="s2">'#c6fcff'</span><span class="s1">,</span>
+<a name="l513"><span class="ln">513  </span></a>            <span class="s2">'light tan'</span><span class="s1">: </span><span class="s2">'#fbeeac'</span><span class="s1">,</span>
+<a name="l514"><span class="ln">514  </span></a>            <span class="s2">'light teal'</span><span class="s1">: </span><span class="s2">'#90e4c1'</span><span class="s1">,</span>
+<a name="l515"><span class="ln">515  </span></a>            <span class="s2">'light turquoise'</span><span class="s1">: </span><span class="s2">'#7ef4cc'</span><span class="s1">,</span>
+<a name="l516"><span class="ln">516  </span></a>            <span class="s2">'light urple'</span><span class="s1">: </span><span class="s2">'#b36ff6'</span><span class="s1">,</span>
+<a name="l517"><span class="ln">517  </span></a>            <span class="s2">'light violet'</span><span class="s1">: </span><span class="s2">'#d6b4fc'</span><span class="s1">,</span>
+<a name="l518"><span class="ln">518  </span></a>            <span class="s2">'light yellow'</span><span class="s1">: </span><span class="s2">'#fffe7a'</span><span class="s1">,</span>
+<a name="l519"><span class="ln">519  </span></a>            <span class="s2">'light yellow green'</span><span class="s1">: </span><span class="s2">'#ccfd7f'</span><span class="s1">,</span>
+<a name="l520"><span class="ln">520  </span></a>            <span class="s2">'light yellowish green'</span><span class="s1">: </span><span class="s2">'#c2ff89'</span><span class="s1">,</span>
+<a name="l521"><span class="ln">521  </span></a>            <span class="s2">'lightblue'</span><span class="s1">: </span><span class="s2">'#7bc8f6'</span><span class="s1">,</span>
+<a name="l522"><span class="ln">522  </span></a>            <span class="s2">'lighter green'</span><span class="s1">: </span><span class="s2">'#75fd63'</span><span class="s1">,</span>
+<a name="l523"><span class="ln">523  </span></a>            <span class="s2">'lighter purple'</span><span class="s1">: </span><span class="s2">'#a55af4'</span><span class="s1">,</span>
+<a name="l524"><span class="ln">524  </span></a>            <span class="s2">'lightgreen'</span><span class="s1">: </span><span class="s2">'#76ff7b'</span><span class="s1">,</span>
+<a name="l525"><span class="ln">525  </span></a>            <span class="s2">'lightish blue'</span><span class="s1">: </span><span class="s2">'#3d7afd'</span><span class="s1">,</span>
+<a name="l526"><span class="ln">526  </span></a>            <span class="s2">'lightish green'</span><span class="s1">: </span><span class="s2">'#61e160'</span><span class="s1">,</span>
+<a name="l527"><span class="ln">527  </span></a>            <span class="s2">'lightish purple'</span><span class="s1">: </span><span class="s2">'#a552e6'</span><span class="s1">,</span>
+<a name="l528"><span class="ln">528  </span></a>            <span class="s2">'lightish red'</span><span class="s1">: </span><span class="s2">'#fe2f4a'</span><span class="s1">,</span>
+<a name="l529"><span class="ln">529  </span></a>            <span class="s2">'lilac'</span><span class="s1">: </span><span class="s2">'#cea2fd'</span><span class="s1">,</span>
+<a name="l530"><span class="ln">530  </span></a>            <span class="s2">'liliac'</span><span class="s1">: </span><span class="s2">'#c48efd'</span><span class="s1">,</span>
+<a name="l531"><span class="ln">531  </span></a>            <span class="s2">'lime'</span><span class="s1">: </span><span class="s2">'#aaff32'</span><span class="s1">,</span>
+<a name="l532"><span class="ln">532  </span></a>            <span class="s2">'lime green'</span><span class="s1">: </span><span class="s2">'#89fe05'</span><span class="s1">,</span>
+<a name="l533"><span class="ln">533  </span></a>            <span class="s2">'lime yellow'</span><span class="s1">: </span><span class="s2">'#d0fe1d'</span><span class="s1">,</span>
+<a name="l534"><span class="ln">534  </span></a>            <span class="s2">'lipstick'</span><span class="s1">: </span><span class="s2">'#d5174e'</span><span class="s1">,</span>
+<a name="l535"><span class="ln">535  </span></a>            <span class="s2">'lipstick red'</span><span class="s1">: </span><span class="s2">'#c0022f'</span><span class="s1">,</span>
+<a name="l536"><span class="ln">536  </span></a>            <span class="s2">'macaroni and cheese'</span><span class="s1">: </span><span class="s2">'#efb435'</span><span class="s1">,</span>
+<a name="l537"><span class="ln">537  </span></a>            <span class="s2">'magenta'</span><span class="s1">: </span><span class="s2">'#c20078'</span><span class="s1">,</span>
+<a name="l538"><span class="ln">538  </span></a>            <span class="s2">'mahogany'</span><span class="s1">: </span><span class="s2">'#4a0100'</span><span class="s1">,</span>
+<a name="l539"><span class="ln">539  </span></a>            <span class="s2">'maize'</span><span class="s1">: </span><span class="s2">'#f4d054'</span><span class="s1">,</span>
+<a name="l540"><span class="ln">540  </span></a>            <span class="s2">'mango'</span><span class="s1">: </span><span class="s2">'#ffa62b'</span><span class="s1">,</span>
+<a name="l541"><span class="ln">541  </span></a>            <span class="s2">'manilla'</span><span class="s1">: </span><span class="s2">'#fffa86'</span><span class="s1">,</span>
+<a name="l542"><span class="ln">542  </span></a>            <span class="s2">'marigold'</span><span class="s1">: </span><span class="s2">'#fcc006'</span><span class="s1">,</span>
+<a name="l543"><span class="ln">543  </span></a>            <span class="s2">'marine'</span><span class="s1">: </span><span class="s2">'#042e60'</span><span class="s1">,</span>
+<a name="l544"><span class="ln">544  </span></a>            <span class="s2">'marine blue'</span><span class="s1">: </span><span class="s2">'#01386a'</span><span class="s1">,</span>
+<a name="l545"><span class="ln">545  </span></a>            <span class="s2">'maroon'</span><span class="s1">: </span><span class="s2">'#650021'</span><span class="s1">,</span>
+<a name="l546"><span class="ln">546  </span></a>            <span class="s2">'mauve'</span><span class="s1">: </span><span class="s2">'#ae7181'</span><span class="s1">,</span>
+<a name="l547"><span class="ln">547  </span></a>            <span class="s2">'medium blue'</span><span class="s1">: </span><span class="s2">'#2c6fbb'</span><span class="s1">,</span>
+<a name="l548"><span class="ln">548  </span></a>            <span class="s2">'medium brown'</span><span class="s1">: </span><span class="s2">'#7f5112'</span><span class="s1">,</span>
+<a name="l549"><span class="ln">549  </span></a>            <span class="s2">'medium green'</span><span class="s1">: </span><span class="s2">'#39ad48'</span><span class="s1">,</span>
+<a name="l550"><span class="ln">550  </span></a>            <span class="s2">'medium grey'</span><span class="s1">: </span><span class="s2">'#7d7f7c'</span><span class="s1">,</span>
+<a name="l551"><span class="ln">551  </span></a>            <span class="s2">'medium pink'</span><span class="s1">: </span><span class="s2">'#f36196'</span><span class="s1">,</span>
+<a name="l552"><span class="ln">552  </span></a>            <span class="s2">'medium purple'</span><span class="s1">: </span><span class="s2">'#9e43a2'</span><span class="s1">,</span>
+<a name="l553"><span class="ln">553  </span></a>            <span class="s2">'melon'</span><span class="s1">: </span><span class="s2">'#ff7855'</span><span class="s1">,</span>
+<a name="l554"><span class="ln">554  </span></a>            <span class="s2">'merlot'</span><span class="s1">: </span><span class="s2">'#730039'</span><span class="s1">,</span>
+<a name="l555"><span class="ln">555  </span></a>            <span class="s2">'metallic blue'</span><span class="s1">: </span><span class="s2">'#4f738e'</span><span class="s1">,</span>
+<a name="l556"><span class="ln">556  </span></a>            <span class="s2">'mid blue'</span><span class="s1">: </span><span class="s2">'#276ab3'</span><span class="s1">,</span>
+<a name="l557"><span class="ln">557  </span></a>            <span class="s2">'mid green'</span><span class="s1">: </span><span class="s2">'#50a747'</span><span class="s1">,</span>
+<a name="l558"><span class="ln">558  </span></a>            <span class="s2">'midnight'</span><span class="s1">: </span><span class="s2">'#03012d'</span><span class="s1">,</span>
+<a name="l559"><span class="ln">559  </span></a>            <span class="s2">'midnight blue'</span><span class="s1">: </span><span class="s2">'#020035'</span><span class="s1">,</span>
+<a name="l560"><span class="ln">560  </span></a>            <span class="s2">'midnight purple'</span><span class="s1">: </span><span class="s2">'#280137'</span><span class="s1">,</span>
+<a name="l561"><span class="ln">561  </span></a>            <span class="s2">'military green'</span><span class="s1">: </span><span class="s2">'#667c3e'</span><span class="s1">,</span>
+<a name="l562"><span class="ln">562  </span></a>            <span class="s2">'milk chocolate'</span><span class="s1">: </span><span class="s2">'#7f4e1e'</span><span class="s1">,</span>
+<a name="l563"><span class="ln">563  </span></a>            <span class="s2">'mint'</span><span class="s1">: </span><span class="s2">'#9ffeb0'</span><span class="s1">,</span>
+<a name="l564"><span class="ln">564  </span></a>            <span class="s2">'mint green'</span><span class="s1">: </span><span class="s2">'#8fff9f'</span><span class="s1">,</span>
+<a name="l565"><span class="ln">565  </span></a>            <span class="s2">'minty green'</span><span class="s1">: </span><span class="s2">'#0bf77d'</span><span class="s1">,</span>
+<a name="l566"><span class="ln">566  </span></a>            <span class="s2">'mocha'</span><span class="s1">: </span><span class="s2">'#9d7651'</span><span class="s1">,</span>
+<a name="l567"><span class="ln">567  </span></a>            <span class="s2">'moss'</span><span class="s1">: </span><span class="s2">'#769958'</span><span class="s1">,</span>
+<a name="l568"><span class="ln">568  </span></a>            <span class="s2">'moss green'</span><span class="s1">: </span><span class="s2">'#658b38'</span><span class="s1">,</span>
+<a name="l569"><span class="ln">569  </span></a>            <span class="s2">'mossy green'</span><span class="s1">: </span><span class="s2">'#638b27'</span><span class="s1">,</span>
+<a name="l570"><span class="ln">570  </span></a>            <span class="s2">'mud'</span><span class="s1">: </span><span class="s2">'#735c12'</span><span class="s1">,</span>
+<a name="l571"><span class="ln">571  </span></a>            <span class="s2">'mud brown'</span><span class="s1">: </span><span class="s2">'#60460f'</span><span class="s1">,</span>
+<a name="l572"><span class="ln">572  </span></a>            <span class="s2">'mud green'</span><span class="s1">: </span><span class="s2">'#606602'</span><span class="s1">,</span>
+<a name="l573"><span class="ln">573  </span></a>            <span class="s2">'muddy brown'</span><span class="s1">: </span><span class="s2">'#886806'</span><span class="s1">,</span>
+<a name="l574"><span class="ln">574  </span></a>            <span class="s2">'muddy green'</span><span class="s1">: </span><span class="s2">'#657432'</span><span class="s1">,</span>
+<a name="l575"><span class="ln">575  </span></a>            <span class="s2">'muddy yellow'</span><span class="s1">: </span><span class="s2">'#bfac05'</span><span class="s1">,</span>
+<a name="l576"><span class="ln">576  </span></a>            <span class="s2">'mulberry'</span><span class="s1">: </span><span class="s2">'#920a4e'</span><span class="s1">,</span>
+<a name="l577"><span class="ln">577  </span></a>            <span class="s2">'murky green'</span><span class="s1">: </span><span class="s2">'#6c7a0e'</span><span class="s1">,</span>
+<a name="l578"><span class="ln">578  </span></a>            <span class="s2">'mushroom'</span><span class="s1">: </span><span class="s2">'#ba9e88'</span><span class="s1">,</span>
+<a name="l579"><span class="ln">579  </span></a>            <span class="s2">'mustard'</span><span class="s1">: </span><span class="s2">'#ceb301'</span><span class="s1">,</span>
+<a name="l580"><span class="ln">580  </span></a>            <span class="s2">'mustard brown'</span><span class="s1">: </span><span class="s2">'#ac7e04'</span><span class="s1">,</span>
+<a name="l581"><span class="ln">581  </span></a>            <span class="s2">'mustard green'</span><span class="s1">: </span><span class="s2">'#a8b504'</span><span class="s1">,</span>
+<a name="l582"><span class="ln">582  </span></a>            <span class="s2">'mustard yellow'</span><span class="s1">: </span><span class="s2">'#d2bd0a'</span><span class="s1">,</span>
+<a name="l583"><span class="ln">583  </span></a>            <span class="s2">'muted blue'</span><span class="s1">: </span><span class="s2">'#3b719f'</span><span class="s1">,</span>
+<a name="l584"><span class="ln">584  </span></a>            <span class="s2">'muted green'</span><span class="s1">: </span><span class="s2">'#5fa052'</span><span class="s1">,</span>
+<a name="l585"><span class="ln">585  </span></a>            <span class="s2">'muted pink'</span><span class="s1">: </span><span class="s2">'#d1768f'</span><span class="s1">,</span>
+<a name="l586"><span class="ln">586  </span></a>            <span class="s2">'muted purple'</span><span class="s1">: </span><span class="s2">'#805b87'</span><span class="s1">,</span>
+<a name="l587"><span class="ln">587  </span></a>            <span class="s2">'nasty green'</span><span class="s1">: </span><span class="s2">'#70b23f'</span><span class="s1">,</span>
+<a name="l588"><span class="ln">588  </span></a>            <span class="s2">'navy'</span><span class="s1">: </span><span class="s2">'#01153e'</span><span class="s1">,</span>
+<a name="l589"><span class="ln">589  </span></a>            <span class="s2">'navy blue'</span><span class="s1">: </span><span class="s2">'#001146'</span><span class="s1">,</span>
+<a name="l590"><span class="ln">590  </span></a>            <span class="s2">'navy green'</span><span class="s1">: </span><span class="s2">'#35530a'</span><span class="s1">,</span>
+<a name="l591"><span class="ln">591  </span></a>            <span class="s2">'neon blue'</span><span class="s1">: </span><span class="s2">'#04d9ff'</span><span class="s1">,</span>
+<a name="l592"><span class="ln">592  </span></a>            <span class="s2">'neon green'</span><span class="s1">: </span><span class="s2">'#0cff0c'</span><span class="s1">,</span>
+<a name="l593"><span class="ln">593  </span></a>            <span class="s2">'neon pink'</span><span class="s1">: </span><span class="s2">'#fe019a'</span><span class="s1">,</span>
+<a name="l594"><span class="ln">594  </span></a>            <span class="s2">'neon purple'</span><span class="s1">: </span><span class="s2">'#bc13fe'</span><span class="s1">,</span>
+<a name="l595"><span class="ln">595  </span></a>            <span class="s2">'neon red'</span><span class="s1">: </span><span class="s2">'#ff073a'</span><span class="s1">,</span>
+<a name="l596"><span class="ln">596  </span></a>            <span class="s2">'neon yellow'</span><span class="s1">: </span><span class="s2">'#cfff04'</span><span class="s1">,</span>
+<a name="l597"><span class="ln">597  </span></a>            <span class="s2">'nice blue'</span><span class="s1">: </span><span class="s2">'#107ab0'</span><span class="s1">,</span>
+<a name="l598"><span class="ln">598  </span></a>            <span class="s2">'night blue'</span><span class="s1">: </span><span class="s2">'#040348'</span><span class="s1">,</span>
+<a name="l599"><span class="ln">599  </span></a>            <span class="s2">'ocean'</span><span class="s1">: </span><span class="s2">'#017b92'</span><span class="s1">,</span>
+<a name="l600"><span class="ln">600  </span></a>            <span class="s2">'ocean blue'</span><span class="s1">: </span><span class="s2">'#03719c'</span><span class="s1">,</span>
+<a name="l601"><span class="ln">601  </span></a>            <span class="s2">'ocean green'</span><span class="s1">: </span><span class="s2">'#3d9973'</span><span class="s1">,</span>
+<a name="l602"><span class="ln">602  </span></a>            <span class="s2">'ocher'</span><span class="s1">: </span><span class="s2">'#bf9b0c'</span><span class="s1">,</span>
+<a name="l603"><span class="ln">603  </span></a>            <span class="s2">'ochre'</span><span class="s1">: </span><span class="s2">'#bf9005'</span><span class="s1">,</span>
+<a name="l604"><span class="ln">604  </span></a>            <span class="s2">'ocre'</span><span class="s1">: </span><span class="s2">'#c69c04'</span><span class="s1">,</span>
+<a name="l605"><span class="ln">605  </span></a>            <span class="s2">'off blue'</span><span class="s1">: </span><span class="s2">'#5684ae'</span><span class="s1">,</span>
+<a name="l606"><span class="ln">606  </span></a>            <span class="s2">'off green'</span><span class="s1">: </span><span class="s2">'#6ba353'</span><span class="s1">,</span>
+<a name="l607"><span class="ln">607  </span></a>            <span class="s2">'off white'</span><span class="s1">: </span><span class="s2">'#ffffe4'</span><span class="s1">,</span>
+<a name="l608"><span class="ln">608  </span></a>            <span class="s2">'off yellow'</span><span class="s1">: </span><span class="s2">'#f1f33f'</span><span class="s1">,</span>
+<a name="l609"><span class="ln">609  </span></a>            <span class="s2">'old pink'</span><span class="s1">: </span><span class="s2">'#c77986'</span><span class="s1">,</span>
+<a name="l610"><span class="ln">610  </span></a>            <span class="s2">'old rose'</span><span class="s1">: </span><span class="s2">'#c87f89'</span><span class="s1">,</span>
+<a name="l611"><span class="ln">611  </span></a>            <span class="s2">'olive'</span><span class="s1">: </span><span class="s2">'#6e750e'</span><span class="s1">,</span>
+<a name="l612"><span class="ln">612  </span></a>            <span class="s2">'olive brown'</span><span class="s1">: </span><span class="s2">'#645403'</span><span class="s1">,</span>
+<a name="l613"><span class="ln">613  </span></a>            <span class="s2">'olive drab'</span><span class="s1">: </span><span class="s2">'#6f7632'</span><span class="s1">,</span>
+<a name="l614"><span class="ln">614  </span></a>            <span class="s2">'olive green'</span><span class="s1">: </span><span class="s2">'#677a04'</span><span class="s1">,</span>
+<a name="l615"><span class="ln">615  </span></a>            <span class="s2">'olive yellow'</span><span class="s1">: </span><span class="s2">'#c2b709'</span><span class="s1">,</span>
+<a name="l616"><span class="ln">616  </span></a>            <span class="s2">'orange'</span><span class="s1">: </span><span class="s2">'#f97306'</span><span class="s1">,</span>
+<a name="l617"><span class="ln">617  </span></a>            <span class="s2">'orange brown'</span><span class="s1">: </span><span class="s2">'#be6400'</span><span class="s1">,</span>
+<a name="l618"><span class="ln">618  </span></a>            <span class="s2">'orange pink'</span><span class="s1">: </span><span class="s2">'#ff6f52'</span><span class="s1">,</span>
+<a name="l619"><span class="ln">619  </span></a>            <span class="s2">'orange red'</span><span class="s1">: </span><span class="s2">'#fd411e'</span><span class="s1">,</span>
+<a name="l620"><span class="ln">620  </span></a>            <span class="s2">'orange yellow'</span><span class="s1">: </span><span class="s2">'#ffad01'</span><span class="s1">,</span>
+<a name="l621"><span class="ln">621  </span></a>            <span class="s2">'orangeish'</span><span class="s1">: </span><span class="s2">'#fd8d49'</span><span class="s1">,</span>
+<a name="l622"><span class="ln">622  </span></a>            <span class="s2">'orangered'</span><span class="s1">: </span><span class="s2">'#fe420f'</span><span class="s1">,</span>
+<a name="l623"><span class="ln">623  </span></a>            <span class="s2">'orangey brown'</span><span class="s1">: </span><span class="s2">'#b16002'</span><span class="s1">,</span>
+<a name="l624"><span class="ln">624  </span></a>            <span class="s2">'orangey red'</span><span class="s1">: </span><span class="s2">'#fa4224'</span><span class="s1">,</span>
+<a name="l625"><span class="ln">625  </span></a>            <span class="s2">'orangey yellow'</span><span class="s1">: </span><span class="s2">'#fdb915'</span><span class="s1">,</span>
+<a name="l626"><span class="ln">626  </span></a>            <span class="s2">'orangish'</span><span class="s1">: </span><span class="s2">'#fc824a'</span><span class="s1">,</span>
+<a name="l627"><span class="ln">627  </span></a>            <span class="s2">'orangish brown'</span><span class="s1">: </span><span class="s2">'#b25f03'</span><span class="s1">,</span>
+<a name="l628"><span class="ln">628  </span></a>            <span class="s2">'orangish red'</span><span class="s1">: </span><span class="s2">'#f43605'</span><span class="s1">,</span>
+<a name="l629"><span class="ln">629  </span></a>            <span class="s2">'orchid'</span><span class="s1">: </span><span class="s2">'#c875c4'</span><span class="s1">,</span>
+<a name="l630"><span class="ln">630  </span></a>            <span class="s2">'pale'</span><span class="s1">: </span><span class="s2">'#fff9d0'</span><span class="s1">,</span>
+<a name="l631"><span class="ln">631  </span></a>            <span class="s2">'pale aqua'</span><span class="s1">: </span><span class="s2">'#b8ffeb'</span><span class="s1">,</span>
+<a name="l632"><span class="ln">632  </span></a>            <span class="s2">'pale blue'</span><span class="s1">: </span><span class="s2">'#d0fefe'</span><span class="s1">,</span>
+<a name="l633"><span class="ln">633  </span></a>            <span class="s2">'pale brown'</span><span class="s1">: </span><span class="s2">'#b1916e'</span><span class="s1">,</span>
+<a name="l634"><span class="ln">634  </span></a>            <span class="s2">'pale cyan'</span><span class="s1">: </span><span class="s2">'#b7fffa'</span><span class="s1">,</span>
+<a name="l635"><span class="ln">635  </span></a>            <span class="s2">'pale gold'</span><span class="s1">: </span><span class="s2">'#fdde6c'</span><span class="s1">,</span>
+<a name="l636"><span class="ln">636  </span></a>            <span class="s2">'pale green'</span><span class="s1">: </span><span class="s2">'#c7fdb5'</span><span class="s1">,</span>
+<a name="l637"><span class="ln">637  </span></a>            <span class="s2">'pale grey'</span><span class="s1">: </span><span class="s2">'#fdfdfe'</span><span class="s1">,</span>
+<a name="l638"><span class="ln">638  </span></a>            <span class="s2">'pale lavender'</span><span class="s1">: </span><span class="s2">'#eecffe'</span><span class="s1">,</span>
+<a name="l639"><span class="ln">639  </span></a>            <span class="s2">'pale light green'</span><span class="s1">: </span><span class="s2">'#b1fc99'</span><span class="s1">,</span>
+<a name="l640"><span class="ln">640  </span></a>            <span class="s2">'pale lilac'</span><span class="s1">: </span><span class="s2">'#e4cbff'</span><span class="s1">,</span>
+<a name="l641"><span class="ln">641  </span></a>            <span class="s2">'pale lime'</span><span class="s1">: </span><span class="s2">'#befd73'</span><span class="s1">,</span>
+<a name="l642"><span class="ln">642  </span></a>            <span class="s2">'pale lime green'</span><span class="s1">: </span><span class="s2">'#b1ff65'</span><span class="s1">,</span>
+<a name="l643"><span class="ln">643  </span></a>            <span class="s2">'pale magenta'</span><span class="s1">: </span><span class="s2">'#d767ad'</span><span class="s1">,</span>
+<a name="l644"><span class="ln">644  </span></a>            <span class="s2">'pale mauve'</span><span class="s1">: </span><span class="s2">'#fed0fc'</span><span class="s1">,</span>
+<a name="l645"><span class="ln">645  </span></a>            <span class="s2">'pale olive'</span><span class="s1">: </span><span class="s2">'#b9cc81'</span><span class="s1">,</span>
+<a name="l646"><span class="ln">646  </span></a>            <span class="s2">'pale olive green'</span><span class="s1">: </span><span class="s2">'#b1d27b'</span><span class="s1">,</span>
+<a name="l647"><span class="ln">647  </span></a>            <span class="s2">'pale orange'</span><span class="s1">: </span><span class="s2">'#ffa756'</span><span class="s1">,</span>
+<a name="l648"><span class="ln">648  </span></a>            <span class="s2">'pale peach'</span><span class="s1">: </span><span class="s2">'#ffe5ad'</span><span class="s1">,</span>
+<a name="l649"><span class="ln">649  </span></a>            <span class="s2">'pale pink'</span><span class="s1">: </span><span class="s2">'#ffcfdc'</span><span class="s1">,</span>
+<a name="l650"><span class="ln">650  </span></a>            <span class="s2">'pale purple'</span><span class="s1">: </span><span class="s2">'#b790d4'</span><span class="s1">,</span>
+<a name="l651"><span class="ln">651  </span></a>            <span class="s2">'pale red'</span><span class="s1">: </span><span class="s2">'#d9544d'</span><span class="s1">,</span>
+<a name="l652"><span class="ln">652  </span></a>            <span class="s2">'pale rose'</span><span class="s1">: </span><span class="s2">'#fdc1c5'</span><span class="s1">,</span>
+<a name="l653"><span class="ln">653  </span></a>            <span class="s2">'pale salmon'</span><span class="s1">: </span><span class="s2">'#ffb19a'</span><span class="s1">,</span>
+<a name="l654"><span class="ln">654  </span></a>            <span class="s2">'pale sky blue'</span><span class="s1">: </span><span class="s2">'#bdf6fe'</span><span class="s1">,</span>
+<a name="l655"><span class="ln">655  </span></a>            <span class="s2">'pale teal'</span><span class="s1">: </span><span class="s2">'#82cbb2'</span><span class="s1">,</span>
+<a name="l656"><span class="ln">656  </span></a>            <span class="s2">'pale turquoise'</span><span class="s1">: </span><span class="s2">'#a5fbd5'</span><span class="s1">,</span>
+<a name="l657"><span class="ln">657  </span></a>            <span class="s2">'pale violet'</span><span class="s1">: </span><span class="s2">'#ceaefa'</span><span class="s1">,</span>
+<a name="l658"><span class="ln">658  </span></a>            <span class="s2">'pale yellow'</span><span class="s1">: </span><span class="s2">'#ffff84'</span><span class="s1">,</span>
+<a name="l659"><span class="ln">659  </span></a>            <span class="s2">'parchment'</span><span class="s1">: </span><span class="s2">'#fefcaf'</span><span class="s1">,</span>
+<a name="l660"><span class="ln">660  </span></a>            <span class="s2">'pastel blue'</span><span class="s1">: </span><span class="s2">'#a2bffe'</span><span class="s1">,</span>
+<a name="l661"><span class="ln">661  </span></a>            <span class="s2">'pastel green'</span><span class="s1">: </span><span class="s2">'#b0ff9d'</span><span class="s1">,</span>
+<a name="l662"><span class="ln">662  </span></a>            <span class="s2">'pastel orange'</span><span class="s1">: </span><span class="s2">'#ff964f'</span><span class="s1">,</span>
+<a name="l663"><span class="ln">663  </span></a>            <span class="s2">'pastel pink'</span><span class="s1">: </span><span class="s2">'#ffbacd'</span><span class="s1">,</span>
+<a name="l664"><span class="ln">664  </span></a>            <span class="s2">'pastel purple'</span><span class="s1">: </span><span class="s2">'#caa0ff'</span><span class="s1">,</span>
+<a name="l665"><span class="ln">665  </span></a>            <span class="s2">'pastel red'</span><span class="s1">: </span><span class="s2">'#db5856'</span><span class="s1">,</span>
+<a name="l666"><span class="ln">666  </span></a>            <span class="s2">'pastel yellow'</span><span class="s1">: </span><span class="s2">'#fffe71'</span><span class="s1">,</span>
+<a name="l667"><span class="ln">667  </span></a>            <span class="s2">'pea'</span><span class="s1">: </span><span class="s2">'#a4bf20'</span><span class="s1">,</span>
+<a name="l668"><span class="ln">668  </span></a>            <span class="s2">'pea green'</span><span class="s1">: </span><span class="s2">'#8eab12'</span><span class="s1">,</span>
+<a name="l669"><span class="ln">669  </span></a>            <span class="s2">'pea soup'</span><span class="s1">: </span><span class="s2">'#929901'</span><span class="s1">,</span>
+<a name="l670"><span class="ln">670  </span></a>            <span class="s2">'pea soup green'</span><span class="s1">: </span><span class="s2">'#94a617'</span><span class="s1">,</span>
+<a name="l671"><span class="ln">671  </span></a>            <span class="s2">'peach'</span><span class="s1">: </span><span class="s2">'#ffb07c'</span><span class="s1">,</span>
+<a name="l672"><span class="ln">672  </span></a>            <span class="s2">'peachy pink'</span><span class="s1">: </span><span class="s2">'#ff9a8a'</span><span class="s1">,</span>
+<a name="l673"><span class="ln">673  </span></a>            <span class="s2">'peacock blue'</span><span class="s1">: </span><span class="s2">'#016795'</span><span class="s1">,</span>
+<a name="l674"><span class="ln">674  </span></a>            <span class="s2">'pear'</span><span class="s1">: </span><span class="s2">'#cbf85f'</span><span class="s1">,</span>
+<a name="l675"><span class="ln">675  </span></a>            <span class="s2">'periwinkle'</span><span class="s1">: </span><span class="s2">'#8e82fe'</span><span class="s1">,</span>
+<a name="l676"><span class="ln">676  </span></a>            <span class="s2">'periwinkle blue'</span><span class="s1">: </span><span class="s2">'#8f99fb'</span><span class="s1">,</span>
+<a name="l677"><span class="ln">677  </span></a>            <span class="s2">'perrywinkle'</span><span class="s1">: </span><span class="s2">'#8f8ce7'</span><span class="s1">,</span>
+<a name="l678"><span class="ln">678  </span></a>            <span class="s2">'petrol'</span><span class="s1">: </span><span class="s2">'#005f6a'</span><span class="s1">,</span>
+<a name="l679"><span class="ln">679  </span></a>            <span class="s2">'pig pink'</span><span class="s1">: </span><span class="s2">'#e78ea5'</span><span class="s1">,</span>
+<a name="l680"><span class="ln">680  </span></a>            <span class="s2">'pine'</span><span class="s1">: </span><span class="s2">'#2b5d34'</span><span class="s1">,</span>
+<a name="l681"><span class="ln">681  </span></a>            <span class="s2">'pine green'</span><span class="s1">: </span><span class="s2">'#0a481e'</span><span class="s1">,</span>
+<a name="l682"><span class="ln">682  </span></a>            <span class="s2">'pink'</span><span class="s1">: </span><span class="s2">'#ff81c0'</span><span class="s1">,</span>
+<a name="l683"><span class="ln">683  </span></a>            <span class="s2">'pink purple'</span><span class="s1">: </span><span class="s2">'#db4bda'</span><span class="s1">,</span>
+<a name="l684"><span class="ln">684  </span></a>            <span class="s2">'pink red'</span><span class="s1">: </span><span class="s2">'#f5054f'</span><span class="s1">,</span>
+<a name="l685"><span class="ln">685  </span></a>            <span class="s2">'pink/purple'</span><span class="s1">: </span><span class="s2">'#ef1de7'</span><span class="s1">,</span>
+<a name="l686"><span class="ln">686  </span></a>            <span class="s2">'pinkish'</span><span class="s1">: </span><span class="s2">'#d46a7e'</span><span class="s1">,</span>
+<a name="l687"><span class="ln">687  </span></a>            <span class="s2">'pinkish brown'</span><span class="s1">: </span><span class="s2">'#b17261'</span><span class="s1">,</span>
+<a name="l688"><span class="ln">688  </span></a>            <span class="s2">'pinkish grey'</span><span class="s1">: </span><span class="s2">'#c8aca9'</span><span class="s1">,</span>
+<a name="l689"><span class="ln">689  </span></a>            <span class="s2">'pinkish orange'</span><span class="s1">: </span><span class="s2">'#ff724c'</span><span class="s1">,</span>
+<a name="l690"><span class="ln">690  </span></a>            <span class="s2">'pinkish purple'</span><span class="s1">: </span><span class="s2">'#d648d7'</span><span class="s1">,</span>
+<a name="l691"><span class="ln">691  </span></a>            <span class="s2">'pinkish red'</span><span class="s1">: </span><span class="s2">'#f10c45'</span><span class="s1">,</span>
+<a name="l692"><span class="ln">692  </span></a>            <span class="s2">'pinkish tan'</span><span class="s1">: </span><span class="s2">'#d99b82'</span><span class="s1">,</span>
+<a name="l693"><span class="ln">693  </span></a>            <span class="s2">'pinky'</span><span class="s1">: </span><span class="s2">'#fc86aa'</span><span class="s1">,</span>
+<a name="l694"><span class="ln">694  </span></a>            <span class="s2">'pinky purple'</span><span class="s1">: </span><span class="s2">'#c94cbe'</span><span class="s1">,</span>
+<a name="l695"><span class="ln">695  </span></a>            <span class="s2">'pinky red'</span><span class="s1">: </span><span class="s2">'#fc2647'</span><span class="s1">,</span>
+<a name="l696"><span class="ln">696  </span></a>            <span class="s2">'piss yellow'</span><span class="s1">: </span><span class="s2">'#ddd618'</span><span class="s1">,</span>
+<a name="l697"><span class="ln">697  </span></a>            <span class="s2">'pistachio'</span><span class="s1">: </span><span class="s2">'#c0fa8b'</span><span class="s1">,</span>
+<a name="l698"><span class="ln">698  </span></a>            <span class="s2">'plum'</span><span class="s1">: </span><span class="s2">'#580f41'</span><span class="s1">,</span>
+<a name="l699"><span class="ln">699  </span></a>            <span class="s2">'plum purple'</span><span class="s1">: </span><span class="s2">'#4e0550'</span><span class="s1">,</span>
+<a name="l700"><span class="ln">700  </span></a>            <span class="s2">'poison green'</span><span class="s1">: </span><span class="s2">'#40fd14'</span><span class="s1">,</span>
+<a name="l701"><span class="ln">701  </span></a>            <span class="s2">'poo'</span><span class="s1">: </span><span class="s2">'#8f7303'</span><span class="s1">,</span>
+<a name="l702"><span class="ln">702  </span></a>            <span class="s2">'poo brown'</span><span class="s1">: </span><span class="s2">'#885f01'</span><span class="s1">,</span>
+<a name="l703"><span class="ln">703  </span></a>            <span class="s2">'poop'</span><span class="s1">: </span><span class="s2">'#7f5e00'</span><span class="s1">,</span>
+<a name="l704"><span class="ln">704  </span></a>            <span class="s2">'poop brown'</span><span class="s1">: </span><span class="s2">'#7a5901'</span><span class="s1">,</span>
+<a name="l705"><span class="ln">705  </span></a>            <span class="s2">'poop green'</span><span class="s1">: </span><span class="s2">'#6f7c00'</span><span class="s1">,</span>
+<a name="l706"><span class="ln">706  </span></a>            <span class="s2">'powder blue'</span><span class="s1">: </span><span class="s2">'#b1d1fc'</span><span class="s1">,</span>
+<a name="l707"><span class="ln">707  </span></a>            <span class="s2">'powder pink'</span><span class="s1">: </span><span class="s2">'#ffb2d0'</span><span class="s1">,</span>
+<a name="l708"><span class="ln">708  </span></a>            <span class="s2">'primary blue'</span><span class="s1">: </span><span class="s2">'#0804f9'</span><span class="s1">,</span>
+<a name="l709"><span class="ln">709  </span></a>            <span class="s2">'prussian blue'</span><span class="s1">: </span><span class="s2">'#004577'</span><span class="s1">,</span>
+<a name="l710"><span class="ln">710  </span></a>            <span class="s2">'puce'</span><span class="s1">: </span><span class="s2">'#a57e52'</span><span class="s1">,</span>
+<a name="l711"><span class="ln">711  </span></a>            <span class="s2">'puke'</span><span class="s1">: </span><span class="s2">'#a5a502'</span><span class="s1">,</span>
+<a name="l712"><span class="ln">712  </span></a>            <span class="s2">'puke brown'</span><span class="s1">: </span><span class="s2">'#947706'</span><span class="s1">,</span>
+<a name="l713"><span class="ln">713  </span></a>            <span class="s2">'puke green'</span><span class="s1">: </span><span class="s2">'#9aae07'</span><span class="s1">,</span>
+<a name="l714"><span class="ln">714  </span></a>            <span class="s2">'puke yellow'</span><span class="s1">: </span><span class="s2">'#c2be0e'</span><span class="s1">,</span>
+<a name="l715"><span class="ln">715  </span></a>            <span class="s2">'pumpkin'</span><span class="s1">: </span><span class="s2">'#e17701'</span><span class="s1">,</span>
+<a name="l716"><span class="ln">716  </span></a>            <span class="s2">'pumpkin orange'</span><span class="s1">: </span><span class="s2">'#fb7d07'</span><span class="s1">,</span>
+<a name="l717"><span class="ln">717  </span></a>            <span class="s2">'pure blue'</span><span class="s1">: </span><span class="s2">'#0203e2'</span><span class="s1">,</span>
+<a name="l718"><span class="ln">718  </span></a>            <span class="s2">'purple'</span><span class="s1">: </span><span class="s2">'#7e1e9c'</span><span class="s1">,</span>
+<a name="l719"><span class="ln">719  </span></a>            <span class="s2">'purple blue'</span><span class="s1">: </span><span class="s2">'#632de9'</span><span class="s1">,</span>
+<a name="l720"><span class="ln">720  </span></a>            <span class="s2">'purple brown'</span><span class="s1">: </span><span class="s2">'#673a3f'</span><span class="s1">,</span>
+<a name="l721"><span class="ln">721  </span></a>            <span class="s2">'purple grey'</span><span class="s1">: </span><span class="s2">'#866f85'</span><span class="s1">,</span>
+<a name="l722"><span class="ln">722  </span></a>            <span class="s2">'purple pink'</span><span class="s1">: </span><span class="s2">'#e03fd8'</span><span class="s1">,</span>
+<a name="l723"><span class="ln">723  </span></a>            <span class="s2">'purple red'</span><span class="s1">: </span><span class="s2">'#990147'</span><span class="s1">,</span>
+<a name="l724"><span class="ln">724  </span></a>            <span class="s2">'purple/blue'</span><span class="s1">: </span><span class="s2">'#5d21d0'</span><span class="s1">,</span>
+<a name="l725"><span class="ln">725  </span></a>            <span class="s2">'purple/pink'</span><span class="s1">: </span><span class="s2">'#d725de'</span><span class="s1">,</span>
+<a name="l726"><span class="ln">726  </span></a>            <span class="s2">'purpleish'</span><span class="s1">: </span><span class="s2">'#98568d'</span><span class="s1">,</span>
+<a name="l727"><span class="ln">727  </span></a>            <span class="s2">'purpleish blue'</span><span class="s1">: </span><span class="s2">'#6140ef'</span><span class="s1">,</span>
+<a name="l728"><span class="ln">728  </span></a>            <span class="s2">'purpleish pink'</span><span class="s1">: </span><span class="s2">'#df4ec8'</span><span class="s1">,</span>
+<a name="l729"><span class="ln">729  </span></a>            <span class="s2">'purpley'</span><span class="s1">: </span><span class="s2">'#8756e4'</span><span class="s1">,</span>
+<a name="l730"><span class="ln">730  </span></a>            <span class="s2">'purpley blue'</span><span class="s1">: </span><span class="s2">'#5f34e7'</span><span class="s1">,</span>
+<a name="l731"><span class="ln">731  </span></a>            <span class="s2">'purpley grey'</span><span class="s1">: </span><span class="s2">'#947e94'</span><span class="s1">,</span>
+<a name="l732"><span class="ln">732  </span></a>            <span class="s2">'purpley pink'</span><span class="s1">: </span><span class="s2">'#c83cb9'</span><span class="s1">,</span>
+<a name="l733"><span class="ln">733  </span></a>            <span class="s2">'purplish'</span><span class="s1">: </span><span class="s2">'#94568c'</span><span class="s1">,</span>
+<a name="l734"><span class="ln">734  </span></a>            <span class="s2">'purplish blue'</span><span class="s1">: </span><span class="s2">'#601ef9'</span><span class="s1">,</span>
+<a name="l735"><span class="ln">735  </span></a>            <span class="s2">'purplish brown'</span><span class="s1">: </span><span class="s2">'#6b4247'</span><span class="s1">,</span>
+<a name="l736"><span class="ln">736  </span></a>            <span class="s2">'purplish grey'</span><span class="s1">: </span><span class="s2">'#7a687f'</span><span class="s1">,</span>
+<a name="l737"><span class="ln">737  </span></a>            <span class="s2">'purplish pink'</span><span class="s1">: </span><span class="s2">'#ce5dae'</span><span class="s1">,</span>
+<a name="l738"><span class="ln">738  </span></a>            <span class="s2">'purplish red'</span><span class="s1">: </span><span class="s2">'#b0054b'</span><span class="s1">,</span>
+<a name="l739"><span class="ln">739  </span></a>            <span class="s2">'purply'</span><span class="s1">: </span><span class="s2">'#983fb2'</span><span class="s1">,</span>
+<a name="l740"><span class="ln">740  </span></a>            <span class="s2">'purply blue'</span><span class="s1">: </span><span class="s2">'#661aee'</span><span class="s1">,</span>
+<a name="l741"><span class="ln">741  </span></a>            <span class="s2">'purply pink'</span><span class="s1">: </span><span class="s2">'#f075e6'</span><span class="s1">,</span>
+<a name="l742"><span class="ln">742  </span></a>            <span class="s2">'putty'</span><span class="s1">: </span><span class="s2">'#beae8a'</span><span class="s1">,</span>
+<a name="l743"><span class="ln">743  </span></a>            <span class="s2">'racing green'</span><span class="s1">: </span><span class="s2">'#014600'</span><span class="s1">,</span>
+<a name="l744"><span class="ln">744  </span></a>            <span class="s2">'radioactive green'</span><span class="s1">: </span><span class="s2">'#2cfa1f'</span><span class="s1">,</span>
+<a name="l745"><span class="ln">745  </span></a>            <span class="s2">'raspberry'</span><span class="s1">: </span><span class="s2">'#b00149'</span><span class="s1">,</span>
+<a name="l746"><span class="ln">746  </span></a>            <span class="s2">'raw sienna'</span><span class="s1">: </span><span class="s2">'#9a6200'</span><span class="s1">,</span>
+<a name="l747"><span class="ln">747  </span></a>            <span class="s2">'raw umber'</span><span class="s1">: </span><span class="s2">'#a75e09'</span><span class="s1">,</span>
+<a name="l748"><span class="ln">748  </span></a>            <span class="s2">'really light blue'</span><span class="s1">: </span><span class="s2">'#d4ffff'</span><span class="s1">,</span>
+<a name="l749"><span class="ln">749  </span></a>            <span class="s2">'red'</span><span class="s1">: </span><span class="s2">'#e50000'</span><span class="s1">,</span>
+<a name="l750"><span class="ln">750  </span></a>            <span class="s2">'red brown'</span><span class="s1">: </span><span class="s2">'#8b2e16'</span><span class="s1">,</span>
+<a name="l751"><span class="ln">751  </span></a>            <span class="s2">'red orange'</span><span class="s1">: </span><span class="s2">'#fd3c06'</span><span class="s1">,</span>
+<a name="l752"><span class="ln">752  </span></a>            <span class="s2">'red pink'</span><span class="s1">: </span><span class="s2">'#fa2a55'</span><span class="s1">,</span>
+<a name="l753"><span class="ln">753  </span></a>            <span class="s2">'red purple'</span><span class="s1">: </span><span class="s2">'#820747'</span><span class="s1">,</span>
+<a name="l754"><span class="ln">754  </span></a>            <span class="s2">'red violet'</span><span class="s1">: </span><span class="s2">'#9e0168'</span><span class="s1">,</span>
+<a name="l755"><span class="ln">755  </span></a>            <span class="s2">'red wine'</span><span class="s1">: </span><span class="s2">'#8c0034'</span><span class="s1">,</span>
+<a name="l756"><span class="ln">756  </span></a>            <span class="s2">'reddish'</span><span class="s1">: </span><span class="s2">'#c44240'</span><span class="s1">,</span>
+<a name="l757"><span class="ln">757  </span></a>            <span class="s2">'reddish brown'</span><span class="s1">: </span><span class="s2">'#7f2b0a'</span><span class="s1">,</span>
+<a name="l758"><span class="ln">758  </span></a>            <span class="s2">'reddish grey'</span><span class="s1">: </span><span class="s2">'#997570'</span><span class="s1">,</span>
+<a name="l759"><span class="ln">759  </span></a>            <span class="s2">'reddish orange'</span><span class="s1">: </span><span class="s2">'#f8481c'</span><span class="s1">,</span>
+<a name="l760"><span class="ln">760  </span></a>            <span class="s2">'reddish pink'</span><span class="s1">: </span><span class="s2">'#fe2c54'</span><span class="s1">,</span>
+<a name="l761"><span class="ln">761  </span></a>            <span class="s2">'reddish purple'</span><span class="s1">: </span><span class="s2">'#910951'</span><span class="s1">,</span>
+<a name="l762"><span class="ln">762  </span></a>            <span class="s2">'reddy brown'</span><span class="s1">: </span><span class="s2">'#6e1005'</span><span class="s1">,</span>
+<a name="l763"><span class="ln">763  </span></a>            <span class="s2">'rich blue'</span><span class="s1">: </span><span class="s2">'#021bf9'</span><span class="s1">,</span>
+<a name="l764"><span class="ln">764  </span></a>            <span class="s2">'rich purple'</span><span class="s1">: </span><span class="s2">'#720058'</span><span class="s1">,</span>
+<a name="l765"><span class="ln">765  </span></a>            <span class="s2">'robin egg blue'</span><span class="s1">: </span><span class="s2">'#8af1fe'</span><span class="s1">,</span>
+<a name="l766"><span class="ln">766  </span></a>            <span class="s2">&quot;robin's egg&quot;</span><span class="s1">: </span><span class="s2">'#6dedfd'</span><span class="s1">,</span>
+<a name="l767"><span class="ln">767  </span></a>            <span class="s2">&quot;robin's egg blue&quot;</span><span class="s1">: </span><span class="s2">'#98eff9'</span><span class="s1">,</span>
+<a name="l768"><span class="ln">768  </span></a>            <span class="s2">'rosa'</span><span class="s1">: </span><span class="s2">'#fe86a4'</span><span class="s1">,</span>
+<a name="l769"><span class="ln">769  </span></a>            <span class="s2">'rose'</span><span class="s1">: </span><span class="s2">'#cf6275'</span><span class="s1">,</span>
+<a name="l770"><span class="ln">770  </span></a>            <span class="s2">'rose pink'</span><span class="s1">: </span><span class="s2">'#f7879a'</span><span class="s1">,</span>
+<a name="l771"><span class="ln">771  </span></a>            <span class="s2">'rose red'</span><span class="s1">: </span><span class="s2">'#be013c'</span><span class="s1">,</span>
+<a name="l772"><span class="ln">772  </span></a>            <span class="s2">'rosy pink'</span><span class="s1">: </span><span class="s2">'#f6688e'</span><span class="s1">,</span>
+<a name="l773"><span class="ln">773  </span></a>            <span class="s2">'rouge'</span><span class="s1">: </span><span class="s2">'#ab1239'</span><span class="s1">,</span>
+<a name="l774"><span class="ln">774  </span></a>            <span class="s2">'royal'</span><span class="s1">: </span><span class="s2">'#0c1793'</span><span class="s1">,</span>
+<a name="l775"><span class="ln">775  </span></a>            <span class="s2">'royal blue'</span><span class="s1">: </span><span class="s2">'#0504aa'</span><span class="s1">,</span>
+<a name="l776"><span class="ln">776  </span></a>            <span class="s2">'royal purple'</span><span class="s1">: </span><span class="s2">'#4b006e'</span><span class="s1">,</span>
+<a name="l777"><span class="ln">777  </span></a>            <span class="s2">'ruby'</span><span class="s1">: </span><span class="s2">'#ca0147'</span><span class="s1">,</span>
+<a name="l778"><span class="ln">778  </span></a>            <span class="s2">'russet'</span><span class="s1">: </span><span class="s2">'#a13905'</span><span class="s1">,</span>
+<a name="l779"><span class="ln">779  </span></a>            <span class="s2">'rust'</span><span class="s1">: </span><span class="s2">'#a83c09'</span><span class="s1">,</span>
+<a name="l780"><span class="ln">780  </span></a>            <span class="s2">'rust brown'</span><span class="s1">: </span><span class="s2">'#8b3103'</span><span class="s1">,</span>
+<a name="l781"><span class="ln">781  </span></a>            <span class="s2">'rust orange'</span><span class="s1">: </span><span class="s2">'#c45508'</span><span class="s1">,</span>
+<a name="l782"><span class="ln">782  </span></a>            <span class="s2">'rust red'</span><span class="s1">: </span><span class="s2">'#aa2704'</span><span class="s1">,</span>
+<a name="l783"><span class="ln">783  </span></a>            <span class="s2">'rusty orange'</span><span class="s1">: </span><span class="s2">'#cd5909'</span><span class="s1">,</span>
+<a name="l784"><span class="ln">784  </span></a>            <span class="s2">'rusty red'</span><span class="s1">: </span><span class="s2">'#af2f0d'</span><span class="s1">,</span>
+<a name="l785"><span class="ln">785  </span></a>            <span class="s2">'saffron'</span><span class="s1">: </span><span class="s2">'#feb209'</span><span class="s1">,</span>
+<a name="l786"><span class="ln">786  </span></a>            <span class="s2">'sage'</span><span class="s1">: </span><span class="s2">'#87ae73'</span><span class="s1">,</span>
+<a name="l787"><span class="ln">787  </span></a>            <span class="s2">'sage green'</span><span class="s1">: </span><span class="s2">'#88b378'</span><span class="s1">,</span>
+<a name="l788"><span class="ln">788  </span></a>            <span class="s2">'salmon'</span><span class="s1">: </span><span class="s2">'#ff796c'</span><span class="s1">,</span>
+<a name="l789"><span class="ln">789  </span></a>            <span class="s2">'salmon pink'</span><span class="s1">: </span><span class="s2">'#fe7b7c'</span><span class="s1">,</span>
+<a name="l790"><span class="ln">790  </span></a>            <span class="s2">'sand'</span><span class="s1">: </span><span class="s2">'#e2ca76'</span><span class="s1">,</span>
+<a name="l791"><span class="ln">791  </span></a>            <span class="s2">'sand brown'</span><span class="s1">: </span><span class="s2">'#cba560'</span><span class="s1">,</span>
+<a name="l792"><span class="ln">792  </span></a>            <span class="s2">'sand yellow'</span><span class="s1">: </span><span class="s2">'#fce166'</span><span class="s1">,</span>
+<a name="l793"><span class="ln">793  </span></a>            <span class="s2">'sandstone'</span><span class="s1">: </span><span class="s2">'#c9ae74'</span><span class="s1">,</span>
+<a name="l794"><span class="ln">794  </span></a>            <span class="s2">'sandy'</span><span class="s1">: </span><span class="s2">'#f1da7a'</span><span class="s1">,</span>
+<a name="l795"><span class="ln">795  </span></a>            <span class="s2">'sandy brown'</span><span class="s1">: </span><span class="s2">'#c4a661'</span><span class="s1">,</span>
+<a name="l796"><span class="ln">796  </span></a>            <span class="s2">'sandy yellow'</span><span class="s1">: </span><span class="s2">'#fdee73'</span><span class="s1">,</span>
+<a name="l797"><span class="ln">797  </span></a>            <span class="s2">'sap green'</span><span class="s1">: </span><span class="s2">'#5c8b15'</span><span class="s1">,</span>
+<a name="l798"><span class="ln">798  </span></a>            <span class="s2">'sapphire'</span><span class="s1">: </span><span class="s2">'#2138ab'</span><span class="s1">,</span>
+<a name="l799"><span class="ln">799  </span></a>            <span class="s2">'scarlet'</span><span class="s1">: </span><span class="s2">'#be0119'</span><span class="s1">,</span>
+<a name="l800"><span class="ln">800  </span></a>            <span class="s2">'sea'</span><span class="s1">: </span><span class="s2">'#3c9992'</span><span class="s1">,</span>
+<a name="l801"><span class="ln">801  </span></a>            <span class="s2">'sea blue'</span><span class="s1">: </span><span class="s2">'#047495'</span><span class="s1">,</span>
+<a name="l802"><span class="ln">802  </span></a>            <span class="s2">'sea green'</span><span class="s1">: </span><span class="s2">'#53fca1'</span><span class="s1">,</span>
+<a name="l803"><span class="ln">803  </span></a>            <span class="s2">'seafoam'</span><span class="s1">: </span><span class="s2">'#80f9ad'</span><span class="s1">,</span>
+<a name="l804"><span class="ln">804  </span></a>            <span class="s2">'seafoam blue'</span><span class="s1">: </span><span class="s2">'#78d1b6'</span><span class="s1">,</span>
+<a name="l805"><span class="ln">805  </span></a>            <span class="s2">'seafoam green'</span><span class="s1">: </span><span class="s2">'#7af9ab'</span><span class="s1">,</span>
+<a name="l806"><span class="ln">806  </span></a>            <span class="s2">'seaweed'</span><span class="s1">: </span><span class="s2">'#18d17b'</span><span class="s1">,</span>
+<a name="l807"><span class="ln">807  </span></a>            <span class="s2">'seaweed green'</span><span class="s1">: </span><span class="s2">'#35ad6b'</span><span class="s1">,</span>
+<a name="l808"><span class="ln">808  </span></a>            <span class="s2">'sepia'</span><span class="s1">: </span><span class="s2">'#985e2b'</span><span class="s1">,</span>
+<a name="l809"><span class="ln">809  </span></a>            <span class="s2">'shamrock'</span><span class="s1">: </span><span class="s2">'#01b44c'</span><span class="s1">,</span>
+<a name="l810"><span class="ln">810  </span></a>            <span class="s2">'shamrock green'</span><span class="s1">: </span><span class="s2">'#02c14d'</span><span class="s1">,</span>
+<a name="l811"><span class="ln">811  </span></a>            <span class="s2">'shit'</span><span class="s1">: </span><span class="s2">'#7f5f00'</span><span class="s1">,</span>
+<a name="l812"><span class="ln">812  </span></a>            <span class="s2">'shit brown'</span><span class="s1">: </span><span class="s2">'#7b5804'</span><span class="s1">,</span>
+<a name="l813"><span class="ln">813  </span></a>            <span class="s2">'shit green'</span><span class="s1">: </span><span class="s2">'#758000'</span><span class="s1">,</span>
+<a name="l814"><span class="ln">814  </span></a>            <span class="s2">'shocking pink'</span><span class="s1">: </span><span class="s2">'#fe02a2'</span><span class="s1">,</span>
+<a name="l815"><span class="ln">815  </span></a>            <span class="s2">'sick green'</span><span class="s1">: </span><span class="s2">'#9db92c'</span><span class="s1">,</span>
+<a name="l816"><span class="ln">816  </span></a>            <span class="s2">'sickly green'</span><span class="s1">: </span><span class="s2">'#94b21c'</span><span class="s1">,</span>
+<a name="l817"><span class="ln">817  </span></a>            <span class="s2">'sickly yellow'</span><span class="s1">: </span><span class="s2">'#d0e429'</span><span class="s1">,</span>
+<a name="l818"><span class="ln">818  </span></a>            <span class="s2">'sienna'</span><span class="s1">: </span><span class="s2">'#a9561e'</span><span class="s1">,</span>
+<a name="l819"><span class="ln">819  </span></a>            <span class="s2">'silver'</span><span class="s1">: </span><span class="s2">'#c5c9c7'</span><span class="s1">,</span>
+<a name="l820"><span class="ln">820  </span></a>            <span class="s2">'sky'</span><span class="s1">: </span><span class="s2">'#82cafc'</span><span class="s1">,</span>
+<a name="l821"><span class="ln">821  </span></a>            <span class="s2">'sky blue'</span><span class="s1">: </span><span class="s2">'#75bbfd'</span><span class="s1">,</span>
+<a name="l822"><span class="ln">822  </span></a>            <span class="s2">'slate'</span><span class="s1">: </span><span class="s2">'#516572'</span><span class="s1">,</span>
+<a name="l823"><span class="ln">823  </span></a>            <span class="s2">'slate blue'</span><span class="s1">: </span><span class="s2">'#5b7c99'</span><span class="s1">,</span>
+<a name="l824"><span class="ln">824  </span></a>            <span class="s2">'slate green'</span><span class="s1">: </span><span class="s2">'#658d6d'</span><span class="s1">,</span>
+<a name="l825"><span class="ln">825  </span></a>            <span class="s2">'slate grey'</span><span class="s1">: </span><span class="s2">'#59656d'</span><span class="s1">,</span>
+<a name="l826"><span class="ln">826  </span></a>            <span class="s2">'slime green'</span><span class="s1">: </span><span class="s2">'#99cc04'</span><span class="s1">,</span>
+<a name="l827"><span class="ln">827  </span></a>            <span class="s2">'snot'</span><span class="s1">: </span><span class="s2">'#acbb0d'</span><span class="s1">,</span>
+<a name="l828"><span class="ln">828  </span></a>            <span class="s2">'snot green'</span><span class="s1">: </span><span class="s2">'#9dc100'</span><span class="s1">,</span>
+<a name="l829"><span class="ln">829  </span></a>            <span class="s2">'soft blue'</span><span class="s1">: </span><span class="s2">'#6488ea'</span><span class="s1">,</span>
+<a name="l830"><span class="ln">830  </span></a>            <span class="s2">'soft green'</span><span class="s1">: </span><span class="s2">'#6fc276'</span><span class="s1">,</span>
+<a name="l831"><span class="ln">831  </span></a>            <span class="s2">'soft pink'</span><span class="s1">: </span><span class="s2">'#fdb0c0'</span><span class="s1">,</span>
+<a name="l832"><span class="ln">832  </span></a>            <span class="s2">'soft purple'</span><span class="s1">: </span><span class="s2">'#a66fb5'</span><span class="s1">,</span>
+<a name="l833"><span class="ln">833  </span></a>            <span class="s2">'spearmint'</span><span class="s1">: </span><span class="s2">'#1ef876'</span><span class="s1">,</span>
+<a name="l834"><span class="ln">834  </span></a>            <span class="s2">'spring green'</span><span class="s1">: </span><span class="s2">'#a9f971'</span><span class="s1">,</span>
+<a name="l835"><span class="ln">835  </span></a>            <span class="s2">'spruce'</span><span class="s1">: </span><span class="s2">'#0a5f38'</span><span class="s1">,</span>
+<a name="l836"><span class="ln">836  </span></a>            <span class="s2">'squash'</span><span class="s1">: </span><span class="s2">'#f2ab15'</span><span class="s1">,</span>
+<a name="l837"><span class="ln">837  </span></a>            <span class="s2">'steel'</span><span class="s1">: </span><span class="s2">'#738595'</span><span class="s1">,</span>
+<a name="l838"><span class="ln">838  </span></a>            <span class="s2">'steel blue'</span><span class="s1">: </span><span class="s2">'#5a7d9a'</span><span class="s1">,</span>
+<a name="l839"><span class="ln">839  </span></a>            <span class="s2">'steel grey'</span><span class="s1">: </span><span class="s2">'#6f828a'</span><span class="s1">,</span>
+<a name="l840"><span class="ln">840  </span></a>            <span class="s2">'stone'</span><span class="s1">: </span><span class="s2">'#ada587'</span><span class="s1">,</span>
+<a name="l841"><span class="ln">841  </span></a>            <span class="s2">'stormy blue'</span><span class="s1">: </span><span class="s2">'#507b9c'</span><span class="s1">,</span>
+<a name="l842"><span class="ln">842  </span></a>            <span class="s2">'straw'</span><span class="s1">: </span><span class="s2">'#fcf679'</span><span class="s1">,</span>
+<a name="l843"><span class="ln">843  </span></a>            <span class="s2">'strawberry'</span><span class="s1">: </span><span class="s2">'#fb2943'</span><span class="s1">,</span>
+<a name="l844"><span class="ln">844  </span></a>            <span class="s2">'strong blue'</span><span class="s1">: </span><span class="s2">'#0c06f7'</span><span class="s1">,</span>
+<a name="l845"><span class="ln">845  </span></a>            <span class="s2">'strong pink'</span><span class="s1">: </span><span class="s2">'#ff0789'</span><span class="s1">,</span>
+<a name="l846"><span class="ln">846  </span></a>            <span class="s2">'sun yellow'</span><span class="s1">: </span><span class="s2">'#ffdf22'</span><span class="s1">,</span>
+<a name="l847"><span class="ln">847  </span></a>            <span class="s2">'sunflower'</span><span class="s1">: </span><span class="s2">'#ffc512'</span><span class="s1">,</span>
+<a name="l848"><span class="ln">848  </span></a>            <span class="s2">'sunflower yellow'</span><span class="s1">: </span><span class="s2">'#ffda03'</span><span class="s1">,</span>
+<a name="l849"><span class="ln">849  </span></a>            <span class="s2">'sunny yellow'</span><span class="s1">: </span><span class="s2">'#fff917'</span><span class="s1">,</span>
+<a name="l850"><span class="ln">850  </span></a>            <span class="s2">'sunshine yellow'</span><span class="s1">: </span><span class="s2">'#fffd37'</span><span class="s1">,</span>
+<a name="l851"><span class="ln">851  </span></a>            <span class="s2">'swamp'</span><span class="s1">: </span><span class="s2">'#698339'</span><span class="s1">,</span>
+<a name="l852"><span class="ln">852  </span></a>            <span class="s2">'swamp green'</span><span class="s1">: </span><span class="s2">'#748500'</span><span class="s1">,</span>
+<a name="l853"><span class="ln">853  </span></a>            <span class="s2">'tan'</span><span class="s1">: </span><span class="s2">'#d1b26f'</span><span class="s1">,</span>
+<a name="l854"><span class="ln">854  </span></a>            <span class="s2">'tan brown'</span><span class="s1">: </span><span class="s2">'#ab7e4c'</span><span class="s1">,</span>
+<a name="l855"><span class="ln">855  </span></a>            <span class="s2">'tan green'</span><span class="s1">: </span><span class="s2">'#a9be70'</span><span class="s1">,</span>
+<a name="l856"><span class="ln">856  </span></a>            <span class="s2">'tangerine'</span><span class="s1">: </span><span class="s2">'#ff9408'</span><span class="s1">,</span>
+<a name="l857"><span class="ln">857  </span></a>            <span class="s2">'taupe'</span><span class="s1">: </span><span class="s2">'#b9a281'</span><span class="s1">,</span>
+<a name="l858"><span class="ln">858  </span></a>            <span class="s2">'tea'</span><span class="s1">: </span><span class="s2">'#65ab7c'</span><span class="s1">,</span>
+<a name="l859"><span class="ln">859  </span></a>            <span class="s2">'tea green'</span><span class="s1">: </span><span class="s2">'#bdf8a3'</span><span class="s1">,</span>
+<a name="l860"><span class="ln">860  </span></a>            <span class="s2">'teal'</span><span class="s1">: </span><span class="s2">'#029386'</span><span class="s1">,</span>
+<a name="l861"><span class="ln">861  </span></a>            <span class="s2">'teal blue'</span><span class="s1">: </span><span class="s2">'#01889f'</span><span class="s1">,</span>
+<a name="l862"><span class="ln">862  </span></a>            <span class="s2">'teal green'</span><span class="s1">: </span><span class="s2">'#25a36f'</span><span class="s1">,</span>
+<a name="l863"><span class="ln">863  </span></a>            <span class="s2">'tealish'</span><span class="s1">: </span><span class="s2">'#24bca8'</span><span class="s1">,</span>
+<a name="l864"><span class="ln">864  </span></a>            <span class="s2">'tealish green'</span><span class="s1">: </span><span class="s2">'#0cdc73'</span><span class="s1">,</span>
+<a name="l865"><span class="ln">865  </span></a>            <span class="s2">'terra cotta'</span><span class="s1">: </span><span class="s2">'#c9643b'</span><span class="s1">,</span>
+<a name="l866"><span class="ln">866  </span></a>            <span class="s2">'terracota'</span><span class="s1">: </span><span class="s2">'#cb6843'</span><span class="s1">,</span>
+<a name="l867"><span class="ln">867  </span></a>            <span class="s2">'terracotta'</span><span class="s1">: </span><span class="s2">'#ca6641'</span><span class="s1">,</span>
+<a name="l868"><span class="ln">868  </span></a>            <span class="s2">'tiffany blue'</span><span class="s1">: </span><span class="s2">'#7bf2da'</span><span class="s1">,</span>
+<a name="l869"><span class="ln">869  </span></a>            <span class="s2">'tomato'</span><span class="s1">: </span><span class="s2">'#ef4026'</span><span class="s1">,</span>
+<a name="l870"><span class="ln">870  </span></a>            <span class="s2">'tomato red'</span><span class="s1">: </span><span class="s2">'#ec2d01'</span><span class="s1">,</span>
+<a name="l871"><span class="ln">871  </span></a>            <span class="s2">'topaz'</span><span class="s1">: </span><span class="s2">'#13bbaf'</span><span class="s1">,</span>
+<a name="l872"><span class="ln">872  </span></a>            <span class="s2">'toupe'</span><span class="s1">: </span><span class="s2">'#c7ac7d'</span><span class="s1">,</span>
+<a name="l873"><span class="ln">873  </span></a>            <span class="s2">'toxic green'</span><span class="s1">: </span><span class="s2">'#61de2a'</span><span class="s1">,</span>
+<a name="l874"><span class="ln">874  </span></a>            <span class="s2">'tree green'</span><span class="s1">: </span><span class="s2">'#2a7e19'</span><span class="s1">,</span>
+<a name="l875"><span class="ln">875  </span></a>            <span class="s2">'true blue'</span><span class="s1">: </span><span class="s2">'#010fcc'</span><span class="s1">,</span>
+<a name="l876"><span class="ln">876  </span></a>            <span class="s2">'true green'</span><span class="s1">: </span><span class="s2">'#089404'</span><span class="s1">,</span>
+<a name="l877"><span class="ln">877  </span></a>            <span class="s2">'turquoise'</span><span class="s1">: </span><span class="s2">'#06c2ac'</span><span class="s1">,</span>
+<a name="l878"><span class="ln">878  </span></a>            <span class="s2">'turquoise blue'</span><span class="s1">: </span><span class="s2">'#06b1c4'</span><span class="s1">,</span>
+<a name="l879"><span class="ln">879  </span></a>            <span class="s2">'turquoise green'</span><span class="s1">: </span><span class="s2">'#04f489'</span><span class="s1">,</span>
+<a name="l880"><span class="ln">880  </span></a>            <span class="s2">'turtle green'</span><span class="s1">: </span><span class="s2">'#75b84f'</span><span class="s1">,</span>
+<a name="l881"><span class="ln">881  </span></a>            <span class="s2">'twilight'</span><span class="s1">: </span><span class="s2">'#4e518b'</span><span class="s1">,</span>
+<a name="l882"><span class="ln">882  </span></a>            <span class="s2">'twilight blue'</span><span class="s1">: </span><span class="s2">'#0a437a'</span><span class="s1">,</span>
+<a name="l883"><span class="ln">883  </span></a>            <span class="s2">'ugly blue'</span><span class="s1">: </span><span class="s2">'#31668a'</span><span class="s1">,</span>
+<a name="l884"><span class="ln">884  </span></a>            <span class="s2">'ugly brown'</span><span class="s1">: </span><span class="s2">'#7d7103'</span><span class="s1">,</span>
+<a name="l885"><span class="ln">885  </span></a>            <span class="s2">'ugly green'</span><span class="s1">: </span><span class="s2">'#7a9703'</span><span class="s1">,</span>
+<a name="l886"><span class="ln">886  </span></a>            <span class="s2">'ugly pink'</span><span class="s1">: </span><span class="s2">'#cd7584'</span><span class="s1">,</span>
+<a name="l887"><span class="ln">887  </span></a>            <span class="s2">'ugly purple'</span><span class="s1">: </span><span class="s2">'#a442a0'</span><span class="s1">,</span>
+<a name="l888"><span class="ln">888  </span></a>            <span class="s2">'ugly yellow'</span><span class="s1">: </span><span class="s2">'#d0c101'</span><span class="s1">,</span>
+<a name="l889"><span class="ln">889  </span></a>            <span class="s2">'ultramarine'</span><span class="s1">: </span><span class="s2">'#2000b1'</span><span class="s1">,</span>
+<a name="l890"><span class="ln">890  </span></a>            <span class="s2">'ultramarine blue'</span><span class="s1">: </span><span class="s2">'#1805db'</span><span class="s1">,</span>
+<a name="l891"><span class="ln">891  </span></a>            <span class="s2">'umber'</span><span class="s1">: </span><span class="s2">'#b26400'</span><span class="s1">,</span>
+<a name="l892"><span class="ln">892  </span></a>            <span class="s2">'velvet'</span><span class="s1">: </span><span class="s2">'#750851'</span><span class="s1">,</span>
+<a name="l893"><span class="ln">893  </span></a>            <span class="s2">'vermillion'</span><span class="s1">: </span><span class="s2">'#f4320c'</span><span class="s1">,</span>
+<a name="l894"><span class="ln">894  </span></a>            <span class="s2">'very dark blue'</span><span class="s1">: </span><span class="s2">'#000133'</span><span class="s1">,</span>
+<a name="l895"><span class="ln">895  </span></a>            <span class="s2">'very dark brown'</span><span class="s1">: </span><span class="s2">'#1d0200'</span><span class="s1">,</span>
+<a name="l896"><span class="ln">896  </span></a>            <span class="s2">'very dark green'</span><span class="s1">: </span><span class="s2">'#062e03'</span><span class="s1">,</span>
+<a name="l897"><span class="ln">897  </span></a>            <span class="s2">'very dark purple'</span><span class="s1">: </span><span class="s2">'#2a0134'</span><span class="s1">,</span>
+<a name="l898"><span class="ln">898  </span></a>            <span class="s2">'very light blue'</span><span class="s1">: </span><span class="s2">'#d5ffff'</span><span class="s1">,</span>
+<a name="l899"><span class="ln">899  </span></a>            <span class="s2">'very light brown'</span><span class="s1">: </span><span class="s2">'#d3b683'</span><span class="s1">,</span>
+<a name="l900"><span class="ln">900  </span></a>            <span class="s2">'very light green'</span><span class="s1">: </span><span class="s2">'#d1ffbd'</span><span class="s1">,</span>
+<a name="l901"><span class="ln">901  </span></a>            <span class="s2">'very light pink'</span><span class="s1">: </span><span class="s2">'#fff4f2'</span><span class="s1">,</span>
+<a name="l902"><span class="ln">902  </span></a>            <span class="s2">'very light purple'</span><span class="s1">: </span><span class="s2">'#f6cefc'</span><span class="s1">,</span>
+<a name="l903"><span class="ln">903  </span></a>            <span class="s2">'very pale blue'</span><span class="s1">: </span><span class="s2">'#d6fffe'</span><span class="s1">,</span>
+<a name="l904"><span class="ln">904  </span></a>            <span class="s2">'very pale green'</span><span class="s1">: </span><span class="s2">'#cffdbc'</span><span class="s1">,</span>
+<a name="l905"><span class="ln">905  </span></a>            <span class="s2">'vibrant blue'</span><span class="s1">: </span><span class="s2">'#0339f8'</span><span class="s1">,</span>
+<a name="l906"><span class="ln">906  </span></a>            <span class="s2">'vibrant green'</span><span class="s1">: </span><span class="s2">'#0add08'</span><span class="s1">,</span>
+<a name="l907"><span class="ln">907  </span></a>            <span class="s2">'vibrant purple'</span><span class="s1">: </span><span class="s2">'#ad03de'</span><span class="s1">,</span>
+<a name="l908"><span class="ln">908  </span></a>            <span class="s2">'violet'</span><span class="s1">: </span><span class="s2">'#9a0eea'</span><span class="s1">,</span>
+<a name="l909"><span class="ln">909  </span></a>            <span class="s2">'violet blue'</span><span class="s1">: </span><span class="s2">'#510ac9'</span><span class="s1">,</span>
+<a name="l910"><span class="ln">910  </span></a>            <span class="s2">'violet pink'</span><span class="s1">: </span><span class="s2">'#fb5ffc'</span><span class="s1">,</span>
+<a name="l911"><span class="ln">911  </span></a>            <span class="s2">'violet red'</span><span class="s1">: </span><span class="s2">'#a50055'</span><span class="s1">,</span>
+<a name="l912"><span class="ln">912  </span></a>            <span class="s2">'viridian'</span><span class="s1">: </span><span class="s2">'#1e9167'</span><span class="s1">,</span>
+<a name="l913"><span class="ln">913  </span></a>            <span class="s2">'vivid blue'</span><span class="s1">: </span><span class="s2">'#152eff'</span><span class="s1">,</span>
+<a name="l914"><span class="ln">914  </span></a>            <span class="s2">'vivid green'</span><span class="s1">: </span><span class="s2">'#2fef10'</span><span class="s1">,</span>
+<a name="l915"><span class="ln">915  </span></a>            <span class="s2">'vivid purple'</span><span class="s1">: </span><span class="s2">'#9900fa'</span><span class="s1">,</span>
+<a name="l916"><span class="ln">916  </span></a>            <span class="s2">'vomit'</span><span class="s1">: </span><span class="s2">'#a2a415'</span><span class="s1">,</span>
+<a name="l917"><span class="ln">917  </span></a>            <span class="s2">'vomit green'</span><span class="s1">: </span><span class="s2">'#89a203'</span><span class="s1">,</span>
+<a name="l918"><span class="ln">918  </span></a>            <span class="s2">'vomit yellow'</span><span class="s1">: </span><span class="s2">'#c7c10c'</span><span class="s1">,</span>
+<a name="l919"><span class="ln">919  </span></a>            <span class="s2">'warm blue'</span><span class="s1">: </span><span class="s2">'#4b57db'</span><span class="s1">,</span>
+<a name="l920"><span class="ln">920  </span></a>            <span class="s2">'warm brown'</span><span class="s1">: </span><span class="s2">'#964e02'</span><span class="s1">,</span>
+<a name="l921"><span class="ln">921  </span></a>            <span class="s2">'warm grey'</span><span class="s1">: </span><span class="s2">'#978a84'</span><span class="s1">,</span>
+<a name="l922"><span class="ln">922  </span></a>            <span class="s2">'warm pink'</span><span class="s1">: </span><span class="s2">'#fb5581'</span><span class="s1">,</span>
+<a name="l923"><span class="ln">923  </span></a>            <span class="s2">'warm purple'</span><span class="s1">: </span><span class="s2">'#952e8f'</span><span class="s1">,</span>
+<a name="l924"><span class="ln">924  </span></a>            <span class="s2">'washed out green'</span><span class="s1">: </span><span class="s2">'#bcf5a6'</span><span class="s1">,</span>
+<a name="l925"><span class="ln">925  </span></a>            <span class="s2">'water blue'</span><span class="s1">: </span><span class="s2">'#0e87cc'</span><span class="s1">,</span>
+<a name="l926"><span class="ln">926  </span></a>            <span class="s2">'watermelon'</span><span class="s1">: </span><span class="s2">'#fd4659'</span><span class="s1">,</span>
+<a name="l927"><span class="ln">927  </span></a>            <span class="s2">'weird green'</span><span class="s1">: </span><span class="s2">'#3ae57f'</span><span class="s1">,</span>
+<a name="l928"><span class="ln">928  </span></a>            <span class="s2">'wheat'</span><span class="s1">: </span><span class="s2">'#fbdd7e'</span><span class="s1">,</span>
+<a name="l929"><span class="ln">929  </span></a>            <span class="s2">'white'</span><span class="s1">: </span><span class="s2">'#ffffff'</span><span class="s1">,</span>
+<a name="l930"><span class="ln">930  </span></a>            <span class="s2">'windows blue'</span><span class="s1">: </span><span class="s2">'#3778bf'</span><span class="s1">,</span>
+<a name="l931"><span class="ln">931  </span></a>            <span class="s2">'wine'</span><span class="s1">: </span><span class="s2">'#80013f'</span><span class="s1">,</span>
+<a name="l932"><span class="ln">932  </span></a>            <span class="s2">'wine red'</span><span class="s1">: </span><span class="s2">'#7b0323'</span><span class="s1">,</span>
+<a name="l933"><span class="ln">933  </span></a>            <span class="s2">'wintergreen'</span><span class="s1">: </span><span class="s2">'#20f986'</span><span class="s1">,</span>
+<a name="l934"><span class="ln">934  </span></a>            <span class="s2">'wisteria'</span><span class="s1">: </span><span class="s2">'#a87dc2'</span><span class="s1">,</span>
+<a name="l935"><span class="ln">935  </span></a>            <span class="s2">'yellow'</span><span class="s1">: </span><span class="s2">'#ffff14'</span><span class="s1">,</span>
+<a name="l936"><span class="ln">936  </span></a>            <span class="s2">'yellow brown'</span><span class="s1">: </span><span class="s2">'#b79400'</span><span class="s1">,</span>
+<a name="l937"><span class="ln">937  </span></a>            <span class="s2">'yellow green'</span><span class="s1">: </span><span class="s2">'#c0fb2d'</span><span class="s1">,</span>
+<a name="l938"><span class="ln">938  </span></a>            <span class="s2">'yellow ochre'</span><span class="s1">: </span><span class="s2">'#cb9d06'</span><span class="s1">,</span>
+<a name="l939"><span class="ln">939  </span></a>            <span class="s2">'yellow orange'</span><span class="s1">: </span><span class="s2">'#fcb001'</span><span class="s1">,</span>
+<a name="l940"><span class="ln">940  </span></a>            <span class="s2">'yellow tan'</span><span class="s1">: </span><span class="s2">'#ffe36e'</span><span class="s1">,</span>
+<a name="l941"><span class="ln">941  </span></a>            <span class="s2">'yellow/green'</span><span class="s1">: </span><span class="s2">'#c8fd3d'</span><span class="s1">,</span>
+<a name="l942"><span class="ln">942  </span></a>            <span class="s2">'yellowgreen'</span><span class="s1">: </span><span class="s2">'#bbf90f'</span><span class="s1">,</span>
+<a name="l943"><span class="ln">943  </span></a>            <span class="s2">'yellowish'</span><span class="s1">: </span><span class="s2">'#faee66'</span><span class="s1">,</span>
+<a name="l944"><span class="ln">944  </span></a>            <span class="s2">'yellowish brown'</span><span class="s1">: </span><span class="s2">'#9b7a01'</span><span class="s1">,</span>
+<a name="l945"><span class="ln">945  </span></a>            <span class="s2">'yellowish green'</span><span class="s1">: </span><span class="s2">'#b0dd16'</span><span class="s1">,</span>
+<a name="l946"><span class="ln">946  </span></a>            <span class="s2">'yellowish orange'</span><span class="s1">: </span><span class="s2">'#ffab0f'</span><span class="s1">,</span>
+<a name="l947"><span class="ln">947  </span></a>            <span class="s2">'yellowish tan'</span><span class="s1">: </span><span class="s2">'#fcfc81'</span><span class="s1">,</span>
+<a name="l948"><span class="ln">948  </span></a>            <span class="s2">'yellowy brown'</span><span class="s1">: </span><span class="s2">'#ae8b0c'</span><span class="s1">,</span>
+<a name="l949"><span class="ln">949  </span></a>            <span class="s2">'yellowy green'</span><span class="s1">: </span><span class="s2">'#bff128'</span><span class="s1">}</span>
+<a name="l950"><span class="ln">950  </span></a></pre>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<html>
+<head>
+<title>iterators.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+iterators.pyi</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">email</span><span class="s2">.</span><span class="s1">message </span><span class="s0">import </span><span class="s1">Message</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">Iterator</span><span class="s2">, </span><span class="s1">Optional</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">def </span><span class="s1">body_line_iterator</span><span class="s2">(</span><span class="s1">msg</span><span class="s2">: </span><span class="s1">Message</span><span class="s2">, </span><span class="s1">decode</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= ...) </span><span class="s1">-&gt; Iterator</span><span class="s2">[</span><span class="s1">str</span><span class="s2">]: ...</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">def </span><span class="s1">typed_subpart_iterator</span><span class="s2">(</span><span class="s1">msg</span><span class="s2">: </span><span class="s1">Message</span><span class="s2">, </span><span class="s1">maintype</span><span class="s2">: </span><span class="s1">str </span><span class="s2">= ..., </span><span class="s1">subtype</span><span class="s2">: </span><span class="s1">Optional</span><span class="s2">[</span><span class="s1">str</span><span class="s2">] = ...) </span><span class="s1">-&gt; Iterator</span><span class="s2">[</span><span class="s1">str</span><span class="s2">]: ...</span>
+<a name="l6"><span class="ln">6    </span></a></pre>
+</body>
+</html>

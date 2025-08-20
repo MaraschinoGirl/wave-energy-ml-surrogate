@@ -1,0 +1,132 @@
+<html>
+<head>
+<title>max_pooling2d.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+max_pooling2d.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">api_export </span><span class="s0">import </span><span class="s1">keras_export</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">layers</span><span class="s2">.</span><span class="s1">pooling</span><span class="s2">.</span><span class="s1">base_pooling </span><span class="s0">import </span><span class="s1">BasePooling</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s2">@</span><span class="s1">keras_export</span><span class="s2">([</span><span class="s3">&quot;keras.layers.MaxPooling2D&quot;</span><span class="s2">, </span><span class="s3">&quot;keras.layers.MaxPool2D&quot;</span><span class="s2">])</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">class </span><span class="s1">MaxPooling2D</span><span class="s2">(</span><span class="s1">BasePooling</span><span class="s2">):</span>
+<a name="l7"><span class="ln">7    </span></a>    <span class="s4">&quot;&quot;&quot;Max pooling operation for 2D spatial data. 
+<a name="l8"><span class="ln">8    </span></a> 
+<a name="l9"><span class="ln">9    </span></a>    Downsamples the input along its spatial dimensions (height and width) 
+<a name="l10"><span class="ln">10   </span></a>    by taking the maximum value over an input window 
+<a name="l11"><span class="ln">11   </span></a>    (of size defined by `pool_size`) for each channel of the input. 
+<a name="l12"><span class="ln">12   </span></a>    The window is shifted by `strides` along each dimension. 
+<a name="l13"><span class="ln">13   </span></a> 
+<a name="l14"><span class="ln">14   </span></a>    The resulting output when using the `&quot;valid&quot;` padding option has a spatial 
+<a name="l15"><span class="ln">15   </span></a>    shape (number of rows or columns) of: 
+<a name="l16"><span class="ln">16   </span></a>    `output_shape = math.floor((input_shape - pool_size) / strides) + 1` 
+<a name="l17"><span class="ln">17   </span></a>    (when `input_shape &gt;= pool_size`) 
+<a name="l18"><span class="ln">18   </span></a> 
+<a name="l19"><span class="ln">19   </span></a>    The resulting output shape when using the `&quot;same&quot;` padding option is: 
+<a name="l20"><span class="ln">20   </span></a>    `output_shape = math.floor((input_shape - 1) / strides) + 1` 
+<a name="l21"><span class="ln">21   </span></a> 
+<a name="l22"><span class="ln">22   </span></a>    Args: 
+<a name="l23"><span class="ln">23   </span></a>        pool_size: int or tuple of 2 integers, factors by which to downscale 
+<a name="l24"><span class="ln">24   </span></a>            (dim1, dim2). If only one integer is specified, the same 
+<a name="l25"><span class="ln">25   </span></a>            window length will be used for all dimensions. 
+<a name="l26"><span class="ln">26   </span></a>        strides: int or tuple of 2 integers, or None. Strides values. If None, 
+<a name="l27"><span class="ln">27   </span></a>            it will default to `pool_size`. If only one int is specified, the 
+<a name="l28"><span class="ln">28   </span></a>            same stride size will be used for all dimensions. 
+<a name="l29"><span class="ln">29   </span></a>        padding: string, either `&quot;valid&quot;` or `&quot;same&quot;` (case-insensitive). 
+<a name="l30"><span class="ln">30   </span></a>            `&quot;valid&quot;` means no padding. `&quot;same&quot;` results in padding evenly to 
+<a name="l31"><span class="ln">31   </span></a>            the left/right or up/down of the input such that output has the same 
+<a name="l32"><span class="ln">32   </span></a>            height/width dimension as the input. 
+<a name="l33"><span class="ln">33   </span></a>        data_format: string, either `&quot;channels_last&quot;` or `&quot;channels_first&quot;`. 
+<a name="l34"><span class="ln">34   </span></a>            The ordering of the dimensions in the inputs. `&quot;channels_last&quot;` 
+<a name="l35"><span class="ln">35   </span></a>            corresponds to inputs with shape `(batch, height, width, channels)` 
+<a name="l36"><span class="ln">36   </span></a>            while `&quot;channels_first&quot;` corresponds to inputs with shape 
+<a name="l37"><span class="ln">37   </span></a>            `(batch, channels, height, width)`. It defaults to the 
+<a name="l38"><span class="ln">38   </span></a>            `image_data_format` value found in your Keras config file at 
+<a name="l39"><span class="ln">39   </span></a>            `~/.keras/keras.json`. If you never set it, then it will be 
+<a name="l40"><span class="ln">40   </span></a>            `&quot;channels_last&quot;`. 
+<a name="l41"><span class="ln">41   </span></a> 
+<a name="l42"><span class="ln">42   </span></a>    Input shape: 
+<a name="l43"><span class="ln">43   </span></a> 
+<a name="l44"><span class="ln">44   </span></a>    - If `data_format=&quot;channels_last&quot;`: 
+<a name="l45"><span class="ln">45   </span></a>        4D tensor with shape `(batch_size, height, width, channels)`. 
+<a name="l46"><span class="ln">46   </span></a>    - If `data_format=&quot;channels_first&quot;`: 
+<a name="l47"><span class="ln">47   </span></a>        4D tensor with shape `(batch_size, channels, height, width)`. 
+<a name="l48"><span class="ln">48   </span></a> 
+<a name="l49"><span class="ln">49   </span></a>    Output shape: 
+<a name="l50"><span class="ln">50   </span></a> 
+<a name="l51"><span class="ln">51   </span></a>    - If `data_format=&quot;channels_last&quot;`: 
+<a name="l52"><span class="ln">52   </span></a>        4D tensor with shape 
+<a name="l53"><span class="ln">53   </span></a>        `(batch_size, pooled_height, pooled_width, channels)`. 
+<a name="l54"><span class="ln">54   </span></a>    - If `data_format=&quot;channels_first&quot;`: 
+<a name="l55"><span class="ln">55   </span></a>        4D tensor with shape 
+<a name="l56"><span class="ln">56   </span></a>        `(batch_size, channels, pooled_height, pooled_width)`. 
+<a name="l57"><span class="ln">57   </span></a> 
+<a name="l58"><span class="ln">58   </span></a>    Examples: 
+<a name="l59"><span class="ln">59   </span></a> 
+<a name="l60"><span class="ln">60   </span></a>    `strides=(1, 1)` and `padding=&quot;valid&quot;`: 
+<a name="l61"><span class="ln">61   </span></a> 
+<a name="l62"><span class="ln">62   </span></a>    &gt;&gt;&gt; x = np.array([[1., 2., 3.], 
+<a name="l63"><span class="ln">63   </span></a>    ...               [4., 5., 6.], 
+<a name="l64"><span class="ln">64   </span></a>    ...               [7., 8., 9.]]) 
+<a name="l65"><span class="ln">65   </span></a>    &gt;&gt;&gt; x = np.reshape(x, [1, 3, 3, 1]) 
+<a name="l66"><span class="ln">66   </span></a>    &gt;&gt;&gt; max_pool_2d = keras.layers.MaxPooling2D(pool_size=(2, 2), 
+<a name="l67"><span class="ln">67   </span></a>    ...    strides=(1, 1), padding=&quot;valid&quot;) 
+<a name="l68"><span class="ln">68   </span></a>    &gt;&gt;&gt; max_pool_2d(x) 
+<a name="l69"><span class="ln">69   </span></a> 
+<a name="l70"><span class="ln">70   </span></a>    `strides=(2, 2)` and `padding=&quot;valid&quot;`: 
+<a name="l71"><span class="ln">71   </span></a> 
+<a name="l72"><span class="ln">72   </span></a>    &gt;&gt;&gt; x = np.array([[1., 2., 3., 4.], 
+<a name="l73"><span class="ln">73   </span></a>    ...               [5., 6., 7., 8.], 
+<a name="l74"><span class="ln">74   </span></a>    ...               [9., 10., 11., 12.]]) 
+<a name="l75"><span class="ln">75   </span></a>    &gt;&gt;&gt; x = np.reshape(x, [1, 3, 4, 1]) 
+<a name="l76"><span class="ln">76   </span></a>    &gt;&gt;&gt; max_pool_2d = keras.layers.MaxPooling2D(pool_size=(2, 2), 
+<a name="l77"><span class="ln">77   </span></a>    ...    strides=(2, 2), padding=&quot;valid&quot;) 
+<a name="l78"><span class="ln">78   </span></a>    &gt;&gt;&gt; max_pool_2d(x) 
+<a name="l79"><span class="ln">79   </span></a> 
+<a name="l80"><span class="ln">80   </span></a>    `stride=(1, 1)` and `padding=&quot;same&quot;`: 
+<a name="l81"><span class="ln">81   </span></a> 
+<a name="l82"><span class="ln">82   </span></a>    &gt;&gt;&gt; x = np.array([[1., 2., 3.], 
+<a name="l83"><span class="ln">83   </span></a>    ...               [4., 5., 6.], 
+<a name="l84"><span class="ln">84   </span></a>    ...               [7., 8., 9.]]) 
+<a name="l85"><span class="ln">85   </span></a>    &gt;&gt;&gt; x = np.reshape(x, [1, 3, 3, 1]) 
+<a name="l86"><span class="ln">86   </span></a>    &gt;&gt;&gt; max_pool_2d = keras.layers.MaxPooling2D(pool_size=(2, 2), 
+<a name="l87"><span class="ln">87   </span></a>    ...    strides=(1, 1), padding=&quot;same&quot;) 
+<a name="l88"><span class="ln">88   </span></a>    &gt;&gt;&gt; max_pool_2d(x) 
+<a name="l89"><span class="ln">89   </span></a>    &quot;&quot;&quot;</span>
+<a name="l90"><span class="ln">90   </span></a>
+<a name="l91"><span class="ln">91   </span></a>    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span>
+<a name="l92"><span class="ln">92   </span></a>        <span class="s1">self</span><span class="s2">,</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s1">pool_size</span><span class="s2">=(</span><span class="s5">2</span><span class="s2">, </span><span class="s5">2</span><span class="s2">),</span>
+<a name="l94"><span class="ln">94   </span></a>        <span class="s1">strides</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l95"><span class="ln">95   </span></a>        <span class="s1">padding</span><span class="s2">=</span><span class="s3">&quot;valid&quot;</span><span class="s2">,</span>
+<a name="l96"><span class="ln">96   </span></a>        <span class="s1">data_format</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s1">name</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l98"><span class="ln">98   </span></a>        <span class="s2">**</span><span class="s1">kwargs</span><span class="s2">,</span>
+<a name="l99"><span class="ln">99   </span></a>    <span class="s2">):</span>
+<a name="l100"><span class="ln">100  </span></a>        <span class="s1">super</span><span class="s2">().</span><span class="s1">__init__</span><span class="s2">(</span>
+<a name="l101"><span class="ln">101  </span></a>            <span class="s1">pool_size</span><span class="s2">,</span>
+<a name="l102"><span class="ln">102  </span></a>            <span class="s1">strides</span><span class="s2">,</span>
+<a name="l103"><span class="ln">103  </span></a>            <span class="s1">pool_dimensions</span><span class="s2">=</span><span class="s5">2</span><span class="s2">,</span>
+<a name="l104"><span class="ln">104  </span></a>            <span class="s1">pool_mode</span><span class="s2">=</span><span class="s3">&quot;max&quot;</span><span class="s2">,</span>
+<a name="l105"><span class="ln">105  </span></a>            <span class="s1">padding</span><span class="s2">=</span><span class="s1">padding</span><span class="s2">,</span>
+<a name="l106"><span class="ln">106  </span></a>            <span class="s1">data_format</span><span class="s2">=</span><span class="s1">data_format</span><span class="s2">,</span>
+<a name="l107"><span class="ln">107  </span></a>            <span class="s1">name</span><span class="s2">=</span><span class="s1">name</span><span class="s2">,</span>
+<a name="l108"><span class="ln">108  </span></a>            <span class="s2">**</span><span class="s1">kwargs</span><span class="s2">,</span>
+<a name="l109"><span class="ln">109  </span></a>        <span class="s2">)</span>
+<a name="l110"><span class="ln">110  </span></a></pre>
+</body>
+</html>

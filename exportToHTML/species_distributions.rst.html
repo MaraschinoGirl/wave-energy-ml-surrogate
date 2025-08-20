@@ -1,0 +1,62 @@
+<html>
+<head>
+<title>species_distributions.rst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #6aab73;}
+.s2 { color: #2aacb8;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+species_distributions.rst</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">.. </span><span class="s1">_species_distribution_dataset:</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s2">Species distribution dataset 
+<a name="l4"><span class="ln">4    </span></a>---------------------------- 
+<a name="l5"><span class="ln">5    </span></a></span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">This dataset represents the geographic distribution of two species in Central and</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">South America. The two species are:</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s0">- </span><span class="s1">`&quot;Bradypus variegatus&quot; &lt;http://www.iucnredlist.org/details/3038/0&gt;`_ </span><span class="s0">,</span>
+<a name="l10"><span class="ln">10   </span></a>  <span class="s0">the Brown-throated Sloth.</span>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a><span class="s0">- </span><span class="s1">`&quot;Microryzomys minutus&quot; &lt;http://www.iucnredlist.org/details/13408/0&gt;`_ </span><span class="s0">,</span>
+<a name="l13"><span class="ln">13   </span></a>  <span class="s0">also known as the Forest Small Rice Rat, a rodent that lives in Peru,</span>
+<a name="l14"><span class="ln">14   </span></a>  <span class="s0">Colombia, Ecuador, Peru, and Venezuela.</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a><span class="s0">The dataset is not a typical dataset since a </span><span class="s3">:class:</span><span class="s4">`~sklearn.datasets.base.Bunch`</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s0">containing the attributes </span><span class="s4">`data` </span><span class="s0">and </span><span class="s4">`target` </span><span class="s0">is not returned. Instead, we have</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s0">information allowing to create a &quot;density&quot; map of the different species.</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s0">The grid for the map can be built using the attributes </span><span class="s4">`x_left_lower_corner`</span><span class="s0">,</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s4">`y_left_lower_corner`</span><span class="s0">, </span><span class="s4">`Nx`</span><span class="s0">, </span><span class="s4">`Ny` </span><span class="s0">and </span><span class="s4">`grid_size`</span><span class="s0">, which respectively correspond</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s0">to the x and y coordinates of the lower left corner of the grid, the number of</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s0">points along the x- and y-axis and the size of the step on the grid.</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a><span class="s0">The density at each location of the grid is contained in the </span><span class="s4">`coverage` </span><span class="s0">attribute.</span>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a><span class="s0">Finally, the </span><span class="s4">`train` </span><span class="s0">and </span><span class="s4">`test` </span><span class="s0">attributes contain information regarding the location</span>
+<a name="l28"><span class="ln">28   </span></a><span class="s0">of a species at a specific location.</span>
+<a name="l29"><span class="ln">29   </span></a>
+<a name="l30"><span class="ln">30   </span></a><span class="s0">The dataset is provided by Phillips et. al. (2006).</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a><span class="s0">.. </span><span class="s3">rubric:: </span><span class="s0">References</span>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a><span class="s0">* </span><span class="s1">`&quot;Maximum entropy modeling of species geographic distributions&quot; 
+<a name="l35"><span class="ln">35   </span></a>  &lt;http://rob.schapire.net/papers/ecolmod.pdf&gt;`_ </span><span class="s0">S. J. Phillips,</span>
+<a name="l36"><span class="ln">36   </span></a>  <span class="s0">R. P. Anderson, R. E. Schapire - Ecological Modelling, 190:231-259, 2006.</span>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a><span class="s0">.. </span><span class="s3">rubric:: </span><span class="s0">Examples</span>
+<a name="l39"><span class="ln">39   </span></a>
+<a name="l40"><span class="ln">40   </span></a><span class="s0">* </span><span class="s3">:ref:</span><span class="s4">`sphx_glr_auto_examples_applications_plot_species_distribution_modeling.py`</span>
+<a name="l41"><span class="ln">41   </span></a></pre>
+</body>
+</html>

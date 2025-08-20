@@ -1,0 +1,441 @@
+<html>
+<head>
+<title>isoparser.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.s7 { color: #a5c261;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+isoparser.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># -*- coding: utf-8 -*-</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s2">&quot;&quot;&quot; 
+<a name="l3"><span class="ln">3    </span></a>This module offers a parser for ISO-8601 strings 
+<a name="l4"><span class="ln">4    </span></a> 
+<a name="l5"><span class="ln">5    </span></a>It is intended to support all valid date, time and datetime formats per the 
+<a name="l6"><span class="ln">6    </span></a>ISO-8601 specification. 
+<a name="l7"><span class="ln">7    </span></a> 
+<a name="l8"><span class="ln">8    </span></a>..versionadded:: 2.7.0 
+<a name="l9"><span class="ln">9    </span></a>&quot;&quot;&quot;</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s3">from </span><span class="s1">datetime </span><span class="s3">import </span><span class="s1">datetime</span><span class="s4">, </span><span class="s1">timedelta</span><span class="s4">, </span><span class="s1">time</span><span class="s4">, </span><span class="s1">date</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s3">import </span><span class="s1">calendar</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s3">from </span><span class="s1">dateutil </span><span class="s3">import </span><span class="s1">tz</span>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a><span class="s3">from </span><span class="s1">functools </span><span class="s3">import </span><span class="s1">wraps</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a><span class="s3">import </span><span class="s1">re</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s3">import </span><span class="s1">six</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a><span class="s1">__all__ </span><span class="s4">= [</span><span class="s5">&quot;isoparse&quot;</span><span class="s4">, </span><span class="s5">&quot;isoparser&quot;</span><span class="s4">]</span>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a>
+<a name="l22"><span class="ln">22   </span></a><span class="s3">def </span><span class="s1">_takes_ascii</span><span class="s4">(</span><span class="s1">f</span><span class="s4">):</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s4">@</span><span class="s1">wraps</span><span class="s4">(</span><span class="s1">f</span><span class="s4">)</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s3">def </span><span class="s1">func</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">str_in</span><span class="s4">, *</span><span class="s1">args</span><span class="s4">, **</span><span class="s1">kwargs</span><span class="s4">):</span>
+<a name="l25"><span class="ln">25   </span></a>        <span class="s0"># If it's a stream, read the whole thing</span>
+<a name="l26"><span class="ln">26   </span></a>        <span class="s1">str_in </span><span class="s4">= </span><span class="s1">getattr</span><span class="s4">(</span><span class="s1">str_in</span><span class="s4">, </span><span class="s5">'read'</span><span class="s4">, </span><span class="s3">lambda</span><span class="s4">: </span><span class="s1">str_in</span><span class="s4">)()</span>
+<a name="l27"><span class="ln">27   </span></a>
+<a name="l28"><span class="ln">28   </span></a>        <span class="s0"># If it's unicode, turn it into bytes, since ISO-8601 only covers ASCII</span>
+<a name="l29"><span class="ln">29   </span></a>        <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">str_in</span><span class="s4">, </span><span class="s1">six</span><span class="s4">.</span><span class="s1">text_type</span><span class="s4">):</span>
+<a name="l30"><span class="ln">30   </span></a>            <span class="s0"># ASCII is the same in UTF-8</span>
+<a name="l31"><span class="ln">31   </span></a>            <span class="s3">try</span><span class="s4">:</span>
+<a name="l32"><span class="ln">32   </span></a>                <span class="s1">str_in </span><span class="s4">= </span><span class="s1">str_in</span><span class="s4">.</span><span class="s1">encode</span><span class="s4">(</span><span class="s5">'ascii'</span><span class="s4">)</span>
+<a name="l33"><span class="ln">33   </span></a>            <span class="s3">except </span><span class="s1">UnicodeEncodeError </span><span class="s3">as </span><span class="s1">e</span><span class="s4">:</span>
+<a name="l34"><span class="ln">34   </span></a>                <span class="s1">msg </span><span class="s4">= </span><span class="s5">'ISO-8601 strings should contain only ASCII characters'</span>
+<a name="l35"><span class="ln">35   </span></a>                <span class="s1">six</span><span class="s4">.</span><span class="s1">raise_from</span><span class="s4">(</span><span class="s1">ValueError</span><span class="s4">(</span><span class="s1">msg</span><span class="s4">), </span><span class="s1">e</span><span class="s4">)</span>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a>        <span class="s3">return </span><span class="s1">f</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">str_in</span><span class="s4">, *</span><span class="s1">args</span><span class="s4">, **</span><span class="s1">kwargs</span><span class="s4">)</span>
+<a name="l38"><span class="ln">38   </span></a>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s3">return </span><span class="s1">func</span>
+<a name="l40"><span class="ln">40   </span></a>
+<a name="l41"><span class="ln">41   </span></a>
+<a name="l42"><span class="ln">42   </span></a><span class="s3">class </span><span class="s1">isoparser</span><span class="s4">(</span><span class="s1">object</span><span class="s4">):</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s3">def </span><span class="s1">__init__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">sep</span><span class="s4">=</span><span class="s3">None</span><span class="s4">):</span>
+<a name="l44"><span class="ln">44   </span></a>        <span class="s2">&quot;&quot;&quot; 
+<a name="l45"><span class="ln">45   </span></a>        :param sep: 
+<a name="l46"><span class="ln">46   </span></a>            A single character that separates date and time portions. If 
+<a name="l47"><span class="ln">47   </span></a>            ``None``, the parser will accept any single character. 
+<a name="l48"><span class="ln">48   </span></a>            For strict ISO-8601 adherence, pass ``'T'``. 
+<a name="l49"><span class="ln">49   </span></a>        &quot;&quot;&quot;</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s3">if </span><span class="s1">sep </span><span class="s3">is not None</span><span class="s4">:</span>
+<a name="l51"><span class="ln">51   </span></a>            <span class="s3">if </span><span class="s4">(</span><span class="s1">len</span><span class="s4">(</span><span class="s1">sep</span><span class="s4">) != </span><span class="s6">1 </span><span class="s3">or </span><span class="s1">ord</span><span class="s4">(</span><span class="s1">sep</span><span class="s4">) &gt;= </span><span class="s6">128 </span><span class="s3">or </span><span class="s1">sep </span><span class="s3">in </span><span class="s5">'0123456789'</span><span class="s4">):</span>
+<a name="l52"><span class="ln">52   </span></a>                <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Separator must be a single, non-numeric ' </span><span class="s4">+</span>
+<a name="l53"><span class="ln">53   </span></a>                                 <span class="s5">'ASCII character'</span><span class="s4">)</span>
+<a name="l54"><span class="ln">54   </span></a>
+<a name="l55"><span class="ln">55   </span></a>            <span class="s1">sep </span><span class="s4">= </span><span class="s1">sep</span><span class="s4">.</span><span class="s1">encode</span><span class="s4">(</span><span class="s5">'ascii'</span><span class="s4">)</span>
+<a name="l56"><span class="ln">56   </span></a>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">_sep </span><span class="s4">= </span><span class="s1">sep</span>
+<a name="l58"><span class="ln">58   </span></a>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s4">@</span><span class="s1">_takes_ascii</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s3">def </span><span class="s1">isoparse</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">dt_str</span><span class="s4">):</span>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s2">&quot;&quot;&quot; 
+<a name="l62"><span class="ln">62   </span></a>        Parse an ISO-8601 datetime string into a :class:`datetime.datetime`. 
+<a name="l63"><span class="ln">63   </span></a> 
+<a name="l64"><span class="ln">64   </span></a>        An ISO-8601 datetime string consists of a date portion, followed 
+<a name="l65"><span class="ln">65   </span></a>        optionally by a time portion - the date and time portions are separated 
+<a name="l66"><span class="ln">66   </span></a>        by a single character separator, which is ``T`` in the official 
+<a name="l67"><span class="ln">67   </span></a>        standard. Incomplete date formats (such as ``YYYY-MM``) may *not* be 
+<a name="l68"><span class="ln">68   </span></a>        combined with a time portion. 
+<a name="l69"><span class="ln">69   </span></a> 
+<a name="l70"><span class="ln">70   </span></a>        Supported date formats are: 
+<a name="l71"><span class="ln">71   </span></a> 
+<a name="l72"><span class="ln">72   </span></a>        Common: 
+<a name="l73"><span class="ln">73   </span></a> 
+<a name="l74"><span class="ln">74   </span></a>        - ``YYYY`` 
+<a name="l75"><span class="ln">75   </span></a>        - ``YYYY-MM`` 
+<a name="l76"><span class="ln">76   </span></a>        - ``YYYY-MM-DD`` or ``YYYYMMDD`` 
+<a name="l77"><span class="ln">77   </span></a> 
+<a name="l78"><span class="ln">78   </span></a>        Uncommon: 
+<a name="l79"><span class="ln">79   </span></a> 
+<a name="l80"><span class="ln">80   </span></a>        - ``YYYY-Www`` or ``YYYYWww`` - ISO week (day defaults to 0) 
+<a name="l81"><span class="ln">81   </span></a>        - ``YYYY-Www-D`` or ``YYYYWwwD`` - ISO week and day 
+<a name="l82"><span class="ln">82   </span></a> 
+<a name="l83"><span class="ln">83   </span></a>        The ISO week and day numbering follows the same logic as 
+<a name="l84"><span class="ln">84   </span></a>        :func:`datetime.date.isocalendar`. 
+<a name="l85"><span class="ln">85   </span></a> 
+<a name="l86"><span class="ln">86   </span></a>        Supported time formats are: 
+<a name="l87"><span class="ln">87   </span></a> 
+<a name="l88"><span class="ln">88   </span></a>        - ``hh`` 
+<a name="l89"><span class="ln">89   </span></a>        - ``hh:mm`` or ``hhmm`` 
+<a name="l90"><span class="ln">90   </span></a>        - ``hh:mm:ss`` or ``hhmmss`` 
+<a name="l91"><span class="ln">91   </span></a>        - ``hh:mm:ss.ssssss`` (Up to 6 sub-second digits) 
+<a name="l92"><span class="ln">92   </span></a> 
+<a name="l93"><span class="ln">93   </span></a>        Midnight is a special case for `hh`, as the standard supports both 
+<a name="l94"><span class="ln">94   </span></a>        00:00 and 24:00 as a representation. The decimal separator can be 
+<a name="l95"><span class="ln">95   </span></a>        either a dot or a comma. 
+<a name="l96"><span class="ln">96   </span></a> 
+<a name="l97"><span class="ln">97   </span></a> 
+<a name="l98"><span class="ln">98   </span></a>        .. caution:: 
+<a name="l99"><span class="ln">99   </span></a> 
+<a name="l100"><span class="ln">100  </span></a>            Support for fractional components other than seconds is part of the 
+<a name="l101"><span class="ln">101  </span></a>            ISO-8601 standard, but is not currently implemented in this parser. 
+<a name="l102"><span class="ln">102  </span></a> 
+<a name="l103"><span class="ln">103  </span></a>        Supported time zone offset formats are: 
+<a name="l104"><span class="ln">104  </span></a> 
+<a name="l105"><span class="ln">105  </span></a>        - `Z` (UTC) 
+<a name="l106"><span class="ln">106  </span></a>        - `±HH:MM` 
+<a name="l107"><span class="ln">107  </span></a>        - `±HHMM` 
+<a name="l108"><span class="ln">108  </span></a>        - `±HH` 
+<a name="l109"><span class="ln">109  </span></a> 
+<a name="l110"><span class="ln">110  </span></a>        Offsets will be represented as :class:`dateutil.tz.tzoffset` objects, 
+<a name="l111"><span class="ln">111  </span></a>        with the exception of UTC, which will be represented as 
+<a name="l112"><span class="ln">112  </span></a>        :class:`dateutil.tz.tzutc`. Time zone offsets equivalent to UTC (such 
+<a name="l113"><span class="ln">113  </span></a>        as `+00:00`) will also be represented as :class:`dateutil.tz.tzutc`. 
+<a name="l114"><span class="ln">114  </span></a> 
+<a name="l115"><span class="ln">115  </span></a>        :param dt_str: 
+<a name="l116"><span class="ln">116  </span></a>            A string or stream containing only an ISO-8601 datetime string 
+<a name="l117"><span class="ln">117  </span></a> 
+<a name="l118"><span class="ln">118  </span></a>        :return: 
+<a name="l119"><span class="ln">119  </span></a>            Returns a :class:`datetime.datetime` representing the string. 
+<a name="l120"><span class="ln">120  </span></a>            Unspecified components default to their lowest value. 
+<a name="l121"><span class="ln">121  </span></a> 
+<a name="l122"><span class="ln">122  </span></a>        .. warning:: 
+<a name="l123"><span class="ln">123  </span></a> 
+<a name="l124"><span class="ln">124  </span></a>            As of version 2.7.0, the strictness of the parser should not be 
+<a name="l125"><span class="ln">125  </span></a>            considered a stable part of the contract. Any valid ISO-8601 string 
+<a name="l126"><span class="ln">126  </span></a>            that parses correctly with the default settings will continue to 
+<a name="l127"><span class="ln">127  </span></a>            parse correctly in future versions, but invalid strings that 
+<a name="l128"><span class="ln">128  </span></a>            currently fail (e.g. ``2017-01-01T00:00+00:00:00``) are not 
+<a name="l129"><span class="ln">129  </span></a>            guaranteed to continue failing in future versions if they encode 
+<a name="l130"><span class="ln">130  </span></a>            a valid date. 
+<a name="l131"><span class="ln">131  </span></a> 
+<a name="l132"><span class="ln">132  </span></a>        .. versionadded:: 2.7.0 
+<a name="l133"><span class="ln">133  </span></a>        &quot;&quot;&quot;</span>
+<a name="l134"><span class="ln">134  </span></a>        <span class="s1">components</span><span class="s4">, </span><span class="s1">pos </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_parse_isodate</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">)</span>
+<a name="l135"><span class="ln">135  </span></a>
+<a name="l136"><span class="ln">136  </span></a>        <span class="s3">if </span><span class="s1">len</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">) &gt; </span><span class="s1">pos</span><span class="s4">:</span>
+<a name="l137"><span class="ln">137  </span></a>            <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_sep </span><span class="s3">is None or </span><span class="s1">dt_str</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:</span><span class="s1">pos </span><span class="s4">+ </span><span class="s6">1</span><span class="s4">] == </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_sep</span><span class="s4">:</span>
+<a name="l138"><span class="ln">138  </span></a>                <span class="s1">components </span><span class="s4">+= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_parse_isotime</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">[</span><span class="s1">pos </span><span class="s4">+ </span><span class="s6">1</span><span class="s4">:])</span>
+<a name="l139"><span class="ln">139  </span></a>            <span class="s3">else</span><span class="s4">:</span>
+<a name="l140"><span class="ln">140  </span></a>                <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'String contains unknown ISO components'</span><span class="s4">)</span>
+<a name="l141"><span class="ln">141  </span></a>
+<a name="l142"><span class="ln">142  </span></a>        <span class="s3">if </span><span class="s1">len</span><span class="s4">(</span><span class="s1">components</span><span class="s4">) &gt; </span><span class="s6">3 </span><span class="s3">and </span><span class="s1">components</span><span class="s4">[</span><span class="s6">3</span><span class="s4">] == </span><span class="s6">24</span><span class="s4">:</span>
+<a name="l143"><span class="ln">143  </span></a>            <span class="s1">components</span><span class="s4">[</span><span class="s6">3</span><span class="s4">] = </span><span class="s6">0</span>
+<a name="l144"><span class="ln">144  </span></a>            <span class="s3">return </span><span class="s1">datetime</span><span class="s4">(*</span><span class="s1">components</span><span class="s4">) + </span><span class="s1">timedelta</span><span class="s4">(</span><span class="s1">days</span><span class="s4">=</span><span class="s6">1</span><span class="s4">)</span>
+<a name="l145"><span class="ln">145  </span></a>
+<a name="l146"><span class="ln">146  </span></a>        <span class="s3">return </span><span class="s1">datetime</span><span class="s4">(*</span><span class="s1">components</span><span class="s4">)</span>
+<a name="l147"><span class="ln">147  </span></a>
+<a name="l148"><span class="ln">148  </span></a>    <span class="s4">@</span><span class="s1">_takes_ascii</span>
+<a name="l149"><span class="ln">149  </span></a>    <span class="s3">def </span><span class="s1">parse_isodate</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">datestr</span><span class="s4">):</span>
+<a name="l150"><span class="ln">150  </span></a>        <span class="s2">&quot;&quot;&quot; 
+<a name="l151"><span class="ln">151  </span></a>        Parse the date portion of an ISO string. 
+<a name="l152"><span class="ln">152  </span></a> 
+<a name="l153"><span class="ln">153  </span></a>        :param datestr: 
+<a name="l154"><span class="ln">154  </span></a>            The string portion of an ISO string, without a separator 
+<a name="l155"><span class="ln">155  </span></a> 
+<a name="l156"><span class="ln">156  </span></a>        :return: 
+<a name="l157"><span class="ln">157  </span></a>            Returns a :class:`datetime.date` object 
+<a name="l158"><span class="ln">158  </span></a>        &quot;&quot;&quot;</span>
+<a name="l159"><span class="ln">159  </span></a>        <span class="s1">components</span><span class="s4">, </span><span class="s1">pos </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_parse_isodate</span><span class="s4">(</span><span class="s1">datestr</span><span class="s4">)</span>
+<a name="l160"><span class="ln">160  </span></a>        <span class="s3">if </span><span class="s1">pos </span><span class="s4">&lt; </span><span class="s1">len</span><span class="s4">(</span><span class="s1">datestr</span><span class="s4">):</span>
+<a name="l161"><span class="ln">161  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'String contains unknown ISO ' </span><span class="s4">+</span>
+<a name="l162"><span class="ln">162  </span></a>                             <span class="s5">'components: {!r}'</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span><span class="s1">datestr</span><span class="s4">.</span><span class="s1">decode</span><span class="s4">(</span><span class="s5">'ascii'</span><span class="s4">)))</span>
+<a name="l163"><span class="ln">163  </span></a>        <span class="s3">return </span><span class="s1">date</span><span class="s4">(*</span><span class="s1">components</span><span class="s4">)</span>
+<a name="l164"><span class="ln">164  </span></a>
+<a name="l165"><span class="ln">165  </span></a>    <span class="s4">@</span><span class="s1">_takes_ascii</span>
+<a name="l166"><span class="ln">166  </span></a>    <span class="s3">def </span><span class="s1">parse_isotime</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">timestr</span><span class="s4">):</span>
+<a name="l167"><span class="ln">167  </span></a>        <span class="s2">&quot;&quot;&quot; 
+<a name="l168"><span class="ln">168  </span></a>        Parse the time portion of an ISO string. 
+<a name="l169"><span class="ln">169  </span></a> 
+<a name="l170"><span class="ln">170  </span></a>        :param timestr: 
+<a name="l171"><span class="ln">171  </span></a>            The time portion of an ISO string, without a separator 
+<a name="l172"><span class="ln">172  </span></a> 
+<a name="l173"><span class="ln">173  </span></a>        :return: 
+<a name="l174"><span class="ln">174  </span></a>            Returns a :class:`datetime.time` object 
+<a name="l175"><span class="ln">175  </span></a>        &quot;&quot;&quot;</span>
+<a name="l176"><span class="ln">176  </span></a>        <span class="s1">components </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_parse_isotime</span><span class="s4">(</span><span class="s1">timestr</span><span class="s4">)</span>
+<a name="l177"><span class="ln">177  </span></a>        <span class="s3">if </span><span class="s1">components</span><span class="s4">[</span><span class="s6">0</span><span class="s4">] == </span><span class="s6">24</span><span class="s4">:</span>
+<a name="l178"><span class="ln">178  </span></a>            <span class="s1">components</span><span class="s4">[</span><span class="s6">0</span><span class="s4">] = </span><span class="s6">0</span>
+<a name="l179"><span class="ln">179  </span></a>        <span class="s3">return </span><span class="s1">time</span><span class="s4">(*</span><span class="s1">components</span><span class="s4">)</span>
+<a name="l180"><span class="ln">180  </span></a>
+<a name="l181"><span class="ln">181  </span></a>    <span class="s4">@</span><span class="s1">_takes_ascii</span>
+<a name="l182"><span class="ln">182  </span></a>    <span class="s3">def </span><span class="s1">parse_tzstr</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">tzstr</span><span class="s4">, </span><span class="s1">zero_as_utc</span><span class="s4">=</span><span class="s3">True</span><span class="s4">):</span>
+<a name="l183"><span class="ln">183  </span></a>        <span class="s2">&quot;&quot;&quot; 
+<a name="l184"><span class="ln">184  </span></a>        Parse a valid ISO time zone string. 
+<a name="l185"><span class="ln">185  </span></a> 
+<a name="l186"><span class="ln">186  </span></a>        See :func:`isoparser.isoparse` for details on supported formats. 
+<a name="l187"><span class="ln">187  </span></a> 
+<a name="l188"><span class="ln">188  </span></a>        :param tzstr: 
+<a name="l189"><span class="ln">189  </span></a>            A string representing an ISO time zone offset 
+<a name="l190"><span class="ln">190  </span></a> 
+<a name="l191"><span class="ln">191  </span></a>        :param zero_as_utc: 
+<a name="l192"><span class="ln">192  </span></a>            Whether to return :class:`dateutil.tz.tzutc` for zero-offset zones 
+<a name="l193"><span class="ln">193  </span></a> 
+<a name="l194"><span class="ln">194  </span></a>        :return: 
+<a name="l195"><span class="ln">195  </span></a>            Returns :class:`dateutil.tz.tzoffset` for offsets and 
+<a name="l196"><span class="ln">196  </span></a>            :class:`dateutil.tz.tzutc` for ``Z`` and (if ``zero_as_utc`` is 
+<a name="l197"><span class="ln">197  </span></a>            specified) offsets equivalent to UTC. 
+<a name="l198"><span class="ln">198  </span></a>        &quot;&quot;&quot;</span>
+<a name="l199"><span class="ln">199  </span></a>        <span class="s3">return </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_parse_tzstr</span><span class="s4">(</span><span class="s1">tzstr</span><span class="s4">, </span><span class="s1">zero_as_utc</span><span class="s4">=</span><span class="s1">zero_as_utc</span><span class="s4">)</span>
+<a name="l200"><span class="ln">200  </span></a>
+<a name="l201"><span class="ln">201  </span></a>    <span class="s0"># Constants</span>
+<a name="l202"><span class="ln">202  </span></a>    <span class="s1">_DATE_SEP </span><span class="s4">= </span><span class="s7">b'-'</span>
+<a name="l203"><span class="ln">203  </span></a>    <span class="s1">_TIME_SEP </span><span class="s4">= </span><span class="s7">b':'</span>
+<a name="l204"><span class="ln">204  </span></a>    <span class="s1">_FRACTION_REGEX </span><span class="s4">= </span><span class="s1">re</span><span class="s4">.</span><span class="s1">compile</span><span class="s4">(</span><span class="s7">b'[</span><span class="s3">\\</span><span class="s7">.,]([0-9]+)'</span><span class="s4">)</span>
+<a name="l205"><span class="ln">205  </span></a>
+<a name="l206"><span class="ln">206  </span></a>    <span class="s3">def </span><span class="s1">_parse_isodate</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">dt_str</span><span class="s4">):</span>
+<a name="l207"><span class="ln">207  </span></a>        <span class="s3">try</span><span class="s4">:</span>
+<a name="l208"><span class="ln">208  </span></a>            <span class="s3">return </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_parse_isodate_common</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">)</span>
+<a name="l209"><span class="ln">209  </span></a>        <span class="s3">except </span><span class="s1">ValueError</span><span class="s4">:</span>
+<a name="l210"><span class="ln">210  </span></a>            <span class="s3">return </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_parse_isodate_uncommon</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">)</span>
+<a name="l211"><span class="ln">211  </span></a>
+<a name="l212"><span class="ln">212  </span></a>    <span class="s3">def </span><span class="s1">_parse_isodate_common</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">dt_str</span><span class="s4">):</span>
+<a name="l213"><span class="ln">213  </span></a>        <span class="s1">len_str </span><span class="s4">= </span><span class="s1">len</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">)</span>
+<a name="l214"><span class="ln">214  </span></a>        <span class="s1">components </span><span class="s4">= [</span><span class="s6">1</span><span class="s4">, </span><span class="s6">1</span><span class="s4">, </span><span class="s6">1</span><span class="s4">]</span>
+<a name="l215"><span class="ln">215  </span></a>
+<a name="l216"><span class="ln">216  </span></a>        <span class="s3">if </span><span class="s1">len_str </span><span class="s4">&lt; </span><span class="s6">4</span><span class="s4">:</span>
+<a name="l217"><span class="ln">217  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'ISO string too short'</span><span class="s4">)</span>
+<a name="l218"><span class="ln">218  </span></a>
+<a name="l219"><span class="ln">219  </span></a>        <span class="s0"># Year</span>
+<a name="l220"><span class="ln">220  </span></a>        <span class="s1">components</span><span class="s4">[</span><span class="s6">0</span><span class="s4">] = </span><span class="s1">int</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">[</span><span class="s6">0</span><span class="s4">:</span><span class="s6">4</span><span class="s4">])</span>
+<a name="l221"><span class="ln">221  </span></a>        <span class="s1">pos </span><span class="s4">= </span><span class="s6">4</span>
+<a name="l222"><span class="ln">222  </span></a>        <span class="s3">if </span><span class="s1">pos </span><span class="s4">&gt;= </span><span class="s1">len_str</span><span class="s4">:</span>
+<a name="l223"><span class="ln">223  </span></a>            <span class="s3">return </span><span class="s1">components</span><span class="s4">, </span><span class="s1">pos</span>
+<a name="l224"><span class="ln">224  </span></a>
+<a name="l225"><span class="ln">225  </span></a>        <span class="s1">has_sep </span><span class="s4">= </span><span class="s1">dt_str</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:</span><span class="s1">pos </span><span class="s4">+ </span><span class="s6">1</span><span class="s4">] == </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_DATE_SEP</span>
+<a name="l226"><span class="ln">226  </span></a>        <span class="s3">if </span><span class="s1">has_sep</span><span class="s4">:</span>
+<a name="l227"><span class="ln">227  </span></a>            <span class="s1">pos </span><span class="s4">+= </span><span class="s6">1</span>
+<a name="l228"><span class="ln">228  </span></a>
+<a name="l229"><span class="ln">229  </span></a>        <span class="s0"># Month</span>
+<a name="l230"><span class="ln">230  </span></a>        <span class="s3">if </span><span class="s1">len_str </span><span class="s4">- </span><span class="s1">pos </span><span class="s4">&lt; </span><span class="s6">2</span><span class="s4">:</span>
+<a name="l231"><span class="ln">231  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Invalid common month'</span><span class="s4">)</span>
+<a name="l232"><span class="ln">232  </span></a>
+<a name="l233"><span class="ln">233  </span></a>        <span class="s1">components</span><span class="s4">[</span><span class="s6">1</span><span class="s4">] = </span><span class="s1">int</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:</span><span class="s1">pos </span><span class="s4">+ </span><span class="s6">2</span><span class="s4">])</span>
+<a name="l234"><span class="ln">234  </span></a>        <span class="s1">pos </span><span class="s4">+= </span><span class="s6">2</span>
+<a name="l235"><span class="ln">235  </span></a>
+<a name="l236"><span class="ln">236  </span></a>        <span class="s3">if </span><span class="s1">pos </span><span class="s4">&gt;= </span><span class="s1">len_str</span><span class="s4">:</span>
+<a name="l237"><span class="ln">237  </span></a>            <span class="s3">if </span><span class="s1">has_sep</span><span class="s4">:</span>
+<a name="l238"><span class="ln">238  </span></a>                <span class="s3">return </span><span class="s1">components</span><span class="s4">, </span><span class="s1">pos</span>
+<a name="l239"><span class="ln">239  </span></a>            <span class="s3">else</span><span class="s4">:</span>
+<a name="l240"><span class="ln">240  </span></a>                <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Invalid ISO format'</span><span class="s4">)</span>
+<a name="l241"><span class="ln">241  </span></a>
+<a name="l242"><span class="ln">242  </span></a>        <span class="s3">if </span><span class="s1">has_sep</span><span class="s4">:</span>
+<a name="l243"><span class="ln">243  </span></a>            <span class="s3">if </span><span class="s1">dt_str</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:</span><span class="s1">pos </span><span class="s4">+ </span><span class="s6">1</span><span class="s4">] != </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_DATE_SEP</span><span class="s4">:</span>
+<a name="l244"><span class="ln">244  </span></a>                <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Invalid separator in ISO string'</span><span class="s4">)</span>
+<a name="l245"><span class="ln">245  </span></a>            <span class="s1">pos </span><span class="s4">+= </span><span class="s6">1</span>
+<a name="l246"><span class="ln">246  </span></a>
+<a name="l247"><span class="ln">247  </span></a>        <span class="s0"># Day</span>
+<a name="l248"><span class="ln">248  </span></a>        <span class="s3">if </span><span class="s1">len_str </span><span class="s4">- </span><span class="s1">pos </span><span class="s4">&lt; </span><span class="s6">2</span><span class="s4">:</span>
+<a name="l249"><span class="ln">249  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Invalid common day'</span><span class="s4">)</span>
+<a name="l250"><span class="ln">250  </span></a>        <span class="s1">components</span><span class="s4">[</span><span class="s6">2</span><span class="s4">] = </span><span class="s1">int</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:</span><span class="s1">pos </span><span class="s4">+ </span><span class="s6">2</span><span class="s4">])</span>
+<a name="l251"><span class="ln">251  </span></a>        <span class="s3">return </span><span class="s1">components</span><span class="s4">, </span><span class="s1">pos </span><span class="s4">+ </span><span class="s6">2</span>
+<a name="l252"><span class="ln">252  </span></a>
+<a name="l253"><span class="ln">253  </span></a>    <span class="s3">def </span><span class="s1">_parse_isodate_uncommon</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">dt_str</span><span class="s4">):</span>
+<a name="l254"><span class="ln">254  </span></a>        <span class="s3">if </span><span class="s1">len</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">) &lt; </span><span class="s6">4</span><span class="s4">:</span>
+<a name="l255"><span class="ln">255  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'ISO string too short'</span><span class="s4">)</span>
+<a name="l256"><span class="ln">256  </span></a>
+<a name="l257"><span class="ln">257  </span></a>        <span class="s0"># All ISO formats start with the year</span>
+<a name="l258"><span class="ln">258  </span></a>        <span class="s1">year </span><span class="s4">= </span><span class="s1">int</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">[</span><span class="s6">0</span><span class="s4">:</span><span class="s6">4</span><span class="s4">])</span>
+<a name="l259"><span class="ln">259  </span></a>
+<a name="l260"><span class="ln">260  </span></a>        <span class="s1">has_sep </span><span class="s4">= </span><span class="s1">dt_str</span><span class="s4">[</span><span class="s6">4</span><span class="s4">:</span><span class="s6">5</span><span class="s4">] == </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_DATE_SEP</span>
+<a name="l261"><span class="ln">261  </span></a>
+<a name="l262"><span class="ln">262  </span></a>        <span class="s1">pos </span><span class="s4">= </span><span class="s6">4 </span><span class="s4">+ </span><span class="s1">has_sep       </span><span class="s0"># Skip '-' if it's there</span>
+<a name="l263"><span class="ln">263  </span></a>        <span class="s3">if </span><span class="s1">dt_str</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:</span><span class="s1">pos </span><span class="s4">+ </span><span class="s6">1</span><span class="s4">] == </span><span class="s7">b'W'</span><span class="s4">:</span>
+<a name="l264"><span class="ln">264  </span></a>            <span class="s0"># YYYY-?Www-?D?</span>
+<a name="l265"><span class="ln">265  </span></a>            <span class="s1">pos </span><span class="s4">+= </span><span class="s6">1</span>
+<a name="l266"><span class="ln">266  </span></a>            <span class="s1">weekno </span><span class="s4">= </span><span class="s1">int</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:</span><span class="s1">pos </span><span class="s4">+ </span><span class="s6">2</span><span class="s4">])</span>
+<a name="l267"><span class="ln">267  </span></a>            <span class="s1">pos </span><span class="s4">+= </span><span class="s6">2</span>
+<a name="l268"><span class="ln">268  </span></a>
+<a name="l269"><span class="ln">269  </span></a>            <span class="s1">dayno </span><span class="s4">= </span><span class="s6">1</span>
+<a name="l270"><span class="ln">270  </span></a>            <span class="s3">if </span><span class="s1">len</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">) &gt; </span><span class="s1">pos</span><span class="s4">:</span>
+<a name="l271"><span class="ln">271  </span></a>                <span class="s3">if </span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:</span><span class="s1">pos </span><span class="s4">+ </span><span class="s6">1</span><span class="s4">] == </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_DATE_SEP</span><span class="s4">) != </span><span class="s1">has_sep</span><span class="s4">:</span>
+<a name="l272"><span class="ln">272  </span></a>                    <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Inconsistent use of dash separator'</span><span class="s4">)</span>
+<a name="l273"><span class="ln">273  </span></a>
+<a name="l274"><span class="ln">274  </span></a>                <span class="s1">pos </span><span class="s4">+= </span><span class="s1">has_sep</span>
+<a name="l275"><span class="ln">275  </span></a>
+<a name="l276"><span class="ln">276  </span></a>                <span class="s1">dayno </span><span class="s4">= </span><span class="s1">int</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:</span><span class="s1">pos </span><span class="s4">+ </span><span class="s6">1</span><span class="s4">])</span>
+<a name="l277"><span class="ln">277  </span></a>                <span class="s1">pos </span><span class="s4">+= </span><span class="s6">1</span>
+<a name="l278"><span class="ln">278  </span></a>
+<a name="l279"><span class="ln">279  </span></a>            <span class="s1">base_date </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_calculate_weekdate</span><span class="s4">(</span><span class="s1">year</span><span class="s4">, </span><span class="s1">weekno</span><span class="s4">, </span><span class="s1">dayno</span><span class="s4">)</span>
+<a name="l280"><span class="ln">280  </span></a>        <span class="s3">else</span><span class="s4">:</span>
+<a name="l281"><span class="ln">281  </span></a>            <span class="s0"># YYYYDDD or YYYY-DDD</span>
+<a name="l282"><span class="ln">282  </span></a>            <span class="s3">if </span><span class="s1">len</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">) - </span><span class="s1">pos </span><span class="s4">&lt; </span><span class="s6">3</span><span class="s4">:</span>
+<a name="l283"><span class="ln">283  </span></a>                <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Invalid ordinal day'</span><span class="s4">)</span>
+<a name="l284"><span class="ln">284  </span></a>
+<a name="l285"><span class="ln">285  </span></a>            <span class="s1">ordinal_day </span><span class="s4">= </span><span class="s1">int</span><span class="s4">(</span><span class="s1">dt_str</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:</span><span class="s1">pos </span><span class="s4">+ </span><span class="s6">3</span><span class="s4">])</span>
+<a name="l286"><span class="ln">286  </span></a>            <span class="s1">pos </span><span class="s4">+= </span><span class="s6">3</span>
+<a name="l287"><span class="ln">287  </span></a>
+<a name="l288"><span class="ln">288  </span></a>            <span class="s3">if </span><span class="s1">ordinal_day </span><span class="s4">&lt; </span><span class="s6">1 </span><span class="s3">or </span><span class="s1">ordinal_day </span><span class="s4">&gt; (</span><span class="s6">365 </span><span class="s4">+ </span><span class="s1">calendar</span><span class="s4">.</span><span class="s1">isleap</span><span class="s4">(</span><span class="s1">year</span><span class="s4">)):</span>
+<a name="l289"><span class="ln">289  </span></a>                <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Invalid ordinal day' </span><span class="s4">+</span>
+<a name="l290"><span class="ln">290  </span></a>                                 <span class="s5">' {} for year {}'</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span><span class="s1">ordinal_day</span><span class="s4">, </span><span class="s1">year</span><span class="s4">))</span>
+<a name="l291"><span class="ln">291  </span></a>
+<a name="l292"><span class="ln">292  </span></a>            <span class="s1">base_date </span><span class="s4">= </span><span class="s1">date</span><span class="s4">(</span><span class="s1">year</span><span class="s4">, </span><span class="s6">1</span><span class="s4">, </span><span class="s6">1</span><span class="s4">) + </span><span class="s1">timedelta</span><span class="s4">(</span><span class="s1">days</span><span class="s4">=</span><span class="s1">ordinal_day </span><span class="s4">- </span><span class="s6">1</span><span class="s4">)</span>
+<a name="l293"><span class="ln">293  </span></a>
+<a name="l294"><span class="ln">294  </span></a>        <span class="s1">components </span><span class="s4">= [</span><span class="s1">base_date</span><span class="s4">.</span><span class="s1">year</span><span class="s4">, </span><span class="s1">base_date</span><span class="s4">.</span><span class="s1">month</span><span class="s4">, </span><span class="s1">base_date</span><span class="s4">.</span><span class="s1">day</span><span class="s4">]</span>
+<a name="l295"><span class="ln">295  </span></a>        <span class="s3">return </span><span class="s1">components</span><span class="s4">, </span><span class="s1">pos</span>
+<a name="l296"><span class="ln">296  </span></a>
+<a name="l297"><span class="ln">297  </span></a>    <span class="s3">def </span><span class="s1">_calculate_weekdate</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">year</span><span class="s4">, </span><span class="s1">week</span><span class="s4">, </span><span class="s1">day</span><span class="s4">):</span>
+<a name="l298"><span class="ln">298  </span></a>        <span class="s2">&quot;&quot;&quot; 
+<a name="l299"><span class="ln">299  </span></a>        Calculate the day of corresponding to the ISO year-week-day calendar. 
+<a name="l300"><span class="ln">300  </span></a> 
+<a name="l301"><span class="ln">301  </span></a>        This function is effectively the inverse of 
+<a name="l302"><span class="ln">302  </span></a>        :func:`datetime.date.isocalendar`. 
+<a name="l303"><span class="ln">303  </span></a> 
+<a name="l304"><span class="ln">304  </span></a>        :param year: 
+<a name="l305"><span class="ln">305  </span></a>            The year in the ISO calendar 
+<a name="l306"><span class="ln">306  </span></a> 
+<a name="l307"><span class="ln">307  </span></a>        :param week: 
+<a name="l308"><span class="ln">308  </span></a>            The week in the ISO calendar - range is [1, 53] 
+<a name="l309"><span class="ln">309  </span></a> 
+<a name="l310"><span class="ln">310  </span></a>        :param day: 
+<a name="l311"><span class="ln">311  </span></a>            The day in the ISO calendar - range is [1 (MON), 7 (SUN)] 
+<a name="l312"><span class="ln">312  </span></a> 
+<a name="l313"><span class="ln">313  </span></a>        :return: 
+<a name="l314"><span class="ln">314  </span></a>            Returns a :class:`datetime.date` 
+<a name="l315"><span class="ln">315  </span></a>        &quot;&quot;&quot;</span>
+<a name="l316"><span class="ln">316  </span></a>        <span class="s3">if not </span><span class="s6">0 </span><span class="s4">&lt; </span><span class="s1">week </span><span class="s4">&lt; </span><span class="s6">54</span><span class="s4">:</span>
+<a name="l317"><span class="ln">317  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Invalid week: {}'</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span><span class="s1">week</span><span class="s4">))</span>
+<a name="l318"><span class="ln">318  </span></a>
+<a name="l319"><span class="ln">319  </span></a>        <span class="s3">if not </span><span class="s6">0 </span><span class="s4">&lt; </span><span class="s1">day </span><span class="s4">&lt; </span><span class="s6">8</span><span class="s4">:     </span><span class="s0"># Range is 1-7</span>
+<a name="l320"><span class="ln">320  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Invalid weekday: {}'</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span><span class="s1">day</span><span class="s4">))</span>
+<a name="l321"><span class="ln">321  </span></a>
+<a name="l322"><span class="ln">322  </span></a>        <span class="s0"># Get week 1 for the specific year:</span>
+<a name="l323"><span class="ln">323  </span></a>        <span class="s1">jan_4 </span><span class="s4">= </span><span class="s1">date</span><span class="s4">(</span><span class="s1">year</span><span class="s4">, </span><span class="s6">1</span><span class="s4">, </span><span class="s6">4</span><span class="s4">)   </span><span class="s0"># Week 1 always has January 4th in it</span>
+<a name="l324"><span class="ln">324  </span></a>        <span class="s1">week_1 </span><span class="s4">= </span><span class="s1">jan_4 </span><span class="s4">- </span><span class="s1">timedelta</span><span class="s4">(</span><span class="s1">days</span><span class="s4">=</span><span class="s1">jan_4</span><span class="s4">.</span><span class="s1">isocalendar</span><span class="s4">()[</span><span class="s6">2</span><span class="s4">] - </span><span class="s6">1</span><span class="s4">)</span>
+<a name="l325"><span class="ln">325  </span></a>
+<a name="l326"><span class="ln">326  </span></a>        <span class="s0"># Now add the specific number of weeks and days to get what we want</span>
+<a name="l327"><span class="ln">327  </span></a>        <span class="s1">week_offset </span><span class="s4">= (</span><span class="s1">week </span><span class="s4">- </span><span class="s6">1</span><span class="s4">) * </span><span class="s6">7 </span><span class="s4">+ (</span><span class="s1">day </span><span class="s4">- </span><span class="s6">1</span><span class="s4">)</span>
+<a name="l328"><span class="ln">328  </span></a>        <span class="s3">return </span><span class="s1">week_1 </span><span class="s4">+ </span><span class="s1">timedelta</span><span class="s4">(</span><span class="s1">days</span><span class="s4">=</span><span class="s1">week_offset</span><span class="s4">)</span>
+<a name="l329"><span class="ln">329  </span></a>
+<a name="l330"><span class="ln">330  </span></a>    <span class="s3">def </span><span class="s1">_parse_isotime</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">timestr</span><span class="s4">):</span>
+<a name="l331"><span class="ln">331  </span></a>        <span class="s1">len_str </span><span class="s4">= </span><span class="s1">len</span><span class="s4">(</span><span class="s1">timestr</span><span class="s4">)</span>
+<a name="l332"><span class="ln">332  </span></a>        <span class="s1">components </span><span class="s4">= [</span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s4">, </span><span class="s6">0</span><span class="s4">, </span><span class="s3">None</span><span class="s4">]</span>
+<a name="l333"><span class="ln">333  </span></a>        <span class="s1">pos </span><span class="s4">= </span><span class="s6">0</span>
+<a name="l334"><span class="ln">334  </span></a>        <span class="s1">comp </span><span class="s4">= -</span><span class="s6">1</span>
+<a name="l335"><span class="ln">335  </span></a>
+<a name="l336"><span class="ln">336  </span></a>        <span class="s3">if </span><span class="s1">len_str </span><span class="s4">&lt; </span><span class="s6">2</span><span class="s4">:</span>
+<a name="l337"><span class="ln">337  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'ISO time too short'</span><span class="s4">)</span>
+<a name="l338"><span class="ln">338  </span></a>
+<a name="l339"><span class="ln">339  </span></a>        <span class="s1">has_sep </span><span class="s4">= </span><span class="s3">False</span>
+<a name="l340"><span class="ln">340  </span></a>
+<a name="l341"><span class="ln">341  </span></a>        <span class="s3">while </span><span class="s1">pos </span><span class="s4">&lt; </span><span class="s1">len_str </span><span class="s3">and </span><span class="s1">comp </span><span class="s4">&lt; </span><span class="s6">5</span><span class="s4">:</span>
+<a name="l342"><span class="ln">342  </span></a>            <span class="s1">comp </span><span class="s4">+= </span><span class="s6">1</span>
+<a name="l343"><span class="ln">343  </span></a>
+<a name="l344"><span class="ln">344  </span></a>            <span class="s3">if </span><span class="s1">timestr</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:</span><span class="s1">pos </span><span class="s4">+ </span><span class="s6">1</span><span class="s4">] </span><span class="s3">in </span><span class="s7">b'-+Zz'</span><span class="s4">:</span>
+<a name="l345"><span class="ln">345  </span></a>                <span class="s0"># Detect time zone boundary</span>
+<a name="l346"><span class="ln">346  </span></a>                <span class="s1">components</span><span class="s4">[-</span><span class="s6">1</span><span class="s4">] = </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_parse_tzstr</span><span class="s4">(</span><span class="s1">timestr</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:])</span>
+<a name="l347"><span class="ln">347  </span></a>                <span class="s1">pos </span><span class="s4">= </span><span class="s1">len_str</span>
+<a name="l348"><span class="ln">348  </span></a>                <span class="s3">break</span>
+<a name="l349"><span class="ln">349  </span></a>
+<a name="l350"><span class="ln">350  </span></a>            <span class="s3">if </span><span class="s1">comp </span><span class="s4">== </span><span class="s6">1 </span><span class="s3">and </span><span class="s1">timestr</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:</span><span class="s1">pos</span><span class="s4">+</span><span class="s6">1</span><span class="s4">] == </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_TIME_SEP</span><span class="s4">:</span>
+<a name="l351"><span class="ln">351  </span></a>                <span class="s1">has_sep </span><span class="s4">= </span><span class="s3">True</span>
+<a name="l352"><span class="ln">352  </span></a>                <span class="s1">pos </span><span class="s4">+= </span><span class="s6">1</span>
+<a name="l353"><span class="ln">353  </span></a>            <span class="s3">elif </span><span class="s1">comp </span><span class="s4">== </span><span class="s6">2 </span><span class="s3">and </span><span class="s1">has_sep</span><span class="s4">:</span>
+<a name="l354"><span class="ln">354  </span></a>                <span class="s3">if </span><span class="s1">timestr</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:</span><span class="s1">pos</span><span class="s4">+</span><span class="s6">1</span><span class="s4">] != </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_TIME_SEP</span><span class="s4">:</span>
+<a name="l355"><span class="ln">355  </span></a>                    <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Inconsistent use of colon separator'</span><span class="s4">)</span>
+<a name="l356"><span class="ln">356  </span></a>                <span class="s1">pos </span><span class="s4">+= </span><span class="s6">1</span>
+<a name="l357"><span class="ln">357  </span></a>
+<a name="l358"><span class="ln">358  </span></a>            <span class="s3">if </span><span class="s1">comp </span><span class="s4">&lt; </span><span class="s6">3</span><span class="s4">:</span>
+<a name="l359"><span class="ln">359  </span></a>                <span class="s0"># Hour, minute, second</span>
+<a name="l360"><span class="ln">360  </span></a>                <span class="s1">components</span><span class="s4">[</span><span class="s1">comp</span><span class="s4">] = </span><span class="s1">int</span><span class="s4">(</span><span class="s1">timestr</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:</span><span class="s1">pos </span><span class="s4">+ </span><span class="s6">2</span><span class="s4">])</span>
+<a name="l361"><span class="ln">361  </span></a>                <span class="s1">pos </span><span class="s4">+= </span><span class="s6">2</span>
+<a name="l362"><span class="ln">362  </span></a>
+<a name="l363"><span class="ln">363  </span></a>            <span class="s3">if </span><span class="s1">comp </span><span class="s4">== </span><span class="s6">3</span><span class="s4">:</span>
+<a name="l364"><span class="ln">364  </span></a>                <span class="s0"># Fraction of a second</span>
+<a name="l365"><span class="ln">365  </span></a>                <span class="s1">frac </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_FRACTION_REGEX</span><span class="s4">.</span><span class="s1">match</span><span class="s4">(</span><span class="s1">timestr</span><span class="s4">[</span><span class="s1">pos</span><span class="s4">:])</span>
+<a name="l366"><span class="ln">366  </span></a>                <span class="s3">if not </span><span class="s1">frac</span><span class="s4">:</span>
+<a name="l367"><span class="ln">367  </span></a>                    <span class="s3">continue</span>
+<a name="l368"><span class="ln">368  </span></a>
+<a name="l369"><span class="ln">369  </span></a>                <span class="s1">us_str </span><span class="s4">= </span><span class="s1">frac</span><span class="s4">.</span><span class="s1">group</span><span class="s4">(</span><span class="s6">1</span><span class="s4">)[:</span><span class="s6">6</span><span class="s4">]  </span><span class="s0"># Truncate to microseconds</span>
+<a name="l370"><span class="ln">370  </span></a>                <span class="s1">components</span><span class="s4">[</span><span class="s1">comp</span><span class="s4">] = </span><span class="s1">int</span><span class="s4">(</span><span class="s1">us_str</span><span class="s4">) * </span><span class="s6">10</span><span class="s4">**(</span><span class="s6">6 </span><span class="s4">- </span><span class="s1">len</span><span class="s4">(</span><span class="s1">us_str</span><span class="s4">))</span>
+<a name="l371"><span class="ln">371  </span></a>                <span class="s1">pos </span><span class="s4">+= </span><span class="s1">len</span><span class="s4">(</span><span class="s1">frac</span><span class="s4">.</span><span class="s1">group</span><span class="s4">())</span>
+<a name="l372"><span class="ln">372  </span></a>
+<a name="l373"><span class="ln">373  </span></a>        <span class="s3">if </span><span class="s1">pos </span><span class="s4">&lt; </span><span class="s1">len_str</span><span class="s4">:</span>
+<a name="l374"><span class="ln">374  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Unused components in ISO string'</span><span class="s4">)</span>
+<a name="l375"><span class="ln">375  </span></a>
+<a name="l376"><span class="ln">376  </span></a>        <span class="s3">if </span><span class="s1">components</span><span class="s4">[</span><span class="s6">0</span><span class="s4">] == </span><span class="s6">24</span><span class="s4">:</span>
+<a name="l377"><span class="ln">377  </span></a>            <span class="s0"># Standard supports 00:00 and 24:00 as representations of midnight</span>
+<a name="l378"><span class="ln">378  </span></a>            <span class="s3">if </span><span class="s1">any</span><span class="s4">(</span><span class="s1">component </span><span class="s4">!= </span><span class="s6">0 </span><span class="s3">for </span><span class="s1">component </span><span class="s3">in </span><span class="s1">components</span><span class="s4">[</span><span class="s6">1</span><span class="s4">:</span><span class="s6">4</span><span class="s4">]):</span>
+<a name="l379"><span class="ln">379  </span></a>                <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Hour may only be 24 at 24:00:00.000'</span><span class="s4">)</span>
+<a name="l380"><span class="ln">380  </span></a>
+<a name="l381"><span class="ln">381  </span></a>        <span class="s3">return </span><span class="s1">components</span>
+<a name="l382"><span class="ln">382  </span></a>
+<a name="l383"><span class="ln">383  </span></a>    <span class="s3">def </span><span class="s1">_parse_tzstr</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">tzstr</span><span class="s4">, </span><span class="s1">zero_as_utc</span><span class="s4">=</span><span class="s3">True</span><span class="s4">):</span>
+<a name="l384"><span class="ln">384  </span></a>        <span class="s3">if </span><span class="s1">tzstr </span><span class="s4">== </span><span class="s7">b'Z' </span><span class="s3">or </span><span class="s1">tzstr </span><span class="s4">== </span><span class="s7">b'z'</span><span class="s4">:</span>
+<a name="l385"><span class="ln">385  </span></a>            <span class="s3">return </span><span class="s1">tz</span><span class="s4">.</span><span class="s1">UTC</span>
+<a name="l386"><span class="ln">386  </span></a>
+<a name="l387"><span class="ln">387  </span></a>        <span class="s3">if </span><span class="s1">len</span><span class="s4">(</span><span class="s1">tzstr</span><span class="s4">) </span><span class="s3">not in </span><span class="s4">{</span><span class="s6">3</span><span class="s4">, </span><span class="s6">5</span><span class="s4">, </span><span class="s6">6</span><span class="s4">}:</span>
+<a name="l388"><span class="ln">388  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Time zone offset must be 1, 3, 5 or 6 characters'</span><span class="s4">)</span>
+<a name="l389"><span class="ln">389  </span></a>
+<a name="l390"><span class="ln">390  </span></a>        <span class="s3">if </span><span class="s1">tzstr</span><span class="s4">[</span><span class="s6">0</span><span class="s4">:</span><span class="s6">1</span><span class="s4">] == </span><span class="s7">b'-'</span><span class="s4">:</span>
+<a name="l391"><span class="ln">391  </span></a>            <span class="s1">mult </span><span class="s4">= -</span><span class="s6">1</span>
+<a name="l392"><span class="ln">392  </span></a>        <span class="s3">elif </span><span class="s1">tzstr</span><span class="s4">[</span><span class="s6">0</span><span class="s4">:</span><span class="s6">1</span><span class="s4">] == </span><span class="s7">b'+'</span><span class="s4">:</span>
+<a name="l393"><span class="ln">393  </span></a>            <span class="s1">mult </span><span class="s4">= </span><span class="s6">1</span>
+<a name="l394"><span class="ln">394  </span></a>        <span class="s3">else</span><span class="s4">:</span>
+<a name="l395"><span class="ln">395  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Time zone offset requires sign'</span><span class="s4">)</span>
+<a name="l396"><span class="ln">396  </span></a>
+<a name="l397"><span class="ln">397  </span></a>        <span class="s1">hours </span><span class="s4">= </span><span class="s1">int</span><span class="s4">(</span><span class="s1">tzstr</span><span class="s4">[</span><span class="s6">1</span><span class="s4">:</span><span class="s6">3</span><span class="s4">])</span>
+<a name="l398"><span class="ln">398  </span></a>        <span class="s3">if </span><span class="s1">len</span><span class="s4">(</span><span class="s1">tzstr</span><span class="s4">) == </span><span class="s6">3</span><span class="s4">:</span>
+<a name="l399"><span class="ln">399  </span></a>            <span class="s1">minutes </span><span class="s4">= </span><span class="s6">0</span>
+<a name="l400"><span class="ln">400  </span></a>        <span class="s3">else</span><span class="s4">:</span>
+<a name="l401"><span class="ln">401  </span></a>            <span class="s1">minutes </span><span class="s4">= </span><span class="s1">int</span><span class="s4">(</span><span class="s1">tzstr</span><span class="s4">[(</span><span class="s6">4 </span><span class="s3">if </span><span class="s1">tzstr</span><span class="s4">[</span><span class="s6">3</span><span class="s4">:</span><span class="s6">4</span><span class="s4">] == </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_TIME_SEP </span><span class="s3">else </span><span class="s6">3</span><span class="s4">):])</span>
+<a name="l402"><span class="ln">402  </span></a>
+<a name="l403"><span class="ln">403  </span></a>        <span class="s3">if </span><span class="s1">zero_as_utc </span><span class="s3">and </span><span class="s1">hours </span><span class="s4">== </span><span class="s6">0 </span><span class="s3">and </span><span class="s1">minutes </span><span class="s4">== </span><span class="s6">0</span><span class="s4">:</span>
+<a name="l404"><span class="ln">404  </span></a>            <span class="s3">return </span><span class="s1">tz</span><span class="s4">.</span><span class="s1">UTC</span>
+<a name="l405"><span class="ln">405  </span></a>        <span class="s3">else</span><span class="s4">:</span>
+<a name="l406"><span class="ln">406  </span></a>            <span class="s3">if </span><span class="s1">minutes </span><span class="s4">&gt; </span><span class="s6">59</span><span class="s4">:</span>
+<a name="l407"><span class="ln">407  </span></a>                <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Invalid minutes in time zone offset'</span><span class="s4">)</span>
+<a name="l408"><span class="ln">408  </span></a>
+<a name="l409"><span class="ln">409  </span></a>            <span class="s3">if </span><span class="s1">hours </span><span class="s4">&gt; </span><span class="s6">23</span><span class="s4">:</span>
+<a name="l410"><span class="ln">410  </span></a>                <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'Invalid hours in time zone offset'</span><span class="s4">)</span>
+<a name="l411"><span class="ln">411  </span></a>
+<a name="l412"><span class="ln">412  </span></a>            <span class="s3">return </span><span class="s1">tz</span><span class="s4">.</span><span class="s1">tzoffset</span><span class="s4">(</span><span class="s3">None</span><span class="s4">, </span><span class="s1">mult </span><span class="s4">* (</span><span class="s1">hours </span><span class="s4">* </span><span class="s6">60 </span><span class="s4">+ </span><span class="s1">minutes</span><span class="s4">) * </span><span class="s6">60</span><span class="s4">)</span>
+<a name="l413"><span class="ln">413  </span></a>
+<a name="l414"><span class="ln">414  </span></a>
+<a name="l415"><span class="ln">415  </span></a><span class="s1">DEFAULT_ISOPARSER </span><span class="s4">= </span><span class="s1">isoparser</span><span class="s4">()</span>
+<a name="l416"><span class="ln">416  </span></a><span class="s1">isoparse </span><span class="s4">= </span><span class="s1">DEFAULT_ISOPARSER</span><span class="s4">.</span><span class="s1">isoparse</span>
+<a name="l417"><span class="ln">417  </span></a></pre>
+</body>
+</html>

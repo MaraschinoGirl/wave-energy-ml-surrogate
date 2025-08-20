@@ -1,0 +1,134 @@
+<html>
+<head>
+<title>attach.cpp</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #6aab73;}
+.s4 { color: #2aacb8;}
+.s5 { color: #c77dbb;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+attach.cpp</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">// This is much simpler than the windows version because we're using gdb and</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">// we assume that gdb will call things in the correct thread already.</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">//compile with: g++ -shared -o attach_linux.so -fPIC -nostartfiles attach_linux.c</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">#include </span><span class="s1">&lt;stdio.h&gt;</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s2">#include </span><span class="s1">&lt;stdlib.h&gt;</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">#include </span><span class="s1">&lt;dlfcn.h&gt;</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s2">#include </span><span class="s1">&lt;stdbool.h&gt;</span>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">#include </span><span class="s3">&quot;../common/python.h&quot;</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s2">#include </span><span class="s3">&quot;../common/ref_utils.hpp&quot;</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s2">#include </span><span class="s3">&quot;../common/py_utils.hpp&quot;</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s2">#include </span><span class="s3">&quot;../common/py_settrace.hpp&quot;</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s0">//#include &lt;unistd.h&gt; used for usleep</span>
+<a name="l17"><span class="ln">17   </span></a>
+<a name="l18"><span class="ln">18   </span></a><span class="s0">// Exported function: hello(): Just to print something and check that we've been</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s0">// able to connect.</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s2">extern </span><span class="s3">&quot;C&quot; </span><span class="s2">int </span><span class="s1">hello(</span><span class="s2">void</span><span class="s1">);</span>
+<a name="l21"><span class="ln">21   </span></a>
+<a name="l22"><span class="ln">22   </span></a><span class="s2">int </span><span class="s1">hello()</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s1">{</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s1">printf(</span><span class="s3">&quot;Hello world!</span><span class="s2">\n</span><span class="s3">&quot;</span><span class="s1">);</span>
+<a name="l25"><span class="ln">25   </span></a>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s2">void </span><span class="s1">*module = dlopen(nullptr, </span><span class="s4">0x2</span><span class="s1">);</span>
+<a name="l27"><span class="ln">27   </span></a>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s2">void </span><span class="s1">*hndl = dlsym (module, </span><span class="s3">&quot;PyGILState_Ensure&quot;</span><span class="s1">);</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s2">if</span><span class="s1">(hndl == nullptr){</span>
+<a name="l30"><span class="ln">30   </span></a>        <span class="s1">printf(</span><span class="s3">&quot;nullptr</span><span class="s2">\n</span><span class="s3">&quot;</span><span class="s1">);</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">}</span><span class="s2">else</span><span class="s1">{</span>
+<a name="l33"><span class="ln">33   </span></a>        <span class="s1">printf(</span><span class="s3">&quot;Worked (found PyGILState_Ensure)!</span><span class="s2">\n</span><span class="s3">&quot;</span><span class="s1">);</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s1">}</span>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s1">printf(</span><span class="s3">&quot;%d&quot;</span><span class="s1">, GetPythonVersion(module));</span>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s2">return </span><span class="s4">2</span><span class="s1">;</span>
+<a name="l40"><span class="ln">40   </span></a><span class="s1">}</span>
+<a name="l41"><span class="ln">41   </span></a>
+<a name="l42"><span class="ln">42   </span></a>
+<a name="l43"><span class="ln">43   </span></a><span class="s0">// Internal function to keep on the tracing</span>
+<a name="l44"><span class="ln">44   </span></a><span class="s2">int </span><span class="s1">_PYDEVD_ExecWithGILSetSysStrace(</span><span class="s2">bool </span><span class="s1">showDebugInfo, </span><span class="s2">bool </span><span class="s1">isDebug);</span>
+<a name="l45"><span class="ln">45   </span></a>
+<a name="l46"><span class="ln">46   </span></a><span class="s0">// Implementation details below</span>
+<a name="l47"><span class="ln">47   </span></a><span class="s2">typedef </span><span class="s1">PyObject* (PyImport_ImportModuleNoBlock) (</span><span class="s2">const char </span><span class="s1">*name);</span>
+<a name="l48"><span class="ln">48   </span></a><span class="s2">typedef int </span><span class="s1">(*PyEval_ThreadsInitialized)();</span>
+<a name="l49"><span class="ln">49   </span></a><span class="s2">typedef unsigned long </span><span class="s1">(*_PyEval_GetSwitchInterval)(</span><span class="s2">void</span><span class="s1">);</span>
+<a name="l50"><span class="ln">50   </span></a><span class="s2">typedef void </span><span class="s1">(*_PyEval_SetSwitchInterval)(</span><span class="s2">unsigned long </span><span class="s1">microseconds);</span>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a><span class="s0">// isDebug is pretty important! Must be true on python debug builds (python_d)</span>
+<a name="l53"><span class="ln">53   </span></a><span class="s0">// If this value is passed wrongly the program will crash.</span>
+<a name="l54"><span class="ln">54   </span></a><span class="s2">extern </span><span class="s3">&quot;C&quot; </span><span class="s2">int </span><span class="s1">DoAttach(</span><span class="s2">bool </span><span class="s1">isDebug, </span><span class="s2">const char </span><span class="s1">*command, </span><span class="s2">bool </span><span class="s1">showDebugInfo);</span>
+<a name="l55"><span class="ln">55   </span></a>
+<a name="l56"><span class="ln">56   </span></a><span class="s2">int </span><span class="s1">DoAttach(</span><span class="s2">bool </span><span class="s1">isDebug, </span><span class="s2">const char </span><span class="s1">*command, </span><span class="s2">bool </span><span class="s1">showDebugInfo)</span>
+<a name="l57"><span class="ln">57   </span></a><span class="s1">{</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s2">void </span><span class="s1">*module = dlopen(nullptr, </span><span class="s4">0x2</span><span class="s1">);</span>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s1">DEFINE_PROC(isInitFunc, Py_IsInitialized*, </span><span class="s3">&quot;Py_IsInitialized&quot;</span><span class="s1">, </span><span class="s4">1</span><span class="s1">);</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s1">DEFINE_PROC(gilEnsure, PyGILState_Ensure*, </span><span class="s3">&quot;PyGILState_Ensure&quot;</span><span class="s1">, </span><span class="s4">51</span><span class="s1">);</span>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s1">DEFINE_PROC(gilRelease, PyGILState_Release*, </span><span class="s3">&quot;PyGILState_Release&quot;</span><span class="s1">, </span><span class="s4">51</span><span class="s1">);</span>
+<a name="l62"><span class="ln">62   </span></a>
+<a name="l63"><span class="ln">63   </span></a>
+<a name="l64"><span class="ln">64   </span></a>    <span class="s2">if</span><span class="s1">(!isInitFunc()){</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s2">if</span><span class="s1">(showDebugInfo){</span>
+<a name="l66"><span class="ln">66   </span></a>            <span class="s1">printf(</span><span class="s3">&quot;Py_IsInitialized returned false.</span><span class="s2">\n</span><span class="s3">&quot;</span><span class="s1">);</span>
+<a name="l67"><span class="ln">67   </span></a>        <span class="s1">}</span>
+<a name="l68"><span class="ln">68   </span></a>        <span class="s2">return </span><span class="s4">2</span><span class="s1">;</span>
+<a name="l69"><span class="ln">69   </span></a>    <span class="s1">}</span>
+<a name="l70"><span class="ln">70   </span></a>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s1">PythonVersion version = GetPythonVersion(module);</span>
+<a name="l72"><span class="ln">72   </span></a>
+<a name="l73"><span class="ln">73   </span></a>    <span class="s1">DEFINE_PROC(interpHead, PyInterpreterState_Head*, </span><span class="s3">&quot;PyInterpreterState_Head&quot;</span><span class="s1">, </span><span class="s4">51</span><span class="s1">);</span>
+<a name="l74"><span class="ln">74   </span></a>
+<a name="l75"><span class="ln">75   </span></a>    <span class="s2">auto </span><span class="s1">head = interpHead();</span>
+<a name="l76"><span class="ln">76   </span></a>    <span class="s2">if </span><span class="s1">(head == nullptr) {</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s0">// this interpreter is loaded but not initialized.</span>
+<a name="l78"><span class="ln">78   </span></a>        <span class="s2">if</span><span class="s1">(showDebugInfo){</span>
+<a name="l79"><span class="ln">79   </span></a>            <span class="s1">printf(</span><span class="s3">&quot;Interpreter not initialized!</span><span class="s2">\n</span><span class="s3">&quot;</span><span class="s1">);</span>
+<a name="l80"><span class="ln">80   </span></a>        <span class="s1">}</span>
+<a name="l81"><span class="ln">81   </span></a>        <span class="s2">return </span><span class="s4">54</span><span class="s1">;</span>
+<a name="l82"><span class="ln">82   </span></a>    <span class="s1">}</span>
+<a name="l83"><span class="ln">83   </span></a>
+<a name="l84"><span class="ln">84   </span></a>    <span class="s0">// Note: unlike windows where we have to do many things to enable threading</span>
+<a name="l85"><span class="ln">85   </span></a>    <span class="s0">// to work to get the gil, here we'll be executing in an existing thread,</span>
+<a name="l86"><span class="ln">86   </span></a>    <span class="s0">// so, it's mostly a matter of getting the GIL and running it and we shouldn't</span>
+<a name="l87"><span class="ln">87   </span></a>    <span class="s0">// have any more problems.</span>
+<a name="l88"><span class="ln">88   </span></a>
+<a name="l89"><span class="ln">89   </span></a>    <span class="s1">DEFINE_PROC(pyRun_SimpleString, PyRun_SimpleString*, </span><span class="s3">&quot;PyRun_SimpleString&quot;</span><span class="s1">, </span><span class="s4">51</span><span class="s1">);</span>
+<a name="l90"><span class="ln">90   </span></a>    
+<a name="l91"><span class="ln">91   </span></a>    <span class="s1">GilHolder gilLock(gilEnsure, gilRelease);   </span><span class="s0">// acquire and hold the GIL until done...</span>
+<a name="l92"><span class="ln">92   </span></a>    
+<a name="l93"><span class="ln">93   </span></a>    <span class="s1">pyRun_SimpleString(command);</span>
+<a name="l94"><span class="ln">94   </span></a>    <span class="s2">return </span><span class="s4">0</span><span class="s1">;</span>
+<a name="l95"><span class="ln">95   </span></a><span class="s1">}</span>
+<a name="l96"><span class="ln">96   </span></a>
+<a name="l97"><span class="ln">97   </span></a>
+<a name="l98"><span class="ln">98   </span></a><span class="s0">// This is the function which enables us to set the sys.settrace for all the threads</span>
+<a name="l99"><span class="ln">99   </span></a><span class="s0">// which are already running.</span>
+<a name="l100"><span class="ln">100  </span></a><span class="s2">extern </span><span class="s3">&quot;C&quot; </span><span class="s2">int </span><span class="s1">AttachDebuggerTracing(</span><span class="s2">bool </span><span class="s1">showDebugInfo, </span><span class="s2">void</span><span class="s1">* pSetTraceFunc, </span><span class="s2">void</span><span class="s1">* pTraceFunc, </span><span class="s2">unsigned int </span><span class="s1">threadId, </span><span class="s2">void</span><span class="s1">* pPyNone);</span>
+<a name="l101"><span class="ln">101  </span></a>
+<a name="l102"><span class="ln">102  </span></a><span class="s2">int </span><span class="s1">AttachDebuggerTracing(</span><span class="s2">bool </span><span class="s1">showDebugInfo, </span><span class="s2">void</span><span class="s1">* pSetTraceFunc, </span><span class="s2">void</span><span class="s1">* pTraceFunc, </span><span class="s2">unsigned int </span><span class="s1">threadId, </span><span class="s2">void</span><span class="s1">* pPyNone)</span>
+<a name="l103"><span class="ln">103  </span></a><span class="s1">{</span>
+<a name="l104"><span class="ln">104  </span></a>    <span class="s2">void </span><span class="s1">*module = dlopen(nullptr, </span><span class="s4">0x2</span><span class="s1">);</span>
+<a name="l105"><span class="ln">105  </span></a>    <span class="s2">bool </span><span class="s1">isDebug = </span><span class="s2">false</span><span class="s1">;</span>
+<a name="l106"><span class="ln">106  </span></a>    <span class="s1">PyObjectHolder traceFunc(isDebug, (PyObject*) pTraceFunc, </span><span class="s5">true</span><span class="s1">);</span>
+<a name="l107"><span class="ln">107  </span></a>    <span class="s1">PyObjectHolder setTraceFunc(isDebug, (PyObject*) pSetTraceFunc, </span><span class="s5">true</span><span class="s1">);</span>
+<a name="l108"><span class="ln">108  </span></a>    <span class="s1">PyObjectHolder pyNone(isDebug, </span><span class="s5">reinterpret_cast</span><span class="s1">&lt;PyObject*&gt;(pPyNone), </span><span class="s5">true</span><span class="s1">);</span>
+<a name="l109"><span class="ln">109  </span></a>    <span class="s2">return </span><span class="s1">InternalSetSysTraceFunc(module, isDebug, showDebugInfo, &amp;traceFunc, &amp;setTraceFunc, threadId, &amp;pyNone);</span>
+<a name="l110"><span class="ln">110  </span></a><span class="s1">}</span>
+<a name="l111"><span class="ln">111  </span></a>
+<a name="l112"><span class="ln">112  </span></a></pre>
+</body>
+</html>

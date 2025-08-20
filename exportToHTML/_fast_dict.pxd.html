@@ -1,0 +1,41 @@
+<html>
+<head>
+<title>_fast_dict.pxd</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_fast_dict.pxd</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Authors: The scikit-learn developers</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># SPDX-License-Identifier: BSD-3-Clause</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">&quot;&quot;&quot; 
+<a name="l5"><span class="ln">5    </span></a>Uses C++ map containers for fast dict-like behavior with keys being 
+<a name="l6"><span class="ln">6    </span></a>integers, and values float. 
+<a name="l7"><span class="ln">7    </span></a>&quot;&quot;&quot;</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s3">from </span><span class="s1">libcpp</span><span class="s4">.</span><span class="s1">map </span><span class="s3">cimport </span><span class="s1">map </span><span class="s3">as </span><span class="s1">cpp_map</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">_typedefs </span><span class="s3">cimport </span><span class="s1">float64_t</span><span class="s4">, </span><span class="s1">intp_t</span>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a><span class="s0">###############################################################################</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s0"># An object to be used in Python</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s3">cdef class </span><span class="s1">IntFloatDict</span><span class="s4">:</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s3">cdef </span><span class="s1">cpp_map</span><span class="s4">[</span><span class="s1">intp_t</span><span class="s4">, </span><span class="s1">float64_t</span><span class="s4">] </span><span class="s1">my_map</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s3">cdef </span><span class="s1">_to_arrays</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">intp_t </span><span class="s4">[:] </span><span class="s1">keys</span><span class="s4">, </span><span class="s1">float64_t </span><span class="s4">[:] </span><span class="s1">values</span><span class="s4">)</span>
+<a name="l20"><span class="ln">20   </span></a></pre>
+</body>
+</html>

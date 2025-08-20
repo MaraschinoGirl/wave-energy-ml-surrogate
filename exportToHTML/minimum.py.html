@@ -1,0 +1,89 @@
+<html>
+<head>
+<title>minimum.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #5f826b; font-style: italic;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+minimum.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src </span><span class="s0">import </span><span class="s1">ops</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">api_export </span><span class="s0">import </span><span class="s1">keras_export</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">layers</span><span class="s2">.</span><span class="s1">merging</span><span class="s2">.</span><span class="s1">base_merge </span><span class="s0">import </span><span class="s1">Merge</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">@</span><span class="s1">keras_export</span><span class="s2">(</span><span class="s3">&quot;keras.layers.Minimum&quot;</span><span class="s2">)</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">class </span><span class="s1">Minimum</span><span class="s2">(</span><span class="s1">Merge</span><span class="s2">):</span>
+<a name="l8"><span class="ln">8    </span></a>    <span class="s4">&quot;&quot;&quot;Computes elementwise minimum on a list of inputs. 
+<a name="l9"><span class="ln">9    </span></a> 
+<a name="l10"><span class="ln">10   </span></a>    It takes as input a list of tensors, all of the same shape, 
+<a name="l11"><span class="ln">11   </span></a>    and returns a single tensor (also of the same shape). 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>    Examples: 
+<a name="l14"><span class="ln">14   </span></a> 
+<a name="l15"><span class="ln">15   </span></a>    &gt;&gt;&gt; input_shape = (2, 3, 4) 
+<a name="l16"><span class="ln">16   </span></a>    &gt;&gt;&gt; x1 = np.random.rand(*input_shape) 
+<a name="l17"><span class="ln">17   </span></a>    &gt;&gt;&gt; x2 = np.random.rand(*input_shape) 
+<a name="l18"><span class="ln">18   </span></a>    &gt;&gt;&gt; y = keras.layers.Minimum()([x1, x2]) 
+<a name="l19"><span class="ln">19   </span></a> 
+<a name="l20"><span class="ln">20   </span></a>    Usage in a Keras model: 
+<a name="l21"><span class="ln">21   </span></a> 
+<a name="l22"><span class="ln">22   </span></a>    &gt;&gt;&gt; input1 = keras.layers.Input(shape=(16,)) 
+<a name="l23"><span class="ln">23   </span></a>    &gt;&gt;&gt; x1 = keras.layers.Dense(8, activation='relu')(input1) 
+<a name="l24"><span class="ln">24   </span></a>    &gt;&gt;&gt; input2 = keras.layers.Input(shape=(32,)) 
+<a name="l25"><span class="ln">25   </span></a>    &gt;&gt;&gt; x2 = keras.layers.Dense(8, activation='relu')(input2) 
+<a name="l26"><span class="ln">26   </span></a>    &gt;&gt;&gt; # equivalent to `y = keras.layers.minimum([x1, x2])` 
+<a name="l27"><span class="ln">27   </span></a>    &gt;&gt;&gt; y = keras.layers.Minimum()([x1, x2]) 
+<a name="l28"><span class="ln">28   </span></a>    &gt;&gt;&gt; out = keras.layers.Dense(4)(y) 
+<a name="l29"><span class="ln">29   </span></a>    &gt;&gt;&gt; model = keras.models.Model(inputs=[input1, input2], outputs=out) 
+<a name="l30"><span class="ln">30   </span></a> 
+<a name="l31"><span class="ln">31   </span></a>    &quot;&quot;&quot;</span>
+<a name="l32"><span class="ln">32   </span></a>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s0">def </span><span class="s1">_merge_function</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">inputs</span><span class="s2">):</span>
+<a name="l34"><span class="ln">34   </span></a>        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_apply_merge_op_and_or_mask</span><span class="s2">(</span><span class="s1">ops</span><span class="s2">.</span><span class="s1">minimum</span><span class="s2">, </span><span class="s1">inputs</span><span class="s2">)</span>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a><span class="s2">@</span><span class="s1">keras_export</span><span class="s2">(</span><span class="s3">&quot;keras.layers.minimum&quot;</span><span class="s2">)</span>
+<a name="l38"><span class="ln">38   </span></a><span class="s0">def </span><span class="s1">minimum</span><span class="s2">(</span><span class="s1">inputs</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s4">&quot;&quot;&quot;Functional interface to the `keras.layers.Minimum` layer. 
+<a name="l40"><span class="ln">40   </span></a> 
+<a name="l41"><span class="ln">41   </span></a>    Args: 
+<a name="l42"><span class="ln">42   </span></a>        inputs: A list of input tensors , all of the same shape. 
+<a name="l43"><span class="ln">43   </span></a>        **kwargs: Standard layer keyword arguments. 
+<a name="l44"><span class="ln">44   </span></a> 
+<a name="l45"><span class="ln">45   </span></a>    Returns: 
+<a name="l46"><span class="ln">46   </span></a>        A tensor as the elementwise product of the inputs with the same 
+<a name="l47"><span class="ln">47   </span></a>        shape as the inputs. 
+<a name="l48"><span class="ln">48   </span></a> 
+<a name="l49"><span class="ln">49   </span></a>    Examples: 
+<a name="l50"><span class="ln">50   </span></a> 
+<a name="l51"><span class="ln">51   </span></a>    &gt;&gt;&gt; input_shape = (2, 3, 4) 
+<a name="l52"><span class="ln">52   </span></a>    &gt;&gt;&gt; x1 = np.random.rand(*input_shape) 
+<a name="l53"><span class="ln">53   </span></a>    &gt;&gt;&gt; x2 = np.random.rand(*input_shape) 
+<a name="l54"><span class="ln">54   </span></a>    &gt;&gt;&gt; y = keras.layers.minimum([x1, x2]) 
+<a name="l55"><span class="ln">55   </span></a> 
+<a name="l56"><span class="ln">56   </span></a>    Usage in a Keras model: 
+<a name="l57"><span class="ln">57   </span></a> 
+<a name="l58"><span class="ln">58   </span></a>    &gt;&gt;&gt; input1 = keras.layers.Input(shape=(16,)) 
+<a name="l59"><span class="ln">59   </span></a>    &gt;&gt;&gt; x1 = keras.layers.Dense(8, activation='relu')(input1) 
+<a name="l60"><span class="ln">60   </span></a>    &gt;&gt;&gt; input2 = keras.layers.Input(shape=(32,)) 
+<a name="l61"><span class="ln">61   </span></a>    &gt;&gt;&gt; x2 = keras.layers.Dense(8, activation='relu')(input2) 
+<a name="l62"><span class="ln">62   </span></a>    &gt;&gt;&gt; y = keras.layers.minimum([x1, x2]) 
+<a name="l63"><span class="ln">63   </span></a>    &gt;&gt;&gt; out = keras.layers.Dense(4)(y) 
+<a name="l64"><span class="ln">64   </span></a>    &gt;&gt;&gt; model = keras.models.Model(inputs=[input1, input2], outputs=out) 
+<a name="l65"><span class="ln">65   </span></a> 
+<a name="l66"><span class="ln">66   </span></a>    &quot;&quot;&quot;</span>
+<a name="l67"><span class="ln">67   </span></a>    <span class="s0">return </span><span class="s1">Minimum</span><span class="s2">(**</span><span class="s1">kwargs</span><span class="s2">)(</span><span class="s1">inputs</span><span class="s2">)</span>
+<a name="l68"><span class="ln">68   </span></a></pre>
+</body>
+</html>

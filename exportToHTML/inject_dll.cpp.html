@@ -1,0 +1,157 @@
+<html>
+<head>
+<title>inject_dll.cpp</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #6aab73;}
+.s3 { color: #7a7e85;}
+.s4 { color: #c77dbb;}
+.s5 { color: #0da19e;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+inject_dll.cpp</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">#include </span><span class="s1">&lt;iostream&gt;</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">#include </span><span class="s1">&lt;windows.h&gt;</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">#include </span><span class="s1">&lt;stdio.h&gt;</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">#include </span><span class="s1">&lt;conio.h&gt;</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">#include </span><span class="s1">&lt;tchar.h&gt;</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">#include </span><span class="s1">&lt;tlhelp32.h&gt;</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a><span class="s1">#pragma comment(lib, </span><span class="s2">&quot;kernel32.lib&quot;</span><span class="s1">)</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s1">#pragma comment(lib, </span><span class="s2">&quot;user32.lib&quot;</span><span class="s1">)</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s3">// Helper to free data when we leave the scope.</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s4">class </span><span class="s1">DataToFree {</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s4">public</span><span class="s1">:</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s1">HANDLE hProcess;</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s1">HANDLE snapshotHandle;</span>
+<a name="l16"><span class="ln">16   </span></a>    
+<a name="l17"><span class="ln">17   </span></a>    <span class="s1">LPVOID remoteMemoryAddr;</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s0">int </span><span class="s1">remoteMemorySize;</span>
+<a name="l19"><span class="ln">19   </span></a>    
+<a name="l20"><span class="ln">20   </span></a>    <span class="s1">DataToFree(){</span>
+<a name="l21"><span class="ln">21   </span></a>        <span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">hProcess = nullptr;</span>
+<a name="l22"><span class="ln">22   </span></a>        <span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">snapshotHandle = nullptr;</span>
+<a name="l23"><span class="ln">23   </span></a>        
+<a name="l24"><span class="ln">24   </span></a>        <span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">remoteMemoryAddr = nullptr;</span>
+<a name="l25"><span class="ln">25   </span></a>        <span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">remoteMemorySize = </span><span class="s6">0</span><span class="s1">;</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s1">}</span>
+<a name="l27"><span class="ln">27   </span></a>    
+<a name="l28"><span class="ln">28   </span></a>    <span class="s1">~DataToFree() {</span>
+<a name="l29"><span class="ln">29   </span></a>        <span class="s0">if</span><span class="s1">(</span><span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">hProcess != nullptr){</span>
+<a name="l30"><span class="ln">30   </span></a>            
+<a name="l31"><span class="ln">31   </span></a>            <span class="s0">if</span><span class="s1">(</span><span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">remoteMemoryAddr != nullptr &amp;&amp; </span><span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">remoteMemorySize != </span><span class="s6">0</span><span class="s1">){</span>
+<a name="l32"><span class="ln">32   </span></a>                <span class="s1">VirtualFreeEx(</span><span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">hProcess, </span><span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">remoteMemoryAddr, </span><span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">remoteMemorySize, MEM_RELEASE);</span>
+<a name="l33"><span class="ln">33   </span></a>                <span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">remoteMemoryAddr = nullptr;</span>
+<a name="l34"><span class="ln">34   </span></a>                <span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">remoteMemorySize = </span><span class="s6">0</span><span class="s1">;</span>
+<a name="l35"><span class="ln">35   </span></a>            <span class="s1">}</span>
+<a name="l36"><span class="ln">36   </span></a>            
+<a name="l37"><span class="ln">37   </span></a>            <span class="s1">CloseHandle(</span><span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">hProcess);</span>
+<a name="l38"><span class="ln">38   </span></a>            <span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">hProcess = nullptr;</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s1">}</span>
+<a name="l40"><span class="ln">40   </span></a>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s0">if</span><span class="s1">(</span><span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">snapshotHandle != nullptr){</span>
+<a name="l42"><span class="ln">42   </span></a>            <span class="s1">CloseHandle(</span><span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">snapshotHandle);</span>
+<a name="l43"><span class="ln">43   </span></a>            <span class="s4">this</span><span class="s5">-&gt;</span><span class="s1">snapshotHandle = nullptr;</span>
+<a name="l44"><span class="ln">44   </span></a>        <span class="s1">}</span>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s1">}</span>
+<a name="l46"><span class="ln">46   </span></a><span class="s1">};</span>
+<a name="l47"><span class="ln">47   </span></a>
+<a name="l48"><span class="ln">48   </span></a>
+<a name="l49"><span class="ln">49   </span></a><span class="s3">/** 
+<a name="l50"><span class="ln">50   </span></a> * All we do here is load a dll in a remote program (in a remote thread). 
+<a name="l51"><span class="ln">51   </span></a> * 
+<a name="l52"><span class="ln">52   </span></a> * Arguments must be the pid and the dll name to run. 
+<a name="l53"><span class="ln">53   </span></a> * 
+<a name="l54"><span class="ln">54   </span></a> * i.e.: inject_dll.exe &lt;pid&gt; &lt;dll path&gt; 
+<a name="l55"><span class="ln">55   </span></a> */</span>
+<a name="l56"><span class="ln">56   </span></a><span class="s0">int </span><span class="s1">wmain( </span><span class="s0">int </span><span class="s1">argc, </span><span class="s4">wchar_t </span><span class="s1">*argv[ ], </span><span class="s4">wchar_t </span><span class="s1">*envp[ ] )</span>
+<a name="l57"><span class="ln">57   </span></a><span class="s1">{</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;Running executable to inject dll.&quot; </span><span class="s1">&lt;&lt; std::endl;</span>
+<a name="l59"><span class="ln">59   </span></a>    
+<a name="l60"><span class="ln">60   </span></a>    <span class="s3">// Helper to clear resources.</span>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s1">DataToFree dataToFree;</span>
+<a name="l62"><span class="ln">62   </span></a>    
+<a name="l63"><span class="ln">63   </span></a>    <span class="s0">if</span><span class="s1">(argc != </span><span class="s6">3</span><span class="s1">){</span>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;Expected 2 arguments (pid, dll name).&quot; </span><span class="s1">&lt;&lt; std::endl;</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s0">return </span><span class="s6">1</span><span class="s1">;</span>
+<a name="l66"><span class="ln">66   </span></a>    <span class="s1">}</span>
+<a name="l67"><span class="ln">67   </span></a> 
+<a name="l68"><span class="ln">68   </span></a>    <span class="s0">const int </span><span class="s1">pid = _wtoi(argv[</span><span class="s6">1</span><span class="s1">]);</span>
+<a name="l69"><span class="ln">69   </span></a>    <span class="s0">if</span><span class="s1">(pid == </span><span class="s6">0</span><span class="s1">){</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;Invalid pid.&quot; </span><span class="s1">&lt;&lt; std::endl;</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s0">return </span><span class="s6">2</span><span class="s1">;</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s1">}</span>
+<a name="l73"><span class="ln">73   </span></a>    
+<a name="l74"><span class="ln">74   </span></a>    <span class="s0">const int </span><span class="s1">MAX_PATH_SIZE_PADDED = MAX_PATH + </span><span class="s6">1</span><span class="s1">;</span>
+<a name="l75"><span class="ln">75   </span></a>    <span class="s0">char </span><span class="s1">dllPath[MAX_PATH_SIZE_PADDED];</span>
+<a name="l76"><span class="ln">76   </span></a>    <span class="s1">memset(&amp;dllPath[</span><span class="s6">0</span><span class="s1">], </span><span class="s2">'</span><span class="s0">\0</span><span class="s2">'</span><span class="s1">, MAX_PATH_SIZE_PADDED);</span>
+<a name="l77"><span class="ln">77   </span></a>    <span class="s1">size_t pathLen = </span><span class="s6">0</span><span class="s1">;</span>
+<a name="l78"><span class="ln">78   </span></a>    <span class="s1">wcstombs_s(&amp;pathLen, dllPath, argv[</span><span class="s6">2</span><span class="s1">], MAX_PATH);</span>
+<a name="l79"><span class="ln">79   </span></a>    
+<a name="l80"><span class="ln">80   </span></a>    <span class="s0">const bool </span><span class="s1">inheritable = </span><span class="s0">false</span><span class="s1">;</span>
+<a name="l81"><span class="ln">81   </span></a>    <span class="s0">const </span><span class="s1">HANDLE hProcess = OpenProcess(PROCESS_VM_OPERATION | PROCESS_CREATE_THREAD | PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, inheritable, pid);</span>
+<a name="l82"><span class="ln">82   </span></a>    <span class="s0">if</span><span class="s1">(hProcess == nullptr || hProcess == INVALID_HANDLE_VALUE){</span>
+<a name="l83"><span class="ln">83   </span></a>        <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;Unable to open process with pid: &quot; </span><span class="s1">&lt;&lt; pid &lt;&lt; </span><span class="s2">&quot;. Error code: &quot; </span><span class="s1">&lt;&lt; GetLastError() &lt;&lt; </span><span class="s2">&quot;.&quot; </span><span class="s1">&lt;&lt; std::endl;</span>
+<a name="l84"><span class="ln">84   </span></a>        <span class="s0">return </span><span class="s6">3</span><span class="s1">;</span>
+<a name="l85"><span class="ln">85   </span></a>    <span class="s1">}</span>
+<a name="l86"><span class="ln">86   </span></a>    <span class="s1">dataToFree.hProcess = hProcess;</span>
+<a name="l87"><span class="ln">87   </span></a>    <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;OpenProcess with pid: &quot; </span><span class="s1">&lt;&lt; pid &lt;&lt; std::endl;</span>
+<a name="l88"><span class="ln">88   </span></a>    
+<a name="l89"><span class="ln">89   </span></a>    <span class="s0">const </span><span class="s1">LPVOID remoteMemoryAddr = VirtualAllocEx(hProcess, nullptr, MAX_PATH_SIZE_PADDED, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);</span>
+<a name="l90"><span class="ln">90   </span></a>    <span class="s0">if</span><span class="s1">(remoteMemoryAddr == nullptr){</span>
+<a name="l91"><span class="ln">91   </span></a>        <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;Error. Unable to allocate memory in pid: &quot; </span><span class="s1">&lt;&lt; pid &lt;&lt; </span><span class="s2">&quot;. Error code: &quot; </span><span class="s1">&lt;&lt; GetLastError() &lt;&lt; </span><span class="s2">&quot;.&quot; </span><span class="s1">&lt;&lt; std::endl;</span>
+<a name="l92"><span class="ln">92   </span></a>        <span class="s0">return </span><span class="s6">4</span><span class="s1">;</span>
+<a name="l93"><span class="ln">93   </span></a>    <span class="s1">}</span>
+<a name="l94"><span class="ln">94   </span></a>    <span class="s1">dataToFree.remoteMemorySize = MAX_PATH_SIZE_PADDED;</span>
+<a name="l95"><span class="ln">95   </span></a>    <span class="s1">dataToFree.remoteMemoryAddr = remoteMemoryAddr;</span>
+<a name="l96"><span class="ln">96   </span></a>    
+<a name="l97"><span class="ln">97   </span></a>    <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;VirtualAllocEx in pid: &quot; </span><span class="s1">&lt;&lt; pid &lt;&lt; std::endl;</span>
+<a name="l98"><span class="ln">98   </span></a>    
+<a name="l99"><span class="ln">99   </span></a>    <span class="s0">const bool </span><span class="s1">written = WriteProcessMemory(hProcess, remoteMemoryAddr, dllPath, pathLen, nullptr);</span>
+<a name="l100"><span class="ln">100  </span></a>    <span class="s0">if</span><span class="s1">(!written){</span>
+<a name="l101"><span class="ln">101  </span></a>        <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;Error. Unable to write to memory in pid: &quot; </span><span class="s1">&lt;&lt; pid &lt;&lt; </span><span class="s2">&quot;. Error code: &quot; </span><span class="s1">&lt;&lt; GetLastError() &lt;&lt; </span><span class="s2">&quot;.&quot; </span><span class="s1">&lt;&lt; std::endl;</span>
+<a name="l102"><span class="ln">102  </span></a>        <span class="s0">return </span><span class="s6">5</span><span class="s1">;</span>
+<a name="l103"><span class="ln">103  </span></a>    <span class="s1">}</span>
+<a name="l104"><span class="ln">104  </span></a>    <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;WriteProcessMemory in pid: &quot; </span><span class="s1">&lt;&lt; pid &lt;&lt; std::endl;</span>
+<a name="l105"><span class="ln">105  </span></a>    
+<a name="l106"><span class="ln">106  </span></a>    <span class="s0">const </span><span class="s1">LPVOID loadLibraryAddress = (LPVOID) GetProcAddress(GetModuleHandle(</span><span class="s2">&quot;kernel32.dll&quot;</span><span class="s1">), </span><span class="s2">&quot;LoadLibraryA&quot;</span><span class="s1">);</span>
+<a name="l107"><span class="ln">107  </span></a>    <span class="s0">if</span><span class="s1">(loadLibraryAddress == nullptr){</span>
+<a name="l108"><span class="ln">108  </span></a>        <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;Error. Unable to get LoadLibraryA address. Error code: &quot; </span><span class="s1">&lt;&lt; GetLastError() &lt;&lt; </span><span class="s2">&quot;.&quot; </span><span class="s1">&lt;&lt; std::endl;</span>
+<a name="l109"><span class="ln">109  </span></a>        <span class="s0">return </span><span class="s6">6</span><span class="s1">;</span>
+<a name="l110"><span class="ln">110  </span></a>    <span class="s1">}</span>
+<a name="l111"><span class="ln">111  </span></a>    <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;loadLibraryAddress: &quot; </span><span class="s1">&lt;&lt; pid &lt;&lt; std::endl;</span>
+<a name="l112"><span class="ln">112  </span></a>    
+<a name="l113"><span class="ln">113  </span></a>    <span class="s0">const </span><span class="s1">HANDLE remoteThread = CreateRemoteThread(hProcess, nullptr, </span><span class="s6">0</span><span class="s1">, (LPTHREAD_START_ROUTINE) loadLibraryAddress, remoteMemoryAddr, </span><span class="s6">0</span><span class="s1">, nullptr);</span>
+<a name="l114"><span class="ln">114  </span></a>    <span class="s0">if </span><span class="s1">(remoteThread == nullptr) {</span>
+<a name="l115"><span class="ln">115  </span></a>        <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;Error. Unable to CreateRemoteThread. Error code: &quot; </span><span class="s1">&lt;&lt; GetLastError() &lt;&lt; </span><span class="s2">&quot;.&quot; </span><span class="s1">&lt;&lt; std::endl;</span>
+<a name="l116"><span class="ln">116  </span></a>        <span class="s0">return </span><span class="s6">7</span><span class="s1">;</span>
+<a name="l117"><span class="ln">117  </span></a>    <span class="s1">}</span>
+<a name="l118"><span class="ln">118  </span></a>    
+<a name="l119"><span class="ln">119  </span></a>    <span class="s3">// We wait for the load to finish before proceeding to get the function to actually do the attach.</span>
+<a name="l120"><span class="ln">120  </span></a>    <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;Waiting for LoadLibraryA to complete.&quot; </span><span class="s1">&lt;&lt; std::endl;</span>
+<a name="l121"><span class="ln">121  </span></a>    <span class="s1">DWORD result = WaitForSingleObject(remoteThread, </span><span class="s6">5 </span><span class="s1">* </span><span class="s6">1000</span><span class="s1">);</span>
+<a name="l122"><span class="ln">122  </span></a>    
+<a name="l123"><span class="ln">123  </span></a>    <span class="s0">if</span><span class="s1">(result == WAIT_TIMEOUT) {</span>
+<a name="l124"><span class="ln">124  </span></a>        <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;WaitForSingleObject(LoadLibraryA thread) timed out.&quot; </span><span class="s1">&lt;&lt; std::endl;</span>
+<a name="l125"><span class="ln">125  </span></a>        <span class="s0">return </span><span class="s6">8</span><span class="s1">;</span>
+<a name="l126"><span class="ln">126  </span></a>        
+<a name="l127"><span class="ln">127  </span></a>    <span class="s1">} </span><span class="s0">else if</span><span class="s1">(result == WAIT_FAILED) {</span>
+<a name="l128"><span class="ln">128  </span></a>        <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;WaitForSingleObject(LoadLibraryA thread) failed. Error code: &quot; </span><span class="s1">&lt;&lt; GetLastError() &lt;&lt; </span><span class="s2">&quot;.&quot; </span><span class="s1">&lt;&lt; std::endl;</span>
+<a name="l129"><span class="ln">129  </span></a>        <span class="s0">return </span><span class="s6">9</span><span class="s1">;</span>
+<a name="l130"><span class="ln">130  </span></a>    <span class="s1">}</span>
+<a name="l131"><span class="ln">131  </span></a>    
+<a name="l132"><span class="ln">132  </span></a>    <span class="s1">std::cout &lt;&lt; </span><span class="s2">&quot;Ok, finished dll injection.&quot; </span><span class="s1">&lt;&lt; std::endl;</span>
+<a name="l133"><span class="ln">133  </span></a>    <span class="s0">return </span><span class="s6">0</span><span class="s1">;</span>
+<a name="l134"><span class="ln">134  </span></a><span class="s1">}</span></pre>
+</body>
+</html>

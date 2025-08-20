@@ -1,0 +1,72 @@
+<html>
+<head>
+<title>fuzz_validate.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+fuzz_validate.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>Fuzzing setup for OSS-Fuzz. 
+<a name="l3"><span class="ln">3    </span></a> 
+<a name="l4"><span class="ln">4    </span></a>See https://github.com/google/oss-fuzz/tree/master/projects/jsonschema for the 
+<a name="l5"><span class="ln">5    </span></a>other half of the setup here. 
+<a name="l6"><span class="ln">6    </span></a>&quot;&quot;&quot;</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">import </span><span class="s1">sys</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">from </span><span class="s1">hypothesis </span><span class="s2">import </span><span class="s1">given</span><span class="s3">, </span><span class="s1">strategies</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s2">import </span><span class="s1">jsonschema</span>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a><span class="s1">PRIM </span><span class="s3">= </span><span class="s1">strategies</span><span class="s3">.</span><span class="s1">one_of</span><span class="s3">(</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s1">strategies</span><span class="s3">.</span><span class="s1">booleans</span><span class="s3">(),</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s1">strategies</span><span class="s3">.</span><span class="s1">integers</span><span class="s3">(),</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s1">strategies</span><span class="s3">.</span><span class="s1">floats</span><span class="s3">(</span><span class="s1">allow_nan</span><span class="s3">=</span><span class="s2">False</span><span class="s3">, </span><span class="s1">allow_infinity</span><span class="s3">=</span><span class="s2">False</span><span class="s3">),</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s1">strategies</span><span class="s3">.</span><span class="s1">text</span><span class="s3">(),</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s3">)</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s1">DICT </span><span class="s3">= </span><span class="s1">strategies</span><span class="s3">.</span><span class="s1">recursive</span><span class="s3">(</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s1">base</span><span class="s3">=</span><span class="s1">strategies</span><span class="s3">.</span><span class="s1">one_of</span><span class="s3">(</span>
+<a name="l21"><span class="ln">21   </span></a>        <span class="s1">strategies</span><span class="s3">.</span><span class="s1">booleans</span><span class="s3">(),</span>
+<a name="l22"><span class="ln">22   </span></a>        <span class="s1">strategies</span><span class="s3">.</span><span class="s1">dictionaries</span><span class="s3">(</span><span class="s1">strategies</span><span class="s3">.</span><span class="s1">text</span><span class="s3">(), </span><span class="s1">PRIM</span><span class="s3">),</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s3">),</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s1">extend</span><span class="s3">=</span><span class="s2">lambda </span><span class="s1">inner</span><span class="s3">: </span><span class="s1">strategies</span><span class="s3">.</span><span class="s1">dictionaries</span><span class="s3">(</span><span class="s1">strategies</span><span class="s3">.</span><span class="s1">text</span><span class="s3">(), </span><span class="s1">inner</span><span class="s3">),</span>
+<a name="l25"><span class="ln">25   </span></a><span class="s3">)</span>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a>
+<a name="l28"><span class="ln">28   </span></a><span class="s3">@</span><span class="s1">given</span><span class="s3">(</span><span class="s1">obj1</span><span class="s3">=</span><span class="s1">DICT</span><span class="s3">, </span><span class="s1">obj2</span><span class="s3">=</span><span class="s1">DICT</span><span class="s3">)</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s2">def </span><span class="s1">test_schemas</span><span class="s3">(</span><span class="s1">obj1</span><span class="s3">, </span><span class="s1">obj2</span><span class="s3">):</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s2">try</span><span class="s3">:</span>
+<a name="l31"><span class="ln">31   </span></a>        <span class="s1">jsonschema</span><span class="s3">.</span><span class="s1">validate</span><span class="s3">(</span><span class="s1">instance</span><span class="s3">=</span><span class="s1">obj1</span><span class="s3">, </span><span class="s1">schema</span><span class="s3">=</span><span class="s1">obj2</span><span class="s3">)</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s2">except </span><span class="s1">jsonschema</span><span class="s3">.</span><span class="s1">exceptions</span><span class="s3">.</span><span class="s1">ValidationError</span><span class="s3">:</span>
+<a name="l33"><span class="ln">33   </span></a>        <span class="s2">pass</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s2">except </span><span class="s1">jsonschema</span><span class="s3">.</span><span class="s1">exceptions</span><span class="s3">.</span><span class="s1">SchemaError</span><span class="s3">:</span>
+<a name="l35"><span class="ln">35   </span></a>        <span class="s2">pass</span>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a><span class="s2">def </span><span class="s1">main</span><span class="s3">():</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s1">atheris</span><span class="s3">.</span><span class="s1">instrument_all</span><span class="s3">()</span>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s1">atheris</span><span class="s3">.</span><span class="s1">Setup</span><span class="s3">(</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s1">sys</span><span class="s3">.</span><span class="s1">argv</span><span class="s3">,</span>
+<a name="l42"><span class="ln">42   </span></a>        <span class="s1">test_schemas</span><span class="s3">.</span><span class="s1">hypothesis</span><span class="s3">.</span><span class="s1">fuzz_one_input</span><span class="s3">,</span>
+<a name="l43"><span class="ln">43   </span></a>        <span class="s1">enable_python_coverage</span><span class="s3">=</span><span class="s2">True</span><span class="s3">,</span>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s3">)</span>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s1">atheris</span><span class="s3">.</span><span class="s1">Fuzz</span><span class="s3">()</span>
+<a name="l46"><span class="ln">46   </span></a>
+<a name="l47"><span class="ln">47   </span></a>
+<a name="l48"><span class="ln">48   </span></a><span class="s2">if </span><span class="s1">__name__ </span><span class="s3">== </span><span class="s4">&quot;__main__&quot;</span><span class="s3">:</span>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s2">import </span><span class="s1">atheris</span>
+<a name="l50"><span class="ln">50   </span></a>    <span class="s1">main</span><span class="s3">()</span>
+<a name="l51"><span class="ln">51   </span></a></pre>
+</body>
+</html>

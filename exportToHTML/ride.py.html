@@ -1,0 +1,161 @@
+<html>
+<head>
+<title>ride.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ride.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>    pygments.lexers.ride 
+<a name="l3"><span class="ln">3    </span></a>    ~~~~~~~~~~~~~~~~~~~~ 
+<a name="l4"><span class="ln">4    </span></a> 
+<a name="l5"><span class="ln">5    </span></a>    Lexer for the Ride programming language. 
+<a name="l6"><span class="ln">6    </span></a> 
+<a name="l7"><span class="ln">7    </span></a>    :copyright: Copyright 2006-2025 by the Pygments team, see AUTHORS. 
+<a name="l8"><span class="ln">8    </span></a>    :license: BSD, see LICENSE for details. 
+<a name="l9"><span class="ln">9    </span></a>&quot;&quot;&quot;</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">lexer </span><span class="s2">import </span><span class="s1">RegexLexer</span><span class="s3">, </span><span class="s1">words</span><span class="s3">, </span><span class="s1">include</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">token </span><span class="s2">import </span><span class="s1">Comment</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">, </span><span class="s1">Number</span><span class="s3">, </span><span class="s1">Punctuation</span><span class="s3">, </span><span class="s1">\</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s1">String</span><span class="s3">, </span><span class="s1">Text</span>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a><span class="s1">__all__ </span><span class="s3">= [</span><span class="s4">'RideLexer'</span><span class="s3">]</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a>
+<a name="l18"><span class="ln">18   </span></a><span class="s2">class </span><span class="s1">RideLexer</span><span class="s3">(</span><span class="s1">RegexLexer</span><span class="s3">):</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l20"><span class="ln">20   </span></a>    For Ride source code. 
+<a name="l21"><span class="ln">21   </span></a>    &quot;&quot;&quot;</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s1">name </span><span class="s3">= </span><span class="s4">'Ride'</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s1">aliases </span><span class="s3">= [</span><span class="s4">'ride'</span><span class="s3">]</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s1">filenames </span><span class="s3">= [</span><span class="s4">'*.ride'</span><span class="s3">]</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s1">mimetypes </span><span class="s3">= [</span><span class="s4">'text/x-ride'</span><span class="s3">]</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s1">url </span><span class="s3">= </span><span class="s4">'https://docs.waves.tech/en/ride'</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s1">version_added </span><span class="s3">= </span><span class="s4">'2.6'</span>
+<a name="l29"><span class="ln">29   </span></a>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s1">validName </span><span class="s3">= </span><span class="s4">r'[a-zA-Z_][a-zA-Z0-9_\']*'</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">builtinOps </span><span class="s3">= (</span>
+<a name="l33"><span class="ln">33   </span></a>        <span class="s4">'||'</span><span class="s3">, </span><span class="s4">'|'</span><span class="s3">, </span><span class="s4">'&gt;='</span><span class="s3">, </span><span class="s4">'&gt;'</span><span class="s3">, </span><span class="s4">'=='</span><span class="s3">, </span><span class="s4">'!'</span><span class="s3">,</span>
+<a name="l34"><span class="ln">34   </span></a>        <span class="s4">'='</span><span class="s3">, </span><span class="s4">'&lt;='</span><span class="s3">, </span><span class="s4">'&lt;'</span><span class="s3">, </span><span class="s4">'::'</span><span class="s3">, </span><span class="s4">':+'</span><span class="s3">, </span><span class="s4">':'</span><span class="s3">, </span><span class="s4">'!='</span><span class="s3">, </span><span class="s4">'/'</span><span class="s3">,</span>
+<a name="l35"><span class="ln">35   </span></a>        <span class="s4">'.'</span><span class="s3">, </span><span class="s4">'=&gt;'</span><span class="s3">, </span><span class="s4">'-'</span><span class="s3">, </span><span class="s4">'+'</span><span class="s3">, </span><span class="s4">'*'</span><span class="s3">, </span><span class="s4">'&amp;&amp;'</span><span class="s3">, </span><span class="s4">'%'</span><span class="s3">, </span><span class="s4">'++'</span><span class="s3">,</span>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s3">)</span>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s1">globalVariablesName </span><span class="s3">= (</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s4">'NOALG'</span><span class="s3">, </span><span class="s4">'MD5'</span><span class="s3">, </span><span class="s4">'SHA1'</span><span class="s3">, </span><span class="s4">'SHA224'</span><span class="s3">, </span><span class="s4">'SHA256'</span><span class="s3">, </span><span class="s4">'SHA384'</span><span class="s3">, </span><span class="s4">'SHA512'</span><span class="s3">,</span>
+<a name="l40"><span class="ln">40   </span></a>        <span class="s4">'SHA3224'</span><span class="s3">, </span><span class="s4">'SHA3256'</span><span class="s3">, </span><span class="s4">'SHA3384'</span><span class="s3">, </span><span class="s4">'SHA3512'</span><span class="s3">, </span><span class="s4">'nil'</span><span class="s3">, </span><span class="s4">'this'</span><span class="s3">, </span><span class="s4">'unit'</span><span class="s3">,</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s4">'height'</span><span class="s3">, </span><span class="s4">'lastBlock'</span><span class="s3">, </span><span class="s4">'Buy'</span><span class="s3">, </span><span class="s4">'Sell'</span><span class="s3">, </span><span class="s4">'CEILING'</span><span class="s3">, </span><span class="s4">'FLOOR'</span><span class="s3">, </span><span class="s4">'DOWN'</span><span class="s3">,</span>
+<a name="l42"><span class="ln">42   </span></a>        <span class="s4">'HALFDOWN'</span><span class="s3">, </span><span class="s4">'HALFEVEN'</span><span class="s3">, </span><span class="s4">'HALFUP'</span><span class="s3">, </span><span class="s4">'UP'</span><span class="s3">,</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s3">)</span>
+<a name="l44"><span class="ln">44   </span></a>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s1">typesName </span><span class="s3">= (</span>
+<a name="l46"><span class="ln">46   </span></a>        <span class="s4">'Unit'</span><span class="s3">, </span><span class="s4">'Int'</span><span class="s3">, </span><span class="s4">'Boolean'</span><span class="s3">, </span><span class="s4">'ByteVector'</span><span class="s3">, </span><span class="s4">'String'</span><span class="s3">, </span><span class="s4">'Address'</span><span class="s3">, </span><span class="s4">'Alias'</span><span class="s3">,</span>
+<a name="l47"><span class="ln">47   </span></a>        <span class="s4">'Transfer'</span><span class="s3">, </span><span class="s4">'AssetPair'</span><span class="s3">, </span><span class="s4">'DataEntry'</span><span class="s3">, </span><span class="s4">'Order'</span><span class="s3">, </span><span class="s4">'Transaction'</span><span class="s3">,</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s4">'GenesisTransaction'</span><span class="s3">, </span><span class="s4">'PaymentTransaction'</span><span class="s3">, </span><span class="s4">'ReissueTransaction'</span><span class="s3">,</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s4">'BurnTransaction'</span><span class="s3">, </span><span class="s4">'MassTransferTransaction'</span><span class="s3">, </span><span class="s4">'ExchangeTransaction'</span><span class="s3">,</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s4">'TransferTransaction'</span><span class="s3">, </span><span class="s4">'SetAssetScriptTransaction'</span><span class="s3">,</span>
+<a name="l51"><span class="ln">51   </span></a>        <span class="s4">'InvokeScriptTransaction'</span><span class="s3">, </span><span class="s4">'IssueTransaction'</span><span class="s3">, </span><span class="s4">'LeaseTransaction'</span><span class="s3">,</span>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s4">'LeaseCancelTransaction'</span><span class="s3">, </span><span class="s4">'CreateAliasTransaction'</span><span class="s3">,</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s4">'SetScriptTransaction'</span><span class="s3">, </span><span class="s4">'SponsorFeeTransaction'</span><span class="s3">, </span><span class="s4">'DataTransaction'</span><span class="s3">,</span>
+<a name="l54"><span class="ln">54   </span></a>        <span class="s4">'WriteSet'</span><span class="s3">, </span><span class="s4">'AttachedPayment'</span><span class="s3">, </span><span class="s4">'ScriptTransfer'</span><span class="s3">, </span><span class="s4">'TransferSet'</span><span class="s3">,</span>
+<a name="l55"><span class="ln">55   </span></a>        <span class="s4">'ScriptResult'</span><span class="s3">, </span><span class="s4">'Invocation'</span><span class="s3">, </span><span class="s4">'Asset'</span><span class="s3">, </span><span class="s4">'BlockInfo'</span><span class="s3">, </span><span class="s4">'Issue'</span><span class="s3">, </span><span class="s4">'Reissue'</span><span class="s3">,</span>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s4">'Burn'</span><span class="s3">, </span><span class="s4">'NoAlg'</span><span class="s3">, </span><span class="s4">'Md5'</span><span class="s3">, </span><span class="s4">'Sha1'</span><span class="s3">, </span><span class="s4">'Sha224'</span><span class="s3">, </span><span class="s4">'Sha256'</span><span class="s3">, </span><span class="s4">'Sha384'</span><span class="s3">, </span><span class="s4">'Sha512'</span><span class="s3">,</span>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s4">'Sha3224'</span><span class="s3">, </span><span class="s4">'Sha3256'</span><span class="s3">, </span><span class="s4">'Sha3384'</span><span class="s3">, </span><span class="s4">'Sha3512'</span><span class="s3">, </span><span class="s4">'BinaryEntry'</span><span class="s3">,</span>
+<a name="l58"><span class="ln">58   </span></a>        <span class="s4">'BooleanEntry'</span><span class="s3">, </span><span class="s4">'IntegerEntry'</span><span class="s3">, </span><span class="s4">'StringEntry'</span><span class="s3">, </span><span class="s4">'List'</span><span class="s3">, </span><span class="s4">'Ceiling'</span><span class="s3">,</span>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s4">'Down'</span><span class="s3">, </span><span class="s4">'Floor'</span><span class="s3">, </span><span class="s4">'HalfDown'</span><span class="s3">, </span><span class="s4">'HalfEven'</span><span class="s3">, </span><span class="s4">'HalfUp'</span><span class="s3">, </span><span class="s4">'Up'</span><span class="s3">,</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s3">)</span>
+<a name="l61"><span class="ln">61   </span></a>
+<a name="l62"><span class="ln">62   </span></a>    <span class="s1">functionsName </span><span class="s3">= (</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s4">'fraction'</span><span class="s3">, </span><span class="s4">'size'</span><span class="s3">, </span><span class="s4">'toBytes'</span><span class="s3">, </span><span class="s4">'take'</span><span class="s3">, </span><span class="s4">'drop'</span><span class="s3">, </span><span class="s4">'takeRight'</span><span class="s3">, </span><span class="s4">'dropRight'</span><span class="s3">,</span>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s4">'toString'</span><span class="s3">, </span><span class="s4">'isDefined'</span><span class="s3">, </span><span class="s4">'extract'</span><span class="s3">, </span><span class="s4">'throw'</span><span class="s3">, </span><span class="s4">'getElement'</span><span class="s3">, </span><span class="s4">'value'</span><span class="s3">,</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s4">'cons'</span><span class="s3">, </span><span class="s4">'toUtf8String'</span><span class="s3">, </span><span class="s4">'toInt'</span><span class="s3">, </span><span class="s4">'indexOf'</span><span class="s3">, </span><span class="s4">'lastIndexOf'</span><span class="s3">, </span><span class="s4">'split'</span><span class="s3">,</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s4">'parseInt'</span><span class="s3">, </span><span class="s4">'parseIntValue'</span><span class="s3">, </span><span class="s4">'keccak256'</span><span class="s3">, </span><span class="s4">'blake2b256'</span><span class="s3">, </span><span class="s4">'sha256'</span><span class="s3">,</span>
+<a name="l67"><span class="ln">67   </span></a>        <span class="s4">'sigVerify'</span><span class="s3">, </span><span class="s4">'toBase58String'</span><span class="s3">, </span><span class="s4">'fromBase58String'</span><span class="s3">, </span><span class="s4">'toBase64String'</span><span class="s3">,</span>
+<a name="l68"><span class="ln">68   </span></a>        <span class="s4">'fromBase64String'</span><span class="s3">, </span><span class="s4">'transactionById'</span><span class="s3">, </span><span class="s4">'transactionHeightById'</span><span class="s3">,</span>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s4">'getInteger'</span><span class="s3">, </span><span class="s4">'getBoolean'</span><span class="s3">, </span><span class="s4">'getBinary'</span><span class="s3">, </span><span class="s4">'getString'</span><span class="s3">,</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s4">'addressFromPublicKey'</span><span class="s3">, </span><span class="s4">'addressFromString'</span><span class="s3">, </span><span class="s4">'addressFromRecipient'</span><span class="s3">,</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s4">'assetBalance'</span><span class="s3">, </span><span class="s4">'wavesBalance'</span><span class="s3">, </span><span class="s4">'getIntegerValue'</span><span class="s3">, </span><span class="s4">'getBooleanValue'</span><span class="s3">,</span>
+<a name="l72"><span class="ln">72   </span></a>        <span class="s4">'getBinaryValue'</span><span class="s3">, </span><span class="s4">'getStringValue'</span><span class="s3">, </span><span class="s4">'addressFromStringValue'</span><span class="s3">,</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s4">'assetInfo'</span><span class="s3">, </span><span class="s4">'rsaVerify'</span><span class="s3">, </span><span class="s4">'checkMerkleProof'</span><span class="s3">, </span><span class="s4">'median'</span><span class="s3">,</span>
+<a name="l74"><span class="ln">74   </span></a>        <span class="s4">'valueOrElse'</span><span class="s3">, </span><span class="s4">'valueOrErrorMessage'</span><span class="s3">, </span><span class="s4">'contains'</span><span class="s3">, </span><span class="s4">'log'</span><span class="s3">, </span><span class="s4">'pow'</span><span class="s3">,</span>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s4">'toBase16String'</span><span class="s3">, </span><span class="s4">'fromBase16String'</span><span class="s3">, </span><span class="s4">'blockInfoByHeight'</span><span class="s3">,</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s4">'transferTransactionById'</span><span class="s3">,</span>
+<a name="l77"><span class="ln">77   </span></a>    <span class="s3">)</span>
+<a name="l78"><span class="ln">78   </span></a>
+<a name="l79"><span class="ln">79   </span></a>    <span class="s1">reservedWords </span><span class="s3">= </span><span class="s1">words</span><span class="s3">((</span>
+<a name="l80"><span class="ln">80   </span></a>        <span class="s4">'match'</span><span class="s3">, </span><span class="s4">'case'</span><span class="s3">, </span><span class="s4">'else'</span><span class="s3">, </span><span class="s4">'func'</span><span class="s3">, </span><span class="s4">'if'</span><span class="s3">,</span>
+<a name="l81"><span class="ln">81   </span></a>        <span class="s4">'let'</span><span class="s3">, </span><span class="s4">'then'</span><span class="s3">, </span><span class="s4">'@Callable'</span><span class="s3">, </span><span class="s4">'@Verifier'</span><span class="s3">,</span>
+<a name="l82"><span class="ln">82   </span></a>    <span class="s3">), </span><span class="s1">suffix</span><span class="s3">=</span><span class="s4">r'\b'</span><span class="s3">)</span>
+<a name="l83"><span class="ln">83   </span></a>
+<a name="l84"><span class="ln">84   </span></a>    <span class="s1">tokens </span><span class="s3">= {</span>
+<a name="l85"><span class="ln">85   </span></a>        <span class="s4">'root'</span><span class="s3">: [</span>
+<a name="l86"><span class="ln">86   </span></a>            <span class="s5"># Comments</span>
+<a name="l87"><span class="ln">87   </span></a>            <span class="s3">(</span><span class="s4">r'#.*'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">.</span><span class="s1">Single</span><span class="s3">),</span>
+<a name="l88"><span class="ln">88   </span></a>            <span class="s5"># Whitespace</span>
+<a name="l89"><span class="ln">89   </span></a>            <span class="s3">(</span><span class="s4">r'\s+'</span><span class="s3">, </span><span class="s1">Text</span><span class="s3">),</span>
+<a name="l90"><span class="ln">90   </span></a>            <span class="s5"># Strings</span>
+<a name="l91"><span class="ln">91   </span></a>            <span class="s3">(</span><span class="s4">r'&quot;'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">, </span><span class="s4">'doublequote'</span><span class="s3">),</span>
+<a name="l92"><span class="ln">92   </span></a>            <span class="s3">(</span><span class="s4">r'utf8\''</span><span class="s3">, </span><span class="s1">String</span><span class="s3">, </span><span class="s4">'utf8quote'</span><span class="s3">),</span>
+<a name="l93"><span class="ln">93   </span></a>            <span class="s3">(</span><span class="s4">r'base(58|64|16)\''</span><span class="s3">, </span><span class="s1">String</span><span class="s3">, </span><span class="s4">'singlequote'</span><span class="s3">),</span>
+<a name="l94"><span class="ln">94   </span></a>            <span class="s5"># Keywords</span>
+<a name="l95"><span class="ln">95   </span></a>            <span class="s3">(</span><span class="s1">reservedWords</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Reserved</span><span class="s3">),</span>
+<a name="l96"><span class="ln">96   </span></a>            <span class="s3">(</span><span class="s4">r'\{-#.*?#-\}'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Reserved</span><span class="s3">),</span>
+<a name="l97"><span class="ln">97   </span></a>            <span class="s3">(</span><span class="s4">r'FOLD&lt;\d+&gt;'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Reserved</span><span class="s3">),</span>
+<a name="l98"><span class="ln">98   </span></a>            <span class="s5"># Types</span>
+<a name="l99"><span class="ln">99   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">typesName</span><span class="s3">), </span><span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Type</span><span class="s3">),</span>
+<a name="l100"><span class="ln">100  </span></a>            <span class="s5"># Main</span>
+<a name="l101"><span class="ln">101  </span></a>            <span class="s5"># (specialName, Keyword.Reserved),</span>
+<a name="l102"><span class="ln">102  </span></a>            <span class="s5"># Prefix Operators</span>
+<a name="l103"><span class="ln">103  </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">builtinOps</span><span class="s3">, </span><span class="s1">prefix</span><span class="s3">=</span><span class="s4">r'\('</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s4">r'\)'</span><span class="s3">), </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Function</span><span class="s3">),</span>
+<a name="l104"><span class="ln">104  </span></a>            <span class="s5"># Infix Operators</span>
+<a name="l105"><span class="ln">105  </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">builtinOps</span><span class="s3">), </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Function</span><span class="s3">),</span>
+<a name="l106"><span class="ln">106  </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">globalVariablesName</span><span class="s3">), </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Function</span><span class="s3">),</span>
+<a name="l107"><span class="ln">107  </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">functionsName</span><span class="s3">), </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Function</span><span class="s3">),</span>
+<a name="l108"><span class="ln">108  </span></a>            <span class="s5"># Numbers</span>
+<a name="l109"><span class="ln">109  </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'numbers'</span><span class="s3">),</span>
+<a name="l110"><span class="ln">110  </span></a>            <span class="s5"># Variable Names</span>
+<a name="l111"><span class="ln">111  </span></a>            <span class="s3">(</span><span class="s1">validName</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">),</span>
+<a name="l112"><span class="ln">112  </span></a>            <span class="s5"># Parens</span>
+<a name="l113"><span class="ln">113  </span></a>            <span class="s3">(</span><span class="s4">r'[,()\[\]{}]'</span><span class="s3">, </span><span class="s1">Punctuation</span><span class="s3">),</span>
+<a name="l114"><span class="ln">114  </span></a>        <span class="s3">],</span>
+<a name="l115"><span class="ln">115  </span></a>
+<a name="l116"><span class="ln">116  </span></a>        <span class="s4">'doublequote'</span><span class="s3">: [</span>
+<a name="l117"><span class="ln">117  </span></a>            <span class="s3">(</span><span class="s4">r'\\u[0-9a-fA-F]{4}'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">.</span><span class="s1">Escape</span><span class="s3">),</span>
+<a name="l118"><span class="ln">118  </span></a>            <span class="s3">(</span><span class="s4">r'\\[nrfvb\\&quot;]'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">.</span><span class="s1">Escape</span><span class="s3">),</span>
+<a name="l119"><span class="ln">119  </span></a>            <span class="s3">(</span><span class="s4">r'[^&quot;]'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">),</span>
+<a name="l120"><span class="ln">120  </span></a>            <span class="s3">(</span><span class="s4">r'&quot;'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">),</span>
+<a name="l121"><span class="ln">121  </span></a>        <span class="s3">],</span>
+<a name="l122"><span class="ln">122  </span></a>
+<a name="l123"><span class="ln">123  </span></a>        <span class="s4">'utf8quote'</span><span class="s3">: [</span>
+<a name="l124"><span class="ln">124  </span></a>            <span class="s3">(</span><span class="s4">r'\\u[0-9a-fA-F]{4}'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">.</span><span class="s1">Escape</span><span class="s3">),</span>
+<a name="l125"><span class="ln">125  </span></a>            <span class="s3">(</span><span class="s4">r'\\[nrfvb\\\']'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">.</span><span class="s1">Escape</span><span class="s3">),</span>
+<a name="l126"><span class="ln">126  </span></a>            <span class="s3">(</span><span class="s4">r'[^\']'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">),</span>
+<a name="l127"><span class="ln">127  </span></a>            <span class="s3">(</span><span class="s4">r'\''</span><span class="s3">, </span><span class="s1">String</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">),</span>
+<a name="l128"><span class="ln">128  </span></a>        <span class="s3">],</span>
+<a name="l129"><span class="ln">129  </span></a>
+<a name="l130"><span class="ln">130  </span></a>        <span class="s4">'singlequote'</span><span class="s3">: [</span>
+<a name="l131"><span class="ln">131  </span></a>            <span class="s3">(</span><span class="s4">r'[^\']'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">),</span>
+<a name="l132"><span class="ln">132  </span></a>            <span class="s3">(</span><span class="s4">r'\''</span><span class="s3">, </span><span class="s1">String</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">),</span>
+<a name="l133"><span class="ln">133  </span></a>        <span class="s3">],</span>
+<a name="l134"><span class="ln">134  </span></a>
+<a name="l135"><span class="ln">135  </span></a>        <span class="s4">'numbers'</span><span class="s3">: [</span>
+<a name="l136"><span class="ln">136  </span></a>            <span class="s3">(</span><span class="s4">r'_?\d+'</span><span class="s3">, </span><span class="s1">Number</span><span class="s3">.</span><span class="s1">Integer</span><span class="s3">),</span>
+<a name="l137"><span class="ln">137  </span></a>        <span class="s3">],</span>
+<a name="l138"><span class="ln">138  </span></a>    <span class="s3">}</span>
+<a name="l139"><span class="ln">139  </span></a></pre>
+</body>
+</html>

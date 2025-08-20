@@ -1,0 +1,487 @@
+<html>
+<head>
+<title>win32gui_menu.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+win32gui_menu.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Demonstrates some advanced menu concepts using win32gui.</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># This creates a taskbar icon which has some fancy menus (but note that</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0"># selecting the menu items does nothing useful - see win32gui_taskbar.py</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0"># for examples of this.</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s0"># NOTE: This is a work in progress.  Todo:</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0"># * The &quot;Checked&quot; menu items don't work correctly - I'm not sure why.</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0"># * No support for GetMenuItemInfo.</span>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s0"># Based on Andy McKay's demo code.</span>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">import </span><span class="s1">os</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s2">import </span><span class="s1">struct</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s2">import </span><span class="s1">sys</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a><span class="s2">import </span><span class="s1">win32con</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s2">from </span><span class="s1">win32api </span><span class="s2">import </span><span class="s1">GetSystemDirectory</span><span class="s3">, </span><span class="s1">GetSystemMetrics</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s2">from </span><span class="s1">win32gui </span><span class="s2">import </span><span class="s3">(</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s1">LOWORD</span><span class="s3">,</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s1">NIF_ICON</span><span class="s3">,</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s1">NIF_MESSAGE</span><span class="s3">,</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s1">NIF_TIP</span><span class="s3">,</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s1">NIM_ADD</span><span class="s3">,</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s1">NIM_DELETE</span><span class="s3">,</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s1">WNDCLASS</span><span class="s3">,</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s1">CheckMenuItem</span><span class="s3">,</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s1">CheckMenuRadioItem</span><span class="s3">,</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s1">CreateCompatibleBitmap</span><span class="s3">,</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s1">CreateCompatibleDC</span><span class="s3">,</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s1">CreateFontIndirect</span><span class="s3">,</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s1">CreatePopupMenu</span><span class="s3">,</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">CreateWindow</span><span class="s3">,</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s1">DeleteDC</span><span class="s3">,</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s1">DestroyIcon</span><span class="s3">,</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s1">DestroyWindow</span><span class="s3">,</span>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s1">DrawIconEx</span><span class="s3">,</span>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s1">ExtTextOut</span><span class="s3">,</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s1">FillRect</span><span class="s3">,</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s1">GetCursorPos</span><span class="s3">,</span>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s1">GetDC</span><span class="s3">,</span>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s1">GetMenuDefaultItem</span><span class="s3">,</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s1">GetMenuState</span><span class="s3">,</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s1">GetModuleHandle</span><span class="s3">,</span>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s1">GetSysColor</span><span class="s3">,</span>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s1">GetSysColorBrush</span><span class="s3">,</span>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s1">GetTextExtentPoint32</span><span class="s3">,</span>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s1">InsertMenu</span><span class="s3">,</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s1">InsertMenuItem</span><span class="s3">,</span>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s1">LoadIcon</span><span class="s3">,</span>
+<a name="l50"><span class="ln">50   </span></a>    <span class="s1">LoadImage</span><span class="s3">,</span>
+<a name="l51"><span class="ln">51   </span></a>    <span class="s1">PostMessage</span><span class="s3">,</span>
+<a name="l52"><span class="ln">52   </span></a>    <span class="s1">PostQuitMessage</span><span class="s3">,</span>
+<a name="l53"><span class="ln">53   </span></a>    <span class="s1">PumpMessages</span><span class="s3">,</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s1">PyGetMemory</span><span class="s3">,</span>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s1">PyMakeBuffer</span><span class="s3">,</span>
+<a name="l56"><span class="ln">56   </span></a>    <span class="s1">PySetMemory</span><span class="s3">,</span>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s1">RegisterClass</span><span class="s3">,</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s1">ReleaseDC</span><span class="s3">,</span>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s1">SelectObject</span><span class="s3">,</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s1">SetBkColor</span><span class="s3">,</span>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s1">SetBkMode</span><span class="s3">,</span>
+<a name="l62"><span class="ln">62   </span></a>    <span class="s1">SetForegroundWindow</span><span class="s3">,</span>
+<a name="l63"><span class="ln">63   </span></a>    <span class="s1">SetMenuDefaultItem</span><span class="s3">,</span>
+<a name="l64"><span class="ln">64   </span></a>    <span class="s1">SetTextColor</span><span class="s3">,</span>
+<a name="l65"><span class="ln">65   </span></a>    <span class="s1">Shell_NotifyIcon</span><span class="s3">,</span>
+<a name="l66"><span class="ln">66   </span></a>    <span class="s1">SystemParametersInfo</span><span class="s3">,</span>
+<a name="l67"><span class="ln">67   </span></a>    <span class="s1">TrackPopupMenu</span><span class="s3">,</span>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s1">UpdateWindow</span><span class="s3">,</span>
+<a name="l69"><span class="ln">69   </span></a><span class="s3">)</span>
+<a name="l70"><span class="ln">70   </span></a><span class="s2">from </span><span class="s1">win32gui_struct </span><span class="s2">import </span><span class="s3">(</span>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s1">EmptyMENUITEMINFO</span><span class="s3">,</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s1">PackMENUITEMINFO</span><span class="s3">,</span>
+<a name="l73"><span class="ln">73   </span></a>    <span class="s1">UnpackMENUITEMINFO</span><span class="s3">,</span>
+<a name="l74"><span class="ln">74   </span></a><span class="s3">)</span>
+<a name="l75"><span class="ln">75   </span></a>
+<a name="l76"><span class="ln">76   </span></a><span class="s1">this_dir </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">split</span><span class="s3">(</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">argv</span><span class="s3">[</span><span class="s4">0</span><span class="s3">])[</span><span class="s4">0</span><span class="s3">]</span>
+<a name="l77"><span class="ln">77   </span></a>
+<a name="l78"><span class="ln">78   </span></a>
+<a name="l79"><span class="ln">79   </span></a><span class="s2">class </span><span class="s1">MainWindow</span><span class="s3">:</span>
+<a name="l80"><span class="ln">80   </span></a>    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l81"><span class="ln">81   </span></a>        <span class="s1">message_map </span><span class="s3">= {</span>
+<a name="l82"><span class="ln">82   </span></a>            <span class="s1">win32con</span><span class="s3">.</span><span class="s1">WM_DESTROY</span><span class="s3">: </span><span class="s1">self</span><span class="s3">.</span><span class="s1">OnDestroy</span><span class="s3">,</span>
+<a name="l83"><span class="ln">83   </span></a>            <span class="s1">win32con</span><span class="s3">.</span><span class="s1">WM_COMMAND</span><span class="s3">: </span><span class="s1">self</span><span class="s3">.</span><span class="s1">OnCommand</span><span class="s3">,</span>
+<a name="l84"><span class="ln">84   </span></a>            <span class="s1">win32con</span><span class="s3">.</span><span class="s1">WM_USER </span><span class="s3">+ </span><span class="s4">20</span><span class="s3">: </span><span class="s1">self</span><span class="s3">.</span><span class="s1">OnTaskbarNotify</span><span class="s3">,</span>
+<a name="l85"><span class="ln">85   </span></a>            <span class="s0"># owner-draw related handlers.</span>
+<a name="l86"><span class="ln">86   </span></a>            <span class="s1">win32con</span><span class="s3">.</span><span class="s1">WM_MEASUREITEM</span><span class="s3">: </span><span class="s1">self</span><span class="s3">.</span><span class="s1">OnMeasureItem</span><span class="s3">,</span>
+<a name="l87"><span class="ln">87   </span></a>            <span class="s1">win32con</span><span class="s3">.</span><span class="s1">WM_DRAWITEM</span><span class="s3">: </span><span class="s1">self</span><span class="s3">.</span><span class="s1">OnDrawItem</span><span class="s3">,</span>
+<a name="l88"><span class="ln">88   </span></a>        <span class="s3">}</span>
+<a name="l89"><span class="ln">89   </span></a>        <span class="s0"># Register the Window class.</span>
+<a name="l90"><span class="ln">90   </span></a>        <span class="s1">wc </span><span class="s3">= </span><span class="s1">WNDCLASS</span><span class="s3">()</span>
+<a name="l91"><span class="ln">91   </span></a>        <span class="s1">hinst </span><span class="s3">= </span><span class="s1">wc</span><span class="s3">.</span><span class="s1">hInstance </span><span class="s3">= </span><span class="s1">GetModuleHandle</span><span class="s3">(</span><span class="s2">None</span><span class="s3">)</span>
+<a name="l92"><span class="ln">92   </span></a>        <span class="s1">wc</span><span class="s3">.</span><span class="s1">lpszClassName </span><span class="s3">= </span><span class="s5">&quot;PythonTaskbarDemo&quot;</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s1">wc</span><span class="s3">.</span><span class="s1">lpfnWndProc </span><span class="s3">= </span><span class="s1">message_map  </span><span class="s0"># could also specify a wndproc.</span>
+<a name="l94"><span class="ln">94   </span></a>        <span class="s1">classAtom </span><span class="s3">= </span><span class="s1">RegisterClass</span><span class="s3">(</span><span class="s1">wc</span><span class="s3">)</span>
+<a name="l95"><span class="ln">95   </span></a>        <span class="s0"># Create the Window.</span>
+<a name="l96"><span class="ln">96   </span></a>        <span class="s1">style </span><span class="s3">= </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">WS_OVERLAPPED </span><span class="s3">| </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">WS_SYSMENU</span>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">hwnd </span><span class="s3">= </span><span class="s1">CreateWindow</span><span class="s3">(</span>
+<a name="l98"><span class="ln">98   </span></a>            <span class="s1">classAtom</span><span class="s3">,</span>
+<a name="l99"><span class="ln">99   </span></a>            <span class="s5">&quot;Taskbar Demo&quot;</span><span class="s3">,</span>
+<a name="l100"><span class="ln">100  </span></a>            <span class="s1">style</span><span class="s3">,</span>
+<a name="l101"><span class="ln">101  </span></a>            <span class="s4">0</span><span class="s3">,</span>
+<a name="l102"><span class="ln">102  </span></a>            <span class="s4">0</span><span class="s3">,</span>
+<a name="l103"><span class="ln">103  </span></a>            <span class="s1">win32con</span><span class="s3">.</span><span class="s1">CW_USEDEFAULT</span><span class="s3">,</span>
+<a name="l104"><span class="ln">104  </span></a>            <span class="s1">win32con</span><span class="s3">.</span><span class="s1">CW_USEDEFAULT</span><span class="s3">,</span>
+<a name="l105"><span class="ln">105  </span></a>            <span class="s4">0</span><span class="s3">,</span>
+<a name="l106"><span class="ln">106  </span></a>            <span class="s4">0</span><span class="s3">,</span>
+<a name="l107"><span class="ln">107  </span></a>            <span class="s1">hinst</span><span class="s3">,</span>
+<a name="l108"><span class="ln">108  </span></a>            <span class="s2">None</span><span class="s3">,</span>
+<a name="l109"><span class="ln">109  </span></a>        <span class="s3">)</span>
+<a name="l110"><span class="ln">110  </span></a>        <span class="s1">UpdateWindow</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">hwnd</span><span class="s3">)</span>
+<a name="l111"><span class="ln">111  </span></a>        <span class="s1">iconPathName </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">abspath</span><span class="s3">(</span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">prefix</span><span class="s3">, </span><span class="s5">&quot;pyc.ico&quot;</span><span class="s3">))</span>
+<a name="l112"><span class="ln">112  </span></a>        <span class="s2">if not </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">isfile</span><span class="s3">(</span><span class="s1">iconPathName</span><span class="s3">):</span>
+<a name="l113"><span class="ln">113  </span></a>            <span class="s0"># Look in the source tree.</span>
+<a name="l114"><span class="ln">114  </span></a>            <span class="s1">iconPathName </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">abspath</span><span class="s3">(</span>
+<a name="l115"><span class="ln">115  </span></a>                <span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">split</span><span class="s3">(</span><span class="s1">sys</span><span class="s3">.</span><span class="s1">executable</span><span class="s3">)[</span><span class="s4">0</span><span class="s3">], </span><span class="s5">&quot;..</span><span class="s2">\\</span><span class="s5">PC</span><span class="s2">\\</span><span class="s5">pyc.ico&quot;</span><span class="s3">)</span>
+<a name="l116"><span class="ln">116  </span></a>            <span class="s3">)</span>
+<a name="l117"><span class="ln">117  </span></a>        <span class="s2">if </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">isfile</span><span class="s3">(</span><span class="s1">iconPathName</span><span class="s3">):</span>
+<a name="l118"><span class="ln">118  </span></a>            <span class="s1">icon_flags </span><span class="s3">= </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">LR_LOADFROMFILE </span><span class="s3">| </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">LR_DEFAULTSIZE</span>
+<a name="l119"><span class="ln">119  </span></a>            <span class="s1">hicon </span><span class="s3">= </span><span class="s1">LoadImage</span><span class="s3">(</span>
+<a name="l120"><span class="ln">120  </span></a>                <span class="s1">hinst</span><span class="s3">, </span><span class="s1">iconPathName</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">IMAGE_ICON</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s1">icon_flags</span>
+<a name="l121"><span class="ln">121  </span></a>            <span class="s3">)</span>
+<a name="l122"><span class="ln">122  </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l123"><span class="ln">123  </span></a>            <span class="s1">iconPathName </span><span class="s3">= </span><span class="s2">None</span>
+<a name="l124"><span class="ln">124  </span></a>            <span class="s1">print</span><span class="s3">(</span><span class="s5">&quot;Can't find a Python icon file - using default&quot;</span><span class="s3">)</span>
+<a name="l125"><span class="ln">125  </span></a>            <span class="s1">hicon </span><span class="s3">= </span><span class="s1">LoadIcon</span><span class="s3">(</span><span class="s4">0</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">IDI_APPLICATION</span><span class="s3">)</span>
+<a name="l126"><span class="ln">126  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">iconPathName </span><span class="s3">= </span><span class="s1">iconPathName</span>
+<a name="l127"><span class="ln">127  </span></a>
+<a name="l128"><span class="ln">128  </span></a>        <span class="s0"># Load up some information about menus needed by our owner-draw code.</span>
+<a name="l129"><span class="ln">129  </span></a>        <span class="s0"># The font to use on the menu.</span>
+<a name="l130"><span class="ln">130  </span></a>        <span class="s1">ncm </span><span class="s3">= </span><span class="s1">SystemParametersInfo</span><span class="s3">(</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">SPI_GETNONCLIENTMETRICS</span><span class="s3">)</span>
+<a name="l131"><span class="ln">131  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">font_menu </span><span class="s3">= </span><span class="s1">CreateFontIndirect</span><span class="s3">(</span><span class="s1">ncm</span><span class="s3">[</span><span class="s5">&quot;lfMenuFont&quot;</span><span class="s3">])</span>
+<a name="l132"><span class="ln">132  </span></a>        <span class="s0"># spacing for our ownerdraw menus - not sure exactly what constants</span>
+<a name="l133"><span class="ln">133  </span></a>        <span class="s0"># should be used (and if you owner-draw all items on the menu, it</span>
+<a name="l134"><span class="ln">134  </span></a>        <span class="s0"># doesn't matter!)</span>
+<a name="l135"><span class="ln">135  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">menu_icon_height </span><span class="s3">= </span><span class="s1">GetSystemMetrics</span><span class="s3">(</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">SM_CYMENU</span><span class="s3">) - </span><span class="s4">4</span>
+<a name="l136"><span class="ln">136  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">menu_icon_width </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">menu_icon_height</span>
+<a name="l137"><span class="ln">137  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">icon_x_pad </span><span class="s3">= </span><span class="s4">8  </span><span class="s0"># space from end of icon to start of text.</span>
+<a name="l138"><span class="ln">138  </span></a>        <span class="s0"># A map we use to stash away data we need for ownerdraw.  Keyed</span>
+<a name="l139"><span class="ln">139  </span></a>        <span class="s0"># by integer ID - that ID will be set in dwTypeData of the menu item.</span>
+<a name="l140"><span class="ln">140  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">menu_item_map </span><span class="s3">= {}</span>
+<a name="l141"><span class="ln">141  </span></a>
+<a name="l142"><span class="ln">142  </span></a>        <span class="s0"># Finally, create the menu</span>
+<a name="l143"><span class="ln">143  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">createMenu</span><span class="s3">()</span>
+<a name="l144"><span class="ln">144  </span></a>
+<a name="l145"><span class="ln">145  </span></a>        <span class="s1">flags </span><span class="s3">= </span><span class="s1">NIF_ICON </span><span class="s3">| </span><span class="s1">NIF_MESSAGE </span><span class="s3">| </span><span class="s1">NIF_TIP</span>
+<a name="l146"><span class="ln">146  </span></a>        <span class="s1">nid </span><span class="s3">= (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">hwnd</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s1">flags</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">WM_USER </span><span class="s3">+ </span><span class="s4">20</span><span class="s3">, </span><span class="s1">hicon</span><span class="s3">, </span><span class="s5">&quot;Python Demo&quot;</span><span class="s3">)</span>
+<a name="l147"><span class="ln">147  </span></a>        <span class="s1">Shell_NotifyIcon</span><span class="s3">(</span><span class="s1">NIM_ADD</span><span class="s3">, </span><span class="s1">nid</span><span class="s3">)</span>
+<a name="l148"><span class="ln">148  </span></a>        <span class="s1">print</span><span class="s3">(</span><span class="s5">&quot;Please right-click on the Python icon in the taskbar&quot;</span><span class="s3">)</span>
+<a name="l149"><span class="ln">149  </span></a>
+<a name="l150"><span class="ln">150  </span></a>    <span class="s2">def </span><span class="s1">createMenu</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+<a name="l151"><span class="ln">151  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">hmenu </span><span class="s3">= </span><span class="s1">menu </span><span class="s3">= </span><span class="s1">CreatePopupMenu</span><span class="s3">()</span>
+<a name="l152"><span class="ln">152  </span></a>        <span class="s0"># Create our 'Exit' item with the standard, ugly 'close' icon.</span>
+<a name="l153"><span class="ln">153  </span></a>        <span class="s1">item</span><span class="s3">, </span><span class="s1">extras </span><span class="s3">= </span><span class="s1">PackMENUITEMINFO</span><span class="s3">(</span>
+<a name="l154"><span class="ln">154  </span></a>            <span class="s1">text</span><span class="s3">=</span><span class="s5">&quot;Exit&quot;</span><span class="s3">, </span><span class="s1">hbmpItem</span><span class="s3">=</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">HBMMENU_MBAR_CLOSE</span><span class="s3">, </span><span class="s1">wID</span><span class="s3">=</span><span class="s4">1000</span>
+<a name="l155"><span class="ln">155  </span></a>        <span class="s3">)</span>
+<a name="l156"><span class="ln">156  </span></a>        <span class="s1">InsertMenuItem</span><span class="s3">(</span><span class="s1">menu</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s1">item</span><span class="s3">)</span>
+<a name="l157"><span class="ln">157  </span></a>        <span class="s0"># Create a 'text only' menu via InsertMenuItem rather then</span>
+<a name="l158"><span class="ln">158  </span></a>        <span class="s0"># AppendMenu, just to prove we can!</span>
+<a name="l159"><span class="ln">159  </span></a>        <span class="s1">item</span><span class="s3">, </span><span class="s1">extras </span><span class="s3">= </span><span class="s1">PackMENUITEMINFO</span><span class="s3">(</span><span class="s1">text</span><span class="s3">=</span><span class="s5">&quot;Text only item&quot;</span><span class="s3">, </span><span class="s1">wID</span><span class="s3">=</span><span class="s4">1001</span><span class="s3">)</span>
+<a name="l160"><span class="ln">160  </span></a>        <span class="s1">InsertMenuItem</span><span class="s3">(</span><span class="s1">menu</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s1">item</span><span class="s3">)</span>
+<a name="l161"><span class="ln">161  </span></a>
+<a name="l162"><span class="ln">162  </span></a>        <span class="s1">load_bmp_flags </span><span class="s3">= </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">LR_LOADFROMFILE </span><span class="s3">| </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">LR_LOADTRANSPARENT</span>
+<a name="l163"><span class="ln">163  </span></a>        <span class="s0"># These images are &quot;over sized&quot;, so we load them scaled.</span>
+<a name="l164"><span class="ln">164  </span></a>        <span class="s1">hbmp </span><span class="s3">= </span><span class="s1">LoadImage</span><span class="s3">(</span>
+<a name="l165"><span class="ln">165  </span></a>            <span class="s4">0</span><span class="s3">,</span>
+<a name="l166"><span class="ln">166  </span></a>            <span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">this_dir</span><span class="s3">, </span><span class="s5">&quot;images/smiley.bmp&quot;</span><span class="s3">),</span>
+<a name="l167"><span class="ln">167  </span></a>            <span class="s1">win32con</span><span class="s3">.</span><span class="s1">IMAGE_BITMAP</span><span class="s3">,</span>
+<a name="l168"><span class="ln">168  </span></a>            <span class="s4">20</span><span class="s3">,</span>
+<a name="l169"><span class="ln">169  </span></a>            <span class="s4">20</span><span class="s3">,</span>
+<a name="l170"><span class="ln">170  </span></a>            <span class="s1">load_bmp_flags</span><span class="s3">,</span>
+<a name="l171"><span class="ln">171  </span></a>        <span class="s3">)</span>
+<a name="l172"><span class="ln">172  </span></a>
+<a name="l173"><span class="ln">173  </span></a>        <span class="s0"># Create a top-level menu with a bitmap</span>
+<a name="l174"><span class="ln">174  </span></a>        <span class="s1">item</span><span class="s3">, </span><span class="s1">extras </span><span class="s3">= </span><span class="s1">PackMENUITEMINFO</span><span class="s3">(</span>
+<a name="l175"><span class="ln">175  </span></a>            <span class="s1">text</span><span class="s3">=</span><span class="s5">&quot;Menu with bitmap&quot;</span><span class="s3">, </span><span class="s1">hbmpItem</span><span class="s3">=</span><span class="s1">hbmp</span><span class="s3">, </span><span class="s1">wID</span><span class="s3">=</span><span class="s4">1002</span>
+<a name="l176"><span class="ln">176  </span></a>        <span class="s3">)</span>
+<a name="l177"><span class="ln">177  </span></a>        <span class="s1">InsertMenuItem</span><span class="s3">(</span><span class="s1">menu</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s1">item</span><span class="s3">)</span>
+<a name="l178"><span class="ln">178  </span></a>
+<a name="l179"><span class="ln">179  </span></a>        <span class="s0"># Owner-draw menus mainly from:</span>
+<a name="l180"><span class="ln">180  </span></a>        <span class="s0"># https://learn.microsoft.com/en-ca/windows/win32/menurc/using-menus</span>
+<a name="l181"><span class="ln">181  </span></a>        <span class="s0"># and:</span>
+<a name="l182"><span class="ln">182  </span></a>        <span class="s0"># https://www.codeguru.com/cplusplus/owner-drawn-menu-with-icons/</span>
+<a name="l183"><span class="ln">183  </span></a>
+<a name="l184"><span class="ln">184  </span></a>        <span class="s0"># Create one with an icon - this is *lots* more work - we do it</span>
+<a name="l185"><span class="ln">185  </span></a>        <span class="s0"># owner-draw!  The primary reason is to handle transparency better -</span>
+<a name="l186"><span class="ln">186  </span></a>        <span class="s0"># converting to a bitmap causes the background to be incorrect when</span>
+<a name="l187"><span class="ln">187  </span></a>        <span class="s0"># the menu item is selected.  I can't see a simpler way.</span>
+<a name="l188"><span class="ln">188  </span></a>        <span class="s0"># First, load the icon we want to use.</span>
+<a name="l189"><span class="ln">189  </span></a>        <span class="s1">ico_x </span><span class="s3">= </span><span class="s1">GetSystemMetrics</span><span class="s3">(</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">SM_CXSMICON</span><span class="s3">)</span>
+<a name="l190"><span class="ln">190  </span></a>        <span class="s1">ico_y </span><span class="s3">= </span><span class="s1">GetSystemMetrics</span><span class="s3">(</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">SM_CYSMICON</span><span class="s3">)</span>
+<a name="l191"><span class="ln">191  </span></a>        <span class="s2">if </span><span class="s1">self</span><span class="s3">.</span><span class="s1">iconPathName</span><span class="s3">:</span>
+<a name="l192"><span class="ln">192  </span></a>            <span class="s1">hicon </span><span class="s3">= </span><span class="s1">LoadImage</span><span class="s3">(</span>
+<a name="l193"><span class="ln">193  </span></a>                <span class="s4">0</span><span class="s3">,</span>
+<a name="l194"><span class="ln">194  </span></a>                <span class="s1">self</span><span class="s3">.</span><span class="s1">iconPathName</span><span class="s3">,</span>
+<a name="l195"><span class="ln">195  </span></a>                <span class="s1">win32con</span><span class="s3">.</span><span class="s1">IMAGE_ICON</span><span class="s3">,</span>
+<a name="l196"><span class="ln">196  </span></a>                <span class="s1">ico_x</span><span class="s3">,</span>
+<a name="l197"><span class="ln">197  </span></a>                <span class="s1">ico_y</span><span class="s3">,</span>
+<a name="l198"><span class="ln">198  </span></a>                <span class="s1">win32con</span><span class="s3">.</span><span class="s1">LR_LOADFROMFILE</span><span class="s3">,</span>
+<a name="l199"><span class="ln">199  </span></a>            <span class="s3">)</span>
+<a name="l200"><span class="ln">200  </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l201"><span class="ln">201  </span></a>            <span class="s1">shell_dll </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">GetSystemDirectory</span><span class="s3">(), </span><span class="s5">&quot;shell32.dll&quot;</span><span class="s3">)</span>
+<a name="l202"><span class="ln">202  </span></a>            <span class="s1">large</span><span class="s3">, </span><span class="s1">small </span><span class="s3">= </span><span class="s1">win32gui</span><span class="s3">.</span><span class="s1">ExtractIconEx</span><span class="s3">(</span><span class="s1">shell_dll</span><span class="s3">, </span><span class="s4">4</span><span class="s3">, </span><span class="s4">1</span><span class="s3">)</span>
+<a name="l203"><span class="ln">203  </span></a>            <span class="s1">hicon </span><span class="s3">= </span><span class="s1">small</span><span class="s3">[</span><span class="s4">0</span><span class="s3">]</span>
+<a name="l204"><span class="ln">204  </span></a>            <span class="s1">DestroyIcon</span><span class="s3">(</span><span class="s1">large</span><span class="s3">[</span><span class="s4">0</span><span class="s3">])</span>
+<a name="l205"><span class="ln">205  </span></a>
+<a name="l206"><span class="ln">206  </span></a>        <span class="s0"># Stash away the text and hicon in our map, and add the owner-draw</span>
+<a name="l207"><span class="ln">207  </span></a>        <span class="s0"># item to the menu.</span>
+<a name="l208"><span class="ln">208  </span></a>        <span class="s1">index </span><span class="s3">= </span><span class="s4">0</span>
+<a name="l209"><span class="ln">209  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">menu_item_map</span><span class="s3">[</span><span class="s1">index</span><span class="s3">] = (</span><span class="s1">hicon</span><span class="s3">, </span><span class="s5">&quot;Menu with owner-draw icon&quot;</span><span class="s3">)</span>
+<a name="l210"><span class="ln">210  </span></a>        <span class="s1">item</span><span class="s3">, </span><span class="s1">extras </span><span class="s3">= </span><span class="s1">PackMENUITEMINFO</span><span class="s3">(</span>
+<a name="l211"><span class="ln">211  </span></a>            <span class="s1">fType</span><span class="s3">=</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MFT_OWNERDRAW</span><span class="s3">, </span><span class="s1">dwItemData</span><span class="s3">=</span><span class="s1">index</span><span class="s3">, </span><span class="s1">wID</span><span class="s3">=</span><span class="s4">1009</span>
+<a name="l212"><span class="ln">212  </span></a>        <span class="s3">)</span>
+<a name="l213"><span class="ln">213  </span></a>        <span class="s1">InsertMenuItem</span><span class="s3">(</span><span class="s1">menu</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s1">item</span><span class="s3">)</span>
+<a name="l214"><span class="ln">214  </span></a>
+<a name="l215"><span class="ln">215  </span></a>        <span class="s0"># Add another icon-based icon - but this time using HBMMENU_CALLBACK</span>
+<a name="l216"><span class="ln">216  </span></a>        <span class="s0"># in the hbmpItem elt, so we only need to draw the icon (ie, not the</span>
+<a name="l217"><span class="ln">217  </span></a>        <span class="s0"># text or checkmark)</span>
+<a name="l218"><span class="ln">218  </span></a>        <span class="s1">index </span><span class="s3">= </span><span class="s4">1</span>
+<a name="l219"><span class="ln">219  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">menu_item_map</span><span class="s3">[</span><span class="s1">index</span><span class="s3">] = (</span><span class="s1">hicon</span><span class="s3">, </span><span class="s2">None</span><span class="s3">)</span>
+<a name="l220"><span class="ln">220  </span></a>        <span class="s1">item</span><span class="s3">, </span><span class="s1">extras </span><span class="s3">= </span><span class="s1">PackMENUITEMINFO</span><span class="s3">(</span>
+<a name="l221"><span class="ln">221  </span></a>            <span class="s1">text</span><span class="s3">=</span><span class="s5">&quot;Menu with o-d icon 2&quot;</span><span class="s3">,</span>
+<a name="l222"><span class="ln">222  </span></a>            <span class="s1">dwItemData</span><span class="s3">=</span><span class="s1">index</span><span class="s3">,</span>
+<a name="l223"><span class="ln">223  </span></a>            <span class="s1">hbmpItem</span><span class="s3">=</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">HBMMENU_CALLBACK</span><span class="s3">,</span>
+<a name="l224"><span class="ln">224  </span></a>            <span class="s1">wID</span><span class="s3">=</span><span class="s4">1010</span><span class="s3">,</span>
+<a name="l225"><span class="ln">225  </span></a>        <span class="s3">)</span>
+<a name="l226"><span class="ln">226  </span></a>        <span class="s1">InsertMenuItem</span><span class="s3">(</span><span class="s1">menu</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s1">item</span><span class="s3">)</span>
+<a name="l227"><span class="ln">227  </span></a>
+<a name="l228"><span class="ln">228  </span></a>        <span class="s0"># Add another icon-based icon - this time by converting</span>
+<a name="l229"><span class="ln">229  </span></a>        <span class="s0"># via bitmap.  Note the icon background when selected is ugly :(</span>
+<a name="l230"><span class="ln">230  </span></a>        <span class="s1">hdcBitmap </span><span class="s3">= </span><span class="s1">CreateCompatibleDC</span><span class="s3">(</span><span class="s4">0</span><span class="s3">)</span>
+<a name="l231"><span class="ln">231  </span></a>        <span class="s1">hdcScreen </span><span class="s3">= </span><span class="s1">GetDC</span><span class="s3">(</span><span class="s4">0</span><span class="s3">)</span>
+<a name="l232"><span class="ln">232  </span></a>        <span class="s1">hbm </span><span class="s3">= </span><span class="s1">CreateCompatibleBitmap</span><span class="s3">(</span><span class="s1">hdcScreen</span><span class="s3">, </span><span class="s1">ico_x</span><span class="s3">, </span><span class="s1">ico_y</span><span class="s3">)</span>
+<a name="l233"><span class="ln">233  </span></a>        <span class="s1">hbmOld </span><span class="s3">= </span><span class="s1">SelectObject</span><span class="s3">(</span><span class="s1">hdcBitmap</span><span class="s3">, </span><span class="s1">hbm</span><span class="s3">)</span>
+<a name="l234"><span class="ln">234  </span></a>        <span class="s1">SetBkMode</span><span class="s3">(</span><span class="s1">hdcBitmap</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">TRANSPARENT</span><span class="s3">)</span>
+<a name="l235"><span class="ln">235  </span></a>        <span class="s0"># Fill the background.</span>
+<a name="l236"><span class="ln">236  </span></a>        <span class="s1">brush </span><span class="s3">= </span><span class="s1">GetSysColorBrush</span><span class="s3">(</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">COLOR_MENU</span><span class="s3">)</span>
+<a name="l237"><span class="ln">237  </span></a>        <span class="s1">FillRect</span><span class="s3">(</span><span class="s1">hdcBitmap</span><span class="s3">, (</span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">16</span><span class="s3">, </span><span class="s4">16</span><span class="s3">), </span><span class="s1">brush</span><span class="s3">)</span>
+<a name="l238"><span class="ln">238  </span></a>        <span class="s0"># unclear if brush needs to be freed.  Best clue I can find is:</span>
+<a name="l239"><span class="ln">239  </span></a>        <span class="s0"># &quot;GetSysColorBrush returns a cached brush instead of allocating a new</span>
+<a name="l240"><span class="ln">240  </span></a>        <span class="s0"># one.&quot; - implies no DeleteObject.</span>
+<a name="l241"><span class="ln">241  </span></a>        <span class="s0"># draw the icon</span>
+<a name="l242"><span class="ln">242  </span></a>        <span class="s1">DrawIconEx</span><span class="s3">(</span><span class="s1">hdcBitmap</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s1">hicon</span><span class="s3">, </span><span class="s1">ico_x</span><span class="s3">, </span><span class="s1">ico_y</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">DI_NORMAL</span><span class="s3">)</span>
+<a name="l243"><span class="ln">243  </span></a>        <span class="s1">SelectObject</span><span class="s3">(</span><span class="s1">hdcBitmap</span><span class="s3">, </span><span class="s1">hbmOld</span><span class="s3">)</span>
+<a name="l244"><span class="ln">244  </span></a>        <span class="s1">DeleteDC</span><span class="s3">(</span><span class="s1">hdcBitmap</span><span class="s3">)</span>
+<a name="l245"><span class="ln">245  </span></a>        <span class="s1">item</span><span class="s3">, </span><span class="s1">extras </span><span class="s3">= </span><span class="s1">PackMENUITEMINFO</span><span class="s3">(</span>
+<a name="l246"><span class="ln">246  </span></a>            <span class="s1">text</span><span class="s3">=</span><span class="s5">&quot;Menu with icon&quot;</span><span class="s3">, </span><span class="s1">hbmpItem</span><span class="s3">=</span><span class="s1">hbm</span><span class="s3">.</span><span class="s1">Detach</span><span class="s3">(), </span><span class="s1">wID</span><span class="s3">=</span><span class="s4">1011</span>
+<a name="l247"><span class="ln">247  </span></a>        <span class="s3">)</span>
+<a name="l248"><span class="ln">248  </span></a>        <span class="s1">InsertMenuItem</span><span class="s3">(</span><span class="s1">menu</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s1">item</span><span class="s3">)</span>
+<a name="l249"><span class="ln">249  </span></a>
+<a name="l250"><span class="ln">250  </span></a>        <span class="s0"># Create a sub-menu, and put a few funky ones there.</span>
+<a name="l251"><span class="ln">251  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">sub_menu </span><span class="s3">= </span><span class="s1">sub_menu </span><span class="s3">= </span><span class="s1">CreatePopupMenu</span><span class="s3">()</span>
+<a name="l252"><span class="ln">252  </span></a>        <span class="s0"># A 'checkbox' menu.</span>
+<a name="l253"><span class="ln">253  </span></a>        <span class="s1">item</span><span class="s3">, </span><span class="s1">extras </span><span class="s3">= </span><span class="s1">PackMENUITEMINFO</span><span class="s3">(</span>
+<a name="l254"><span class="ln">254  </span></a>            <span class="s1">fState</span><span class="s3">=</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MFS_CHECKED</span><span class="s3">, </span><span class="s1">text</span><span class="s3">=</span><span class="s5">&quot;Checkbox menu&quot;</span><span class="s3">, </span><span class="s1">hbmpItem</span><span class="s3">=</span><span class="s1">hbmp</span><span class="s3">, </span><span class="s1">wID</span><span class="s3">=</span><span class="s4">1003</span>
+<a name="l255"><span class="ln">255  </span></a>        <span class="s3">)</span>
+<a name="l256"><span class="ln">256  </span></a>        <span class="s1">InsertMenuItem</span><span class="s3">(</span><span class="s1">sub_menu</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s1">item</span><span class="s3">)</span>
+<a name="l257"><span class="ln">257  </span></a>        <span class="s0"># A 'radio' menu.</span>
+<a name="l258"><span class="ln">258  </span></a>        <span class="s1">InsertMenu</span><span class="s3">(</span><span class="s1">sub_menu</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MF_BYPOSITION</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MF_SEPARATOR</span><span class="s3">, </span><span class="s2">None</span><span class="s3">)</span>
+<a name="l259"><span class="ln">259  </span></a>        <span class="s1">item</span><span class="s3">, </span><span class="s1">extras </span><span class="s3">= </span><span class="s1">PackMENUITEMINFO</span><span class="s3">(</span>
+<a name="l260"><span class="ln">260  </span></a>            <span class="s1">fType</span><span class="s3">=</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MFT_RADIOCHECK</span><span class="s3">,</span>
+<a name="l261"><span class="ln">261  </span></a>            <span class="s1">fState</span><span class="s3">=</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MFS_CHECKED</span><span class="s3">,</span>
+<a name="l262"><span class="ln">262  </span></a>            <span class="s1">text</span><span class="s3">=</span><span class="s5">&quot;Checkbox menu - bullet 1&quot;</span><span class="s3">,</span>
+<a name="l263"><span class="ln">263  </span></a>            <span class="s1">hbmpItem</span><span class="s3">=</span><span class="s1">hbmp</span><span class="s3">,</span>
+<a name="l264"><span class="ln">264  </span></a>            <span class="s1">wID</span><span class="s3">=</span><span class="s4">1004</span><span class="s3">,</span>
+<a name="l265"><span class="ln">265  </span></a>        <span class="s3">)</span>
+<a name="l266"><span class="ln">266  </span></a>        <span class="s1">InsertMenuItem</span><span class="s3">(</span><span class="s1">sub_menu</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s1">item</span><span class="s3">)</span>
+<a name="l267"><span class="ln">267  </span></a>        <span class="s1">item</span><span class="s3">, </span><span class="s1">extras </span><span class="s3">= </span><span class="s1">PackMENUITEMINFO</span><span class="s3">(</span>
+<a name="l268"><span class="ln">268  </span></a>            <span class="s1">fType</span><span class="s3">=</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MFT_RADIOCHECK</span><span class="s3">,</span>
+<a name="l269"><span class="ln">269  </span></a>            <span class="s1">fState</span><span class="s3">=</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MFS_UNCHECKED</span><span class="s3">,</span>
+<a name="l270"><span class="ln">270  </span></a>            <span class="s1">text</span><span class="s3">=</span><span class="s5">&quot;Checkbox menu - bullet 2&quot;</span><span class="s3">,</span>
+<a name="l271"><span class="ln">271  </span></a>            <span class="s1">hbmpItem</span><span class="s3">=</span><span class="s1">hbmp</span><span class="s3">,</span>
+<a name="l272"><span class="ln">272  </span></a>            <span class="s1">wID</span><span class="s3">=</span><span class="s4">1005</span><span class="s3">,</span>
+<a name="l273"><span class="ln">273  </span></a>        <span class="s3">)</span>
+<a name="l274"><span class="ln">274  </span></a>        <span class="s1">InsertMenuItem</span><span class="s3">(</span><span class="s1">sub_menu</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s1">item</span><span class="s3">)</span>
+<a name="l275"><span class="ln">275  </span></a>        <span class="s0"># And add the sub-menu to the top-level menu.</span>
+<a name="l276"><span class="ln">276  </span></a>        <span class="s1">item</span><span class="s3">, </span><span class="s1">extras </span><span class="s3">= </span><span class="s1">PackMENUITEMINFO</span><span class="s3">(</span><span class="s1">text</span><span class="s3">=</span><span class="s5">&quot;Sub-Menu&quot;</span><span class="s3">, </span><span class="s1">hSubMenu</span><span class="s3">=</span><span class="s1">sub_menu</span><span class="s3">)</span>
+<a name="l277"><span class="ln">277  </span></a>        <span class="s1">InsertMenuItem</span><span class="s3">(</span><span class="s1">menu</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s1">item</span><span class="s3">)</span>
+<a name="l278"><span class="ln">278  </span></a>
+<a name="l279"><span class="ln">279  </span></a>        <span class="s0"># Set 'Exit' as the default option.</span>
+<a name="l280"><span class="ln">280  </span></a>        <span class="s1">SetMenuDefaultItem</span><span class="s3">(</span><span class="s1">menu</span><span class="s3">, </span><span class="s4">1000</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+<a name="l281"><span class="ln">281  </span></a>
+<a name="l282"><span class="ln">282  </span></a>    <span class="s2">def </span><span class="s1">OnDestroy</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">hwnd</span><span class="s3">, </span><span class="s1">msg</span><span class="s3">, </span><span class="s1">wparam</span><span class="s3">, </span><span class="s1">lparam</span><span class="s3">):</span>
+<a name="l283"><span class="ln">283  </span></a>        <span class="s1">nid </span><span class="s3">= (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">hwnd</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+<a name="l284"><span class="ln">284  </span></a>        <span class="s1">Shell_NotifyIcon</span><span class="s3">(</span><span class="s1">NIM_DELETE</span><span class="s3">, </span><span class="s1">nid</span><span class="s3">)</span>
+<a name="l285"><span class="ln">285  </span></a>        <span class="s1">PostQuitMessage</span><span class="s3">(</span><span class="s4">0</span><span class="s3">)  </span><span class="s0"># Terminate the app.</span>
+<a name="l286"><span class="ln">286  </span></a>
+<a name="l287"><span class="ln">287  </span></a>    <span class="s2">def </span><span class="s1">OnTaskbarNotify</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">hwnd</span><span class="s3">, </span><span class="s1">msg</span><span class="s3">, </span><span class="s1">wparam</span><span class="s3">, </span><span class="s1">lparam</span><span class="s3">):</span>
+<a name="l288"><span class="ln">288  </span></a>        <span class="s2">if </span><span class="s1">lparam </span><span class="s3">== </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">WM_RBUTTONUP</span><span class="s3">:</span>
+<a name="l289"><span class="ln">289  </span></a>            <span class="s1">print</span><span class="s3">(</span><span class="s5">&quot;You right clicked me.&quot;</span><span class="s3">)</span>
+<a name="l290"><span class="ln">290  </span></a>            <span class="s0"># display the menu at the cursor pos.</span>
+<a name="l291"><span class="ln">291  </span></a>            <span class="s1">pos </span><span class="s3">= </span><span class="s1">GetCursorPos</span><span class="s3">()</span>
+<a name="l292"><span class="ln">292  </span></a>            <span class="s1">SetForegroundWindow</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">hwnd</span><span class="s3">)</span>
+<a name="l293"><span class="ln">293  </span></a>            <span class="s1">TrackPopupMenu</span><span class="s3">(</span>
+<a name="l294"><span class="ln">294  </span></a>                <span class="s1">self</span><span class="s3">.</span><span class="s1">hmenu</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">TPM_LEFTALIGN</span><span class="s3">, </span><span class="s1">pos</span><span class="s3">[</span><span class="s4">0</span><span class="s3">], </span><span class="s1">pos</span><span class="s3">[</span><span class="s4">1</span><span class="s3">], </span><span class="s4">0</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">hwnd</span><span class="s3">, </span><span class="s2">None</span>
+<a name="l295"><span class="ln">295  </span></a>            <span class="s3">)</span>
+<a name="l296"><span class="ln">296  </span></a>            <span class="s1">PostMessage</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">hwnd</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">WM_NULL</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+<a name="l297"><span class="ln">297  </span></a>        <span class="s2">elif </span><span class="s1">lparam </span><span class="s3">== </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">WM_LBUTTONDBLCLK</span><span class="s3">:</span>
+<a name="l298"><span class="ln">298  </span></a>            <span class="s1">print</span><span class="s3">(</span><span class="s5">&quot;You double-clicked me&quot;</span><span class="s3">)</span>
+<a name="l299"><span class="ln">299  </span></a>            <span class="s0"># find the default menu item and fire it.</span>
+<a name="l300"><span class="ln">300  </span></a>            <span class="s1">cmd </span><span class="s3">= </span><span class="s1">GetMenuDefaultItem</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">hmenu</span><span class="s3">, </span><span class="s2">False</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+<a name="l301"><span class="ln">301  </span></a>            <span class="s2">if </span><span class="s1">cmd </span><span class="s3">== -</span><span class="s4">1</span><span class="s3">:</span>
+<a name="l302"><span class="ln">302  </span></a>                <span class="s1">print</span><span class="s3">(</span><span class="s5">&quot;Can't find a default!&quot;</span><span class="s3">)</span>
+<a name="l303"><span class="ln">303  </span></a>            <span class="s0"># and just pretend it came from the menu</span>
+<a name="l304"><span class="ln">304  </span></a>            <span class="s1">self</span><span class="s3">.</span><span class="s1">OnCommand</span><span class="s3">(</span><span class="s1">hwnd</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">WM_COMMAND</span><span class="s3">, </span><span class="s1">cmd</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+<a name="l305"><span class="ln">305  </span></a>        <span class="s2">return </span><span class="s4">1</span>
+<a name="l306"><span class="ln">306  </span></a>
+<a name="l307"><span class="ln">307  </span></a>    <span class="s2">def </span><span class="s1">OnCommand</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">hwnd</span><span class="s3">, </span><span class="s1">msg</span><span class="s3">, </span><span class="s1">wparam</span><span class="s3">, </span><span class="s1">lparam</span><span class="s3">):</span>
+<a name="l308"><span class="ln">308  </span></a>        <span class="s1">id </span><span class="s3">= </span><span class="s1">LOWORD</span><span class="s3">(</span><span class="s1">wparam</span><span class="s3">)</span>
+<a name="l309"><span class="ln">309  </span></a>        <span class="s2">if </span><span class="s1">id </span><span class="s3">== </span><span class="s4">1000</span><span class="s3">:</span>
+<a name="l310"><span class="ln">310  </span></a>            <span class="s1">print</span><span class="s3">(</span><span class="s5">&quot;Goodbye&quot;</span><span class="s3">)</span>
+<a name="l311"><span class="ln">311  </span></a>            <span class="s1">DestroyWindow</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">hwnd</span><span class="s3">)</span>
+<a name="l312"><span class="ln">312  </span></a>        <span class="s2">elif </span><span class="s1">id </span><span class="s2">in </span><span class="s3">(</span><span class="s4">1003</span><span class="s3">, </span><span class="s4">1004</span><span class="s3">, </span><span class="s4">1005</span><span class="s3">):</span>
+<a name="l313"><span class="ln">313  </span></a>            <span class="s0"># Our 'checkbox' and 'radio' items</span>
+<a name="l314"><span class="ln">314  </span></a>            <span class="s1">state </span><span class="s3">= </span><span class="s1">GetMenuState</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">sub_menu</span><span class="s3">, </span><span class="s1">id</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MF_BYCOMMAND</span><span class="s3">)</span>
+<a name="l315"><span class="ln">315  </span></a>            <span class="s2">if </span><span class="s1">state </span><span class="s3">== -</span><span class="s4">1</span><span class="s3">:</span>
+<a name="l316"><span class="ln">316  </span></a>                <span class="s2">raise </span><span class="s1">RuntimeError</span><span class="s3">(</span><span class="s5">&quot;No item found&quot;</span><span class="s3">)</span>
+<a name="l317"><span class="ln">317  </span></a>            <span class="s2">if </span><span class="s1">state </span><span class="s3">&amp; </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MF_CHECKED</span><span class="s3">:</span>
+<a name="l318"><span class="ln">318  </span></a>                <span class="s1">check_flags </span><span class="s3">= </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MF_UNCHECKED</span>
+<a name="l319"><span class="ln">319  </span></a>                <span class="s1">print</span><span class="s3">(</span><span class="s5">&quot;Menu was checked - unchecking&quot;</span><span class="s3">)</span>
+<a name="l320"><span class="ln">320  </span></a>            <span class="s2">else</span><span class="s3">:</span>
+<a name="l321"><span class="ln">321  </span></a>                <span class="s1">check_flags </span><span class="s3">= </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MF_CHECKED</span>
+<a name="l322"><span class="ln">322  </span></a>                <span class="s1">print</span><span class="s3">(</span><span class="s5">&quot;Menu was unchecked - checking&quot;</span><span class="s3">)</span>
+<a name="l323"><span class="ln">323  </span></a>
+<a name="l324"><span class="ln">324  </span></a>            <span class="s2">if </span><span class="s1">id </span><span class="s3">== </span><span class="s4">1003</span><span class="s3">:</span>
+<a name="l325"><span class="ln">325  </span></a>                <span class="s0"># simple checkbox</span>
+<a name="l326"><span class="ln">326  </span></a>                <span class="s1">rc </span><span class="s3">= </span><span class="s1">CheckMenuItem</span><span class="s3">(</span>
+<a name="l327"><span class="ln">327  </span></a>                    <span class="s1">self</span><span class="s3">.</span><span class="s1">sub_menu</span><span class="s3">, </span><span class="s1">id</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MF_BYCOMMAND </span><span class="s3">| </span><span class="s1">check_flags</span>
+<a name="l328"><span class="ln">328  </span></a>                <span class="s3">)</span>
+<a name="l329"><span class="ln">329  </span></a>            <span class="s2">else</span><span class="s3">:</span>
+<a name="l330"><span class="ln">330  </span></a>                <span class="s0"># radio button - must pass the first and last IDs in the</span>
+<a name="l331"><span class="ln">331  </span></a>                <span class="s0"># &quot;group&quot;, and the ID in the group that is to be selected.</span>
+<a name="l332"><span class="ln">332  </span></a>                <span class="s1">rc </span><span class="s3">= </span><span class="s1">CheckMenuRadioItem</span><span class="s3">(</span>
+<a name="l333"><span class="ln">333  </span></a>                    <span class="s1">self</span><span class="s3">.</span><span class="s1">sub_menu</span><span class="s3">, </span><span class="s4">1004</span><span class="s3">, </span><span class="s4">1005</span><span class="s3">, </span><span class="s1">id</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MF_BYCOMMAND</span>
+<a name="l334"><span class="ln">334  </span></a>                <span class="s3">)</span>
+<a name="l335"><span class="ln">335  </span></a>            <span class="s0"># Get and check the new state - first the simple way...</span>
+<a name="l336"><span class="ln">336  </span></a>            <span class="s1">new_state </span><span class="s3">= </span><span class="s1">GetMenuState</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">sub_menu</span><span class="s3">, </span><span class="s1">id</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MF_BYCOMMAND</span><span class="s3">)</span>
+<a name="l337"><span class="ln">337  </span></a>            <span class="s2">if </span><span class="s1">new_state </span><span class="s3">&amp; </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MF_CHECKED </span><span class="s3">!= </span><span class="s1">check_flags</span><span class="s3">:</span>
+<a name="l338"><span class="ln">338  </span></a>                <span class="s2">raise </span><span class="s1">RuntimeError</span><span class="s3">(</span><span class="s5">&quot;The new item didn't get the new checked state!&quot;</span><span class="s3">)</span>
+<a name="l339"><span class="ln">339  </span></a>            <span class="s0"># Now the long-winded way via GetMenuItemInfo...</span>
+<a name="l340"><span class="ln">340  </span></a>            <span class="s1">buf</span><span class="s3">, </span><span class="s1">extras </span><span class="s3">= </span><span class="s1">EmptyMENUITEMINFO</span><span class="s3">()</span>
+<a name="l341"><span class="ln">341  </span></a>            <span class="s1">win32gui</span><span class="s3">.</span><span class="s1">GetMenuItemInfo</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">sub_menu</span><span class="s3">, </span><span class="s1">id</span><span class="s3">, </span><span class="s2">False</span><span class="s3">, </span><span class="s1">buf</span><span class="s3">)</span>
+<a name="l342"><span class="ln">342  </span></a>            <span class="s3">(</span>
+<a name="l343"><span class="ln">343  </span></a>                <span class="s1">fType</span><span class="s3">,</span>
+<a name="l344"><span class="ln">344  </span></a>                <span class="s1">fState</span><span class="s3">,</span>
+<a name="l345"><span class="ln">345  </span></a>                <span class="s1">wID</span><span class="s3">,</span>
+<a name="l346"><span class="ln">346  </span></a>                <span class="s1">hSubMenu</span><span class="s3">,</span>
+<a name="l347"><span class="ln">347  </span></a>                <span class="s1">hbmpChecked</span><span class="s3">,</span>
+<a name="l348"><span class="ln">348  </span></a>                <span class="s1">hbmpUnchecked</span><span class="s3">,</span>
+<a name="l349"><span class="ln">349  </span></a>                <span class="s1">dwItemData</span><span class="s3">,</span>
+<a name="l350"><span class="ln">350  </span></a>                <span class="s1">text</span><span class="s3">,</span>
+<a name="l351"><span class="ln">351  </span></a>                <span class="s1">hbmpItem</span><span class="s3">,</span>
+<a name="l352"><span class="ln">352  </span></a>            <span class="s3">) = </span><span class="s1">UnpackMENUITEMINFO</span><span class="s3">(</span><span class="s1">buf</span><span class="s3">)</span>
+<a name="l353"><span class="ln">353  </span></a>
+<a name="l354"><span class="ln">354  </span></a>            <span class="s2">if </span><span class="s1">fState </span><span class="s3">&amp; </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">MF_CHECKED </span><span class="s3">!= </span><span class="s1">check_flags</span><span class="s3">:</span>
+<a name="l355"><span class="ln">355  </span></a>                <span class="s2">raise </span><span class="s1">RuntimeError</span><span class="s3">(</span><span class="s5">&quot;The new item didn't get the new checked state!&quot;</span><span class="s3">)</span>
+<a name="l356"><span class="ln">356  </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l357"><span class="ln">357  </span></a>            <span class="s1">print</span><span class="s3">(</span><span class="s5">&quot;OnCommand for ID&quot;</span><span class="s3">, </span><span class="s1">id</span><span class="s3">)</span>
+<a name="l358"><span class="ln">358  </span></a>
+<a name="l359"><span class="ln">359  </span></a>    <span class="s0"># Owner-draw related functions.  We only have 1 owner-draw item, but</span>
+<a name="l360"><span class="ln">360  </span></a>    <span class="s0"># we pretend we have more than that :)</span>
+<a name="l361"><span class="ln">361  </span></a>    <span class="s2">def </span><span class="s1">OnMeasureItem</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">hwnd</span><span class="s3">, </span><span class="s1">msg</span><span class="s3">, </span><span class="s1">wparam</span><span class="s3">, </span><span class="s1">lparam</span><span class="s3">):</span>
+<a name="l362"><span class="ln">362  </span></a>        <span class="s0">## Last item of MEASUREITEMSTRUCT is a ULONG_PTR</span>
+<a name="l363"><span class="ln">363  </span></a>        <span class="s1">fmt </span><span class="s3">= </span><span class="s5">&quot;5iP&quot;</span>
+<a name="l364"><span class="ln">364  </span></a>        <span class="s1">buf </span><span class="s3">= </span><span class="s1">PyMakeBuffer</span><span class="s3">(</span><span class="s1">struct</span><span class="s3">.</span><span class="s1">calcsize</span><span class="s3">(</span><span class="s1">fmt</span><span class="s3">), </span><span class="s1">lparam</span><span class="s3">)</span>
+<a name="l365"><span class="ln">365  </span></a>        <span class="s1">data </span><span class="s3">= </span><span class="s1">struct</span><span class="s3">.</span><span class="s1">unpack</span><span class="s3">(</span><span class="s1">fmt</span><span class="s3">, </span><span class="s1">buf</span><span class="s3">)</span>
+<a name="l366"><span class="ln">366  </span></a>        <span class="s1">ctlType</span><span class="s3">, </span><span class="s1">ctlID</span><span class="s3">, </span><span class="s1">itemID</span><span class="s3">, </span><span class="s1">itemWidth</span><span class="s3">, </span><span class="s1">itemHeight</span><span class="s3">, </span><span class="s1">itemData </span><span class="s3">= </span><span class="s1">data</span>
+<a name="l367"><span class="ln">367  </span></a>
+<a name="l368"><span class="ln">368  </span></a>        <span class="s1">hicon</span><span class="s3">, </span><span class="s1">text </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">menu_item_map</span><span class="s3">[</span><span class="s1">itemData</span><span class="s3">]</span>
+<a name="l369"><span class="ln">369  </span></a>        <span class="s2">if </span><span class="s1">text </span><span class="s2">is None</span><span class="s3">:</span>
+<a name="l370"><span class="ln">370  </span></a>            <span class="s0"># Only drawing icon due to HBMMENU_CALLBACK</span>
+<a name="l371"><span class="ln">371  </span></a>            <span class="s1">cx </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">menu_icon_width</span>
+<a name="l372"><span class="ln">372  </span></a>            <span class="s1">cy </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">menu_icon_height</span>
+<a name="l373"><span class="ln">373  </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l374"><span class="ln">374  </span></a>            <span class="s0"># drawing the lot!</span>
+<a name="l375"><span class="ln">375  </span></a>            <span class="s1">dc </span><span class="s3">= </span><span class="s1">GetDC</span><span class="s3">(</span><span class="s1">hwnd</span><span class="s3">)</span>
+<a name="l376"><span class="ln">376  </span></a>            <span class="s1">oldFont </span><span class="s3">= </span><span class="s1">SelectObject</span><span class="s3">(</span><span class="s1">dc</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">font_menu</span><span class="s3">)</span>
+<a name="l377"><span class="ln">377  </span></a>            <span class="s1">cx</span><span class="s3">, </span><span class="s1">cy </span><span class="s3">= </span><span class="s1">GetTextExtentPoint32</span><span class="s3">(</span><span class="s1">dc</span><span class="s3">, </span><span class="s1">text</span><span class="s3">)</span>
+<a name="l378"><span class="ln">378  </span></a>            <span class="s1">SelectObject</span><span class="s3">(</span><span class="s1">dc</span><span class="s3">, </span><span class="s1">oldFont</span><span class="s3">)</span>
+<a name="l379"><span class="ln">379  </span></a>            <span class="s1">ReleaseDC</span><span class="s3">(</span><span class="s1">hwnd</span><span class="s3">, </span><span class="s1">dc</span><span class="s3">)</span>
+<a name="l380"><span class="ln">380  </span></a>
+<a name="l381"><span class="ln">381  </span></a>            <span class="s1">cx </span><span class="s3">+= </span><span class="s1">GetSystemMetrics</span><span class="s3">(</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">SM_CXMENUCHECK</span><span class="s3">)</span>
+<a name="l382"><span class="ln">382  </span></a>            <span class="s1">cx </span><span class="s3">+= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">menu_icon_width </span><span class="s3">+ </span><span class="s1">self</span><span class="s3">.</span><span class="s1">icon_x_pad</span>
+<a name="l383"><span class="ln">383  </span></a>
+<a name="l384"><span class="ln">384  </span></a>            <span class="s1">cy </span><span class="s3">= </span><span class="s1">GetSystemMetrics</span><span class="s3">(</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">SM_CYMENU</span><span class="s3">)</span>
+<a name="l385"><span class="ln">385  </span></a>
+<a name="l386"><span class="ln">386  </span></a>        <span class="s1">new_data </span><span class="s3">= </span><span class="s1">struct</span><span class="s3">.</span><span class="s1">pack</span><span class="s3">(</span><span class="s1">fmt</span><span class="s3">, </span><span class="s1">ctlType</span><span class="s3">, </span><span class="s1">ctlID</span><span class="s3">, </span><span class="s1">itemID</span><span class="s3">, </span><span class="s1">cx</span><span class="s3">, </span><span class="s1">cy</span><span class="s3">, </span><span class="s1">itemData</span><span class="s3">)</span>
+<a name="l387"><span class="ln">387  </span></a>        <span class="s1">PySetMemory</span><span class="s3">(</span><span class="s1">lparam</span><span class="s3">, </span><span class="s1">new_data</span><span class="s3">)</span>
+<a name="l388"><span class="ln">388  </span></a>        <span class="s2">return True</span>
+<a name="l389"><span class="ln">389  </span></a>
+<a name="l390"><span class="ln">390  </span></a>    <span class="s2">def </span><span class="s1">OnDrawItem</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">hwnd</span><span class="s3">, </span><span class="s1">msg</span><span class="s3">, </span><span class="s1">wparam</span><span class="s3">, </span><span class="s1">lparam</span><span class="s3">):</span>
+<a name="l391"><span class="ln">391  </span></a>        <span class="s0">## lparam is a DRAWITEMSTRUCT</span>
+<a name="l392"><span class="ln">392  </span></a>        <span class="s1">fmt </span><span class="s3">= </span><span class="s5">&quot;5i2P4iP&quot;</span>
+<a name="l393"><span class="ln">393  </span></a>        <span class="s1">data </span><span class="s3">= </span><span class="s1">struct</span><span class="s3">.</span><span class="s1">unpack</span><span class="s3">(</span><span class="s1">fmt</span><span class="s3">, </span><span class="s1">PyGetMemory</span><span class="s3">(</span><span class="s1">lparam</span><span class="s3">, </span><span class="s1">struct</span><span class="s3">.</span><span class="s1">calcsize</span><span class="s3">(</span><span class="s1">fmt</span><span class="s3">)))</span>
+<a name="l394"><span class="ln">394  </span></a>        <span class="s3">(</span>
+<a name="l395"><span class="ln">395  </span></a>            <span class="s1">ctlType</span><span class="s3">,</span>
+<a name="l396"><span class="ln">396  </span></a>            <span class="s1">ctlID</span><span class="s3">,</span>
+<a name="l397"><span class="ln">397  </span></a>            <span class="s1">itemID</span><span class="s3">,</span>
+<a name="l398"><span class="ln">398  </span></a>            <span class="s1">itemAction</span><span class="s3">,</span>
+<a name="l399"><span class="ln">399  </span></a>            <span class="s1">itemState</span><span class="s3">,</span>
+<a name="l400"><span class="ln">400  </span></a>            <span class="s1">hwndItem</span><span class="s3">,</span>
+<a name="l401"><span class="ln">401  </span></a>            <span class="s1">hDC</span><span class="s3">,</span>
+<a name="l402"><span class="ln">402  </span></a>            <span class="s1">left</span><span class="s3">,</span>
+<a name="l403"><span class="ln">403  </span></a>            <span class="s1">top</span><span class="s3">,</span>
+<a name="l404"><span class="ln">404  </span></a>            <span class="s1">right</span><span class="s3">,</span>
+<a name="l405"><span class="ln">405  </span></a>            <span class="s1">bot</span><span class="s3">,</span>
+<a name="l406"><span class="ln">406  </span></a>            <span class="s1">itemData</span><span class="s3">,</span>
+<a name="l407"><span class="ln">407  </span></a>        <span class="s3">) = </span><span class="s1">data</span>
+<a name="l408"><span class="ln">408  </span></a>
+<a name="l409"><span class="ln">409  </span></a>        <span class="s1">rect </span><span class="s3">= </span><span class="s1">left</span><span class="s3">, </span><span class="s1">top</span><span class="s3">, </span><span class="s1">right</span><span class="s3">, </span><span class="s1">bot</span>
+<a name="l410"><span class="ln">410  </span></a>        <span class="s1">hicon</span><span class="s3">, </span><span class="s1">text </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">menu_item_map</span><span class="s3">[</span><span class="s1">itemData</span><span class="s3">]</span>
+<a name="l411"><span class="ln">411  </span></a>
+<a name="l412"><span class="ln">412  </span></a>        <span class="s2">if </span><span class="s1">text </span><span class="s2">is None</span><span class="s3">:</span>
+<a name="l413"><span class="ln">413  </span></a>            <span class="s0"># This means the menu-item had HBMMENU_CALLBACK - so all we</span>
+<a name="l414"><span class="ln">414  </span></a>            <span class="s0"># draw is the icon.  rect is the entire area we should use.</span>
+<a name="l415"><span class="ln">415  </span></a>            <span class="s1">DrawIconEx</span><span class="s3">(</span>
+<a name="l416"><span class="ln">416  </span></a>                <span class="s1">hDC</span><span class="s3">, </span><span class="s1">left</span><span class="s3">, </span><span class="s1">top</span><span class="s3">, </span><span class="s1">hicon</span><span class="s3">, </span><span class="s1">right </span><span class="s3">- </span><span class="s1">left</span><span class="s3">, </span><span class="s1">bot </span><span class="s3">- </span><span class="s1">top</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">DI_NORMAL</span>
+<a name="l417"><span class="ln">417  </span></a>            <span class="s3">)</span>
+<a name="l418"><span class="ln">418  </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l419"><span class="ln">419  </span></a>            <span class="s0"># If the user has selected the item, use the selected</span>
+<a name="l420"><span class="ln">420  </span></a>            <span class="s0"># text and background colors to display the item.</span>
+<a name="l421"><span class="ln">421  </span></a>            <span class="s1">selected </span><span class="s3">= </span><span class="s1">itemState </span><span class="s3">&amp; </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">ODS_SELECTED</span>
+<a name="l422"><span class="ln">422  </span></a>            <span class="s2">if </span><span class="s1">selected</span><span class="s3">:</span>
+<a name="l423"><span class="ln">423  </span></a>                <span class="s1">crText </span><span class="s3">= </span><span class="s1">SetTextColor</span><span class="s3">(</span><span class="s1">hDC</span><span class="s3">, </span><span class="s1">GetSysColor</span><span class="s3">(</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">COLOR_HIGHLIGHTTEXT</span><span class="s3">))</span>
+<a name="l424"><span class="ln">424  </span></a>                <span class="s1">crBkgnd </span><span class="s3">= </span><span class="s1">SetBkColor</span><span class="s3">(</span><span class="s1">hDC</span><span class="s3">, </span><span class="s1">GetSysColor</span><span class="s3">(</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">COLOR_HIGHLIGHT</span><span class="s3">))</span>
+<a name="l425"><span class="ln">425  </span></a>
+<a name="l426"><span class="ln">426  </span></a>            <span class="s1">each_pad </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">icon_x_pad </span><span class="s3">// </span><span class="s4">2</span>
+<a name="l427"><span class="ln">427  </span></a>            <span class="s1">x_icon </span><span class="s3">= </span><span class="s1">left </span><span class="s3">+ </span><span class="s1">GetSystemMetrics</span><span class="s3">(</span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">SM_CXMENUCHECK</span><span class="s3">) + </span><span class="s1">each_pad</span>
+<a name="l428"><span class="ln">428  </span></a>            <span class="s1">x_text </span><span class="s3">= </span><span class="s1">x_icon </span><span class="s3">+ </span><span class="s1">self</span><span class="s3">.</span><span class="s1">menu_icon_width </span><span class="s3">+ </span><span class="s1">each_pad</span>
+<a name="l429"><span class="ln">429  </span></a>
+<a name="l430"><span class="ln">430  </span></a>            <span class="s0"># Draw text first, specifying a complete rect to fill - this sets</span>
+<a name="l431"><span class="ln">431  </span></a>            <span class="s0"># up the background (but overwrites anything else already there!)</span>
+<a name="l432"><span class="ln">432  </span></a>            <span class="s0"># Select the font, draw it, and restore the previous font.</span>
+<a name="l433"><span class="ln">433  </span></a>            <span class="s1">hfontOld </span><span class="s3">= </span><span class="s1">SelectObject</span><span class="s3">(</span><span class="s1">hDC</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">font_menu</span><span class="s3">)</span>
+<a name="l434"><span class="ln">434  </span></a>            <span class="s1">ExtTextOut</span><span class="s3">(</span><span class="s1">hDC</span><span class="s3">, </span><span class="s1">x_text</span><span class="s3">, </span><span class="s1">top </span><span class="s3">+ </span><span class="s4">2</span><span class="s3">, </span><span class="s1">win32con</span><span class="s3">.</span><span class="s1">ETO_OPAQUE</span><span class="s3">, </span><span class="s1">rect</span><span class="s3">, </span><span class="s1">text</span><span class="s3">)</span>
+<a name="l435"><span class="ln">435  </span></a>            <span class="s1">SelectObject</span><span class="s3">(</span><span class="s1">hDC</span><span class="s3">, </span><span class="s1">hfontOld</span><span class="s3">)</span>
+<a name="l436"><span class="ln">436  </span></a>
+<a name="l437"><span class="ln">437  </span></a>            <span class="s0"># Icon image next.  Icons are transparent - no need to handle</span>
+<a name="l438"><span class="ln">438  </span></a>            <span class="s0"># selection specially.</span>
+<a name="l439"><span class="ln">439  </span></a>            <span class="s1">DrawIconEx</span><span class="s3">(</span>
+<a name="l440"><span class="ln">440  </span></a>                <span class="s1">hDC</span><span class="s3">,</span>
+<a name="l441"><span class="ln">441  </span></a>                <span class="s1">x_icon</span><span class="s3">,</span>
+<a name="l442"><span class="ln">442  </span></a>                <span class="s1">top </span><span class="s3">+ </span><span class="s4">2</span><span class="s3">,</span>
+<a name="l443"><span class="ln">443  </span></a>                <span class="s1">hicon</span><span class="s3">,</span>
+<a name="l444"><span class="ln">444  </span></a>                <span class="s1">self</span><span class="s3">.</span><span class="s1">menu_icon_width</span><span class="s3">,</span>
+<a name="l445"><span class="ln">445  </span></a>                <span class="s1">self</span><span class="s3">.</span><span class="s1">menu_icon_height</span><span class="s3">,</span>
+<a name="l446"><span class="ln">446  </span></a>                <span class="s4">0</span><span class="s3">,</span>
+<a name="l447"><span class="ln">447  </span></a>                <span class="s4">0</span><span class="s3">,</span>
+<a name="l448"><span class="ln">448  </span></a>                <span class="s1">win32con</span><span class="s3">.</span><span class="s1">DI_NORMAL</span><span class="s3">,</span>
+<a name="l449"><span class="ln">449  </span></a>            <span class="s3">)</span>
+<a name="l450"><span class="ln">450  </span></a>
+<a name="l451"><span class="ln">451  </span></a>            <span class="s0"># Return the text and background colors to their</span>
+<a name="l452"><span class="ln">452  </span></a>            <span class="s0"># normal state (not selected).</span>
+<a name="l453"><span class="ln">453  </span></a>            <span class="s2">if </span><span class="s1">selected</span><span class="s3">:</span>
+<a name="l454"><span class="ln">454  </span></a>                <span class="s1">SetTextColor</span><span class="s3">(</span><span class="s1">hDC</span><span class="s3">, </span><span class="s1">crText</span><span class="s3">)</span>
+<a name="l455"><span class="ln">455  </span></a>                <span class="s1">SetBkColor</span><span class="s3">(</span><span class="s1">hDC</span><span class="s3">, </span><span class="s1">crBkgnd</span><span class="s3">)</span>
+<a name="l456"><span class="ln">456  </span></a>
+<a name="l457"><span class="ln">457  </span></a>
+<a name="l458"><span class="ln">458  </span></a><span class="s2">def </span><span class="s1">main</span><span class="s3">():</span>
+<a name="l459"><span class="ln">459  </span></a>    <span class="s1">w </span><span class="s3">= </span><span class="s1">MainWindow</span><span class="s3">()</span>
+<a name="l460"><span class="ln">460  </span></a>    <span class="s1">PumpMessages</span><span class="s3">()</span>
+<a name="l461"><span class="ln">461  </span></a>
+<a name="l462"><span class="ln">462  </span></a>
+<a name="l463"><span class="ln">463  </span></a><span class="s2">if </span><span class="s1">__name__ </span><span class="s3">== </span><span class="s5">&quot;__main__&quot;</span><span class="s3">:</span>
+<a name="l464"><span class="ln">464  </span></a>    <span class="s1">main</span><span class="s3">()</span>
+<a name="l465"><span class="ln">465  </span></a></pre>
+</body>
+</html>

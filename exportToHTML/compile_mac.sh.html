@@ -1,0 +1,26 @@
+<html>
+<head>
+<title>compile_mac.sh</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #6aab73;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+compile_mac.sh</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">set -e</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">SRC=</span><span class="s1">&quot;</span><span class="s2">$</span><span class="s3">(</span><span class="s0">dirname </span><span class="s1">&quot;</span><span class="s3">$0</span><span class="s1">&quot;</span><span class="s3">)</span><span class="s1">/..&quot;</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">g++ -fPIC -D_REENTRANT -std=c++11 -D_FORTIFY_SOURCE=</span><span class="s4">2 </span><span class="s0">-arch x86_64 -c </span><span class="s3">$SRC</span><span class="s0">/linux_and_mac/attach.cpp -o </span><span class="s3">$SRC</span><span class="s0">/attach_x86_64.o</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">g++ -dynamiclib -nostartfiles -arch x86_64 -lc </span><span class="s3">$SRC</span><span class="s0">/attach_x86_64.o -o </span><span class="s3">$SRC</span><span class="s0">/attach_x86_64.dylib</span>
+<a name="l5"><span class="ln">5    </span></a></pre>
+</body>
+</html>

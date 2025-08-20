@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>compile_linux.sh</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #6aab73;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+compile_linux.sh</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">set -e</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">ARCH=</span><span class="s1">&quot;</span><span class="s2">$</span><span class="s3">(</span><span class="s0">uname -m</span><span class="s3">)</span><span class="s1">&quot;</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">case </span><span class="s3">$ARCH </span><span class="s2">in</span>
+<a name="l5"><span class="ln">5    </span></a>    <span class="s0">i*86</span><span class="s3">) </span><span class="s0">SUFFIX=x86</span><span class="s2">;;</span>
+<a name="l6"><span class="ln">6    </span></a>    <span class="s0">x86_64*</span><span class="s3">) </span><span class="s0">SUFFIX=amd64</span><span class="s2">;;</span>
+<a name="l7"><span class="ln">7    </span></a>    <span class="s0">*</span><span class="s3">) </span><span class="s0">echo </span><span class="s3">&gt;&amp;</span><span class="s4">2 </span><span class="s1">&quot;unsupported: </span><span class="s3">$ARCH</span><span class="s1">&quot;</span><span class="s0">; exit </span><span class="s4">1</span><span class="s2">;;</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s2">esac</span>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">SRC=</span><span class="s1">&quot;</span><span class="s2">$</span><span class="s3">(</span><span class="s0">dirname </span><span class="s1">&quot;</span><span class="s3">$0</span><span class="s1">&quot;</span><span class="s3">)</span><span class="s1">/..&quot;</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s0">g++ -std=c++11 -shared -fPIC -O2 -D_FORTIFY_SOURCE=</span><span class="s4">2 </span><span class="s0">-nostartfiles --stack-protector-strong </span><span class="s3">$SRC</span><span class="s0">/linux_and_mac/attach.cpp -o </span><span class="s3">$SRC</span><span class="s0">/attach_linux_</span><span class="s3">$SUFFIX</span><span class="s0">.so</span>
+<a name="l12"><span class="ln">12   </span></a></pre>
+</body>
+</html>

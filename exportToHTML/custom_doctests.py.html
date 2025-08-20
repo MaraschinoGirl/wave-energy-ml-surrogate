@@ -1,0 +1,179 @@
+<html>
+<head>
+<title>custom_doctests.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #7a7e85;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+custom_doctests.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>Handlers for IPythonDirective's @doctest pseudo-decorator. 
+<a name="l3"><span class="ln">3    </span></a> 
+<a name="l4"><span class="ln">4    </span></a>The Sphinx extension that provides support for embedded IPython code provides 
+<a name="l5"><span class="ln">5    </span></a>a pseudo-decorator @doctest, which treats the input/output block as a 
+<a name="l6"><span class="ln">6    </span></a>doctest, raising a RuntimeError during doc generation if the actual output 
+<a name="l7"><span class="ln">7    </span></a>(after running the input) does not match the expected output. 
+<a name="l8"><span class="ln">8    </span></a> 
+<a name="l9"><span class="ln">9    </span></a>An example usage is: 
+<a name="l10"><span class="ln">10   </span></a> 
+<a name="l11"><span class="ln">11   </span></a>.. code-block:: rst 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>   .. ipython:: 
+<a name="l14"><span class="ln">14   </span></a> 
+<a name="l15"><span class="ln">15   </span></a>        In [1]: x = 1 
+<a name="l16"><span class="ln">16   </span></a> 
+<a name="l17"><span class="ln">17   </span></a>        @doctest 
+<a name="l18"><span class="ln">18   </span></a>        In [2]: x + 2 
+<a name="l19"><span class="ln">19   </span></a>        Out[3]: 3 
+<a name="l20"><span class="ln">20   </span></a> 
+<a name="l21"><span class="ln">21   </span></a>One can also provide arguments to the decorator. The first argument should be 
+<a name="l22"><span class="ln">22   </span></a>the name of a custom handler. The specification of any other arguments is 
+<a name="l23"><span class="ln">23   </span></a>determined by the handler. For example, 
+<a name="l24"><span class="ln">24   </span></a> 
+<a name="l25"><span class="ln">25   </span></a>.. code-block:: rst 
+<a name="l26"><span class="ln">26   </span></a> 
+<a name="l27"><span class="ln">27   </span></a>      .. ipython:: 
+<a name="l28"><span class="ln">28   </span></a> 
+<a name="l29"><span class="ln">29   </span></a>         @doctest float 
+<a name="l30"><span class="ln">30   </span></a>         In [154]: 0.1 + 0.2 
+<a name="l31"><span class="ln">31   </span></a>         Out[154]: 0.3 
+<a name="l32"><span class="ln">32   </span></a> 
+<a name="l33"><span class="ln">33   </span></a>allows the actual output ``0.30000000000000004`` to match the expected output 
+<a name="l34"><span class="ln">34   </span></a>due to a comparison with `np.allclose`. 
+<a name="l35"><span class="ln">35   </span></a> 
+<a name="l36"><span class="ln">36   </span></a>This module contains handlers for the @doctest pseudo-decorator. Handlers 
+<a name="l37"><span class="ln">37   </span></a>should have the following function signature:: 
+<a name="l38"><span class="ln">38   </span></a> 
+<a name="l39"><span class="ln">39   </span></a>    handler(sphinx_shell, args, input_lines, found, submitted) 
+<a name="l40"><span class="ln">40   </span></a> 
+<a name="l41"><span class="ln">41   </span></a>where `sphinx_shell` is the embedded Sphinx shell, `args` contains the list 
+<a name="l42"><span class="ln">42   </span></a>of arguments that follow: '@doctest handler_name', `input_lines` contains 
+<a name="l43"><span class="ln">43   </span></a>a list of the lines relevant to the current doctest, `found` is a string 
+<a name="l44"><span class="ln">44   </span></a>containing the output from the IPython shell, and `submitted` is a string 
+<a name="l45"><span class="ln">45   </span></a>containing the expected output from the IPython shell. 
+<a name="l46"><span class="ln">46   </span></a> 
+<a name="l47"><span class="ln">47   </span></a>Handlers must be registered in the `doctests` dict at the end of this module. 
+<a name="l48"><span class="ln">48   </span></a> 
+<a name="l49"><span class="ln">49   </span></a>&quot;&quot;&quot;</span>
+<a name="l50"><span class="ln">50   </span></a>
+<a name="l51"><span class="ln">51   </span></a><span class="s2">def </span><span class="s1">str_to_array</span><span class="s3">(</span><span class="s1">s</span><span class="s3">):</span>
+<a name="l52"><span class="ln">52   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l53"><span class="ln">53   </span></a>    Simplistic converter of strings from repr to float NumPy arrays. 
+<a name="l54"><span class="ln">54   </span></a> 
+<a name="l55"><span class="ln">55   </span></a>    If the repr representation has ellipsis in it, then this will fail. 
+<a name="l56"><span class="ln">56   </span></a> 
+<a name="l57"><span class="ln">57   </span></a>    Parameters 
+<a name="l58"><span class="ln">58   </span></a>    ---------- 
+<a name="l59"><span class="ln">59   </span></a>    s : str 
+<a name="l60"><span class="ln">60   </span></a>        The repr version of a NumPy array. 
+<a name="l61"><span class="ln">61   </span></a> 
+<a name="l62"><span class="ln">62   </span></a>    Examples 
+<a name="l63"><span class="ln">63   </span></a>    -------- 
+<a name="l64"><span class="ln">64   </span></a>    &gt;&gt;&gt; s = &quot;array([ 0.3,  inf,  nan])&quot; 
+<a name="l65"><span class="ln">65   </span></a>    &gt;&gt;&gt; a = str_to_array(s) 
+<a name="l66"><span class="ln">66   </span></a> 
+<a name="l67"><span class="ln">67   </span></a>    &quot;&quot;&quot;</span>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s2">import </span><span class="s1">numpy </span><span class="s2">as </span><span class="s1">np</span>
+<a name="l69"><span class="ln">69   </span></a>
+<a name="l70"><span class="ln">70   </span></a>    <span class="s4"># Need to make sure eval() knows about inf and nan.</span>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s4"># This also assumes default printoptions for NumPy.</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s2">from </span><span class="s1">numpy </span><span class="s2">import </span><span class="s1">inf</span><span class="s3">, </span><span class="s1">nan</span>
+<a name="l73"><span class="ln">73   </span></a>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s2">if </span><span class="s1">s</span><span class="s3">.</span><span class="s1">startswith</span><span class="s3">(</span><span class="s5">u'array'</span><span class="s3">):</span>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s4"># Remove array( and )</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s1">s </span><span class="s3">= </span><span class="s1">s</span><span class="s3">[</span><span class="s6">6</span><span class="s3">:-</span><span class="s6">1</span><span class="s3">]</span>
+<a name="l77"><span class="ln">77   </span></a>
+<a name="l78"><span class="ln">78   </span></a>    <span class="s2">if </span><span class="s1">s</span><span class="s3">.</span><span class="s1">startswith</span><span class="s3">(</span><span class="s5">u'['</span><span class="s3">):</span>
+<a name="l79"><span class="ln">79   </span></a>        <span class="s1">a </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">array</span><span class="s3">(</span><span class="s1">eval</span><span class="s3">(</span><span class="s1">s</span><span class="s3">), </span><span class="s1">dtype</span><span class="s3">=</span><span class="s1">float</span><span class="s3">)</span>
+<a name="l80"><span class="ln">80   </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l81"><span class="ln">81   </span></a>        <span class="s4"># Assume its a regular float. Force 1D so we can index into it.</span>
+<a name="l82"><span class="ln">82   </span></a>        <span class="s1">a </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">atleast_1d</span><span class="s3">(</span><span class="s1">float</span><span class="s3">(</span><span class="s1">s</span><span class="s3">))</span>
+<a name="l83"><span class="ln">83   </span></a>    <span class="s2">return </span><span class="s1">a</span>
+<a name="l84"><span class="ln">84   </span></a>
+<a name="l85"><span class="ln">85   </span></a><span class="s2">def </span><span class="s1">float_doctest</span><span class="s3">(</span><span class="s1">sphinx_shell</span><span class="s3">, </span><span class="s1">args</span><span class="s3">, </span><span class="s1">input_lines</span><span class="s3">, </span><span class="s1">found</span><span class="s3">, </span><span class="s1">submitted</span><span class="s3">):</span>
+<a name="l86"><span class="ln">86   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l87"><span class="ln">87   </span></a>    Doctest which allow the submitted output to vary slightly from the input. 
+<a name="l88"><span class="ln">88   </span></a> 
+<a name="l89"><span class="ln">89   </span></a>    Here is how it might appear in an rst file: 
+<a name="l90"><span class="ln">90   </span></a> 
+<a name="l91"><span class="ln">91   </span></a>    .. code-block:: rst 
+<a name="l92"><span class="ln">92   </span></a> 
+<a name="l93"><span class="ln">93   </span></a>       .. ipython:: 
+<a name="l94"><span class="ln">94   </span></a> 
+<a name="l95"><span class="ln">95   </span></a>          @doctest float 
+<a name="l96"><span class="ln">96   </span></a>          In [1]: 0.1 + 0.2 
+<a name="l97"><span class="ln">97   </span></a>          Out[1]: 0.3 
+<a name="l98"><span class="ln">98   </span></a> 
+<a name="l99"><span class="ln">99   </span></a>    &quot;&quot;&quot;</span>
+<a name="l100"><span class="ln">100  </span></a>    <span class="s2">import </span><span class="s1">numpy </span><span class="s2">as </span><span class="s1">np</span>
+<a name="l101"><span class="ln">101  </span></a>
+<a name="l102"><span class="ln">102  </span></a>    <span class="s2">if </span><span class="s1">len</span><span class="s3">(</span><span class="s1">args</span><span class="s3">) == </span><span class="s6">2</span><span class="s3">:</span>
+<a name="l103"><span class="ln">103  </span></a>        <span class="s1">rtol </span><span class="s3">= </span><span class="s6">1e-05</span>
+<a name="l104"><span class="ln">104  </span></a>        <span class="s1">atol </span><span class="s3">= </span><span class="s6">1e-08</span>
+<a name="l105"><span class="ln">105  </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l106"><span class="ln">106  </span></a>        <span class="s4"># Both must be specified if any are specified.</span>
+<a name="l107"><span class="ln">107  </span></a>        <span class="s2">try</span><span class="s3">:</span>
+<a name="l108"><span class="ln">108  </span></a>            <span class="s1">rtol </span><span class="s3">= </span><span class="s1">float</span><span class="s3">(</span><span class="s1">args</span><span class="s3">[</span><span class="s6">2</span><span class="s3">])</span>
+<a name="l109"><span class="ln">109  </span></a>            <span class="s1">atol </span><span class="s3">= </span><span class="s1">float</span><span class="s3">(</span><span class="s1">args</span><span class="s3">[</span><span class="s6">3</span><span class="s3">])</span>
+<a name="l110"><span class="ln">110  </span></a>        <span class="s2">except </span><span class="s1">IndexError</span><span class="s3">:</span>
+<a name="l111"><span class="ln">111  </span></a>            <span class="s1">e </span><span class="s3">= (</span><span class="s5">&quot;Both `rtol` and `atol` must be specified &quot;</span>
+<a name="l112"><span class="ln">112  </span></a>                 <span class="s5">&quot;if either are specified: {0}&quot;</span><span class="s3">.</span><span class="s1">format</span><span class="s3">(</span><span class="s1">args</span><span class="s3">))</span>
+<a name="l113"><span class="ln">113  </span></a>            <span class="s2">raise </span><span class="s1">IndexError</span><span class="s3">(</span><span class="s1">e</span><span class="s3">) </span><span class="s2">from </span><span class="s1">e</span>
+<a name="l114"><span class="ln">114  </span></a>
+<a name="l115"><span class="ln">115  </span></a>    <span class="s2">try</span><span class="s3">:</span>
+<a name="l116"><span class="ln">116  </span></a>        <span class="s1">submitted </span><span class="s3">= </span><span class="s1">str_to_array</span><span class="s3">(</span><span class="s1">submitted</span><span class="s3">)</span>
+<a name="l117"><span class="ln">117  </span></a>        <span class="s1">found </span><span class="s3">= </span><span class="s1">str_to_array</span><span class="s3">(</span><span class="s1">found</span><span class="s3">)</span>
+<a name="l118"><span class="ln">118  </span></a>    <span class="s2">except</span><span class="s3">:</span>
+<a name="l119"><span class="ln">119  </span></a>        <span class="s4"># For example, if the array is huge and there are ellipsis in it.</span>
+<a name="l120"><span class="ln">120  </span></a>        <span class="s1">error </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l121"><span class="ln">121  </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l122"><span class="ln">122  </span></a>        <span class="s1">found_isnan </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">isnan</span><span class="s3">(</span><span class="s1">found</span><span class="s3">)</span>
+<a name="l123"><span class="ln">123  </span></a>        <span class="s1">submitted_isnan </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">isnan</span><span class="s3">(</span><span class="s1">submitted</span><span class="s3">)</span>
+<a name="l124"><span class="ln">124  </span></a>        <span class="s1">error </span><span class="s3">= </span><span class="s2">not </span><span class="s1">np</span><span class="s3">.</span><span class="s1">allclose</span><span class="s3">(</span><span class="s1">found_isnan</span><span class="s3">, </span><span class="s1">submitted_isnan</span><span class="s3">)</span>
+<a name="l125"><span class="ln">125  </span></a>        <span class="s1">error </span><span class="s3">|= </span><span class="s2">not </span><span class="s1">np</span><span class="s3">.</span><span class="s1">allclose</span><span class="s3">(</span><span class="s1">found</span><span class="s3">[~</span><span class="s1">found_isnan</span><span class="s3">],</span>
+<a name="l126"><span class="ln">126  </span></a>                                 <span class="s1">submitted</span><span class="s3">[~</span><span class="s1">submitted_isnan</span><span class="s3">],</span>
+<a name="l127"><span class="ln">127  </span></a>                                 <span class="s1">rtol</span><span class="s3">=</span><span class="s1">rtol</span><span class="s3">, </span><span class="s1">atol</span><span class="s3">=</span><span class="s1">atol</span><span class="s3">)</span>
+<a name="l128"><span class="ln">128  </span></a>
+<a name="l129"><span class="ln">129  </span></a>    <span class="s1">TAB </span><span class="s3">= </span><span class="s5">' ' </span><span class="s3">* </span><span class="s6">4</span>
+<a name="l130"><span class="ln">130  </span></a>    <span class="s1">directive </span><span class="s3">= </span><span class="s1">sphinx_shell</span><span class="s3">.</span><span class="s1">directive</span>
+<a name="l131"><span class="ln">131  </span></a>    <span class="s2">if </span><span class="s1">directive </span><span class="s2">is None</span><span class="s3">:</span>
+<a name="l132"><span class="ln">132  </span></a>        <span class="s1">source </span><span class="s3">= </span><span class="s5">'Unavailable'</span>
+<a name="l133"><span class="ln">133  </span></a>        <span class="s1">content </span><span class="s3">= </span><span class="s5">'Unavailable'</span>
+<a name="l134"><span class="ln">134  </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l135"><span class="ln">135  </span></a>        <span class="s1">source </span><span class="s3">= </span><span class="s1">directive</span><span class="s3">.</span><span class="s1">state</span><span class="s3">.</span><span class="s1">document</span><span class="s3">.</span><span class="s1">current_source</span>
+<a name="l136"><span class="ln">136  </span></a>        <span class="s4"># Add tabs and make into a single string.</span>
+<a name="l137"><span class="ln">137  </span></a>        <span class="s1">content </span><span class="s3">= </span><span class="s5">'</span><span class="s2">\n</span><span class="s5">'</span><span class="s3">.</span><span class="s1">join</span><span class="s3">([</span><span class="s1">TAB </span><span class="s3">+ </span><span class="s1">line </span><span class="s2">for </span><span class="s1">line </span><span class="s2">in </span><span class="s1">directive</span><span class="s3">.</span><span class="s1">content</span><span class="s3">])</span>
+<a name="l138"><span class="ln">138  </span></a>
+<a name="l139"><span class="ln">139  </span></a>    <span class="s2">if </span><span class="s1">error</span><span class="s3">:</span>
+<a name="l140"><span class="ln">140  </span></a>
+<a name="l141"><span class="ln">141  </span></a>        <span class="s1">e </span><span class="s3">= (</span><span class="s5">'doctest float comparison failure</span><span class="s2">\n\n</span><span class="s5">'</span>
+<a name="l142"><span class="ln">142  </span></a>             <span class="s5">'Document source: {0}</span><span class="s2">\n\n</span><span class="s5">'</span>
+<a name="l143"><span class="ln">143  </span></a>             <span class="s5">'Raw content: </span><span class="s2">\n</span><span class="s5">{1}</span><span class="s2">\n\n</span><span class="s5">'</span>
+<a name="l144"><span class="ln">144  </span></a>             <span class="s5">'On input line(s):</span><span class="s2">\n</span><span class="s5">{TAB}{2}</span><span class="s2">\n\n</span><span class="s5">'</span>
+<a name="l145"><span class="ln">145  </span></a>             <span class="s5">'we found output:</span><span class="s2">\n</span><span class="s5">{TAB}{3}</span><span class="s2">\n\n</span><span class="s5">'</span>
+<a name="l146"><span class="ln">146  </span></a>             <span class="s5">'instead of the expected:</span><span class="s2">\n</span><span class="s5">{TAB}{4}</span><span class="s2">\n\n</span><span class="s5">'</span><span class="s3">)</span>
+<a name="l147"><span class="ln">147  </span></a>        <span class="s1">e </span><span class="s3">= </span><span class="s1">e</span><span class="s3">.</span><span class="s1">format</span><span class="s3">(</span><span class="s1">source</span><span class="s3">, </span><span class="s1">content</span><span class="s3">, </span><span class="s5">'</span><span class="s2">\n</span><span class="s5">'</span><span class="s3">.</span><span class="s1">join</span><span class="s3">(</span><span class="s1">input_lines</span><span class="s3">), </span><span class="s1">repr</span><span class="s3">(</span><span class="s1">found</span><span class="s3">),</span>
+<a name="l148"><span class="ln">148  </span></a>                     <span class="s1">repr</span><span class="s3">(</span><span class="s1">submitted</span><span class="s3">), </span><span class="s1">TAB</span><span class="s3">=</span><span class="s1">TAB</span><span class="s3">)</span>
+<a name="l149"><span class="ln">149  </span></a>        <span class="s2">raise </span><span class="s1">RuntimeError</span><span class="s3">(</span><span class="s1">e</span><span class="s3">)</span>
+<a name="l150"><span class="ln">150  </span></a>
+<a name="l151"><span class="ln">151  </span></a><span class="s4"># dict of allowable doctest handlers. The key represents the first argument</span>
+<a name="l152"><span class="ln">152  </span></a><span class="s4"># that must be given to @doctest in order to activate the handler.</span>
+<a name="l153"><span class="ln">153  </span></a><span class="s1">doctests </span><span class="s3">= {</span>
+<a name="l154"><span class="ln">154  </span></a>    <span class="s5">'float'</span><span class="s3">: </span><span class="s1">float_doctest</span><span class="s3">,</span>
+<a name="l155"><span class="ln">155  </span></a><span class="s3">}</span>
+<a name="l156"><span class="ln">156  </span></a></pre>
+</body>
+</html>

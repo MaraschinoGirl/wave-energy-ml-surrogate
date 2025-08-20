@@ -1,0 +1,82 @@
+<html>
+<head>
+<title>contexts.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+contexts.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># encoding: utf-8</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s2">&quot;&quot;&quot;Miscellaneous context managers.&quot;&quot;&quot;</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s3">import </span><span class="s1">warnings</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s0"># Copyright (c) IPython Development Team.</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0"># Distributed under the terms of the Modified BSD License.</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s3">class </span><span class="s1">preserve_keys</span><span class="s4">:</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s2">&quot;&quot;&quot;Preserve a set of keys in a dictionary. 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>    Upon entering the context manager the current values of the keys 
+<a name="l14"><span class="ln">14   </span></a>    will be saved. Upon exiting, the dictionary will be updated to 
+<a name="l15"><span class="ln">15   </span></a>    restore the original value of the preserved keys. Preserved keys 
+<a name="l16"><span class="ln">16   </span></a>    which did not exist when entering the context manager will be 
+<a name="l17"><span class="ln">17   </span></a>    deleted. 
+<a name="l18"><span class="ln">18   </span></a> 
+<a name="l19"><span class="ln">19   </span></a>    Examples 
+<a name="l20"><span class="ln">20   </span></a>    -------- 
+<a name="l21"><span class="ln">21   </span></a> 
+<a name="l22"><span class="ln">22   </span></a>    &gt;&gt;&gt; d = {'a': 1, 'b': 2, 'c': 3} 
+<a name="l23"><span class="ln">23   </span></a>    &gt;&gt;&gt; with preserve_keys(d, 'b', 'c', 'd'): 
+<a name="l24"><span class="ln">24   </span></a>    ...     del d['a'] 
+<a name="l25"><span class="ln">25   </span></a>    ...     del d['b']      # will be reset to 2 
+<a name="l26"><span class="ln">26   </span></a>    ...     d['c'] = None   # will be reset to 3 
+<a name="l27"><span class="ln">27   </span></a>    ...     d['d'] = 4      # will be deleted 
+<a name="l28"><span class="ln">28   </span></a>    ...     d['e'] = 5 
+<a name="l29"><span class="ln">29   </span></a>    ...     print(sorted(d.items())) 
+<a name="l30"><span class="ln">30   </span></a>    ... 
+<a name="l31"><span class="ln">31   </span></a>    [('c', None), ('d', 4), ('e', 5)] 
+<a name="l32"><span class="ln">32   </span></a>    &gt;&gt;&gt; print(sorted(d.items())) 
+<a name="l33"><span class="ln">33   </span></a>    [('b', 2), ('c', 3), ('e', 5)] 
+<a name="l34"><span class="ln">34   </span></a>    &quot;&quot;&quot;</span>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s3">def </span><span class="s1">__init__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">dictionary</span><span class="s4">, *</span><span class="s1">keys</span><span class="s4">):</span>
+<a name="l37"><span class="ln">37   </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">dictionary </span><span class="s4">= </span><span class="s1">dictionary</span>
+<a name="l38"><span class="ln">38   </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">keys </span><span class="s4">= </span><span class="s1">keys</span>
+<a name="l39"><span class="ln">39   </span></a>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s3">def </span><span class="s1">__enter__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s0"># Actions to perform upon exiting.</span>
+<a name="l42"><span class="ln">42   </span></a>        <span class="s1">to_delete </span><span class="s4">= []</span>
+<a name="l43"><span class="ln">43   </span></a>        <span class="s1">to_update </span><span class="s4">= {}</span>
+<a name="l44"><span class="ln">44   </span></a>
+<a name="l45"><span class="ln">45   </span></a>        <span class="s1">d </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">dictionary</span>
+<a name="l46"><span class="ln">46   </span></a>        <span class="s3">for </span><span class="s1">k </span><span class="s3">in </span><span class="s1">self</span><span class="s4">.</span><span class="s1">keys</span><span class="s4">:</span>
+<a name="l47"><span class="ln">47   </span></a>            <span class="s3">if </span><span class="s1">k </span><span class="s3">in </span><span class="s1">d</span><span class="s4">:</span>
+<a name="l48"><span class="ln">48   </span></a>                <span class="s1">to_update</span><span class="s4">[</span><span class="s1">k</span><span class="s4">] = </span><span class="s1">d</span><span class="s4">[</span><span class="s1">k</span><span class="s4">]</span>
+<a name="l49"><span class="ln">49   </span></a>            <span class="s3">else</span><span class="s4">:</span>
+<a name="l50"><span class="ln">50   </span></a>                <span class="s1">to_delete</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">k</span><span class="s4">)</span>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">to_delete </span><span class="s4">= </span><span class="s1">to_delete</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">to_update </span><span class="s4">= </span><span class="s1">to_update</span>
+<a name="l54"><span class="ln">54   </span></a>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s3">def </span><span class="s1">__exit__</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, *</span><span class="s1">exc_info</span><span class="s4">):</span>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s1">d </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">dictionary</span>
+<a name="l57"><span class="ln">57   </span></a>
+<a name="l58"><span class="ln">58   </span></a>        <span class="s3">for </span><span class="s1">k </span><span class="s3">in </span><span class="s1">self</span><span class="s4">.</span><span class="s1">to_delete</span><span class="s4">:</span>
+<a name="l59"><span class="ln">59   </span></a>            <span class="s1">d</span><span class="s4">.</span><span class="s1">pop</span><span class="s4">(</span><span class="s1">k</span><span class="s4">, </span><span class="s3">None</span><span class="s4">)</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s1">d</span><span class="s4">.</span><span class="s1">update</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">to_update</span><span class="s4">)</span>
+<a name="l61"><span class="ln">61   </span></a></pre>
+</body>
+</html>

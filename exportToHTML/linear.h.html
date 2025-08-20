@@ -1,0 +1,109 @@
+<html>
+<head>
+<title>linear.h</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #6aab73;}
+.s3 { color: #7a7e85;}
+.s4 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+linear.h</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">#ifndef </span><span class="s1">_LIBLINEAR_H</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">#define </span><span class="s1">_LIBLINEAR_H</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">#ifdef </span><span class="s1">__cplusplus</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">extern </span><span class="s2">&quot;C&quot; </span><span class="s1">{</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">#endif</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">#include </span><span class="s2">&quot;_cython_blas_helpers.h&quot;</span>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">struct </span><span class="s1">feature_node</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s1">{</span>
+<a name="l12"><span class="ln">12   </span></a>	<span class="s0">int </span><span class="s1">index;</span>
+<a name="l13"><span class="ln">13   </span></a>	<span class="s0">double </span><span class="s1">value;</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s1">};</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a><span class="s0">struct </span><span class="s1">problem</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s1">{</span>
+<a name="l18"><span class="ln">18   </span></a>	<span class="s0">int </span><span class="s1">l, n;</span>
+<a name="l19"><span class="ln">19   </span></a>	<span class="s0">double </span><span class="s1">*y;</span>
+<a name="l20"><span class="ln">20   </span></a>	<span class="s0">struct </span><span class="s1">feature_node **x;</span>
+<a name="l21"><span class="ln">21   </span></a>	<span class="s0">double </span><span class="s1">bias;            </span><span class="s3">/* &lt; 0 if no bias term */</span>
+<a name="l22"><span class="ln">22   </span></a>	<span class="s0">double </span><span class="s1">*W;</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s1">};</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a><span class="s0">enum </span><span class="s1">{ L2R_LR, L2R_L2LOSS_SVC_DUAL, L2R_L2LOSS_SVC, L2R_L1LOSS_SVC_DUAL, MCSVM_CS, L1R_L2LOSS_SVC, L1R_LR, L2R_LR_DUAL, L2R_L2LOSS_SVR = </span><span class="s4">11</span><span class="s1">, L2R_L2LOSS_SVR_DUAL, L2R_L1LOSS_SVR_DUAL }; </span><span class="s3">/* solver_type */</span>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a><span class="s0">struct </span><span class="s1">parameter</span>
+<a name="l28"><span class="ln">28   </span></a><span class="s1">{</span>
+<a name="l29"><span class="ln">29   </span></a>	<span class="s0">int </span><span class="s1">solver_type;</span>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a>	<span class="s3">/* these are for training only */</span>
+<a name="l32"><span class="ln">32   </span></a>	<span class="s0">double </span><span class="s1">eps;	        </span><span class="s3">/* stopping criteria */</span>
+<a name="l33"><span class="ln">33   </span></a>	<span class="s0">double </span><span class="s1">C;</span>
+<a name="l34"><span class="ln">34   </span></a>	<span class="s0">int </span><span class="s1">nr_weight;</span>
+<a name="l35"><span class="ln">35   </span></a>	<span class="s0">int </span><span class="s1">*weight_label;</span>
+<a name="l36"><span class="ln">36   </span></a>	<span class="s0">double</span><span class="s1">* weight;</span>
+<a name="l37"><span class="ln">37   </span></a>	<span class="s0">int </span><span class="s1">max_iter;</span>
+<a name="l38"><span class="ln">38   </span></a>	<span class="s0">double </span><span class="s1">p;</span>
+<a name="l39"><span class="ln">39   </span></a><span class="s1">};</span>
+<a name="l40"><span class="ln">40   </span></a>
+<a name="l41"><span class="ln">41   </span></a><span class="s0">struct </span><span class="s1">model</span>
+<a name="l42"><span class="ln">42   </span></a><span class="s1">{</span>
+<a name="l43"><span class="ln">43   </span></a>	<span class="s0">struct </span><span class="s1">parameter param;</span>
+<a name="l44"><span class="ln">44   </span></a>	<span class="s0">int </span><span class="s1">nr_class;		</span><span class="s3">/* number of classes */</span>
+<a name="l45"><span class="ln">45   </span></a>	<span class="s0">int </span><span class="s1">nr_feature;</span>
+<a name="l46"><span class="ln">46   </span></a>	<span class="s0">double </span><span class="s1">*w;</span>
+<a name="l47"><span class="ln">47   </span></a>	<span class="s0">int </span><span class="s1">*label;		</span><span class="s3">/* label of each class */</span>
+<a name="l48"><span class="ln">48   </span></a>	<span class="s0">double </span><span class="s1">bias;</span>
+<a name="l49"><span class="ln">49   </span></a>	<span class="s0">int </span><span class="s1">*n_iter;    </span><span class="s3">/* no. of iterations of each class */</span>
+<a name="l50"><span class="ln">50   </span></a><span class="s1">};</span>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a><span class="s0">void </span><span class="s1">set_seed(</span><span class="s0">unsigned </span><span class="s1">seed);</span>
+<a name="l53"><span class="ln">53   </span></a>
+<a name="l54"><span class="ln">54   </span></a><span class="s0">struct </span><span class="s1">model* train(</span><span class="s0">const struct </span><span class="s1">problem *prob, </span><span class="s0">const struct </span><span class="s1">parameter *param, BlasFunctions *blas_functions);</span>
+<a name="l55"><span class="ln">55   </span></a><span class="s0">void </span><span class="s1">cross_validation(</span><span class="s0">const struct </span><span class="s1">problem *prob, </span><span class="s0">const struct </span><span class="s1">parameter *param, </span><span class="s0">int </span><span class="s1">nr_fold, </span><span class="s0">double </span><span class="s1">*target);</span>
+<a name="l56"><span class="ln">56   </span></a>
+<a name="l57"><span class="ln">57   </span></a><span class="s0">double </span><span class="s1">predict_values(</span><span class="s0">const struct </span><span class="s1">model *model_, </span><span class="s0">const struct </span><span class="s1">feature_node *x, </span><span class="s0">double</span><span class="s1">* dec_values);</span>
+<a name="l58"><span class="ln">58   </span></a><span class="s0">double </span><span class="s1">predict(</span><span class="s0">const struct </span><span class="s1">model *model_, </span><span class="s0">const struct </span><span class="s1">feature_node *x);</span>
+<a name="l59"><span class="ln">59   </span></a><span class="s0">double </span><span class="s1">predict_probability(</span><span class="s0">const struct </span><span class="s1">model *model_, </span><span class="s0">const struct </span><span class="s1">feature_node *x, </span><span class="s0">double</span><span class="s1">* prob_estimates);</span>
+<a name="l60"><span class="ln">60   </span></a>
+<a name="l61"><span class="ln">61   </span></a><span class="s0">int </span><span class="s1">save_model(</span><span class="s0">const char </span><span class="s1">*model_file_name, </span><span class="s0">const struct </span><span class="s1">model *model_);</span>
+<a name="l62"><span class="ln">62   </span></a><span class="s0">struct </span><span class="s1">model *load_model(</span><span class="s0">const char </span><span class="s1">*model_file_name);</span>
+<a name="l63"><span class="ln">63   </span></a>
+<a name="l64"><span class="ln">64   </span></a><span class="s0">int </span><span class="s1">get_nr_feature(</span><span class="s0">const struct </span><span class="s1">model *model_);</span>
+<a name="l65"><span class="ln">65   </span></a><span class="s0">int </span><span class="s1">get_nr_class(</span><span class="s0">const struct </span><span class="s1">model *model_);</span>
+<a name="l66"><span class="ln">66   </span></a><span class="s0">void </span><span class="s1">get_labels(</span><span class="s0">const struct </span><span class="s1">model *model_, </span><span class="s0">int</span><span class="s1">* label);</span>
+<a name="l67"><span class="ln">67   </span></a><span class="s0">void </span><span class="s1">get_n_iter(</span><span class="s0">const struct </span><span class="s1">model *model_, </span><span class="s0">int</span><span class="s1">* n_iter);</span>
+<a name="l68"><span class="ln">68   </span></a><span class="s0">#if </span><span class="s4">0</span>
+<a name="l69"><span class="ln">69   </span></a><span class="s0">double </span><span class="s1">get_decfun_coef(</span><span class="s0">const struct </span><span class="s1">model *model_, </span><span class="s0">int </span><span class="s1">feat_idx, </span><span class="s0">int </span><span class="s1">label_idx);</span>
+<a name="l70"><span class="ln">70   </span></a><span class="s0">double </span><span class="s1">get_decfun_bias(</span><span class="s0">const struct </span><span class="s1">model *model_, </span><span class="s0">int </span><span class="s1">label_idx);</span>
+<a name="l71"><span class="ln">71   </span></a><span class="s0">#endif</span>
+<a name="l72"><span class="ln">72   </span></a>
+<a name="l73"><span class="ln">73   </span></a><span class="s0">void </span><span class="s1">free_model_content(</span><span class="s0">struct </span><span class="s1">model *model_ptr);</span>
+<a name="l74"><span class="ln">74   </span></a><span class="s0">void </span><span class="s1">free_and_destroy_model(</span><span class="s0">struct </span><span class="s1">model **model_ptr_ptr);</span>
+<a name="l75"><span class="ln">75   </span></a><span class="s0">void </span><span class="s1">destroy_param(</span><span class="s0">struct </span><span class="s1">parameter *param);</span>
+<a name="l76"><span class="ln">76   </span></a>
+<a name="l77"><span class="ln">77   </span></a><span class="s0">const char </span><span class="s1">*check_parameter(</span><span class="s0">const struct </span><span class="s1">problem *prob, </span><span class="s0">const struct </span><span class="s1">parameter *param);</span>
+<a name="l78"><span class="ln">78   </span></a><span class="s0">int </span><span class="s1">check_probability_model(</span><span class="s0">const struct </span><span class="s1">model *model);</span>
+<a name="l79"><span class="ln">79   </span></a><span class="s0">int </span><span class="s1">check_regression_model(</span><span class="s0">const struct </span><span class="s1">model *model);</span>
+<a name="l80"><span class="ln">80   </span></a><span class="s0">void </span><span class="s1">set_print_string_function(</span><span class="s0">void </span><span class="s1">(*print_func) (</span><span class="s0">const char</span><span class="s1">*));</span>
+<a name="l81"><span class="ln">81   </span></a>
+<a name="l82"><span class="ln">82   </span></a><span class="s0">#ifdef </span><span class="s1">__cplusplus</span>
+<a name="l83"><span class="ln">83   </span></a><span class="s1">}</span>
+<a name="l84"><span class="ln">84   </span></a><span class="s0">#endif</span>
+<a name="l85"><span class="ln">85   </span></a>
+<a name="l86"><span class="ln">86   </span></a><span class="s0">#endif </span><span class="s3">/* _LIBLINEAR_H */</span>
+<a name="l87"><span class="ln">87   </span></a>
+<a name="l88"><span class="ln">88   </span></a></pre>
+</body>
+</html>

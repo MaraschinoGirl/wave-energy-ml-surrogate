@@ -1,0 +1,186 @@
+<html>
+<head>
+<title>flags.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #2aacb8;}
+.s6 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+flags.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># alias to keep the 'bytecode' variable free</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s2">import </span><span class="s1">sys</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s2">from </span><span class="s1">enum </span><span class="s2">import </span><span class="s1">IntFlag</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">from </span><span class="s1">_pydevd_frame_eval</span><span class="s3">.</span><span class="s1">vendored </span><span class="s2">import </span><span class="s1">bytecode </span><span class="s2">as </span><span class="s1">_bytecode</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">class </span><span class="s1">CompilerFlags</span><span class="s3">(</span><span class="s1">IntFlag</span><span class="s3">):</span>
+<a name="l8"><span class="ln">8    </span></a>    <span class="s4">&quot;&quot;&quot;Possible values of the co_flags attribute of Code object. 
+<a name="l9"><span class="ln">9    </span></a> 
+<a name="l10"><span class="ln">10   </span></a>    Note: We do not rely on inspect values here as some of them are missing and 
+<a name="l11"><span class="ln">11   </span></a>    furthermore would be version dependent. 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>    &quot;&quot;&quot;</span>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s1">OPTIMIZED </span><span class="s3">= </span><span class="s5">0x00001  </span><span class="s0"># noqa</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s1">NEWLOCALS </span><span class="s3">= </span><span class="s5">0x00002  </span><span class="s0"># noqa</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s1">VARARGS </span><span class="s3">= </span><span class="s5">0x00004  </span><span class="s0"># noqa</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s1">VARKEYWORDS </span><span class="s3">= </span><span class="s5">0x00008  </span><span class="s0"># noqa</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s1">NESTED </span><span class="s3">= </span><span class="s5">0x00010  </span><span class="s0"># noqa</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s1">GENERATOR </span><span class="s3">= </span><span class="s5">0x00020  </span><span class="s0"># noqa</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s1">NOFREE </span><span class="s3">= </span><span class="s5">0x00040  </span><span class="s0"># noqa</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s0"># New in Python 3.5</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s0"># Used for coroutines defined using async def ie native coroutine</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s1">COROUTINE </span><span class="s3">= </span><span class="s5">0x00080  </span><span class="s0"># noqa</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s0"># Used for coroutines defined as a generator and then decorated using</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s0"># types.coroutine</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s1">ITERABLE_COROUTINE </span><span class="s3">= </span><span class="s5">0x00100  </span><span class="s0"># noqa</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s0"># New in Python 3.6</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s0"># Generator defined in an async def function</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s1">ASYNC_GENERATOR </span><span class="s3">= </span><span class="s5">0x00200  </span><span class="s0"># noqa</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s0"># __future__ flags</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s0"># future flags changed in Python 3.9</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s2">if </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">version_info </span><span class="s3">&lt; (</span><span class="s5">3</span><span class="s3">, </span><span class="s5">9</span><span class="s3">):</span>
+<a name="l35"><span class="ln">35   </span></a>        <span class="s1">FUTURE_GENERATOR_STOP </span><span class="s3">= </span><span class="s5">0x80000  </span><span class="s0"># noqa</span>
+<a name="l36"><span class="ln">36   </span></a>        <span class="s2">if </span><span class="s1">sys</span><span class="s3">.</span><span class="s1">version_info </span><span class="s3">&gt; (</span><span class="s5">3</span><span class="s3">, </span><span class="s5">6</span><span class="s3">):</span>
+<a name="l37"><span class="ln">37   </span></a>            <span class="s1">FUTURE_ANNOTATIONS </span><span class="s3">= </span><span class="s5">0x100000</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s1">FUTURE_GENERATOR_STOP </span><span class="s3">= </span><span class="s5">0x800000  </span><span class="s0"># noqa</span>
+<a name="l40"><span class="ln">40   </span></a>        <span class="s1">FUTURE_ANNOTATIONS </span><span class="s3">= </span><span class="s5">0x1000000</span>
+<a name="l41"><span class="ln">41   </span></a>
+<a name="l42"><span class="ln">42   </span></a>
+<a name="l43"><span class="ln">43   </span></a><span class="s2">def </span><span class="s1">infer_flags</span><span class="s3">(</span><span class="s1">bytecode</span><span class="s3">, </span><span class="s1">is_async</span><span class="s3">=</span><span class="s2">None</span><span class="s3">):</span>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s4">&quot;&quot;&quot;Infer the proper flags for a bytecode based on the instructions. 
+<a name="l45"><span class="ln">45   </span></a> 
+<a name="l46"><span class="ln">46   </span></a>    Because the bytecode does not have enough context to guess if a function 
+<a name="l47"><span class="ln">47   </span></a>    is asynchronous the algorithm tries to be conservative and will never turn 
+<a name="l48"><span class="ln">48   </span></a>    a previously async code into a sync one. 
+<a name="l49"><span class="ln">49   </span></a> 
+<a name="l50"><span class="ln">50   </span></a>    Parameters 
+<a name="l51"><span class="ln">51   </span></a>    ---------- 
+<a name="l52"><span class="ln">52   </span></a>    bytecode : Bytecode | ConcreteBytecode | ControlFlowGraph 
+<a name="l53"><span class="ln">53   </span></a>        Bytecode for which to infer the proper flags 
+<a name="l54"><span class="ln">54   </span></a>    is_async : bool | None, optional 
+<a name="l55"><span class="ln">55   </span></a>        Force the code to be marked as asynchronous if True, prevent it from 
+<a name="l56"><span class="ln">56   </span></a>        being marked as asynchronous if False and simply infer the best 
+<a name="l57"><span class="ln">57   </span></a>        solution based on the opcode and the existing flag if None. 
+<a name="l58"><span class="ln">58   </span></a> 
+<a name="l59"><span class="ln">59   </span></a>    &quot;&quot;&quot;</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s1">flags </span><span class="s3">= </span><span class="s1">CompilerFlags</span><span class="s3">(</span><span class="s5">0</span><span class="s3">)</span>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s2">if not </span><span class="s1">isinstance</span><span class="s3">(</span>
+<a name="l62"><span class="ln">62   </span></a>        <span class="s1">bytecode</span><span class="s3">,</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s3">(</span><span class="s1">_bytecode</span><span class="s3">.</span><span class="s1">Bytecode</span><span class="s3">, </span><span class="s1">_bytecode</span><span class="s3">.</span><span class="s1">ConcreteBytecode</span><span class="s3">, </span><span class="s1">_bytecode</span><span class="s3">.</span><span class="s1">ControlFlowGraph</span><span class="s3">),</span>
+<a name="l64"><span class="ln">64   </span></a>    <span class="s3">):</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s1">msg </span><span class="s3">= </span><span class="s6">&quot;Expected a Bytecode, ConcreteBytecode or ControlFlowGraph &quot; &quot;instance not %s&quot;</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s1">msg </span><span class="s3">% </span><span class="s1">bytecode</span><span class="s3">)</span>
+<a name="l67"><span class="ln">67   </span></a>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s1">instructions </span><span class="s3">= </span><span class="s1">bytecode</span><span class="s3">.</span><span class="s1">get_instructions</span><span class="s3">() </span><span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">bytecode</span><span class="s3">, </span><span class="s1">_bytecode</span><span class="s3">.</span><span class="s1">ControlFlowGraph</span><span class="s3">) </span><span class="s2">else </span><span class="s1">bytecode</span>
+<a name="l69"><span class="ln">69   </span></a>    <span class="s1">instr_names </span><span class="s3">= {</span><span class="s1">i</span><span class="s3">.</span><span class="s1">name </span><span class="s2">for </span><span class="s1">i </span><span class="s2">in </span><span class="s1">instructions </span><span class="s2">if not </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">i</span><span class="s3">, (</span><span class="s1">_bytecode</span><span class="s3">.</span><span class="s1">SetLineno</span><span class="s3">, </span><span class="s1">_bytecode</span><span class="s3">.</span><span class="s1">Label</span><span class="s3">))}</span>
+<a name="l70"><span class="ln">70   </span></a>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s0"># Identify optimized code</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s2">if not </span><span class="s3">(</span><span class="s1">instr_names </span><span class="s3">&amp; {</span><span class="s6">&quot;STORE_NAME&quot;</span><span class="s3">, </span><span class="s6">&quot;LOAD_NAME&quot;</span><span class="s3">, </span><span class="s6">&quot;DELETE_NAME&quot;</span><span class="s3">}):</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s1">flags </span><span class="s3">|= </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">OPTIMIZED</span>
+<a name="l74"><span class="ln">74   </span></a>
+<a name="l75"><span class="ln">75   </span></a>    <span class="s0"># Check for free variables</span>
+<a name="l76"><span class="ln">76   </span></a>    <span class="s2">if not </span><span class="s3">(</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s1">instr_names</span>
+<a name="l78"><span class="ln">78   </span></a>        <span class="s3">&amp; {</span>
+<a name="l79"><span class="ln">79   </span></a>            <span class="s6">&quot;LOAD_CLOSURE&quot;</span><span class="s3">,</span>
+<a name="l80"><span class="ln">80   </span></a>            <span class="s6">&quot;LOAD_DEREF&quot;</span><span class="s3">,</span>
+<a name="l81"><span class="ln">81   </span></a>            <span class="s6">&quot;STORE_DEREF&quot;</span><span class="s3">,</span>
+<a name="l82"><span class="ln">82   </span></a>            <span class="s6">&quot;DELETE_DEREF&quot;</span><span class="s3">,</span>
+<a name="l83"><span class="ln">83   </span></a>            <span class="s6">&quot;LOAD_CLASSDEREF&quot;</span><span class="s3">,</span>
+<a name="l84"><span class="ln">84   </span></a>        <span class="s3">}</span>
+<a name="l85"><span class="ln">85   </span></a>    <span class="s3">):</span>
+<a name="l86"><span class="ln">86   </span></a>        <span class="s1">flags </span><span class="s3">|= </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">NOFREE</span>
+<a name="l87"><span class="ln">87   </span></a>
+<a name="l88"><span class="ln">88   </span></a>    <span class="s0"># Copy flags for which we cannot infer the right value</span>
+<a name="l89"><span class="ln">89   </span></a>    <span class="s1">flags </span><span class="s3">|= </span><span class="s1">bytecode</span><span class="s3">.</span><span class="s1">flags </span><span class="s3">&amp; (</span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">NEWLOCALS </span><span class="s3">| </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">VARARGS </span><span class="s3">| </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">VARKEYWORDS </span><span class="s3">| </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">NESTED</span><span class="s3">)</span>
+<a name="l90"><span class="ln">90   </span></a>
+<a name="l91"><span class="ln">91   </span></a>    <span class="s1">sure_generator </span><span class="s3">= </span><span class="s1">instr_names </span><span class="s3">&amp; {</span><span class="s6">&quot;YIELD_VALUE&quot;</span><span class="s3">}</span>
+<a name="l92"><span class="ln">92   </span></a>    <span class="s1">maybe_generator </span><span class="s3">= </span><span class="s1">instr_names </span><span class="s3">&amp; {</span><span class="s6">&quot;YIELD_VALUE&quot;</span><span class="s3">, </span><span class="s6">&quot;YIELD_FROM&quot;</span><span class="s3">}</span>
+<a name="l93"><span class="ln">93   </span></a>
+<a name="l94"><span class="ln">94   </span></a>    <span class="s1">sure_async </span><span class="s3">= </span><span class="s1">instr_names </span><span class="s3">&amp; {</span>
+<a name="l95"><span class="ln">95   </span></a>        <span class="s6">&quot;GET_AWAITABLE&quot;</span><span class="s3">,</span>
+<a name="l96"><span class="ln">96   </span></a>        <span class="s6">&quot;GET_AITER&quot;</span><span class="s3">,</span>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s6">&quot;GET_ANEXT&quot;</span><span class="s3">,</span>
+<a name="l98"><span class="ln">98   </span></a>        <span class="s6">&quot;BEFORE_ASYNC_WITH&quot;</span><span class="s3">,</span>
+<a name="l99"><span class="ln">99   </span></a>        <span class="s6">&quot;SETUP_ASYNC_WITH&quot;</span><span class="s3">,</span>
+<a name="l100"><span class="ln">100  </span></a>        <span class="s6">&quot;END_ASYNC_FOR&quot;</span><span class="s3">,</span>
+<a name="l101"><span class="ln">101  </span></a>    <span class="s3">}</span>
+<a name="l102"><span class="ln">102  </span></a>
+<a name="l103"><span class="ln">103  </span></a>    <span class="s0"># If performing inference or forcing an async behavior, first inspect</span>
+<a name="l104"><span class="ln">104  </span></a>    <span class="s0"># the flags since this is the only way to identify iterable coroutines</span>
+<a name="l105"><span class="ln">105  </span></a>    <span class="s2">if </span><span class="s1">is_async </span><span class="s2">in </span><span class="s3">(</span><span class="s2">None</span><span class="s3">, </span><span class="s2">True</span><span class="s3">):</span>
+<a name="l106"><span class="ln">106  </span></a>        <span class="s2">if </span><span class="s1">bytecode</span><span class="s3">.</span><span class="s1">flags </span><span class="s3">&amp; </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">COROUTINE</span><span class="s3">:</span>
+<a name="l107"><span class="ln">107  </span></a>            <span class="s2">if </span><span class="s1">sure_generator</span><span class="s3">:</span>
+<a name="l108"><span class="ln">108  </span></a>                <span class="s1">flags </span><span class="s3">|= </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">ASYNC_GENERATOR</span>
+<a name="l109"><span class="ln">109  </span></a>            <span class="s2">else</span><span class="s3">:</span>
+<a name="l110"><span class="ln">110  </span></a>                <span class="s1">flags </span><span class="s3">|= </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">COROUTINE</span>
+<a name="l111"><span class="ln">111  </span></a>        <span class="s2">elif </span><span class="s1">bytecode</span><span class="s3">.</span><span class="s1">flags </span><span class="s3">&amp; </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">ITERABLE_COROUTINE</span><span class="s3">:</span>
+<a name="l112"><span class="ln">112  </span></a>            <span class="s2">if </span><span class="s1">sure_async</span><span class="s3">:</span>
+<a name="l113"><span class="ln">113  </span></a>                <span class="s1">msg </span><span class="s3">= (</span>
+<a name="l114"><span class="ln">114  </span></a>                    <span class="s6">&quot;The ITERABLE_COROUTINE flag is set but bytecode that&quot;</span>
+<a name="l115"><span class="ln">115  </span></a>                    <span class="s6">&quot;can only be used in async functions have been &quot;</span>
+<a name="l116"><span class="ln">116  </span></a>                    <span class="s6">&quot;detected. Please unset that flag before performing &quot;</span>
+<a name="l117"><span class="ln">117  </span></a>                    <span class="s6">&quot;inference.&quot;</span>
+<a name="l118"><span class="ln">118  </span></a>                <span class="s3">)</span>
+<a name="l119"><span class="ln">119  </span></a>                <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s1">msg</span><span class="s3">)</span>
+<a name="l120"><span class="ln">120  </span></a>            <span class="s1">flags </span><span class="s3">|= </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">ITERABLE_COROUTINE</span>
+<a name="l121"><span class="ln">121  </span></a>        <span class="s2">elif </span><span class="s1">bytecode</span><span class="s3">.</span><span class="s1">flags </span><span class="s3">&amp; </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">ASYNC_GENERATOR</span><span class="s3">:</span>
+<a name="l122"><span class="ln">122  </span></a>            <span class="s2">if not </span><span class="s1">sure_generator</span><span class="s3">:</span>
+<a name="l123"><span class="ln">123  </span></a>                <span class="s1">flags </span><span class="s3">|= </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">COROUTINE</span>
+<a name="l124"><span class="ln">124  </span></a>            <span class="s2">else</span><span class="s3">:</span>
+<a name="l125"><span class="ln">125  </span></a>                <span class="s1">flags </span><span class="s3">|= </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">ASYNC_GENERATOR</span>
+<a name="l126"><span class="ln">126  </span></a>
+<a name="l127"><span class="ln">127  </span></a>        <span class="s0"># If the code was not asynchronous before determine if it should now be</span>
+<a name="l128"><span class="ln">128  </span></a>        <span class="s0"># asynchronous based on the opcode and the is_async argument.</span>
+<a name="l129"><span class="ln">129  </span></a>        <span class="s2">else</span><span class="s3">:</span>
+<a name="l130"><span class="ln">130  </span></a>            <span class="s2">if </span><span class="s1">sure_async</span><span class="s3">:</span>
+<a name="l131"><span class="ln">131  </span></a>                <span class="s0"># YIELD_FROM is not allowed in async generator</span>
+<a name="l132"><span class="ln">132  </span></a>                <span class="s2">if </span><span class="s1">sure_generator</span><span class="s3">:</span>
+<a name="l133"><span class="ln">133  </span></a>                    <span class="s1">flags </span><span class="s3">|= </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">ASYNC_GENERATOR</span>
+<a name="l134"><span class="ln">134  </span></a>                <span class="s2">else</span><span class="s3">:</span>
+<a name="l135"><span class="ln">135  </span></a>                    <span class="s1">flags </span><span class="s3">|= </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">COROUTINE</span>
+<a name="l136"><span class="ln">136  </span></a>
+<a name="l137"><span class="ln">137  </span></a>            <span class="s2">elif </span><span class="s1">maybe_generator</span><span class="s3">:</span>
+<a name="l138"><span class="ln">138  </span></a>                <span class="s2">if </span><span class="s1">is_async</span><span class="s3">:</span>
+<a name="l139"><span class="ln">139  </span></a>                    <span class="s2">if </span><span class="s1">sure_generator</span><span class="s3">:</span>
+<a name="l140"><span class="ln">140  </span></a>                        <span class="s1">flags </span><span class="s3">|= </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">ASYNC_GENERATOR</span>
+<a name="l141"><span class="ln">141  </span></a>                    <span class="s2">else</span><span class="s3">:</span>
+<a name="l142"><span class="ln">142  </span></a>                        <span class="s1">flags </span><span class="s3">|= </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">COROUTINE</span>
+<a name="l143"><span class="ln">143  </span></a>                <span class="s2">else</span><span class="s3">:</span>
+<a name="l144"><span class="ln">144  </span></a>                    <span class="s1">flags </span><span class="s3">|= </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">GENERATOR</span>
+<a name="l145"><span class="ln">145  </span></a>
+<a name="l146"><span class="ln">146  </span></a>            <span class="s2">elif </span><span class="s1">is_async</span><span class="s3">:</span>
+<a name="l147"><span class="ln">147  </span></a>                <span class="s1">flags </span><span class="s3">|= </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">COROUTINE</span>
+<a name="l148"><span class="ln">148  </span></a>
+<a name="l149"><span class="ln">149  </span></a>    <span class="s0"># If the code should not be asynchronous, check first it is possible and</span>
+<a name="l150"><span class="ln">150  </span></a>    <span class="s0"># next set the GENERATOR flag if relevant</span>
+<a name="l151"><span class="ln">151  </span></a>    <span class="s2">else</span><span class="s3">:</span>
+<a name="l152"><span class="ln">152  </span></a>        <span class="s2">if </span><span class="s1">sure_async</span><span class="s3">:</span>
+<a name="l153"><span class="ln">153  </span></a>            <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span>
+<a name="l154"><span class="ln">154  </span></a>                <span class="s6">&quot;The is_async argument is False but bytecodes &quot; &quot;that can only be used in async functions have &quot; &quot;been detected.&quot;</span>
+<a name="l155"><span class="ln">155  </span></a>            <span class="s3">)</span>
+<a name="l156"><span class="ln">156  </span></a>
+<a name="l157"><span class="ln">157  </span></a>        <span class="s2">if </span><span class="s1">maybe_generator</span><span class="s3">:</span>
+<a name="l158"><span class="ln">158  </span></a>            <span class="s1">flags </span><span class="s3">|= </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">GENERATOR</span>
+<a name="l159"><span class="ln">159  </span></a>
+<a name="l160"><span class="ln">160  </span></a>    <span class="s1">flags </span><span class="s3">|= </span><span class="s1">bytecode</span><span class="s3">.</span><span class="s1">flags </span><span class="s3">&amp; </span><span class="s1">CompilerFlags</span><span class="s3">.</span><span class="s1">FUTURE_GENERATOR_STOP</span>
+<a name="l161"><span class="ln">161  </span></a>
+<a name="l162"><span class="ln">162  </span></a>    <span class="s2">return </span><span class="s1">flags</span>
+<a name="l163"><span class="ln">163  </span></a></pre>
+</body>
+</html>

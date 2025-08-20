@@ -1,0 +1,35 @@
+<html>
+<head>
+<title>testxslt.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+testxslt.js</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">//Args:  input-file style-file output-file</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s2">var </span><span class="s1">xml  </span><span class="s3">= </span><span class="s1">WScript</span><span class="s3">.</span><span class="s1">CreateObject</span><span class="s3">(</span><span class="s4">&quot;Microsoft.XMLDOM&quot;</span><span class="s3">);          </span><span class="s0">//input</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s1">xml</span><span class="s3">.</span><span class="s1">validateOnParse</span><span class="s3">=</span><span class="s2">false</span><span class="s3">;</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s1">xml</span><span class="s3">.</span><span class="s1">load</span><span class="s3">(</span><span class="s1">WScript</span><span class="s3">.</span><span class="s1">Arguments</span><span class="s3">(</span><span class="s5">0</span><span class="s3">));</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s2">var </span><span class="s1">xsl  </span><span class="s3">= </span><span class="s1">WScript</span><span class="s3">.</span><span class="s1">CreateObject</span><span class="s3">(</span><span class="s4">&quot;Microsoft.XMLDOM&quot;</span><span class="s3">);          </span><span class="s0">//style</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s1">xsl</span><span class="s3">.</span><span class="s1">validateOnParse</span><span class="s3">=</span><span class="s2">false</span><span class="s3">;</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s1">xsl</span><span class="s3">.</span><span class="s1">load</span><span class="s3">(</span><span class="s1">WScript</span><span class="s3">.</span><span class="s1">Arguments</span><span class="s3">(</span><span class="s5">1</span><span class="s3">));</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s2">var </span><span class="s1">out </span><span class="s3">= </span><span class="s1">WScript</span><span class="s3">.</span><span class="s1">CreateObject</span><span class="s3">(</span><span class="s4">&quot;Scripting.FileSystemObject&quot;</span><span class="s3">); </span><span class="s0">//output</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">var </span><span class="s1">replace </span><span class="s3">= </span><span class="s2">true</span><span class="s3">; </span><span class="s2">var </span><span class="s1">unicode </span><span class="s3">= </span><span class="s2">false</span><span class="s3">; </span><span class="s0">//output file properties</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s2">var </span><span class="s1">hdl </span><span class="s3">= </span><span class="s1">out</span><span class="s3">.</span><span class="s1">CreateTextFile</span><span class="s3">( </span><span class="s1">WScript</span><span class="s3">.</span><span class="s1">Arguments</span><span class="s3">(</span><span class="s5">2</span><span class="s3">), </span><span class="s1">replace</span><span class="s3">, </span><span class="s1">unicode </span><span class="s3">)</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s1">hdl</span><span class="s3">.</span><span class="s1">write</span><span class="s3">( </span><span class="s1">xml</span><span class="s3">.</span><span class="s1">transformNode</span><span class="s3">( </span><span class="s1">xsl</span><span class="s3">.</span><span class="s1">documentElement </span><span class="s3">));</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0">//eof</span>
+<a name="l13"><span class="ln">13   </span></a></pre>
+</body>
+</html>

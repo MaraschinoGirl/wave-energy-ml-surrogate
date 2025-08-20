@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>test_isocalendar.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_isocalendar.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">pandas </span><span class="s0">import </span><span class="s2">(</span>
+<a name="l2"><span class="ln">2    </span></a>    <span class="s1">DataFrame</span><span class="s2">,</span>
+<a name="l3"><span class="ln">3    </span></a>    <span class="s1">DatetimeIndex</span><span class="s2">,</span>
+<a name="l4"><span class="ln">4    </span></a>    <span class="s1">date_range</span><span class="s2">,</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s2">)</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">import </span><span class="s1">pandas</span><span class="s2">.</span><span class="s1">_testing </span><span class="s0">as </span><span class="s1">tm</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s0">def </span><span class="s1">test_isocalendar_returns_correct_values_close_to_new_year_with_tz</span><span class="s2">():</span>
+<a name="l10"><span class="ln">10   </span></a>    <span class="s3"># GH#6538: Check that DatetimeIndex and its TimeStamp elements</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s3"># return the same weekofyear accessor close to new year w/ tz</span>
+<a name="l12"><span class="ln">12   </span></a>    <span class="s1">dates </span><span class="s2">= [</span><span class="s4">&quot;2013/12/29&quot;</span><span class="s2">, </span><span class="s4">&quot;2013/12/30&quot;</span><span class="s2">, </span><span class="s4">&quot;2013/12/31&quot;</span><span class="s2">]</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s1">dates </span><span class="s2">= </span><span class="s1">DatetimeIndex</span><span class="s2">(</span><span class="s1">dates</span><span class="s2">, </span><span class="s1">tz</span><span class="s2">=</span><span class="s4">&quot;Europe/Brussels&quot;</span><span class="s2">)</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s1">result </span><span class="s2">= </span><span class="s1">dates</span><span class="s2">.</span><span class="s1">isocalendar</span><span class="s2">()</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s1">expected_data_frame </span><span class="s2">= </span><span class="s1">DataFrame</span><span class="s2">(</span>
+<a name="l16"><span class="ln">16   </span></a>        <span class="s2">[[</span><span class="s5">2013</span><span class="s2">, </span><span class="s5">52</span><span class="s2">, </span><span class="s5">7</span><span class="s2">], [</span><span class="s5">2014</span><span class="s2">, </span><span class="s5">1</span><span class="s2">, </span><span class="s5">1</span><span class="s2">], [</span><span class="s5">2014</span><span class="s2">, </span><span class="s5">1</span><span class="s2">, </span><span class="s5">2</span><span class="s2">]],</span>
+<a name="l17"><span class="ln">17   </span></a>        <span class="s1">columns</span><span class="s2">=[</span><span class="s4">&quot;year&quot;</span><span class="s2">, </span><span class="s4">&quot;week&quot;</span><span class="s2">, </span><span class="s4">&quot;day&quot;</span><span class="s2">],</span>
+<a name="l18"><span class="ln">18   </span></a>        <span class="s1">index</span><span class="s2">=</span><span class="s1">dates</span><span class="s2">,</span>
+<a name="l19"><span class="ln">19   </span></a>        <span class="s1">dtype</span><span class="s2">=</span><span class="s4">&quot;UInt32&quot;</span><span class="s2">,</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s2">)</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s1">tm</span><span class="s2">.</span><span class="s1">assert_frame_equal</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">expected_data_frame</span><span class="s2">)</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a><span class="s0">def </span><span class="s1">test_dti_timestamp_isocalendar_fields</span><span class="s2">():</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s1">idx </span><span class="s2">= </span><span class="s1">date_range</span><span class="s2">(</span><span class="s4">&quot;2020-01-01&quot;</span><span class="s2">, </span><span class="s1">periods</span><span class="s2">=</span><span class="s5">10</span><span class="s2">)</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s1">expected </span><span class="s2">= </span><span class="s1">tuple</span><span class="s2">(</span><span class="s1">idx</span><span class="s2">.</span><span class="s1">isocalendar</span><span class="s2">().</span><span class="s1">iloc</span><span class="s2">[-</span><span class="s5">1</span><span class="s2">].</span><span class="s1">to_list</span><span class="s2">())</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s1">result </span><span class="s2">= </span><span class="s1">idx</span><span class="s2">[-</span><span class="s5">1</span><span class="s2">].</span><span class="s1">isocalendar</span><span class="s2">()</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s0">assert </span><span class="s1">result </span><span class="s2">== </span><span class="s1">expected</span>
+<a name="l29"><span class="ln">29   </span></a></pre>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<html>
+<head>
+<title>stats.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #5f826b; font-style: italic;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+stats.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Authors: The scikit-learn developers</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># SPDX-License-Identifier: BSD-3-Clause</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">import </span><span class="s1">numpy </span><span class="s2">as </span><span class="s1">np</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">from </span><span class="s3">.</span><span class="s1">extmath </span><span class="s2">import </span><span class="s1">stable_cumsum</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">def </span><span class="s1">_weighted_percentile</span><span class="s3">(</span><span class="s1">array</span><span class="s3">, </span><span class="s1">sample_weight</span><span class="s3">, </span><span class="s1">percentile</span><span class="s3">=</span><span class="s4">50</span><span class="s3">):</span>
+<a name="l10"><span class="ln">10   </span></a>    <span class="s5">&quot;&quot;&quot;Compute weighted percentile 
+<a name="l11"><span class="ln">11   </span></a> 
+<a name="l12"><span class="ln">12   </span></a>    Computes lower weighted percentile. If `array` is a 2D array, the 
+<a name="l13"><span class="ln">13   </span></a>    `percentile` is computed along the axis 0. 
+<a name="l14"><span class="ln">14   </span></a> 
+<a name="l15"><span class="ln">15   </span></a>        .. versionchanged:: 0.24 
+<a name="l16"><span class="ln">16   </span></a>            Accepts 2D `array`. 
+<a name="l17"><span class="ln">17   </span></a> 
+<a name="l18"><span class="ln">18   </span></a>    Parameters 
+<a name="l19"><span class="ln">19   </span></a>    ---------- 
+<a name="l20"><span class="ln">20   </span></a>    array : 1D or 2D array 
+<a name="l21"><span class="ln">21   </span></a>        Values to take the weighted percentile of. 
+<a name="l22"><span class="ln">22   </span></a> 
+<a name="l23"><span class="ln">23   </span></a>    sample_weight: 1D or 2D array 
+<a name="l24"><span class="ln">24   </span></a>        Weights for each value in `array`. Must be same shape as `array` or 
+<a name="l25"><span class="ln">25   </span></a>        of shape `(array.shape[0],)`. 
+<a name="l26"><span class="ln">26   </span></a> 
+<a name="l27"><span class="ln">27   </span></a>    percentile: int or float, default=50 
+<a name="l28"><span class="ln">28   </span></a>        Percentile to compute. Must be value between 0 and 100. 
+<a name="l29"><span class="ln">29   </span></a> 
+<a name="l30"><span class="ln">30   </span></a>    Returns 
+<a name="l31"><span class="ln">31   </span></a>    ------- 
+<a name="l32"><span class="ln">32   </span></a>    percentile : int if `array` 1D, ndarray if `array` 2D 
+<a name="l33"><span class="ln">33   </span></a>        Weighted percentile. 
+<a name="l34"><span class="ln">34   </span></a>    &quot;&quot;&quot;</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s1">n_dim </span><span class="s3">= </span><span class="s1">array</span><span class="s3">.</span><span class="s1">ndim</span>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s2">if </span><span class="s1">n_dim </span><span class="s3">== </span><span class="s4">0</span><span class="s3">:</span>
+<a name="l37"><span class="ln">37   </span></a>        <span class="s2">return </span><span class="s1">array</span><span class="s3">[()]</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s2">if </span><span class="s1">array</span><span class="s3">.</span><span class="s1">ndim </span><span class="s3">== </span><span class="s4">1</span><span class="s3">:</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s1">array </span><span class="s3">= </span><span class="s1">array</span><span class="s3">.</span><span class="s1">reshape</span><span class="s3">((-</span><span class="s4">1</span><span class="s3">, </span><span class="s4">1</span><span class="s3">))</span>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s0"># When sample_weight 1D, repeat for each array.shape[1]</span>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s2">if </span><span class="s1">array</span><span class="s3">.</span><span class="s1">shape </span><span class="s3">!= </span><span class="s1">sample_weight</span><span class="s3">.</span><span class="s1">shape </span><span class="s2">and </span><span class="s1">array</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] == </span><span class="s1">sample_weight</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">[</span><span class="s4">0</span><span class="s3">]:</span>
+<a name="l42"><span class="ln">42   </span></a>        <span class="s1">sample_weight </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">tile</span><span class="s3">(</span><span class="s1">sample_weight</span><span class="s3">, (</span><span class="s1">array</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">[</span><span class="s4">1</span><span class="s3">], </span><span class="s4">1</span><span class="s3">)).</span><span class="s1">T</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s1">sorted_idx </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">argsort</span><span class="s3">(</span><span class="s1">array</span><span class="s3">, </span><span class="s1">axis</span><span class="s3">=</span><span class="s4">0</span><span class="s3">)</span>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s1">sorted_weights </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">take_along_axis</span><span class="s3">(</span><span class="s1">sample_weight</span><span class="s3">, </span><span class="s1">sorted_idx</span><span class="s3">, </span><span class="s1">axis</span><span class="s3">=</span><span class="s4">0</span><span class="s3">)</span>
+<a name="l45"><span class="ln">45   </span></a>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s0"># Find index of median prediction for each sample</span>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s1">weight_cdf </span><span class="s3">= </span><span class="s1">stable_cumsum</span><span class="s3">(</span><span class="s1">sorted_weights</span><span class="s3">, </span><span class="s1">axis</span><span class="s3">=</span><span class="s4">0</span><span class="s3">)</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s1">adjusted_percentile </span><span class="s3">= </span><span class="s1">percentile </span><span class="s3">/ </span><span class="s4">100 </span><span class="s3">* </span><span class="s1">weight_cdf</span><span class="s3">[-</span><span class="s4">1</span><span class="s3">]</span>
+<a name="l49"><span class="ln">49   </span></a>
+<a name="l50"><span class="ln">50   </span></a>    <span class="s0"># For percentile=0, ignore leading observations with sample_weight=0. GH20528</span>
+<a name="l51"><span class="ln">51   </span></a>    <span class="s1">mask </span><span class="s3">= </span><span class="s1">adjusted_percentile </span><span class="s3">== </span><span class="s4">0</span>
+<a name="l52"><span class="ln">52   </span></a>    <span class="s1">adjusted_percentile</span><span class="s3">[</span><span class="s1">mask</span><span class="s3">] = </span><span class="s1">np</span><span class="s3">.</span><span class="s1">nextafter</span><span class="s3">(</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s1">adjusted_percentile</span><span class="s3">[</span><span class="s1">mask</span><span class="s3">], </span><span class="s1">adjusted_percentile</span><span class="s3">[</span><span class="s1">mask</span><span class="s3">] + </span><span class="s4">1</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s3">)</span>
+<a name="l55"><span class="ln">55   </span></a>
+<a name="l56"><span class="ln">56   </span></a>    <span class="s1">percentile_idx </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">array</span><span class="s3">(</span>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s3">[</span>
+<a name="l58"><span class="ln">58   </span></a>            <span class="s1">np</span><span class="s3">.</span><span class="s1">searchsorted</span><span class="s3">(</span><span class="s1">weight_cdf</span><span class="s3">[:, </span><span class="s1">i</span><span class="s3">], </span><span class="s1">adjusted_percentile</span><span class="s3">[</span><span class="s1">i</span><span class="s3">])</span>
+<a name="l59"><span class="ln">59   </span></a>            <span class="s2">for </span><span class="s1">i </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s1">weight_cdf</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">[</span><span class="s4">1</span><span class="s3">])</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s3">]</span>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s3">)</span>
+<a name="l62"><span class="ln">62   </span></a>    <span class="s1">percentile_idx </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">array</span><span class="s3">(</span><span class="s1">percentile_idx</span><span class="s3">)</span>
+<a name="l63"><span class="ln">63   </span></a>    <span class="s0"># In rare cases, percentile_idx equals to sorted_idx.shape[0]</span>
+<a name="l64"><span class="ln">64   </span></a>    <span class="s1">max_idx </span><span class="s3">= </span><span class="s1">sorted_idx</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] - </span><span class="s4">1</span>
+<a name="l65"><span class="ln">65   </span></a>    <span class="s1">percentile_idx </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">apply_along_axis</span><span class="s3">(</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s2">lambda </span><span class="s1">x</span><span class="s3">: </span><span class="s1">np</span><span class="s3">.</span><span class="s1">clip</span><span class="s3">(</span><span class="s1">x</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s1">max_idx</span><span class="s3">), </span><span class="s1">axis</span><span class="s3">=</span><span class="s4">0</span><span class="s3">, </span><span class="s1">arr</span><span class="s3">=</span><span class="s1">percentile_idx</span>
+<a name="l67"><span class="ln">67   </span></a>    <span class="s3">)</span>
+<a name="l68"><span class="ln">68   </span></a>
+<a name="l69"><span class="ln">69   </span></a>    <span class="s1">col_index </span><span class="s3">= </span><span class="s1">np</span><span class="s3">.</span><span class="s1">arange</span><span class="s3">(</span><span class="s1">array</span><span class="s3">.</span><span class="s1">shape</span><span class="s3">[</span><span class="s4">1</span><span class="s3">])</span>
+<a name="l70"><span class="ln">70   </span></a>    <span class="s1">percentile_in_sorted </span><span class="s3">= </span><span class="s1">sorted_idx</span><span class="s3">[</span><span class="s1">percentile_idx</span><span class="s3">, </span><span class="s1">col_index</span><span class="s3">]</span>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s1">percentile </span><span class="s3">= </span><span class="s1">array</span><span class="s3">[</span><span class="s1">percentile_in_sorted</span><span class="s3">, </span><span class="s1">col_index</span><span class="s3">]</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s2">return </span><span class="s1">percentile</span><span class="s3">[</span><span class="s4">0</span><span class="s3">] </span><span class="s2">if </span><span class="s1">n_dim </span><span class="s3">== </span><span class="s4">1 </span><span class="s2">else </span><span class="s1">percentile</span>
+<a name="l73"><span class="ln">73   </span></a></pre>
+</body>
+</html>

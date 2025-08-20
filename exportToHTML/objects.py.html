@@ -1,0 +1,71 @@
+<html>
+<head>
+<title>objects.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+objects.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>A declarative, object-oriented interface for creating statistical graphics. 
+<a name="l3"><span class="ln">3    </span></a> 
+<a name="l4"><span class="ln">4    </span></a>The seaborn.objects namespace contains a number of classes that can be composed 
+<a name="l5"><span class="ln">5    </span></a>together to build a customized visualization. 
+<a name="l6"><span class="ln">6    </span></a> 
+<a name="l7"><span class="ln">7    </span></a>The main object is :class:`Plot`, which is the starting point for all figures. 
+<a name="l8"><span class="ln">8    </span></a>Pass :class:`Plot` a dataset and specify assignments from its variables to 
+<a name="l9"><span class="ln">9    </span></a>roles in the plot. Build up the visualization by calling its methods. 
+<a name="l10"><span class="ln">10   </span></a> 
+<a name="l11"><span class="ln">11   </span></a>There are four other general types of objects in this interface: 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>- :class:`Mark` subclasses, which create matplotlib artists for visualization 
+<a name="l14"><span class="ln">14   </span></a>- :class:`Stat` subclasses, which apply statistical transforms before plotting 
+<a name="l15"><span class="ln">15   </span></a>- :class:`Move` subclasses, which make further adjustments to reduce overplotting 
+<a name="l16"><span class="ln">16   </span></a> 
+<a name="l17"><span class="ln">17   </span></a>These classes are passed to :meth:`Plot.add` to define a layer in the plot. 
+<a name="l18"><span class="ln">18   </span></a>Each layer has a :class:`Mark` and optional :class:`Stat` and/or :class:`Move`. 
+<a name="l19"><span class="ln">19   </span></a>Plots can have multiple layers. 
+<a name="l20"><span class="ln">20   </span></a> 
+<a name="l21"><span class="ln">21   </span></a>The other general type of object is a :class:`Scale` subclass, which provide an 
+<a name="l22"><span class="ln">22   </span></a>interface for controlling the mappings between data values and visual properties. 
+<a name="l23"><span class="ln">23   </span></a>Pass :class:`Scale` objects to :meth:`Plot.scale`. 
+<a name="l24"><span class="ln">24   </span></a> 
+<a name="l25"><span class="ln">25   </span></a>See the documentation for other :class:`Plot` methods to learn about the many 
+<a name="l26"><span class="ln">26   </span></a>ways that a plot can be enhanced and customized. 
+<a name="l27"><span class="ln">27   </span></a> 
+<a name="l28"><span class="ln">28   </span></a>&quot;&quot;&quot;</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_core</span><span class="s3">.</span><span class="s1">plot </span><span class="s2">import </span><span class="s1">Plot  </span><span class="s4"># noqa: F401</span>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_marks</span><span class="s3">.</span><span class="s1">base </span><span class="s2">import </span><span class="s1">Mark  </span><span class="s4"># noqa: F401</span>
+<a name="l32"><span class="ln">32   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_marks</span><span class="s3">.</span><span class="s1">area </span><span class="s2">import </span><span class="s1">Area</span><span class="s3">, </span><span class="s1">Band  </span><span class="s4"># noqa: F401</span>
+<a name="l33"><span class="ln">33   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_marks</span><span class="s3">.</span><span class="s1">bar </span><span class="s2">import </span><span class="s1">Bar</span><span class="s3">, </span><span class="s1">Bars  </span><span class="s4"># noqa: F401</span>
+<a name="l34"><span class="ln">34   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_marks</span><span class="s3">.</span><span class="s1">dot </span><span class="s2">import </span><span class="s1">Dot</span><span class="s3">, </span><span class="s1">Dots  </span><span class="s4"># noqa: F401</span>
+<a name="l35"><span class="ln">35   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_marks</span><span class="s3">.</span><span class="s1">line </span><span class="s2">import </span><span class="s1">Dash</span><span class="s3">, </span><span class="s1">Line</span><span class="s3">, </span><span class="s1">Lines</span><span class="s3">, </span><span class="s1">Path</span><span class="s3">, </span><span class="s1">Paths</span><span class="s3">, </span><span class="s1">Range  </span><span class="s4"># noqa: F401</span>
+<a name="l36"><span class="ln">36   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_marks</span><span class="s3">.</span><span class="s1">text </span><span class="s2">import </span><span class="s1">Text  </span><span class="s4"># noqa: F401</span>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_stats</span><span class="s3">.</span><span class="s1">base </span><span class="s2">import </span><span class="s1">Stat  </span><span class="s4"># noqa: F401</span>
+<a name="l39"><span class="ln">39   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_stats</span><span class="s3">.</span><span class="s1">aggregation </span><span class="s2">import </span><span class="s1">Agg</span><span class="s3">, </span><span class="s1">Est  </span><span class="s4"># noqa: F401</span>
+<a name="l40"><span class="ln">40   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_stats</span><span class="s3">.</span><span class="s1">counting </span><span class="s2">import </span><span class="s1">Count</span><span class="s3">, </span><span class="s1">Hist  </span><span class="s4"># noqa: F401</span>
+<a name="l41"><span class="ln">41   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_stats</span><span class="s3">.</span><span class="s1">density </span><span class="s2">import </span><span class="s1">KDE  </span><span class="s4"># noqa: F401</span>
+<a name="l42"><span class="ln">42   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_stats</span><span class="s3">.</span><span class="s1">order </span><span class="s2">import </span><span class="s1">Perc  </span><span class="s4"># noqa: F401</span>
+<a name="l43"><span class="ln">43   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_stats</span><span class="s3">.</span><span class="s1">regression </span><span class="s2">import </span><span class="s1">PolyFit  </span><span class="s4"># noqa: F401</span>
+<a name="l44"><span class="ln">44   </span></a>
+<a name="l45"><span class="ln">45   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_core</span><span class="s3">.</span><span class="s1">moves </span><span class="s2">import </span><span class="s1">Dodge</span><span class="s3">, </span><span class="s1">Jitter</span><span class="s3">, </span><span class="s1">Norm</span><span class="s3">, </span><span class="s1">Shift</span><span class="s3">, </span><span class="s1">Stack</span><span class="s3">, </span><span class="s1">Move  </span><span class="s4"># noqa: F401</span>
+<a name="l46"><span class="ln">46   </span></a>
+<a name="l47"><span class="ln">47   </span></a><span class="s2">from </span><span class="s1">seaborn</span><span class="s3">.</span><span class="s1">_core</span><span class="s3">.</span><span class="s1">scales </span><span class="s2">import </span><span class="s3">(  </span><span class="s4"># noqa: F401</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s1">Boolean</span><span class="s3">, </span><span class="s1">Continuous</span><span class="s3">, </span><span class="s1">Nominal</span><span class="s3">, </span><span class="s1">Temporal</span><span class="s3">, </span><span class="s1">Scale</span>
+<a name="l49"><span class="ln">49   </span></a><span class="s3">)</span>
+<a name="l50"><span class="ln">50   </span></a></pre>
+</body>
+</html>

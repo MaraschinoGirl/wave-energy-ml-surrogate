@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>__init__.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+__init__.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Copyright (c) Jupyter Development Team.</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># Distributed under the terms of the Modified BSD License.</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">import </span><span class="s1">getpass</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s2">import </span><span class="s1">os</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">from </span><span class="s1">pathlib </span><span class="s2">import </span><span class="s1">Path</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">from </span><span class="s1">tempfile </span><span class="s2">import </span><span class="s1">mkdtemp</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s2">def </span><span class="s1">configure_jupyter_server</span><span class="s3">(</span><span class="s1">c</span><span class="s3">):</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s4">&quot;&quot;&quot;Helper to configure the Jupyter Server for integration testing 
+<a name="l12"><span class="ln">12   </span></a>    with Galata. 
+<a name="l13"><span class="ln">13   </span></a> 
+<a name="l14"><span class="ln">14   </span></a>    By default the tests will be executed in the OS temporary folder. You 
+<a name="l15"><span class="ln">15   </span></a>    can override that folder by setting the environment variable ``JUPYTERLAB_GALATA_ROOT_DIR``. 
+<a name="l16"><span class="ln">16   </span></a> 
+<a name="l17"><span class="ln">17   </span></a>    .. warning:: 
+<a name="l18"><span class="ln">18   </span></a> 
+<a name="l19"><span class="ln">19   </span></a>        Never use this configuration in production as it will remove all security protections. 
+<a name="l20"><span class="ln">20   </span></a>    &quot;&quot;&quot;</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s0"># Test if we are running in a docker</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s2">if </span><span class="s1">getpass</span><span class="s3">.</span><span class="s1">getuser</span><span class="s3">() == </span><span class="s5">&quot;jovyan&quot;</span><span class="s3">:</span>
+<a name="l23"><span class="ln">23   </span></a>        <span class="s1">c</span><span class="s3">.</span><span class="s1">ServerApp</span><span class="s3">.</span><span class="s1">ip </span><span class="s3">= </span><span class="s5">&quot;0.0.0.0&quot;  </span><span class="s0"># noqa S104</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s1">c</span><span class="s3">.</span><span class="s1">ServerApp</span><span class="s3">.</span><span class="s1">port </span><span class="s3">= </span><span class="s6">8888</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s1">c</span><span class="s3">.</span><span class="s1">ServerApp</span><span class="s3">.</span><span class="s1">port_retries </span><span class="s3">= </span><span class="s6">0</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s1">c</span><span class="s3">.</span><span class="s1">ServerApp</span><span class="s3">.</span><span class="s1">open_browser </span><span class="s3">= </span><span class="s2">False</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s0"># Add test helpers extension shipped with JupyterLab.</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s0"># You can replace the following line by the two following one</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s0">#   import jupyterlab</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s0">#   c.LabServerApp.extra_labextensions_path = str(Path(jupyterlab.__file__).parent / &quot;galata&quot;)</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">c</span><span class="s3">.</span><span class="s1">LabServerApp</span><span class="s3">.</span><span class="s1">extra_labextensions_path </span><span class="s3">= </span><span class="s1">str</span><span class="s3">(</span><span class="s1">Path</span><span class="s3">(</span><span class="s1">__file__</span><span class="s3">).</span><span class="s1">parent</span><span class="s3">)</span>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s1">c</span><span class="s3">.</span><span class="s1">LabApp</span><span class="s3">.</span><span class="s1">workspaces_dir </span><span class="s3">= </span><span class="s1">mkdtemp</span><span class="s3">(</span><span class="s1">prefix</span><span class="s3">=</span><span class="s5">&quot;galata-workspaces-&quot;</span><span class="s3">)</span>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s1">c</span><span class="s3">.</span><span class="s1">ServerApp</span><span class="s3">.</span><span class="s1">root_dir </span><span class="s3">= </span><span class="s1">os</span><span class="s3">.</span><span class="s1">environ</span><span class="s3">.</span><span class="s1">get</span><span class="s3">(</span>
+<a name="l37"><span class="ln">37   </span></a>        <span class="s5">&quot;JUPYTERLAB_GALATA_ROOT_DIR&quot;</span><span class="s3">, </span><span class="s1">mkdtemp</span><span class="s3">(</span><span class="s1">prefix</span><span class="s3">=</span><span class="s5">&quot;galata-test-&quot;</span><span class="s3">)</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s3">)</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s1">c</span><span class="s3">.</span><span class="s1">IdentityProvider</span><span class="s3">.</span><span class="s1">token </span><span class="s3">= </span><span class="s5">&quot;&quot;</span>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s1">c</span><span class="s3">.</span><span class="s1">ServerApp</span><span class="s3">.</span><span class="s1">password </span><span class="s3">= </span><span class="s5">&quot;&quot;</span>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s1">c</span><span class="s3">.</span><span class="s1">ServerApp</span><span class="s3">.</span><span class="s1">disable_check_xsrf </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s1">c</span><span class="s3">.</span><span class="s1">LabApp</span><span class="s3">.</span><span class="s1">expose_app_in_browser </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l43"><span class="ln">43   </span></a></pre>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>math.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+math.pyi</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">django</span><span class="s2">.</span><span class="s1">db</span><span class="s2">.</span><span class="s1">models</span><span class="s2">.</span><span class="s1">expressions </span><span class="s0">import </span><span class="s1">Func</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">from </span><span class="s1">django</span><span class="s2">.</span><span class="s1">db</span><span class="s2">.</span><span class="s1">models</span><span class="s2">.</span><span class="s1">functions</span><span class="s2">.</span><span class="s1">mixins </span><span class="s0">import </span><span class="s1">FixDecimalInputMixin</span><span class="s2">, </span><span class="s1">NumericOutputFieldMixin</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">from </span><span class="s1">django</span><span class="s2">.</span><span class="s1">db</span><span class="s2">.</span><span class="s1">models</span><span class="s2">.</span><span class="s1">lookups </span><span class="s0">import </span><span class="s1">Transform</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">class </span><span class="s1">Abs</span><span class="s2">(</span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">class </span><span class="s1">ACos</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">class </span><span class="s1">ASin</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">class </span><span class="s1">ATan</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0">class </span><span class="s1">ATan2</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Func</span><span class="s2">): ...</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">class </span><span class="s1">Ceil</span><span class="s2">(</span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s0">class </span><span class="s1">Cos</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0">class </span><span class="s1">Cot</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s0">class </span><span class="s1">Degrees</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s0">class </span><span class="s1">Exp</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s0">class </span><span class="s1">Floor</span><span class="s2">(</span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s0">class </span><span class="s1">Ln</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s0">class </span><span class="s1">Log</span><span class="s2">(</span><span class="s1">FixDecimalInputMixin</span><span class="s2">, </span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Func</span><span class="s2">): ...</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s0">class </span><span class="s1">Mod</span><span class="s2">(</span><span class="s1">FixDecimalInputMixin</span><span class="s2">, </span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Func</span><span class="s2">): ...</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s0">class </span><span class="s1">Pi</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Func</span><span class="s2">): ...</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s0">class </span><span class="s1">Power</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Func</span><span class="s2">): ...</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s0">class </span><span class="s1">Radians</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s0">class </span><span class="s1">Round</span><span class="s2">(</span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s0">class </span><span class="s1">Sin</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l24"><span class="ln">24   </span></a><span class="s0">class </span><span class="s1">Sqrt</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l25"><span class="ln">25   </span></a><span class="s0">class </span><span class="s1">Tan</span><span class="s2">(</span><span class="s1">NumericOutputFieldMixin</span><span class="s2">, </span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s0">class </span><span class="s1">Sign</span><span class="s2">(</span><span class="s1">Transform</span><span class="s2">): ...</span>
+<a name="l27"><span class="ln">27   </span></a></pre>
+</body>
+</html>

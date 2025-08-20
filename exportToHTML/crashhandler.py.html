@@ -1,0 +1,268 @@
+<html>
+<head>
+<title>crashhandler.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #7a7e85;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+crashhandler.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot;sys.excepthook for IPython itself, leaves a detailed report on disk. 
+<a name="l2"><span class="ln">2    </span></a> 
+<a name="l3"><span class="ln">3    </span></a>Authors: 
+<a name="l4"><span class="ln">4    </span></a> 
+<a name="l5"><span class="ln">5    </span></a>* Fernando Perez 
+<a name="l6"><span class="ln">6    </span></a>* Brian E. Granger 
+<a name="l7"><span class="ln">7    </span></a>&quot;&quot;&quot;</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">#-----------------------------------------------------------------------------</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s2">#  Copyright (C) 2001-2007 Fernando Perez. &lt;fperez@colorado.edu&gt;</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s2">#  Copyright (C) 2008-2011  The IPython Development Team</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">#</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s2">#  Distributed under the terms of the BSD License.  The full license is in</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s2">#  the file COPYING, distributed as part of this software.</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s2">#-----------------------------------------------------------------------------</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s2">#-----------------------------------------------------------------------------</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s2"># Imports</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s2">#-----------------------------------------------------------------------------</span>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a><span class="s3">import </span><span class="s1">sys</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s3">import </span><span class="s1">traceback</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s3">from </span><span class="s1">pprint </span><span class="s3">import </span><span class="s1">pformat</span>
+<a name="l24"><span class="ln">24   </span></a><span class="s3">from </span><span class="s1">pathlib </span><span class="s3">import </span><span class="s1">Path</span>
+<a name="l25"><span class="ln">25   </span></a>
+<a name="l26"><span class="ln">26   </span></a><span class="s3">import </span><span class="s1">builtins </span><span class="s3">as </span><span class="s1">builtin_mod</span>
+<a name="l27"><span class="ln">27   </span></a>
+<a name="l28"><span class="ln">28   </span></a><span class="s3">from </span><span class="s1">IPython</span><span class="s4">.</span><span class="s1">core </span><span class="s3">import </span><span class="s1">ultratb</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s3">from </span><span class="s1">IPython</span><span class="s4">.</span><span class="s1">core</span><span class="s4">.</span><span class="s1">application </span><span class="s3">import </span><span class="s1">Application</span>
+<a name="l30"><span class="ln">30   </span></a><span class="s3">from </span><span class="s1">IPython</span><span class="s4">.</span><span class="s1">core</span><span class="s4">.</span><span class="s1">release </span><span class="s3">import </span><span class="s1">author_email</span>
+<a name="l31"><span class="ln">31   </span></a><span class="s3">from </span><span class="s1">IPython</span><span class="s4">.</span><span class="s1">utils</span><span class="s4">.</span><span class="s1">sysinfo </span><span class="s3">import </span><span class="s1">sys_info</span>
+<a name="l32"><span class="ln">32   </span></a>
+<a name="l33"><span class="ln">33   </span></a><span class="s3">from </span><span class="s1">IPython</span><span class="s4">.</span><span class="s1">core</span><span class="s4">.</span><span class="s1">release </span><span class="s3">import </span><span class="s1">__version__ </span><span class="s3">as </span><span class="s1">version</span>
+<a name="l34"><span class="ln">34   </span></a>
+<a name="l35"><span class="ln">35   </span></a><span class="s3">from </span><span class="s1">typing </span><span class="s3">import </span><span class="s1">Optional</span><span class="s4">, </span><span class="s1">Dict</span>
+<a name="l36"><span class="ln">36   </span></a><span class="s3">import </span><span class="s1">types</span>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a><span class="s2">#-----------------------------------------------------------------------------</span>
+<a name="l39"><span class="ln">39   </span></a><span class="s2"># Code</span>
+<a name="l40"><span class="ln">40   </span></a><span class="s2">#-----------------------------------------------------------------------------</span>
+<a name="l41"><span class="ln">41   </span></a>
+<a name="l42"><span class="ln">42   </span></a><span class="s2"># Template for the user message.</span>
+<a name="l43"><span class="ln">43   </span></a><span class="s1">_default_message_template </span><span class="s4">= </span><span class="s5">&quot;&quot;&quot;</span><span class="s3">\ 
+<a name="l44"><span class="ln">44   </span></a></span><span class="s5">Oops, {app_name} crashed. We do our best to make it stable, but... 
+<a name="l45"><span class="ln">45   </span></a> 
+<a name="l46"><span class="ln">46   </span></a>A crash report was automatically generated with the following information: 
+<a name="l47"><span class="ln">47   </span></a>  - A verbatim copy of the crash traceback. 
+<a name="l48"><span class="ln">48   </span></a>  - A copy of your input history during this session. 
+<a name="l49"><span class="ln">49   </span></a>  - Data on your current {app_name} configuration. 
+<a name="l50"><span class="ln">50   </span></a> 
+<a name="l51"><span class="ln">51   </span></a>It was left in the file named: 
+<a name="l52"><span class="ln">52   </span></a></span><span class="s3">\t</span><span class="s5">'{crash_report_fname}' 
+<a name="l53"><span class="ln">53   </span></a>If you can email this file to the developers, the information in it will help 
+<a name="l54"><span class="ln">54   </span></a>them in understanding and correcting the problem. 
+<a name="l55"><span class="ln">55   </span></a> 
+<a name="l56"><span class="ln">56   </span></a>You can mail it to: {contact_name} at {contact_email} 
+<a name="l57"><span class="ln">57   </span></a>with the subject '{app_name} Crash Report'. 
+<a name="l58"><span class="ln">58   </span></a> 
+<a name="l59"><span class="ln">59   </span></a>If you want to do it now, the following command will work (under Unix): 
+<a name="l60"><span class="ln">60   </span></a>mail -s '{app_name} Crash Report' {contact_email} &lt; {crash_report_fname} 
+<a name="l61"><span class="ln">61   </span></a> 
+<a name="l62"><span class="ln">62   </span></a>In your email, please also include information about: 
+<a name="l63"><span class="ln">63   </span></a>- The operating system under which the crash happened: Linux, macOS, Windows, 
+<a name="l64"><span class="ln">64   </span></a>  other, and which exact version (for example: Ubuntu 16.04.3, macOS 10.13.2, 
+<a name="l65"><span class="ln">65   </span></a>  Windows 10 Pro), and whether it is 32-bit or 64-bit; 
+<a name="l66"><span class="ln">66   </span></a>- How {app_name} was installed: using pip or conda, from GitHub, as part of 
+<a name="l67"><span class="ln">67   </span></a>  a Docker container, or other, providing more detail if possible; 
+<a name="l68"><span class="ln">68   </span></a>- How to reproduce the crash: what exact sequence of instructions can one 
+<a name="l69"><span class="ln">69   </span></a>  input to get the same crash? Ideally, find a minimal yet complete sequence 
+<a name="l70"><span class="ln">70   </span></a>  of instructions that yields the crash. 
+<a name="l71"><span class="ln">71   </span></a> 
+<a name="l72"><span class="ln">72   </span></a>To ensure accurate tracking of this issue, please file a report about it at: 
+<a name="l73"><span class="ln">73   </span></a>{bug_tracker} 
+<a name="l74"><span class="ln">74   </span></a>&quot;&quot;&quot;</span>
+<a name="l75"><span class="ln">75   </span></a>
+<a name="l76"><span class="ln">76   </span></a><span class="s1">_lite_message_template </span><span class="s4">= </span><span class="s5">&quot;&quot;&quot; 
+<a name="l77"><span class="ln">77   </span></a>If you suspect this is an IPython {version} bug, please report it at: 
+<a name="l78"><span class="ln">78   </span></a>    https://github.com/ipython/ipython/issues 
+<a name="l79"><span class="ln">79   </span></a>or send an email to the mailing list at {email} 
+<a name="l80"><span class="ln">80   </span></a> 
+<a name="l81"><span class="ln">81   </span></a>You can print a more detailed traceback right now with &quot;%tb&quot;, or use &quot;%debug&quot; 
+<a name="l82"><span class="ln">82   </span></a>to interactively debug it. 
+<a name="l83"><span class="ln">83   </span></a> 
+<a name="l84"><span class="ln">84   </span></a>Extra-detailed tracebacks for bug-reporting purposes can be enabled via: 
+<a name="l85"><span class="ln">85   </span></a>    {config}Application.verbose_crash=True 
+<a name="l86"><span class="ln">86   </span></a>&quot;&quot;&quot;</span>
+<a name="l87"><span class="ln">87   </span></a>
+<a name="l88"><span class="ln">88   </span></a>
+<a name="l89"><span class="ln">89   </span></a><span class="s3">class </span><span class="s1">CrashHandler</span><span class="s4">:</span>
+<a name="l90"><span class="ln">90   </span></a>    <span class="s0">&quot;&quot;&quot;Customizable crash handlers for IPython applications. 
+<a name="l91"><span class="ln">91   </span></a> 
+<a name="l92"><span class="ln">92   </span></a>    Instances of this class provide a :meth:`__call__` method which can be 
+<a name="l93"><span class="ln">93   </span></a>    used as a ``sys.excepthook``.  The :meth:`__call__` signature is:: 
+<a name="l94"><span class="ln">94   </span></a> 
+<a name="l95"><span class="ln">95   </span></a>        def __call__(self, etype, evalue, etb) 
+<a name="l96"><span class="ln">96   </span></a>    &quot;&quot;&quot;</span>
+<a name="l97"><span class="ln">97   </span></a>
+<a name="l98"><span class="ln">98   </span></a>    <span class="s1">message_template </span><span class="s4">= </span><span class="s1">_default_message_template</span>
+<a name="l99"><span class="ln">99   </span></a>    <span class="s1">section_sep </span><span class="s4">= </span><span class="s5">'</span><span class="s3">\n\n</span><span class="s5">'</span><span class="s4">+</span><span class="s5">'*'</span><span class="s4">*</span><span class="s6">75</span><span class="s4">+</span><span class="s5">'</span><span class="s3">\n\n</span><span class="s5">'</span>
+<a name="l100"><span class="ln">100  </span></a>    <span class="s1">info</span><span class="s4">: </span><span class="s1">Dict</span><span class="s4">[</span><span class="s1">str</span><span class="s4">, </span><span class="s1">Optional</span><span class="s4">[</span><span class="s1">str</span><span class="s4">]]</span>
+<a name="l101"><span class="ln">101  </span></a>
+<a name="l102"><span class="ln">102  </span></a>    <span class="s3">def </span><span class="s1">__init__</span><span class="s4">(</span>
+<a name="l103"><span class="ln">103  </span></a>        <span class="s1">self</span><span class="s4">,</span>
+<a name="l104"><span class="ln">104  </span></a>        <span class="s1">app</span><span class="s4">: </span><span class="s1">Application</span><span class="s4">,</span>
+<a name="l105"><span class="ln">105  </span></a>        <span class="s1">contact_name</span><span class="s4">: </span><span class="s1">Optional</span><span class="s4">[</span><span class="s1">str</span><span class="s4">] = </span><span class="s3">None</span><span class="s4">,</span>
+<a name="l106"><span class="ln">106  </span></a>        <span class="s1">contact_email</span><span class="s4">: </span><span class="s1">Optional</span><span class="s4">[</span><span class="s1">str</span><span class="s4">] = </span><span class="s3">None</span><span class="s4">,</span>
+<a name="l107"><span class="ln">107  </span></a>        <span class="s1">bug_tracker</span><span class="s4">: </span><span class="s1">Optional</span><span class="s4">[</span><span class="s1">str</span><span class="s4">] = </span><span class="s3">None</span><span class="s4">,</span>
+<a name="l108"><span class="ln">108  </span></a>        <span class="s1">show_crash_traceback</span><span class="s4">: </span><span class="s1">bool </span><span class="s4">= </span><span class="s3">True</span><span class="s4">,</span>
+<a name="l109"><span class="ln">109  </span></a>        <span class="s1">call_pdb</span><span class="s4">: </span><span class="s1">bool </span><span class="s4">= </span><span class="s3">False</span><span class="s4">,</span>
+<a name="l110"><span class="ln">110  </span></a>    <span class="s4">):</span>
+<a name="l111"><span class="ln">111  </span></a>        <span class="s0">&quot;&quot;&quot;Create a new crash handler 
+<a name="l112"><span class="ln">112  </span></a> 
+<a name="l113"><span class="ln">113  </span></a>        Parameters 
+<a name="l114"><span class="ln">114  </span></a>        ---------- 
+<a name="l115"><span class="ln">115  </span></a>        app : Application 
+<a name="l116"><span class="ln">116  </span></a>            A running :class:`Application` instance, which will be queried at 
+<a name="l117"><span class="ln">117  </span></a>            crash time for internal information. 
+<a name="l118"><span class="ln">118  </span></a>        contact_name : str 
+<a name="l119"><span class="ln">119  </span></a>            A string with the name of the person to contact. 
+<a name="l120"><span class="ln">120  </span></a>        contact_email : str 
+<a name="l121"><span class="ln">121  </span></a>            A string with the email address of the contact. 
+<a name="l122"><span class="ln">122  </span></a>        bug_tracker : str 
+<a name="l123"><span class="ln">123  </span></a>            A string with the URL for your project's bug tracker. 
+<a name="l124"><span class="ln">124  </span></a>        show_crash_traceback : bool 
+<a name="l125"><span class="ln">125  </span></a>            If false, don't print the crash traceback on stderr, only generate 
+<a name="l126"><span class="ln">126  </span></a>            the on-disk report 
+<a name="l127"><span class="ln">127  </span></a>        call_pdb 
+<a name="l128"><span class="ln">128  </span></a>            Whether to call pdb on crash 
+<a name="l129"><span class="ln">129  </span></a> 
+<a name="l130"><span class="ln">130  </span></a>        Attributes 
+<a name="l131"><span class="ln">131  </span></a>        ---------- 
+<a name="l132"><span class="ln">132  </span></a>        These instances contain some non-argument attributes which allow for 
+<a name="l133"><span class="ln">133  </span></a>        further customization of the crash handler's behavior. Please see the 
+<a name="l134"><span class="ln">134  </span></a>        source for further details. 
+<a name="l135"><span class="ln">135  </span></a> 
+<a name="l136"><span class="ln">136  </span></a>        &quot;&quot;&quot;</span>
+<a name="l137"><span class="ln">137  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">crash_report_fname </span><span class="s4">= </span><span class="s5">&quot;Crash_report_%s.txt&quot; </span><span class="s4">% </span><span class="s1">app</span><span class="s4">.</span><span class="s1">name</span>
+<a name="l138"><span class="ln">138  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">app </span><span class="s4">= </span><span class="s1">app</span>
+<a name="l139"><span class="ln">139  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">call_pdb </span><span class="s4">= </span><span class="s1">call_pdb</span>
+<a name="l140"><span class="ln">140  </span></a>        <span class="s2">#self.call_pdb = True # dbg</span>
+<a name="l141"><span class="ln">141  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">show_crash_traceback </span><span class="s4">= </span><span class="s1">show_crash_traceback</span>
+<a name="l142"><span class="ln">142  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">info </span><span class="s4">= </span><span class="s1">dict</span><span class="s4">(</span><span class="s1">app_name </span><span class="s4">= </span><span class="s1">app</span><span class="s4">.</span><span class="s1">name</span><span class="s4">,</span>
+<a name="l143"><span class="ln">143  </span></a>                    <span class="s1">contact_name </span><span class="s4">= </span><span class="s1">contact_name</span><span class="s4">,</span>
+<a name="l144"><span class="ln">144  </span></a>                    <span class="s1">contact_email </span><span class="s4">= </span><span class="s1">contact_email</span><span class="s4">,</span>
+<a name="l145"><span class="ln">145  </span></a>                    <span class="s1">bug_tracker </span><span class="s4">= </span><span class="s1">bug_tracker</span><span class="s4">,</span>
+<a name="l146"><span class="ln">146  </span></a>                    <span class="s1">crash_report_fname </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">crash_report_fname</span><span class="s4">)</span>
+<a name="l147"><span class="ln">147  </span></a>
+<a name="l148"><span class="ln">148  </span></a>    <span class="s3">def </span><span class="s1">__call__</span><span class="s4">(</span>
+<a name="l149"><span class="ln">149  </span></a>        <span class="s1">self</span><span class="s4">,</span>
+<a name="l150"><span class="ln">150  </span></a>        <span class="s1">etype</span><span class="s4">: </span><span class="s1">type</span><span class="s4">[</span><span class="s1">BaseException</span><span class="s4">],</span>
+<a name="l151"><span class="ln">151  </span></a>        <span class="s1">evalue</span><span class="s4">: </span><span class="s1">BaseException</span><span class="s4">,</span>
+<a name="l152"><span class="ln">152  </span></a>        <span class="s1">etb</span><span class="s4">: </span><span class="s1">types</span><span class="s4">.</span><span class="s1">TracebackType</span><span class="s4">,</span>
+<a name="l153"><span class="ln">153  </span></a>    <span class="s4">) </span><span class="s1">-&gt; </span><span class="s3">None</span><span class="s4">:</span>
+<a name="l154"><span class="ln">154  </span></a>        <span class="s0">&quot;&quot;&quot;Handle an exception, call for compatible with sys.excepthook&quot;&quot;&quot;</span>
+<a name="l155"><span class="ln">155  </span></a>
+<a name="l156"><span class="ln">156  </span></a>        <span class="s2"># do not allow the crash handler to be called twice without reinstalling it</span>
+<a name="l157"><span class="ln">157  </span></a>        <span class="s2"># this prevents unlikely errors in the crash handling from entering an</span>
+<a name="l158"><span class="ln">158  </span></a>        <span class="s2"># infinite loop.</span>
+<a name="l159"><span class="ln">159  </span></a>        <span class="s1">sys</span><span class="s4">.</span><span class="s1">excepthook </span><span class="s4">= </span><span class="s1">sys</span><span class="s4">.</span><span class="s1">__excepthook__</span>
+<a name="l160"><span class="ln">160  </span></a>        
+<a name="l161"><span class="ln">161  </span></a>
+<a name="l162"><span class="ln">162  </span></a>        <span class="s2"># Use this ONLY for developer debugging (keep commented out for release)</span>
+<a name="l163"><span class="ln">163  </span></a>        <span class="s1">ipython_dir </span><span class="s4">= </span><span class="s1">getattr</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">app</span><span class="s4">, </span><span class="s5">&quot;ipython_dir&quot;</span><span class="s4">, </span><span class="s3">None</span><span class="s4">)</span>
+<a name="l164"><span class="ln">164  </span></a>        <span class="s3">if </span><span class="s1">ipython_dir </span><span class="s3">is not None</span><span class="s4">:</span>
+<a name="l165"><span class="ln">165  </span></a>            <span class="s3">assert </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">ipython_dir</span><span class="s4">, </span><span class="s1">str</span><span class="s4">)</span>
+<a name="l166"><span class="ln">166  </span></a>            <span class="s1">rptdir </span><span class="s4">= </span><span class="s1">Path</span><span class="s4">(</span><span class="s1">ipython_dir</span><span class="s4">)</span>
+<a name="l167"><span class="ln">167  </span></a>        <span class="s3">else</span><span class="s4">:</span>
+<a name="l168"><span class="ln">168  </span></a>            <span class="s1">rptdir </span><span class="s4">= </span><span class="s1">Path</span><span class="s4">.</span><span class="s1">cwd</span><span class="s4">()</span>
+<a name="l169"><span class="ln">169  </span></a>        <span class="s3">if not </span><span class="s1">rptdir</span><span class="s4">.</span><span class="s1">is_dir</span><span class="s4">():</span>
+<a name="l170"><span class="ln">170  </span></a>            <span class="s1">rptdir </span><span class="s4">= </span><span class="s1">Path</span><span class="s4">.</span><span class="s1">cwd</span><span class="s4">()</span>
+<a name="l171"><span class="ln">171  </span></a>        <span class="s1">report_name </span><span class="s4">= </span><span class="s1">rptdir </span><span class="s4">/ </span><span class="s1">self</span><span class="s4">.</span><span class="s1">crash_report_fname</span>
+<a name="l172"><span class="ln">172  </span></a>        <span class="s2"># write the report filename into the instance dict so it can get</span>
+<a name="l173"><span class="ln">173  </span></a>        <span class="s2"># properly expanded out in the user message template</span>
+<a name="l174"><span class="ln">174  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">crash_report_fname </span><span class="s4">= </span><span class="s1">str</span><span class="s4">(</span><span class="s1">report_name</span><span class="s4">)</span>
+<a name="l175"><span class="ln">175  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">info</span><span class="s4">[</span><span class="s5">&quot;crash_report_fname&quot;</span><span class="s4">] = </span><span class="s1">str</span><span class="s4">(</span><span class="s1">report_name</span><span class="s4">)</span>
+<a name="l176"><span class="ln">176  </span></a>        <span class="s1">TBhandler </span><span class="s4">= </span><span class="s1">ultratb</span><span class="s4">.</span><span class="s1">VerboseTB</span><span class="s4">(</span>
+<a name="l177"><span class="ln">177  </span></a>            <span class="s1">theme_name</span><span class="s4">=</span><span class="s5">&quot;nocolor&quot;</span><span class="s4">,</span>
+<a name="l178"><span class="ln">178  </span></a>            <span class="s1">long_header</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l179"><span class="ln">179  </span></a>            <span class="s1">call_pdb</span><span class="s4">=</span><span class="s1">self</span><span class="s4">.</span><span class="s1">call_pdb</span><span class="s4">,</span>
+<a name="l180"><span class="ln">180  </span></a>        <span class="s4">)</span>
+<a name="l181"><span class="ln">181  </span></a>        <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">call_pdb</span><span class="s4">:</span>
+<a name="l182"><span class="ln">182  </span></a>            <span class="s1">TBhandler</span><span class="s4">(</span><span class="s1">etype</span><span class="s4">,</span><span class="s1">evalue</span><span class="s4">,</span><span class="s1">etb</span><span class="s4">)</span>
+<a name="l183"><span class="ln">183  </span></a>            <span class="s3">return</span>
+<a name="l184"><span class="ln">184  </span></a>        <span class="s3">else</span><span class="s4">:</span>
+<a name="l185"><span class="ln">185  </span></a>            <span class="s1">traceback </span><span class="s4">= </span><span class="s1">TBhandler</span><span class="s4">.</span><span class="s1">text</span><span class="s4">(</span><span class="s1">etype</span><span class="s4">,</span><span class="s1">evalue</span><span class="s4">,</span><span class="s1">etb</span><span class="s4">,</span><span class="s1">context</span><span class="s4">=</span><span class="s6">31</span><span class="s4">)</span>
+<a name="l186"><span class="ln">186  </span></a>
+<a name="l187"><span class="ln">187  </span></a>        <span class="s2"># print traceback to screen</span>
+<a name="l188"><span class="ln">188  </span></a>        <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">show_crash_traceback</span><span class="s4">:</span>
+<a name="l189"><span class="ln">189  </span></a>            <span class="s1">print</span><span class="s4">(</span><span class="s1">traceback</span><span class="s4">, </span><span class="s1">file</span><span class="s4">=</span><span class="s1">sys</span><span class="s4">.</span><span class="s1">stderr</span><span class="s4">)</span>
+<a name="l190"><span class="ln">190  </span></a>
+<a name="l191"><span class="ln">191  </span></a>        <span class="s2"># and generate a complete report on disk</span>
+<a name="l192"><span class="ln">192  </span></a>        <span class="s3">try</span><span class="s4">:</span>
+<a name="l193"><span class="ln">193  </span></a>            <span class="s1">report </span><span class="s4">= </span><span class="s1">open</span><span class="s4">(</span><span class="s1">report_name</span><span class="s4">, </span><span class="s5">&quot;w&quot;</span><span class="s4">, </span><span class="s1">encoding</span><span class="s4">=</span><span class="s5">&quot;utf-8&quot;</span><span class="s4">)</span>
+<a name="l194"><span class="ln">194  </span></a>        <span class="s3">except</span><span class="s4">:</span>
+<a name="l195"><span class="ln">195  </span></a>            <span class="s1">print</span><span class="s4">(</span><span class="s5">'Could not create crash report on disk.'</span><span class="s4">, </span><span class="s1">file</span><span class="s4">=</span><span class="s1">sys</span><span class="s4">.</span><span class="s1">stderr</span><span class="s4">)</span>
+<a name="l196"><span class="ln">196  </span></a>            <span class="s3">return</span>
+<a name="l197"><span class="ln">197  </span></a>
+<a name="l198"><span class="ln">198  </span></a>        <span class="s3">with </span><span class="s1">report</span><span class="s4">:</span>
+<a name="l199"><span class="ln">199  </span></a>            <span class="s2"># Inform user on stderr of what happened</span>
+<a name="l200"><span class="ln">200  </span></a>            <span class="s1">print</span><span class="s4">(</span><span class="s5">'</span><span class="s3">\n</span><span class="s5">'</span><span class="s4">+</span><span class="s5">'*'</span><span class="s4">*</span><span class="s6">70</span><span class="s4">+</span><span class="s5">'</span><span class="s3">\n</span><span class="s5">'</span><span class="s4">, </span><span class="s1">file</span><span class="s4">=</span><span class="s1">sys</span><span class="s4">.</span><span class="s1">stderr</span><span class="s4">)</span>
+<a name="l201"><span class="ln">201  </span></a>            <span class="s1">print</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">message_template</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(**</span><span class="s1">self</span><span class="s4">.</span><span class="s1">info</span><span class="s4">), </span><span class="s1">file</span><span class="s4">=</span><span class="s1">sys</span><span class="s4">.</span><span class="s1">stderr</span><span class="s4">)</span>
+<a name="l202"><span class="ln">202  </span></a>
+<a name="l203"><span class="ln">203  </span></a>            <span class="s2"># Construct report on disk</span>
+<a name="l204"><span class="ln">204  </span></a>            <span class="s1">report</span><span class="s4">.</span><span class="s1">write</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">make_report</span><span class="s4">(</span><span class="s1">str</span><span class="s4">(</span><span class="s1">traceback</span><span class="s4">)))</span>
+<a name="l205"><span class="ln">205  </span></a>
+<a name="l206"><span class="ln">206  </span></a>        <span class="s1">builtin_mod</span><span class="s4">.</span><span class="s1">input</span><span class="s4">(</span><span class="s5">&quot;Hit &lt;Enter&gt; to quit (your terminal may close):&quot;</span><span class="s4">)</span>
+<a name="l207"><span class="ln">207  </span></a>
+<a name="l208"><span class="ln">208  </span></a>    <span class="s3">def </span><span class="s1">make_report</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">traceback</span><span class="s4">: </span><span class="s1">str</span><span class="s4">) </span><span class="s1">-&gt; str</span><span class="s4">:</span>
+<a name="l209"><span class="ln">209  </span></a>        <span class="s0">&quot;&quot;&quot;Return a string containing a crash report.&quot;&quot;&quot;</span>
+<a name="l210"><span class="ln">210  </span></a>
+<a name="l211"><span class="ln">211  </span></a>        <span class="s1">sec_sep </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">section_sep</span>
+<a name="l212"><span class="ln">212  </span></a>
+<a name="l213"><span class="ln">213  </span></a>        <span class="s1">report </span><span class="s4">= [</span><span class="s5">'*'</span><span class="s4">*</span><span class="s6">75</span><span class="s4">+</span><span class="s5">'</span><span class="s3">\n\n</span><span class="s5">'</span><span class="s4">+</span><span class="s5">'IPython post-mortem report</span><span class="s3">\n\n</span><span class="s5">'</span><span class="s4">]</span>
+<a name="l214"><span class="ln">214  </span></a>        <span class="s1">rpt_add </span><span class="s4">= </span><span class="s1">report</span><span class="s4">.</span><span class="s1">append</span>
+<a name="l215"><span class="ln">215  </span></a>        <span class="s1">rpt_add</span><span class="s4">(</span><span class="s1">sys_info</span><span class="s4">())</span>
+<a name="l216"><span class="ln">216  </span></a>
+<a name="l217"><span class="ln">217  </span></a>        <span class="s3">try</span><span class="s4">:</span>
+<a name="l218"><span class="ln">218  </span></a>            <span class="s1">config </span><span class="s4">= </span><span class="s1">pformat</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">app</span><span class="s4">.</span><span class="s1">config</span><span class="s4">)</span>
+<a name="l219"><span class="ln">219  </span></a>            <span class="s1">rpt_add</span><span class="s4">(</span><span class="s1">sec_sep</span><span class="s4">)</span>
+<a name="l220"><span class="ln">220  </span></a>            <span class="s1">rpt_add</span><span class="s4">(</span><span class="s5">&quot;Application name: %s</span><span class="s3">\n\n</span><span class="s5">&quot; </span><span class="s4">% </span><span class="s1">self</span><span class="s4">.</span><span class="s1">app</span><span class="s4">.</span><span class="s1">name</span><span class="s4">)</span>
+<a name="l221"><span class="ln">221  </span></a>            <span class="s1">rpt_add</span><span class="s4">(</span><span class="s5">&quot;Current user configuration structure:</span><span class="s3">\n\n</span><span class="s5">&quot;</span><span class="s4">)</span>
+<a name="l222"><span class="ln">222  </span></a>            <span class="s1">rpt_add</span><span class="s4">(</span><span class="s1">config</span><span class="s4">)</span>
+<a name="l223"><span class="ln">223  </span></a>        <span class="s3">except</span><span class="s4">:</span>
+<a name="l224"><span class="ln">224  </span></a>            <span class="s3">pass</span>
+<a name="l225"><span class="ln">225  </span></a>        <span class="s1">rpt_add</span><span class="s4">(</span><span class="s1">sec_sep</span><span class="s4">+</span><span class="s5">'Crash traceback:</span><span class="s3">\n\n</span><span class="s5">' </span><span class="s4">+ </span><span class="s1">traceback</span><span class="s4">)</span>
+<a name="l226"><span class="ln">226  </span></a>
+<a name="l227"><span class="ln">227  </span></a>        <span class="s3">return </span><span class="s5">''</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">report</span><span class="s4">)</span>
+<a name="l228"><span class="ln">228  </span></a>
+<a name="l229"><span class="ln">229  </span></a>
+<a name="l230"><span class="ln">230  </span></a><span class="s3">def </span><span class="s1">crash_handler_lite</span><span class="s4">(</span>
+<a name="l231"><span class="ln">231  </span></a>    <span class="s1">etype</span><span class="s4">: </span><span class="s1">type</span><span class="s4">[</span><span class="s1">BaseException</span><span class="s4">], </span><span class="s1">evalue</span><span class="s4">: </span><span class="s1">BaseException</span><span class="s4">, </span><span class="s1">tb</span><span class="s4">: </span><span class="s1">types</span><span class="s4">.</span><span class="s1">TracebackType</span>
+<a name="l232"><span class="ln">232  </span></a><span class="s4">) </span><span class="s1">-&gt; </span><span class="s3">None</span><span class="s4">:</span>
+<a name="l233"><span class="ln">233  </span></a>    <span class="s0">&quot;&quot;&quot;a light excepthook, adding a small message to the usual traceback&quot;&quot;&quot;</span>
+<a name="l234"><span class="ln">234  </span></a>    <span class="s1">traceback</span><span class="s4">.</span><span class="s1">print_exception</span><span class="s4">(</span><span class="s1">etype</span><span class="s4">, </span><span class="s1">evalue</span><span class="s4">, </span><span class="s1">tb</span><span class="s4">)</span>
+<a name="l235"><span class="ln">235  </span></a>    
+<a name="l236"><span class="ln">236  </span></a>    <span class="s3">from </span><span class="s1">IPython</span><span class="s4">.</span><span class="s1">core</span><span class="s4">.</span><span class="s1">interactiveshell </span><span class="s3">import </span><span class="s1">InteractiveShell</span>
+<a name="l237"><span class="ln">237  </span></a>    <span class="s3">if </span><span class="s1">InteractiveShell</span><span class="s4">.</span><span class="s1">initialized</span><span class="s4">():</span>
+<a name="l238"><span class="ln">238  </span></a>        <span class="s2"># we are in a Shell environment, give %magic example</span>
+<a name="l239"><span class="ln">239  </span></a>        <span class="s1">config </span><span class="s4">= </span><span class="s5">&quot;%config &quot;</span>
+<a name="l240"><span class="ln">240  </span></a>    <span class="s3">else</span><span class="s4">:</span>
+<a name="l241"><span class="ln">241  </span></a>        <span class="s2"># we are not in a shell, show generic config</span>
+<a name="l242"><span class="ln">242  </span></a>        <span class="s1">config </span><span class="s4">= </span><span class="s5">&quot;c.&quot;</span>
+<a name="l243"><span class="ln">243  </span></a>    <span class="s1">print</span><span class="s4">(</span><span class="s1">_lite_message_template</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span><span class="s1">email</span><span class="s4">=</span><span class="s1">author_email</span><span class="s4">, </span><span class="s1">config</span><span class="s4">=</span><span class="s1">config</span><span class="s4">, </span><span class="s1">version</span><span class="s4">=</span><span class="s1">version</span><span class="s4">), </span><span class="s1">file</span><span class="s4">=</span><span class="s1">sys</span><span class="s4">.</span><span class="s1">stderr</span><span class="s4">)</span>
+<a name="l244"><span class="ln">244  </span></a>
+<a name="l245"><span class="ln">245  </span></a></pre>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<html>
+<head>
+<title>_docstrings.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #2aacb8;}
+.s6 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_docstrings.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">import </span><span class="s1">re</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">import </span><span class="s1">pydoc</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">from </span><span class="s2">.</span><span class="s1">external</span><span class="s2">.</span><span class="s1">docscrape </span><span class="s0">import </span><span class="s1">NumpyDocString</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">class </span><span class="s1">DocstringComponents</span><span class="s2">:</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a>    <span class="s1">regexp </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">compile</span><span class="s2">(</span><span class="s3">r&quot;\n((\n|.)+)\n\s*&quot;</span><span class="s2">, </span><span class="s1">re</span><span class="s2">.</span><span class="s1">MULTILINE</span><span class="s2">)</span>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a>    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">comp_dict</span><span class="s2">, </span><span class="s1">strip_whitespace</span><span class="s2">=</span><span class="s0">True</span><span class="s2">):</span>
+<a name="l11"><span class="ln">11   </span></a>        <span class="s4">&quot;&quot;&quot;Read entries from a dict, optionally stripping outer whitespace.&quot;&quot;&quot;</span>
+<a name="l12"><span class="ln">12   </span></a>        <span class="s0">if </span><span class="s1">strip_whitespace</span><span class="s2">:</span>
+<a name="l13"><span class="ln">13   </span></a>            <span class="s1">entries </span><span class="s2">= {}</span>
+<a name="l14"><span class="ln">14   </span></a>            <span class="s0">for </span><span class="s1">key</span><span class="s2">, </span><span class="s1">val </span><span class="s0">in </span><span class="s1">comp_dict</span><span class="s2">.</span><span class="s1">items</span><span class="s2">():</span>
+<a name="l15"><span class="ln">15   </span></a>                <span class="s1">m </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">match</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">regexp</span><span class="s2">, </span><span class="s1">val</span><span class="s2">)</span>
+<a name="l16"><span class="ln">16   </span></a>                <span class="s0">if </span><span class="s1">m </span><span class="s0">is None</span><span class="s2">:</span>
+<a name="l17"><span class="ln">17   </span></a>                    <span class="s1">entries</span><span class="s2">[</span><span class="s1">key</span><span class="s2">] = </span><span class="s1">val</span>
+<a name="l18"><span class="ln">18   </span></a>                <span class="s0">else</span><span class="s2">:</span>
+<a name="l19"><span class="ln">19   </span></a>                    <span class="s1">entries</span><span class="s2">[</span><span class="s1">key</span><span class="s2">] = </span><span class="s1">m</span><span class="s2">.</span><span class="s1">group</span><span class="s2">(</span><span class="s5">1</span><span class="s2">)</span>
+<a name="l20"><span class="ln">20   </span></a>        <span class="s0">else</span><span class="s2">:</span>
+<a name="l21"><span class="ln">21   </span></a>            <span class="s1">entries </span><span class="s2">= </span><span class="s1">comp_dict</span><span class="s2">.</span><span class="s1">copy</span><span class="s2">()</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">entries </span><span class="s2">= </span><span class="s1">entries</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s0">def </span><span class="s1">__getattr__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">attr</span><span class="s2">):</span>
+<a name="l26"><span class="ln">26   </span></a>        <span class="s4">&quot;&quot;&quot;Provide dot access to entries for clean raw docstrings.&quot;&quot;&quot;</span>
+<a name="l27"><span class="ln">27   </span></a>        <span class="s0">if </span><span class="s1">attr </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">entries</span><span class="s2">:</span>
+<a name="l28"><span class="ln">28   </span></a>            <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">entries</span><span class="s2">[</span><span class="s1">attr</span><span class="s2">]</span>
+<a name="l29"><span class="ln">29   </span></a>        <span class="s0">else</span><span class="s2">:</span>
+<a name="l30"><span class="ln">30   </span></a>            <span class="s0">try</span><span class="s2">:</span>
+<a name="l31"><span class="ln">31   </span></a>                <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">__getattribute__</span><span class="s2">(</span><span class="s1">attr</span><span class="s2">)</span>
+<a name="l32"><span class="ln">32   </span></a>            <span class="s0">except </span><span class="s1">AttributeError </span><span class="s0">as </span><span class="s1">err</span><span class="s2">:</span>
+<a name="l33"><span class="ln">33   </span></a>                <span class="s6"># If Python is run with -OO, it will strip docstrings and our lookup</span>
+<a name="l34"><span class="ln">34   </span></a>                <span class="s6"># from self.entries will fail. We check for __debug__, which is actually</span>
+<a name="l35"><span class="ln">35   </span></a>                <span class="s6"># set to False by -O (it is True for normal execution).</span>
+<a name="l36"><span class="ln">36   </span></a>                <span class="s6"># But we only want to see an error when building the docs;</span>
+<a name="l37"><span class="ln">37   </span></a>                <span class="s6"># not something users should see, so this slight inconsistency is fine.</span>
+<a name="l38"><span class="ln">38   </span></a>                <span class="s0">if __debug__</span><span class="s2">:</span>
+<a name="l39"><span class="ln">39   </span></a>                    <span class="s0">raise </span><span class="s1">err</span>
+<a name="l40"><span class="ln">40   </span></a>                <span class="s0">else</span><span class="s2">:</span>
+<a name="l41"><span class="ln">41   </span></a>                    <span class="s0">pass</span>
+<a name="l42"><span class="ln">42   </span></a>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s2">@</span><span class="s1">classmethod</span>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s0">def </span><span class="s1">from_nested_components</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+<a name="l45"><span class="ln">45   </span></a>        <span class="s4">&quot;&quot;&quot;Add multiple sub-sets of components.&quot;&quot;&quot;</span>
+<a name="l46"><span class="ln">46   </span></a>        <span class="s0">return </span><span class="s1">cls</span><span class="s2">(</span><span class="s1">kwargs</span><span class="s2">, </span><span class="s1">strip_whitespace</span><span class="s2">=</span><span class="s0">False</span><span class="s2">)</span>
+<a name="l47"><span class="ln">47   </span></a>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s2">@</span><span class="s1">classmethod</span>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s0">def </span><span class="s1">from_function_params</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">func</span><span class="s2">):</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s4">&quot;&quot;&quot;Use the numpydoc parser to extract components from existing func.&quot;&quot;&quot;</span>
+<a name="l51"><span class="ln">51   </span></a>        <span class="s1">params </span><span class="s2">= </span><span class="s1">NumpyDocString</span><span class="s2">(</span><span class="s1">pydoc</span><span class="s2">.</span><span class="s1">getdoc</span><span class="s2">(</span><span class="s1">func</span><span class="s2">))[</span><span class="s3">&quot;Parameters&quot;</span><span class="s2">]</span>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s1">comp_dict </span><span class="s2">= {}</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s0">for </span><span class="s1">p </span><span class="s0">in </span><span class="s1">params</span><span class="s2">:</span>
+<a name="l54"><span class="ln">54   </span></a>            <span class="s1">name </span><span class="s2">= </span><span class="s1">p</span><span class="s2">.</span><span class="s1">name</span>
+<a name="l55"><span class="ln">55   </span></a>            <span class="s1">type </span><span class="s2">= </span><span class="s1">p</span><span class="s2">.</span><span class="s1">type</span>
+<a name="l56"><span class="ln">56   </span></a>            <span class="s1">desc </span><span class="s2">= </span><span class="s3">&quot;</span><span class="s0">\n    </span><span class="s3">&quot;</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">p</span><span class="s2">.</span><span class="s1">desc</span><span class="s2">)</span>
+<a name="l57"><span class="ln">57   </span></a>            <span class="s1">comp_dict</span><span class="s2">[</span><span class="s1">name</span><span class="s2">] = </span><span class="s3">f&quot;</span><span class="s0">{</span><span class="s1">name</span><span class="s0">} </span><span class="s3">: </span><span class="s0">{</span><span class="s1">type</span><span class="s0">}\n    {</span><span class="s1">desc</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l58"><span class="ln">58   </span></a>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s0">return </span><span class="s1">cls</span><span class="s2">(</span><span class="s1">comp_dict</span><span class="s2">)</span>
+<a name="l60"><span class="ln">60   </span></a>
+<a name="l61"><span class="ln">61   </span></a>
+<a name="l62"><span class="ln">62   </span></a><span class="s6"># TODO is &quot;vector&quot; the best term here? We mean to imply 1D data with a variety</span>
+<a name="l63"><span class="ln">63   </span></a><span class="s6"># of types?</span>
+<a name="l64"><span class="ln">64   </span></a>
+<a name="l65"><span class="ln">65   </span></a><span class="s6"># TODO now that we can parse numpydoc style strings, do we need to define dicts</span>
+<a name="l66"><span class="ln">66   </span></a><span class="s6"># of docstring components, or just write out a docstring?</span>
+<a name="l67"><span class="ln">67   </span></a>
+<a name="l68"><span class="ln">68   </span></a>
+<a name="l69"><span class="ln">69   </span></a><span class="s1">_core_params </span><span class="s2">= </span><span class="s1">dict</span><span class="s2">(</span>
+<a name="l70"><span class="ln">70   </span></a>    <span class="s1">data</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l71"><span class="ln">71   </span></a>data : :class:`pandas.DataFrame`, :class:`numpy.ndarray`, mapping, or sequence 
+<a name="l72"><span class="ln">72   </span></a>    Input data structure. Either a long-form collection of vectors that can be 
+<a name="l73"><span class="ln">73   </span></a>    assigned to named variables or a wide-form dataset that will be internally 
+<a name="l74"><span class="ln">74   </span></a>    reshaped. 
+<a name="l75"><span class="ln">75   </span></a>    &quot;&quot;&quot;</span><span class="s2">,  </span><span class="s6"># TODO add link to user guide narrative when exists</span>
+<a name="l76"><span class="ln">76   </span></a>    <span class="s1">xy</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l77"><span class="ln">77   </span></a>x, y : vectors or keys in ``data`` 
+<a name="l78"><span class="ln">78   </span></a>    Variables that specify positions on the x and y axes. 
+<a name="l79"><span class="ln">79   </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l80"><span class="ln">80   </span></a>    <span class="s1">hue</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l81"><span class="ln">81   </span></a>hue : vector or key in ``data`` 
+<a name="l82"><span class="ln">82   </span></a>    Semantic variable that is mapped to determine the color of plot elements. 
+<a name="l83"><span class="ln">83   </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l84"><span class="ln">84   </span></a>    <span class="s1">palette</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l85"><span class="ln">85   </span></a>palette : string, list, dict, or :class:`matplotlib.colors.Colormap` 
+<a name="l86"><span class="ln">86   </span></a>    Method for choosing the colors to use when mapping the ``hue`` semantic. 
+<a name="l87"><span class="ln">87   </span></a>    String values are passed to :func:`color_palette`. List or dict values 
+<a name="l88"><span class="ln">88   </span></a>    imply categorical mapping, while a colormap object implies numeric mapping. 
+<a name="l89"><span class="ln">89   </span></a>    &quot;&quot;&quot;</span><span class="s2">,  </span><span class="s6"># noqa: E501</span>
+<a name="l90"><span class="ln">90   </span></a>    <span class="s1">hue_order</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l91"><span class="ln">91   </span></a>hue_order : vector of strings 
+<a name="l92"><span class="ln">92   </span></a>    Specify the order of processing and plotting for categorical levels of the 
+<a name="l93"><span class="ln">93   </span></a>    ``hue`` semantic. 
+<a name="l94"><span class="ln">94   </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l95"><span class="ln">95   </span></a>    <span class="s1">hue_norm</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l96"><span class="ln">96   </span></a>hue_norm : tuple or :class:`matplotlib.colors.Normalize` 
+<a name="l97"><span class="ln">97   </span></a>    Either a pair of values that set the normalization range in data units 
+<a name="l98"><span class="ln">98   </span></a>    or an object that will map from data units into a [0, 1] interval. Usage 
+<a name="l99"><span class="ln">99   </span></a>    implies numeric mapping. 
+<a name="l100"><span class="ln">100  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l101"><span class="ln">101  </span></a>    <span class="s1">color</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l102"><span class="ln">102  </span></a>color : :mod:`matplotlib color &lt;matplotlib.colors&gt;` 
+<a name="l103"><span class="ln">103  </span></a>    Single color specification for when hue mapping is not used. Otherwise, the 
+<a name="l104"><span class="ln">104  </span></a>    plot will try to hook into the matplotlib property cycle. 
+<a name="l105"><span class="ln">105  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l106"><span class="ln">106  </span></a>    <span class="s1">ax</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l107"><span class="ln">107  </span></a>ax : :class:`matplotlib.axes.Axes` 
+<a name="l108"><span class="ln">108  </span></a>    Pre-existing axes for the plot. Otherwise, call :func:`matplotlib.pyplot.gca` 
+<a name="l109"><span class="ln">109  </span></a>    internally. 
+<a name="l110"><span class="ln">110  </span></a>    &quot;&quot;&quot;</span><span class="s2">,  </span><span class="s6"># noqa: E501</span>
+<a name="l111"><span class="ln">111  </span></a><span class="s2">)</span>
+<a name="l112"><span class="ln">112  </span></a>
+<a name="l113"><span class="ln">113  </span></a>
+<a name="l114"><span class="ln">114  </span></a><span class="s1">_core_returns </span><span class="s2">= </span><span class="s1">dict</span><span class="s2">(</span>
+<a name="l115"><span class="ln">115  </span></a>    <span class="s1">ax</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l116"><span class="ln">116  </span></a>:class:`matplotlib.axes.Axes` 
+<a name="l117"><span class="ln">117  </span></a>    The matplotlib axes containing the plot. 
+<a name="l118"><span class="ln">118  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l119"><span class="ln">119  </span></a>    <span class="s1">facetgrid</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l120"><span class="ln">120  </span></a>:class:`FacetGrid` 
+<a name="l121"><span class="ln">121  </span></a>    An object managing one or more subplots that correspond to conditional data 
+<a name="l122"><span class="ln">122  </span></a>    subsets with convenient methods for batch-setting of axes attributes. 
+<a name="l123"><span class="ln">123  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l124"><span class="ln">124  </span></a>    <span class="s1">jointgrid</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l125"><span class="ln">125  </span></a>:class:`JointGrid` 
+<a name="l126"><span class="ln">126  </span></a>    An object managing multiple subplots that correspond to joint and marginal axes 
+<a name="l127"><span class="ln">127  </span></a>    for plotting a bivariate relationship or distribution. 
+<a name="l128"><span class="ln">128  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l129"><span class="ln">129  </span></a>    <span class="s1">pairgrid</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l130"><span class="ln">130  </span></a>:class:`PairGrid` 
+<a name="l131"><span class="ln">131  </span></a>    An object managing multiple subplots that correspond to joint and marginal axes 
+<a name="l132"><span class="ln">132  </span></a>    for pairwise combinations of multiple variables in a dataset. 
+<a name="l133"><span class="ln">133  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l134"><span class="ln">134  </span></a><span class="s2">)</span>
+<a name="l135"><span class="ln">135  </span></a>
+<a name="l136"><span class="ln">136  </span></a>
+<a name="l137"><span class="ln">137  </span></a><span class="s1">_seealso_blurbs </span><span class="s2">= </span><span class="s1">dict</span><span class="s2">(</span>
+<a name="l138"><span class="ln">138  </span></a>
+<a name="l139"><span class="ln">139  </span></a>    <span class="s6"># Relational plots</span>
+<a name="l140"><span class="ln">140  </span></a>    <span class="s1">scatterplot</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l141"><span class="ln">141  </span></a>scatterplot : Plot data using points. 
+<a name="l142"><span class="ln">142  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l143"><span class="ln">143  </span></a>    <span class="s1">lineplot</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l144"><span class="ln">144  </span></a>lineplot : Plot data using lines. 
+<a name="l145"><span class="ln">145  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l146"><span class="ln">146  </span></a>
+<a name="l147"><span class="ln">147  </span></a>    <span class="s6"># Distribution plots</span>
+<a name="l148"><span class="ln">148  </span></a>    <span class="s1">displot</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l149"><span class="ln">149  </span></a>displot : Figure-level interface to distribution plot functions. 
+<a name="l150"><span class="ln">150  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l151"><span class="ln">151  </span></a>    <span class="s1">histplot</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l152"><span class="ln">152  </span></a>histplot : Plot a histogram of binned counts with optional normalization or smoothing. 
+<a name="l153"><span class="ln">153  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l154"><span class="ln">154  </span></a>    <span class="s1">kdeplot</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l155"><span class="ln">155  </span></a>kdeplot : Plot univariate or bivariate distributions using kernel density estimation. 
+<a name="l156"><span class="ln">156  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l157"><span class="ln">157  </span></a>    <span class="s1">ecdfplot</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l158"><span class="ln">158  </span></a>ecdfplot : Plot empirical cumulative distribution functions. 
+<a name="l159"><span class="ln">159  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l160"><span class="ln">160  </span></a>    <span class="s1">rugplot</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l161"><span class="ln">161  </span></a>rugplot : Plot a tick at each observation value along the x and/or y axes. 
+<a name="l162"><span class="ln">162  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l163"><span class="ln">163  </span></a>
+<a name="l164"><span class="ln">164  </span></a>    <span class="s6"># Categorical plots</span>
+<a name="l165"><span class="ln">165  </span></a>    <span class="s1">stripplot</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l166"><span class="ln">166  </span></a>stripplot : Plot a categorical scatter with jitter. 
+<a name="l167"><span class="ln">167  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l168"><span class="ln">168  </span></a>    <span class="s1">swarmplot</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l169"><span class="ln">169  </span></a>swarmplot : Plot a categorical scatter with non-overlapping points. 
+<a name="l170"><span class="ln">170  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l171"><span class="ln">171  </span></a>    <span class="s1">violinplot</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l172"><span class="ln">172  </span></a>violinplot : Draw an enhanced boxplot using kernel density estimation. 
+<a name="l173"><span class="ln">173  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l174"><span class="ln">174  </span></a>    <span class="s1">pointplot</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l175"><span class="ln">175  </span></a>pointplot : Plot point estimates and CIs using markers and lines. 
+<a name="l176"><span class="ln">176  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l177"><span class="ln">177  </span></a>
+<a name="l178"><span class="ln">178  </span></a>    <span class="s6"># Multiples</span>
+<a name="l179"><span class="ln">179  </span></a>    <span class="s1">jointplot</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l180"><span class="ln">180  </span></a>jointplot : Draw a bivariate plot with univariate marginal distributions. 
+<a name="l181"><span class="ln">181  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l182"><span class="ln">182  </span></a>    <span class="s1">pairplot</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l183"><span class="ln">183  </span></a>jointplot : Draw multiple bivariate plots with univariate marginal distributions. 
+<a name="l184"><span class="ln">184  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l185"><span class="ln">185  </span></a>    <span class="s1">jointgrid</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l186"><span class="ln">186  </span></a>JointGrid : Set up a figure with joint and marginal views on bivariate data. 
+<a name="l187"><span class="ln">187  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l188"><span class="ln">188  </span></a>    <span class="s1">pairgrid</span><span class="s2">=</span><span class="s3">&quot;&quot;&quot; 
+<a name="l189"><span class="ln">189  </span></a>PairGrid : Set up a figure with joint and marginal views on multiple variables. 
+<a name="l190"><span class="ln">190  </span></a>    &quot;&quot;&quot;</span><span class="s2">,</span>
+<a name="l191"><span class="ln">191  </span></a><span class="s2">)</span>
+<a name="l192"><span class="ln">192  </span></a>
+<a name="l193"><span class="ln">193  </span></a>
+<a name="l194"><span class="ln">194  </span></a><span class="s1">_core_docs </span><span class="s2">= </span><span class="s1">dict</span><span class="s2">(</span>
+<a name="l195"><span class="ln">195  </span></a>    <span class="s1">params</span><span class="s2">=</span><span class="s1">DocstringComponents</span><span class="s2">(</span><span class="s1">_core_params</span><span class="s2">),</span>
+<a name="l196"><span class="ln">196  </span></a>    <span class="s1">returns</span><span class="s2">=</span><span class="s1">DocstringComponents</span><span class="s2">(</span><span class="s1">_core_returns</span><span class="s2">),</span>
+<a name="l197"><span class="ln">197  </span></a>    <span class="s1">seealso</span><span class="s2">=</span><span class="s1">DocstringComponents</span><span class="s2">(</span><span class="s1">_seealso_blurbs</span><span class="s2">),</span>
+<a name="l198"><span class="ln">198  </span></a><span class="s2">)</span>
+<a name="l199"><span class="ln">199  </span></a></pre>
+</body>
+</html>

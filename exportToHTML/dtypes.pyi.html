@@ -1,0 +1,104 @@
+<html>
+<head>
+<title>dtypes.pyi</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+dtypes.pyi</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">enum </span><span class="s0">import </span><span class="s1">Enum</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s1">OFFSET_TO_PERIOD_FREQSTR</span><span class="s2">: </span><span class="s1">dict</span><span class="s2">[</span><span class="s1">str</span><span class="s2">, </span><span class="s1">str</span><span class="s2">]</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">def </span><span class="s1">periods_per_day</span><span class="s2">(</span><span class="s1">reso</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= ...) </span><span class="s1">-&gt; int</span><span class="s2">: ...</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">def </span><span class="s1">periods_per_second</span><span class="s2">(</span><span class="s1">reso</span><span class="s2">: </span><span class="s1">int</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">: ...</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">def </span><span class="s1">abbrev_to_npy_unit</span><span class="s2">(</span><span class="s1">abbrev</span><span class="s2">: </span><span class="s1">str </span><span class="s2">| </span><span class="s0">None</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">: ...</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">def </span><span class="s1">freq_to_period_freqstr</span><span class="s2">(</span><span class="s1">freq_n</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">freq_name</span><span class="s2">: </span><span class="s1">str</span><span class="s2">) </span><span class="s1">-&gt; str</span><span class="s2">: ...</span>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">class </span><span class="s1">PeriodDtypeBase</span><span class="s2">:</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s1">_dtype_code</span><span class="s2">: </span><span class="s1">int  </span><span class="s3"># PeriodDtypeCode</span>
+<a name="l12"><span class="ln">12   </span></a>    <span class="s1">_n</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s3"># actually __cinit__</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s0">def </span><span class="s1">__new__</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">code</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">n</span><span class="s2">: </span><span class="s1">int</span><span class="s2">): ...</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s2">@</span><span class="s1">property</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s0">def </span><span class="s1">_freq_group_code</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">: ...</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s2">@</span><span class="s1">property</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s0">def </span><span class="s1">_resolution_obj</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; Resolution</span><span class="s2">: ...</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s0">def </span><span class="s1">_get_to_timestamp_base</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">: ...</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s2">@</span><span class="s1">property</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s0">def </span><span class="s1">_freqstr</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; str</span><span class="s2">: ...</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s0">def </span><span class="s1">__hash__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">: ...</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s0">def </span><span class="s1">_is_tick_like</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; bool</span><span class="s2">: ...</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s2">@</span><span class="s1">property</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s0">def </span><span class="s1">_creso</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; int</span><span class="s2">: ...</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s2">@</span><span class="s1">property</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s0">def </span><span class="s1">_td64_unit</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; str</span><span class="s2">: ...</span>
+<a name="l29"><span class="ln">29   </span></a>
+<a name="l30"><span class="ln">30   </span></a><span class="s0">class </span><span class="s1">FreqGroup</span><span class="s2">(</span><span class="s1">Enum</span><span class="s2">):</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s1">FR_ANN</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">FR_QTR</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s1">FR_MTH</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s1">FR_WK</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s1">FR_BUS</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s1">FR_DAY</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s1">FR_HR</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s1">FR_MIN</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s1">FR_SEC</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s1">FR_MS</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s1">FR_US</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s1">FR_NS</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s1">FR_UND</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s2">@</span><span class="s1">staticmethod</span>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s0">def </span><span class="s1">from_period_dtype_code</span><span class="s2">(</span><span class="s1">code</span><span class="s2">: </span><span class="s1">int</span><span class="s2">) </span><span class="s1">-&gt; FreqGroup</span><span class="s2">: ...</span>
+<a name="l46"><span class="ln">46   </span></a>
+<a name="l47"><span class="ln">47   </span></a><span class="s0">class </span><span class="s1">Resolution</span><span class="s2">(</span><span class="s1">Enum</span><span class="s2">):</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s1">RESO_NS</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s1">RESO_US</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l50"><span class="ln">50   </span></a>    <span class="s1">RESO_MS</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l51"><span class="ln">51   </span></a>    <span class="s1">RESO_SEC</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l52"><span class="ln">52   </span></a>    <span class="s1">RESO_MIN</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l53"><span class="ln">53   </span></a>    <span class="s1">RESO_HR</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s1">RESO_DAY</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s1">RESO_MTH</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l56"><span class="ln">56   </span></a>    <span class="s1">RESO_QTR</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s1">RESO_YR</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s0">def </span><span class="s1">__lt__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">: </span><span class="s1">Resolution</span><span class="s2">) </span><span class="s1">-&gt; bool</span><span class="s2">: ...</span>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s0">def </span><span class="s1">__ge__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">other</span><span class="s2">: </span><span class="s1">Resolution</span><span class="s2">) </span><span class="s1">-&gt; bool</span><span class="s2">: ...</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s2">@</span><span class="s1">property</span>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s0">def </span><span class="s1">attrname</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; str</span><span class="s2">: ...</span>
+<a name="l62"><span class="ln">62   </span></a>    <span class="s2">@</span><span class="s1">classmethod</span>
+<a name="l63"><span class="ln">63   </span></a>    <span class="s0">def </span><span class="s1">from_attrname</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">attrname</span><span class="s2">: </span><span class="s1">str</span><span class="s2">) </span><span class="s1">-&gt; Resolution</span><span class="s2">: ...</span>
+<a name="l64"><span class="ln">64   </span></a>    <span class="s2">@</span><span class="s1">classmethod</span>
+<a name="l65"><span class="ln">65   </span></a>    <span class="s0">def </span><span class="s1">get_reso_from_freqstr</span><span class="s2">(</span><span class="s1">cls</span><span class="s2">, </span><span class="s1">freq</span><span class="s2">: </span><span class="s1">str</span><span class="s2">) </span><span class="s1">-&gt; Resolution</span><span class="s2">: ...</span>
+<a name="l66"><span class="ln">66   </span></a>    <span class="s2">@</span><span class="s1">property</span>
+<a name="l67"><span class="ln">67   </span></a>    <span class="s0">def </span><span class="s1">attr_abbrev</span><span class="s2">(</span><span class="s1">self</span><span class="s2">) </span><span class="s1">-&gt; str</span><span class="s2">: ...</span>
+<a name="l68"><span class="ln">68   </span></a>
+<a name="l69"><span class="ln">69   </span></a><span class="s0">class </span><span class="s1">NpyDatetimeUnit</span><span class="s2">(</span><span class="s1">Enum</span><span class="s2">):</span>
+<a name="l70"><span class="ln">70   </span></a>    <span class="s1">NPY_FR_Y</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s1">NPY_FR_M</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s1">NPY_FR_W</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l73"><span class="ln">73   </span></a>    <span class="s1">NPY_FR_D</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s1">NPY_FR_h</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l75"><span class="ln">75   </span></a>    <span class="s1">NPY_FR_m</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l76"><span class="ln">76   </span></a>    <span class="s1">NPY_FR_s</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l77"><span class="ln">77   </span></a>    <span class="s1">NPY_FR_ms</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l78"><span class="ln">78   </span></a>    <span class="s1">NPY_FR_us</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l79"><span class="ln">79   </span></a>    <span class="s1">NPY_FR_ns</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l80"><span class="ln">80   </span></a>    <span class="s1">NPY_FR_ps</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l81"><span class="ln">81   </span></a>    <span class="s1">NPY_FR_fs</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l82"><span class="ln">82   </span></a>    <span class="s1">NPY_FR_as</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l83"><span class="ln">83   </span></a>    <span class="s1">NPY_FR_GENERIC</span><span class="s2">: </span><span class="s1">int</span>
+<a name="l84"><span class="ln">84   </span></a></pre>
+</body>
+</html>

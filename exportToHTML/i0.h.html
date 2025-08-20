@@ -1,0 +1,172 @@
+<html>
+<head>
+<title>i0.h</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #6aab73;}
+.s4 { color: #c77dbb;}
+.s5 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+i0.h</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">/* Translated into C++ by SciPy developers in 2024. 
+<a name="l2"><span class="ln">2    </span></a> * Original header with Copyright information appears below. 
+<a name="l3"><span class="ln">3    </span></a> */</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">/*                                                     i0.c 
+<a name="l6"><span class="ln">6    </span></a> * 
+<a name="l7"><span class="ln">7    </span></a> *     Modified Bessel function of order zero 
+<a name="l8"><span class="ln">8    </span></a> * 
+<a name="l9"><span class="ln">9    </span></a> * 
+<a name="l10"><span class="ln">10   </span></a> * 
+<a name="l11"><span class="ln">11   </span></a> * SYNOPSIS: 
+<a name="l12"><span class="ln">12   </span></a> * 
+<a name="l13"><span class="ln">13   </span></a> * double x, y, i0(); 
+<a name="l14"><span class="ln">14   </span></a> * 
+<a name="l15"><span class="ln">15   </span></a> * y = i0( x ); 
+<a name="l16"><span class="ln">16   </span></a> * 
+<a name="l17"><span class="ln">17   </span></a> * 
+<a name="l18"><span class="ln">18   </span></a> * 
+<a name="l19"><span class="ln">19   </span></a> * DESCRIPTION: 
+<a name="l20"><span class="ln">20   </span></a> * 
+<a name="l21"><span class="ln">21   </span></a> * Returns modified Bessel function of order zero of the 
+<a name="l22"><span class="ln">22   </span></a> * argument. 
+<a name="l23"><span class="ln">23   </span></a> * 
+<a name="l24"><span class="ln">24   </span></a> * The function is defined as i0(x) = j0( ix ). 
+<a name="l25"><span class="ln">25   </span></a> * 
+<a name="l26"><span class="ln">26   </span></a> * The range is partitioned into the two intervals [0,8] and 
+<a name="l27"><span class="ln">27   </span></a> * (8, infinity).  Chebyshev polynomial expansions are employed 
+<a name="l28"><span class="ln">28   </span></a> * in each interval. 
+<a name="l29"><span class="ln">29   </span></a> * 
+<a name="l30"><span class="ln">30   </span></a> * 
+<a name="l31"><span class="ln">31   </span></a> * 
+<a name="l32"><span class="ln">32   </span></a> * ACCURACY: 
+<a name="l33"><span class="ln">33   </span></a> * 
+<a name="l34"><span class="ln">34   </span></a> *                      Relative error: 
+<a name="l35"><span class="ln">35   </span></a> * arithmetic   domain     # trials      peak         rms 
+<a name="l36"><span class="ln">36   </span></a> *    IEEE      0,30        30000       5.8e-16     1.4e-16 
+<a name="l37"><span class="ln">37   </span></a> * 
+<a name="l38"><span class="ln">38   </span></a> */</span>
+<a name="l39"><span class="ln">39   </span></a><span class="s0">/*                          i0e.c 
+<a name="l40"><span class="ln">40   </span></a> * 
+<a name="l41"><span class="ln">41   </span></a> *  Modified Bessel function of order zero, 
+<a name="l42"><span class="ln">42   </span></a> *  exponentially scaled 
+<a name="l43"><span class="ln">43   </span></a> * 
+<a name="l44"><span class="ln">44   </span></a> * 
+<a name="l45"><span class="ln">45   </span></a> * 
+<a name="l46"><span class="ln">46   </span></a> * SYNOPSIS: 
+<a name="l47"><span class="ln">47   </span></a> * 
+<a name="l48"><span class="ln">48   </span></a> * double x, y, i0e(); 
+<a name="l49"><span class="ln">49   </span></a> * 
+<a name="l50"><span class="ln">50   </span></a> * y = i0e( x ); 
+<a name="l51"><span class="ln">51   </span></a> * 
+<a name="l52"><span class="ln">52   </span></a> * 
+<a name="l53"><span class="ln">53   </span></a> * 
+<a name="l54"><span class="ln">54   </span></a> * DESCRIPTION: 
+<a name="l55"><span class="ln">55   </span></a> * 
+<a name="l56"><span class="ln">56   </span></a> * Returns exponentially scaled modified Bessel function 
+<a name="l57"><span class="ln">57   </span></a> * of order zero of the argument. 
+<a name="l58"><span class="ln">58   </span></a> * 
+<a name="l59"><span class="ln">59   </span></a> * The function is defined as i0e(x) = exp(-|x|) j0( ix ). 
+<a name="l60"><span class="ln">60   </span></a> * 
+<a name="l61"><span class="ln">61   </span></a> * 
+<a name="l62"><span class="ln">62   </span></a> * 
+<a name="l63"><span class="ln">63   </span></a> * ACCURACY: 
+<a name="l64"><span class="ln">64   </span></a> * 
+<a name="l65"><span class="ln">65   </span></a> *                      Relative error: 
+<a name="l66"><span class="ln">66   </span></a> * arithmetic   domain     # trials      peak         rms 
+<a name="l67"><span class="ln">67   </span></a> *    IEEE      0,30        30000       5.4e-16     1.2e-16 
+<a name="l68"><span class="ln">68   </span></a> * See i0(). 
+<a name="l69"><span class="ln">69   </span></a> * 
+<a name="l70"><span class="ln">70   </span></a> */</span>
+<a name="l71"><span class="ln">71   </span></a>
+<a name="l72"><span class="ln">72   </span></a><span class="s0">/*                                                     i0.c            */</span>
+<a name="l73"><span class="ln">73   </span></a>
+<a name="l74"><span class="ln">74   </span></a><span class="s0">/* 
+<a name="l75"><span class="ln">75   </span></a> * Cephes Math Library Release 2.8:  June, 2000 
+<a name="l76"><span class="ln">76   </span></a> * Copyright 1984, 1987, 2000 by Stephen L. Moshier 
+<a name="l77"><span class="ln">77   </span></a> */</span>
+<a name="l78"><span class="ln">78   </span></a><span class="s1">#pragma once</span>
+<a name="l79"><span class="ln">79   </span></a>
+<a name="l80"><span class="ln">80   </span></a><span class="s2">#include </span><span class="s3">&quot;../config.h&quot;</span>
+<a name="l81"><span class="ln">81   </span></a><span class="s2">#include </span><span class="s3">&quot;chbevl.h&quot;</span>
+<a name="l82"><span class="ln">82   </span></a>
+<a name="l83"><span class="ln">83   </span></a><span class="s4">namespace </span><span class="s1">xsf {</span>
+<a name="l84"><span class="ln">84   </span></a><span class="s4">namespace </span><span class="s1">cephes {</span>
+<a name="l85"><span class="ln">85   </span></a>
+<a name="l86"><span class="ln">86   </span></a>    <span class="s4">namespace </span><span class="s1">detail {</span>
+<a name="l87"><span class="ln">87   </span></a>
+<a name="l88"><span class="ln">88   </span></a>        <span class="s0">/* Chebyshev coefficients for exp(-x) I0(x) 
+<a name="l89"><span class="ln">89   </span></a>         * in the interval [0,8]. 
+<a name="l90"><span class="ln">90   </span></a>         * 
+<a name="l91"><span class="ln">91   </span></a>         * lim(x-&gt;0){ exp(-x) I0(x) } = 1. 
+<a name="l92"><span class="ln">92   </span></a>         */</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s1">constexpr </span><span class="s2">double </span><span class="s1">i0_A[] = {</span>
+<a name="l94"><span class="ln">94   </span></a>            <span class="s1">-</span><span class="s5">4</span><span class="s1">.</span><span class="s5">41534164647933937950</span><span class="s1">E-18, </span><span class="s5">3</span><span class="s1">.</span><span class="s5">33079451882223809783</span><span class="s1">E-17,  -</span><span class="s5">2</span><span class="s1">.</span><span class="s5">43127984654795469359</span><span class="s1">E-16,</span>
+<a name="l95"><span class="ln">95   </span></a>            <span class="s5">1</span><span class="s1">.</span><span class="s5">71539128555513303061</span><span class="s1">E-15,  -</span><span class="s5">1</span><span class="s1">.</span><span class="s5">16853328779934516808</span><span class="s1">E-14, </span><span class="s5">7</span><span class="s1">.</span><span class="s5">67618549860493561688</span><span class="s1">E-14,</span>
+<a name="l96"><span class="ln">96   </span></a>            <span class="s1">-</span><span class="s5">4</span><span class="s1">.</span><span class="s5">85644678311192946090</span><span class="s1">E-13, </span><span class="s5">2</span><span class="s1">.</span><span class="s5">95505266312963983461</span><span class="s1">E-12,  -</span><span class="s5">1</span><span class="s1">.</span><span class="s5">72682629144155570723</span><span class="s1">E-11,</span>
+<a name="l97"><span class="ln">97   </span></a>            <span class="s5">9</span><span class="s1">.</span><span class="s5">67580903537323691224</span><span class="s1">E-11,  -</span><span class="s5">5</span><span class="s1">.</span><span class="s5">18979560163526290666</span><span class="s1">E-10, </span><span class="s5">2</span><span class="s1">.</span><span class="s5">65982372468238665035</span><span class="s1">E-9,</span>
+<a name="l98"><span class="ln">98   </span></a>            <span class="s1">-</span><span class="s5">1</span><span class="s1">.</span><span class="s5">30002500998624804212</span><span class="s1">E-8,  </span><span class="s5">6</span><span class="s1">.</span><span class="s5">04699502254191894932</span><span class="s1">E-8,   -</span><span class="s5">2</span><span class="s1">.</span><span class="s5">67079385394061173391</span><span class="s1">E-7,</span>
+<a name="l99"><span class="ln">99   </span></a>            <span class="s5">1</span><span class="s1">.</span><span class="s5">11738753912010371815</span><span class="s1">E-6,   -</span><span class="s5">4</span><span class="s1">.</span><span class="s5">41673835845875056359</span><span class="s1">E-6,  </span><span class="s5">1</span><span class="s1">.</span><span class="s5">64484480707288970893</span><span class="s1">E-5,</span>
+<a name="l100"><span class="ln">100  </span></a>            <span class="s1">-</span><span class="s5">5</span><span class="s1">.</span><span class="s5">75419501008210370398</span><span class="s1">E-5,  </span><span class="s5">1</span><span class="s1">.</span><span class="s5">88502885095841655729</span><span class="s1">E-4,   -</span><span class="s5">5</span><span class="s1">.</span><span class="s5">76375574538582365885</span><span class="s1">E-4,</span>
+<a name="l101"><span class="ln">101  </span></a>            <span class="s5">1</span><span class="s1">.</span><span class="s5">63947561694133579842</span><span class="s1">E-3,   -</span><span class="s5">4</span><span class="s1">.</span><span class="s5">32430999505057594430</span><span class="s1">E-3,  </span><span class="s5">1</span><span class="s1">.</span><span class="s5">05464603945949983183</span><span class="s1">E-2,</span>
+<a name="l102"><span class="ln">102  </span></a>            <span class="s1">-</span><span class="s5">2</span><span class="s1">.</span><span class="s5">37374148058994688156</span><span class="s1">E-2,  </span><span class="s5">4</span><span class="s1">.</span><span class="s5">93052842396707084878</span><span class="s1">E-2,   -</span><span class="s5">9</span><span class="s1">.</span><span class="s5">49010970480476444210</span><span class="s1">E-2,</span>
+<a name="l103"><span class="ln">103  </span></a>            <span class="s5">1</span><span class="s1">.</span><span class="s5">71620901522208775349</span><span class="s1">E-1,   -</span><span class="s5">3</span><span class="s1">.</span><span class="s5">04682672343198398683</span><span class="s1">E-1,  </span><span class="s5">6</span><span class="s1">.</span><span class="s5">76795274409476084995</span><span class="s1">E-1};</span>
+<a name="l104"><span class="ln">104  </span></a>
+<a name="l105"><span class="ln">105  </span></a>        <span class="s0">/* Chebyshev coefficients for exp(-x) sqrt(x) I0(x) 
+<a name="l106"><span class="ln">106  </span></a>         * in the inverted interval [8,infinity]. 
+<a name="l107"><span class="ln">107  </span></a>         * 
+<a name="l108"><span class="ln">108  </span></a>         * lim(x-&gt;inf){ exp(-x) sqrt(x) I0(x) } = 1/sqrt(2pi). 
+<a name="l109"><span class="ln">109  </span></a>         */</span>
+<a name="l110"><span class="ln">110  </span></a>        <span class="s1">constexpr </span><span class="s2">double </span><span class="s1">i0_B[] = {</span>
+<a name="l111"><span class="ln">111  </span></a>            <span class="s1">-</span><span class="s5">7</span><span class="s1">.</span><span class="s5">23318048787475395456</span><span class="s1">E-18, -</span><span class="s5">4</span><span class="s1">.</span><span class="s5">83050448594418207126</span><span class="s1">E-18, </span><span class="s5">4</span><span class="s1">.</span><span class="s5">46562142029675999901</span><span class="s1">E-17,</span>
+<a name="l112"><span class="ln">112  </span></a>            <span class="s5">3</span><span class="s1">.</span><span class="s5">46122286769746109310</span><span class="s1">E-17,  -</span><span class="s5">2</span><span class="s1">.</span><span class="s5">82762398051658348494</span><span class="s1">E-16, -</span><span class="s5">3</span><span class="s1">.</span><span class="s5">42548561967721913462</span><span class="s1">E-16,</span>
+<a name="l113"><span class="ln">113  </span></a>            <span class="s5">1</span><span class="s1">.</span><span class="s5">77256013305652638360</span><span class="s1">E-15,  </span><span class="s5">3</span><span class="s1">.</span><span class="s5">81168066935262242075</span><span class="s1">E-15,  -</span><span class="s5">9</span><span class="s1">.</span><span class="s5">55484669882830764870</span><span class="s1">E-15,</span>
+<a name="l114"><span class="ln">114  </span></a>            <span class="s1">-</span><span class="s5">4</span><span class="s1">.</span><span class="s5">15056934728722208663</span><span class="s1">E-14, </span><span class="s5">1</span><span class="s1">.</span><span class="s5">54008621752140982691</span><span class="s1">E-14,  </span><span class="s5">3</span><span class="s1">.</span><span class="s5">85277838274214270114</span><span class="s1">E-13,</span>
+<a name="l115"><span class="ln">115  </span></a>            <span class="s5">7</span><span class="s1">.</span><span class="s5">18012445138366623367</span><span class="s1">E-13,  -</span><span class="s5">1</span><span class="s1">.</span><span class="s5">79417853150680611778</span><span class="s1">E-12, -</span><span class="s5">1</span><span class="s1">.</span><span class="s5">32158118404477131188</span><span class="s1">E-11,</span>
+<a name="l116"><span class="ln">116  </span></a>            <span class="s1">-</span><span class="s5">3</span><span class="s1">.</span><span class="s5">14991652796324136454</span><span class="s1">E-11, </span><span class="s5">1</span><span class="s1">.</span><span class="s5">18891471078464383424</span><span class="s1">E-11,  </span><span class="s5">4</span><span class="s1">.</span><span class="s5">94060238822496958910</span><span class="s1">E-10,</span>
+<a name="l117"><span class="ln">117  </span></a>            <span class="s5">3</span><span class="s1">.</span><span class="s5">39623202570838634515</span><span class="s1">E-9,   </span><span class="s5">2</span><span class="s1">.</span><span class="s5">26666899049817806459</span><span class="s1">E-8,   </span><span class="s5">2</span><span class="s1">.</span><span class="s5">04891858946906374183</span><span class="s1">E-7,</span>
+<a name="l118"><span class="ln">118  </span></a>            <span class="s5">2</span><span class="s1">.</span><span class="s5">89137052083475648297</span><span class="s1">E-6,   </span><span class="s5">6</span><span class="s1">.</span><span class="s5">88975834691682398426</span><span class="s1">E-5,   </span><span class="s5">3</span><span class="s1">.</span><span class="s5">36911647825569408990</span><span class="s1">E-3,</span>
+<a name="l119"><span class="ln">119  </span></a>            <span class="s5">8</span><span class="s1">.</span><span class="s5">04490411014108831608</span><span class="s1">E-1};</span>
+<a name="l120"><span class="ln">120  </span></a>    <span class="s1">} </span><span class="s0">// namespace detail</span>
+<a name="l121"><span class="ln">121  </span></a>
+<a name="l122"><span class="ln">122  </span></a>    <span class="s1">XSF_HOST_DEVICE </span><span class="s4">inline </span><span class="s2">double </span><span class="s1">i0(</span><span class="s2">double </span><span class="s1">x) {</span>
+<a name="l123"><span class="ln">123  </span></a>        <span class="s2">double </span><span class="s1">y;</span>
+<a name="l124"><span class="ln">124  </span></a>
+<a name="l125"><span class="ln">125  </span></a>        <span class="s2">if </span><span class="s1">(x &lt; </span><span class="s5">0</span><span class="s1">)</span>
+<a name="l126"><span class="ln">126  </span></a>            <span class="s1">x = -x;</span>
+<a name="l127"><span class="ln">127  </span></a>        <span class="s2">if </span><span class="s1">(x &lt;= </span><span class="s5">8.0</span><span class="s1">) {</span>
+<a name="l128"><span class="ln">128  </span></a>            <span class="s1">y = (x / </span><span class="s5">2.0</span><span class="s1">) - </span><span class="s5">2.0</span><span class="s1">;</span>
+<a name="l129"><span class="ln">129  </span></a>            <span class="s2">return </span><span class="s1">(std::exp(x) * chbevl(y, detail::i0_A, </span><span class="s5">30</span><span class="s1">));</span>
+<a name="l130"><span class="ln">130  </span></a>        <span class="s1">}</span>
+<a name="l131"><span class="ln">131  </span></a>
+<a name="l132"><span class="ln">132  </span></a>        <span class="s2">return </span><span class="s1">(std::exp(x) * chbevl(</span><span class="s5">32.0 </span><span class="s1">/ x - </span><span class="s5">2.0</span><span class="s1">, detail::i0_B, </span><span class="s5">25</span><span class="s1">) / sqrt(x));</span>
+<a name="l133"><span class="ln">133  </span></a>    <span class="s1">}</span>
+<a name="l134"><span class="ln">134  </span></a>
+<a name="l135"><span class="ln">135  </span></a>    <span class="s1">XSF_HOST_DEVICE </span><span class="s4">inline </span><span class="s2">double </span><span class="s1">i0e(</span><span class="s2">double </span><span class="s1">x) {</span>
+<a name="l136"><span class="ln">136  </span></a>        <span class="s2">double </span><span class="s1">y;</span>
+<a name="l137"><span class="ln">137  </span></a>
+<a name="l138"><span class="ln">138  </span></a>        <span class="s2">if </span><span class="s1">(x &lt; </span><span class="s5">0</span><span class="s1">)</span>
+<a name="l139"><span class="ln">139  </span></a>            <span class="s1">x = -x;</span>
+<a name="l140"><span class="ln">140  </span></a>        <span class="s2">if </span><span class="s1">(x &lt;= </span><span class="s5">8.0</span><span class="s1">) {</span>
+<a name="l141"><span class="ln">141  </span></a>            <span class="s1">y = (x / </span><span class="s5">2.0</span><span class="s1">) - </span><span class="s5">2.0</span><span class="s1">;</span>
+<a name="l142"><span class="ln">142  </span></a>            <span class="s2">return </span><span class="s1">(chbevl(y, detail::i0_A, </span><span class="s5">30</span><span class="s1">));</span>
+<a name="l143"><span class="ln">143  </span></a>        <span class="s1">}</span>
+<a name="l144"><span class="ln">144  </span></a>
+<a name="l145"><span class="ln">145  </span></a>        <span class="s2">return </span><span class="s1">(chbevl(</span><span class="s5">32.0 </span><span class="s1">/ x - </span><span class="s5">2.0</span><span class="s1">, detail::i0_B, </span><span class="s5">25</span><span class="s1">) / std::sqrt(x));</span>
+<a name="l146"><span class="ln">146  </span></a>    <span class="s1">}</span>
+<a name="l147"><span class="ln">147  </span></a>
+<a name="l148"><span class="ln">148  </span></a><span class="s1">} </span><span class="s0">// namespace cephes</span>
+<a name="l149"><span class="ln">149  </span></a><span class="s1">} </span><span class="s0">// namespace xsf</span>
+<a name="l150"><span class="ln">150  </span></a></pre>
+</body>
+</html>

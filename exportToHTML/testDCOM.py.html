@@ -1,0 +1,73 @@
+<html>
+<head>
+<title>testDCOM.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #cf8e6d;}
+.s5 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+testDCOM.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># testDCOM</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s1">usage </span><span class="s2">= </span><span class="s3">&quot;&quot;&quot;</span><span class="s4">\ 
+<a name="l3"><span class="ln">3    </span></a></span><span class="s3">testDCOM.py - Simple DCOM test 
+<a name="l4"><span class="ln">4    </span></a>Usage: testDCOM.py serverName 
+<a name="l5"><span class="ln">5    </span></a> 
+<a name="l6"><span class="ln">6    </span></a>Attempts to start the Python.Interpreter object on the named machine, 
+<a name="l7"><span class="ln">7    </span></a>and checks that the object is indeed running remotely. 
+<a name="l8"><span class="ln">8    </span></a> 
+<a name="l9"><span class="ln">9    </span></a>Requires the named server be configured to run DCOM (using dcomcnfg.exe), 
+<a name="l10"><span class="ln">10   </span></a>and the Python.Interpreter object installed and registered on that machine. 
+<a name="l11"><span class="ln">11   </span></a> 
+<a name="l12"><span class="ln">12   </span></a>The Python.Interpreter object must be installed on the local machine, 
+<a name="l13"><span class="ln">13   </span></a>but no special DCOM configuration should be necessary. 
+<a name="l14"><span class="ln">14   </span></a>&quot;&quot;&quot;</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s4">import </span><span class="s1">sys</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s0"># NOTE: If you configured the object locally using dcomcnfg, you could</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s0"># simple use Dispatch rather than DispatchEx.</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s4">import </span><span class="s1">pythoncom</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s4">import </span><span class="s1">win32api</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s4">import </span><span class="s1">win32com</span><span class="s2">.</span><span class="s1">client</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a><span class="s4">def </span><span class="s1">test</span><span class="s2">(</span><span class="s1">serverName</span><span class="s2">):</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s4">if </span><span class="s1">serverName</span><span class="s2">.</span><span class="s1">lower</span><span class="s2">() == </span><span class="s1">win32api</span><span class="s2">.</span><span class="s1">GetComputerName</span><span class="s2">().</span><span class="s1">lower</span><span class="s2">():</span>
+<a name="l26"><span class="ln">26   </span></a>        <span class="s1">print</span><span class="s2">(</span><span class="s3">&quot;You must specify a remote server name, not the local machine!&quot;</span><span class="s2">)</span>
+<a name="l27"><span class="ln">27   </span></a>        <span class="s4">return</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s0"># Hack to overcome a DCOM limitation.  As the Python.Interpreter object</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s0"># is probably installed locally as an InProc object, DCOM seems to ignore</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s0"># all settings, and use the local object.</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">clsctx </span><span class="s2">= </span><span class="s1">pythoncom</span><span class="s2">.</span><span class="s1">CLSCTX_SERVER </span><span class="s2">&amp; ~</span><span class="s1">pythoncom</span><span class="s2">.</span><span class="s1">CLSCTX_INPROC_SERVER</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s1">ob </span><span class="s2">= </span><span class="s1">win32com</span><span class="s2">.</span><span class="s1">client</span><span class="s2">.</span><span class="s1">DispatchEx</span><span class="s2">(</span><span class="s3">&quot;Python.Interpreter&quot;</span><span class="s2">, </span><span class="s1">serverName</span><span class="s2">, </span><span class="s1">clsctx</span><span class="s2">=</span><span class="s1">clsctx</span><span class="s2">)</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s1">ob</span><span class="s2">.</span><span class="s1">Exec</span><span class="s2">(</span><span class="s3">&quot;import win32api&quot;</span><span class="s2">)</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s1">actualName </span><span class="s2">= </span><span class="s1">ob</span><span class="s2">.</span><span class="s1">Eval</span><span class="s2">(</span><span class="s3">&quot;win32api.GetComputerName()&quot;</span><span class="s2">)</span>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s4">if </span><span class="s1">serverName</span><span class="s2">.</span><span class="s1">lower</span><span class="s2">() != </span><span class="s1">actualName</span><span class="s2">.</span><span class="s1">lower</span><span class="s2">():</span>
+<a name="l37"><span class="ln">37   </span></a>        <span class="s1">print</span><span class="s2">(</span>
+<a name="l38"><span class="ln">38   </span></a>            <span class="s3">&quot;Error: The object created on server '{}' reported its name as '{}'&quot;</span><span class="s2">.</span><span class="s1">format</span><span class="s2">(</span>
+<a name="l39"><span class="ln">39   </span></a>                <span class="s1">serverName</span><span class="s2">, </span><span class="s1">actualName</span>
+<a name="l40"><span class="ln">40   </span></a>            <span class="s2">)</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s2">)</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s4">else</span><span class="s2">:</span>
+<a name="l43"><span class="ln">43   </span></a>        <span class="s1">print</span><span class="s2">(</span><span class="s3">&quot;Object created and tested OK on server '%s'&quot; </span><span class="s2">% </span><span class="s1">serverName</span><span class="s2">)</span>
+<a name="l44"><span class="ln">44   </span></a>
+<a name="l45"><span class="ln">45   </span></a>
+<a name="l46"><span class="ln">46   </span></a><span class="s4">if </span><span class="s1">__name__ </span><span class="s2">== </span><span class="s3">&quot;__main__&quot;</span><span class="s2">:</span>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s4">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">) == </span><span class="s5">2</span><span class="s2">:</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s1">test</span><span class="s2">(</span><span class="s1">sys</span><span class="s2">.</span><span class="s1">argv</span><span class="s2">[</span><span class="s5">1</span><span class="s2">])</span>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s4">else</span><span class="s2">:</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s1">print</span><span class="s2">(</span><span class="s1">usage</span><span class="s2">)</span>
+<a name="l51"><span class="ln">51   </span></a></pre>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<html>
+<head>
+<title>inputhookglut.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #2aacb8;}
+.s6 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+inputhookglut.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># coding: utf-8</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s2">&quot;&quot;&quot; 
+<a name="l3"><span class="ln">3    </span></a>GLUT Inputhook support functions 
+<a name="l4"><span class="ln">4    </span></a>&quot;&quot;&quot;</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">#  Copyright (C) 2008-2011  The IPython Development Team</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">#</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0">#  Distributed under the terms of the BSD License.  The full license is in</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">#  the file COPYING, distributed as part of this software.</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a><span class="s0"># GLUT is quite an old library and it is difficult to ensure proper</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s0"># integration within IPython since original GLUT does not allow to handle</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s0"># events one by one. Instead, it requires for the mainloop to be entered</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s0"># and never returned (there is not even a function to exit he</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s0"># mainloop). Fortunately, there are alternatives such as freeglut</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s0"># (available for linux and windows) and the OSX implementation gives</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s0"># access to a glutCheckLoop() function that blocks itself until a new</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s0"># event is received. This means we have to setup the idle callback to</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s0"># ensure we got at least one event that will unblock the function.</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s0">#</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s0"># Furthermore, it is not possible to install these handlers without a window</span>
+<a name="l24"><span class="ln">24   </span></a><span class="s0"># being first created. We choose to make this window invisible. This means that</span>
+<a name="l25"><span class="ln">25   </span></a><span class="s0"># display mode options are set at this level and user won't be able to change</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s0"># them later without modifying the code. This should probably be made available</span>
+<a name="l27"><span class="ln">27   </span></a><span class="s0"># via IPython options system.</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l30"><span class="ln">30   </span></a><span class="s0"># Imports</span>
+<a name="l31"><span class="ln">31   </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l32"><span class="ln">32   </span></a><span class="s3">import </span><span class="s1">os</span>
+<a name="l33"><span class="ln">33   </span></a><span class="s3">import </span><span class="s1">sys</span>
+<a name="l34"><span class="ln">34   </span></a><span class="s3">from </span><span class="s1">_pydev_bundle</span><span class="s4">.</span><span class="s1">_pydev_saved_modules </span><span class="s3">import </span><span class="s1">time</span>
+<a name="l35"><span class="ln">35   </span></a><span class="s3">import </span><span class="s1">signal</span>
+<a name="l36"><span class="ln">36   </span></a><span class="s3">import </span><span class="s1">OpenGL</span><span class="s4">.</span><span class="s1">GLUT </span><span class="s3">as </span><span class="s1">glut  </span><span class="s0"># @UnresolvedImport</span>
+<a name="l37"><span class="ln">37   </span></a><span class="s3">import </span><span class="s1">OpenGL</span><span class="s4">.</span><span class="s1">platform </span><span class="s3">as </span><span class="s1">platform  </span><span class="s0"># @UnresolvedImport</span>
+<a name="l38"><span class="ln">38   </span></a><span class="s3">from </span><span class="s1">timeit </span><span class="s3">import </span><span class="s1">default_timer </span><span class="s3">as </span><span class="s1">clock</span>
+<a name="l39"><span class="ln">39   </span></a><span class="s3">from </span><span class="s1">pydev_ipython</span><span class="s4">.</span><span class="s1">inputhook </span><span class="s3">import </span><span class="s1">stdin_ready</span>
+<a name="l40"><span class="ln">40   </span></a>
+<a name="l41"><span class="ln">41   </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l42"><span class="ln">42   </span></a><span class="s0"># Constants</span>
+<a name="l43"><span class="ln">43   </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l44"><span class="ln">44   </span></a>
+<a name="l45"><span class="ln">45   </span></a><span class="s0"># Frame per second : 60</span>
+<a name="l46"><span class="ln">46   </span></a><span class="s0"># Should probably be an IPython option</span>
+<a name="l47"><span class="ln">47   </span></a><span class="s1">glut_fps </span><span class="s4">= </span><span class="s5">60</span>
+<a name="l48"><span class="ln">48   </span></a>
+<a name="l49"><span class="ln">49   </span></a><span class="s0"># Display mode : double buffeed + rgba + depth</span>
+<a name="l50"><span class="ln">50   </span></a><span class="s0"># Should probably be an IPython option</span>
+<a name="l51"><span class="ln">51   </span></a><span class="s1">glut_display_mode </span><span class="s4">= </span><span class="s1">glut</span><span class="s4">.</span><span class="s1">GLUT_DOUBLE </span><span class="s4">| </span><span class="s1">glut</span><span class="s4">.</span><span class="s1">GLUT_RGBA </span><span class="s4">| </span><span class="s1">glut</span><span class="s4">.</span><span class="s1">GLUT_DEPTH</span>
+<a name="l52"><span class="ln">52   </span></a>
+<a name="l53"><span class="ln">53   </span></a><span class="s1">glutMainLoopEvent </span><span class="s4">= </span><span class="s3">None</span>
+<a name="l54"><span class="ln">54   </span></a><span class="s3">if </span><span class="s1">sys</span><span class="s4">.</span><span class="s1">platform </span><span class="s4">== </span><span class="s6">&quot;darwin&quot;</span><span class="s4">:</span>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s3">try</span><span class="s4">:</span>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s1">glutCheckLoop </span><span class="s4">= </span><span class="s1">platform</span><span class="s4">.</span><span class="s1">createBaseFunction</span><span class="s4">(</span>
+<a name="l57"><span class="ln">57   </span></a>            <span class="s6">&quot;glutCheckLoop&quot;</span><span class="s4">,</span>
+<a name="l58"><span class="ln">58   </span></a>            <span class="s1">dll</span><span class="s4">=</span><span class="s1">platform</span><span class="s4">.</span><span class="s1">GLUT</span><span class="s4">,</span>
+<a name="l59"><span class="ln">59   </span></a>            <span class="s1">resultType</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l60"><span class="ln">60   </span></a>            <span class="s1">argTypes</span><span class="s4">=[],</span>
+<a name="l61"><span class="ln">61   </span></a>            <span class="s1">doc</span><span class="s4">=</span><span class="s6">&quot;glutCheckLoop(  ) -&gt; None&quot;</span><span class="s4">,</span>
+<a name="l62"><span class="ln">62   </span></a>            <span class="s1">argNames</span><span class="s4">=(),</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s4">)</span>
+<a name="l64"><span class="ln">64   </span></a>    <span class="s3">except </span><span class="s1">AttributeError</span><span class="s4">:</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s3">raise </span><span class="s1">RuntimeError</span><span class="s4">(</span><span class="s6">&quot;&quot;&quot;Your glut implementation does not allow interactive sessions&quot;&quot;&quot; &quot;&quot;&quot;Consider installing freeglut.&quot;&quot;&quot;</span><span class="s4">)</span>
+<a name="l66"><span class="ln">66   </span></a>    <span class="s1">glutMainLoopEvent </span><span class="s4">= </span><span class="s1">glutCheckLoop</span>
+<a name="l67"><span class="ln">67   </span></a><span class="s3">elif </span><span class="s1">glut</span><span class="s4">.</span><span class="s1">HAVE_FREEGLUT</span><span class="s4">:</span>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s1">glutMainLoopEvent </span><span class="s4">= </span><span class="s1">glut</span><span class="s4">.</span><span class="s1">glutMainLoopEvent</span>
+<a name="l69"><span class="ln">69   </span></a><span class="s3">else</span><span class="s4">:</span>
+<a name="l70"><span class="ln">70   </span></a>    <span class="s3">raise </span><span class="s1">RuntimeError</span><span class="s4">(</span><span class="s6">&quot;&quot;&quot;Your glut implementation does not allow interactive sessions. &quot;&quot;&quot; &quot;&quot;&quot;Consider installing freeglut.&quot;&quot;&quot;</span><span class="s4">)</span>
+<a name="l71"><span class="ln">71   </span></a>
+<a name="l72"><span class="ln">72   </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l73"><span class="ln">73   </span></a><span class="s0"># Callback functions</span>
+<a name="l74"><span class="ln">74   </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l75"><span class="ln">75   </span></a>
+<a name="l76"><span class="ln">76   </span></a>
+<a name="l77"><span class="ln">77   </span></a><span class="s3">def </span><span class="s1">glut_display</span><span class="s4">():</span>
+<a name="l78"><span class="ln">78   </span></a>    <span class="s0"># Dummy display function</span>
+<a name="l79"><span class="ln">79   </span></a>    <span class="s3">pass</span>
+<a name="l80"><span class="ln">80   </span></a>
+<a name="l81"><span class="ln">81   </span></a>
+<a name="l82"><span class="ln">82   </span></a><span class="s3">def </span><span class="s1">glut_idle</span><span class="s4">():</span>
+<a name="l83"><span class="ln">83   </span></a>    <span class="s0"># Dummy idle function</span>
+<a name="l84"><span class="ln">84   </span></a>    <span class="s3">pass</span>
+<a name="l85"><span class="ln">85   </span></a>
+<a name="l86"><span class="ln">86   </span></a>
+<a name="l87"><span class="ln">87   </span></a><span class="s3">def </span><span class="s1">glut_close</span><span class="s4">():</span>
+<a name="l88"><span class="ln">88   </span></a>    <span class="s0"># Close function only hides the current window</span>
+<a name="l89"><span class="ln">89   </span></a>    <span class="s1">glut</span><span class="s4">.</span><span class="s1">glutHideWindow</span><span class="s4">()</span>
+<a name="l90"><span class="ln">90   </span></a>    <span class="s1">glutMainLoopEvent</span><span class="s4">()</span>
+<a name="l91"><span class="ln">91   </span></a>
+<a name="l92"><span class="ln">92   </span></a>
+<a name="l93"><span class="ln">93   </span></a><span class="s3">def </span><span class="s1">glut_int_handler</span><span class="s4">(</span><span class="s1">signum</span><span class="s4">, </span><span class="s1">frame</span><span class="s4">):</span>
+<a name="l94"><span class="ln">94   </span></a>    <span class="s0"># Catch sigint and print the defautl message</span>
+<a name="l95"><span class="ln">95   </span></a>    <span class="s1">signal</span><span class="s4">.</span><span class="s1">signal</span><span class="s4">(</span><span class="s1">signal</span><span class="s4">.</span><span class="s1">SIGINT</span><span class="s4">, </span><span class="s1">signal</span><span class="s4">.</span><span class="s1">default_int_handler</span><span class="s4">)</span>
+<a name="l96"><span class="ln">96   </span></a>    <span class="s1">print</span><span class="s4">(</span><span class="s6">&quot;</span><span class="s3">\n</span><span class="s6">KeyboardInterrupt&quot;</span><span class="s4">)</span>
+<a name="l97"><span class="ln">97   </span></a>    <span class="s0"># Need to reprint the prompt at this stage</span>
+<a name="l98"><span class="ln">98   </span></a>
+<a name="l99"><span class="ln">99   </span></a>
+<a name="l100"><span class="ln">100  </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l101"><span class="ln">101  </span></a><span class="s0"># Code</span>
+<a name="l102"><span class="ln">102  </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l103"><span class="ln">103  </span></a><span class="s3">def </span><span class="s1">inputhook_glut</span><span class="s4">():</span>
+<a name="l104"><span class="ln">104  </span></a>    <span class="s2">&quot;&quot;&quot;Run the pyglet event loop by processing pending events only. 
+<a name="l105"><span class="ln">105  </span></a> 
+<a name="l106"><span class="ln">106  </span></a>    This keeps processing pending events until stdin is ready.  After 
+<a name="l107"><span class="ln">107  </span></a>    processing all pending events, a call to time.sleep is inserted.  This is 
+<a name="l108"><span class="ln">108  </span></a>    needed, otherwise, CPU usage is at 100%.  This sleep time should be tuned 
+<a name="l109"><span class="ln">109  </span></a>    though for best performance. 
+<a name="l110"><span class="ln">110  </span></a>    &quot;&quot;&quot;</span>
+<a name="l111"><span class="ln">111  </span></a>    <span class="s0"># We need to protect against a user pressing Control-C when IPython is</span>
+<a name="l112"><span class="ln">112  </span></a>    <span class="s0"># idle and this is running. We trap KeyboardInterrupt and pass.</span>
+<a name="l113"><span class="ln">113  </span></a>
+<a name="l114"><span class="ln">114  </span></a>    <span class="s1">signal</span><span class="s4">.</span><span class="s1">signal</span><span class="s4">(</span><span class="s1">signal</span><span class="s4">.</span><span class="s1">SIGINT</span><span class="s4">, </span><span class="s1">glut_int_handler</span><span class="s4">)</span>
+<a name="l115"><span class="ln">115  </span></a>
+<a name="l116"><span class="ln">116  </span></a>    <span class="s3">try</span><span class="s4">:</span>
+<a name="l117"><span class="ln">117  </span></a>        <span class="s1">t </span><span class="s4">= </span><span class="s1">clock</span><span class="s4">()</span>
+<a name="l118"><span class="ln">118  </span></a>
+<a name="l119"><span class="ln">119  </span></a>        <span class="s0"># Make sure the default window is set after a window has been closed</span>
+<a name="l120"><span class="ln">120  </span></a>        <span class="s3">if </span><span class="s1">glut</span><span class="s4">.</span><span class="s1">glutGetWindow</span><span class="s4">() == </span><span class="s5">0</span><span class="s4">:</span>
+<a name="l121"><span class="ln">121  </span></a>            <span class="s1">glut</span><span class="s4">.</span><span class="s1">glutSetWindow</span><span class="s4">(</span><span class="s5">1</span><span class="s4">)</span>
+<a name="l122"><span class="ln">122  </span></a>            <span class="s1">glutMainLoopEvent</span><span class="s4">()</span>
+<a name="l123"><span class="ln">123  </span></a>            <span class="s3">return </span><span class="s5">0</span>
+<a name="l124"><span class="ln">124  </span></a>
+<a name="l125"><span class="ln">125  </span></a>        <span class="s3">while not </span><span class="s1">stdin_ready</span><span class="s4">():</span>
+<a name="l126"><span class="ln">126  </span></a>            <span class="s1">glutMainLoopEvent</span><span class="s4">()</span>
+<a name="l127"><span class="ln">127  </span></a>            <span class="s0"># We need to sleep at this point to keep the idle CPU load</span>
+<a name="l128"><span class="ln">128  </span></a>            <span class="s0"># low.  However, if sleep to long, GUI response is poor.  As</span>
+<a name="l129"><span class="ln">129  </span></a>            <span class="s0"># a compromise, we watch how often GUI events are being processed</span>
+<a name="l130"><span class="ln">130  </span></a>            <span class="s0"># and switch between a short and long sleep time.  Here are some</span>
+<a name="l131"><span class="ln">131  </span></a>            <span class="s0"># stats useful in helping to tune this.</span>
+<a name="l132"><span class="ln">132  </span></a>            <span class="s0"># time    CPU load</span>
+<a name="l133"><span class="ln">133  </span></a>            <span class="s0"># 0.001   13%</span>
+<a name="l134"><span class="ln">134  </span></a>            <span class="s0"># 0.005   3%</span>
+<a name="l135"><span class="ln">135  </span></a>            <span class="s0"># 0.01    1.5%</span>
+<a name="l136"><span class="ln">136  </span></a>            <span class="s0"># 0.05    0.5%</span>
+<a name="l137"><span class="ln">137  </span></a>            <span class="s1">used_time </span><span class="s4">= </span><span class="s1">clock</span><span class="s4">() - </span><span class="s1">t</span>
+<a name="l138"><span class="ln">138  </span></a>            <span class="s3">if </span><span class="s1">used_time </span><span class="s4">&gt; </span><span class="s5">10.0</span><span class="s4">:</span>
+<a name="l139"><span class="ln">139  </span></a>                <span class="s0"># print 'Sleep for 1 s'  # dbg</span>
+<a name="l140"><span class="ln">140  </span></a>                <span class="s1">time</span><span class="s4">.</span><span class="s1">sleep</span><span class="s4">(</span><span class="s5">1.0</span><span class="s4">)</span>
+<a name="l141"><span class="ln">141  </span></a>            <span class="s3">elif </span><span class="s1">used_time </span><span class="s4">&gt; </span><span class="s5">0.1</span><span class="s4">:</span>
+<a name="l142"><span class="ln">142  </span></a>                <span class="s0"># Few GUI events coming in, so we can sleep longer</span>
+<a name="l143"><span class="ln">143  </span></a>                <span class="s0"># print 'Sleep for 0.05 s'  # dbg</span>
+<a name="l144"><span class="ln">144  </span></a>                <span class="s1">time</span><span class="s4">.</span><span class="s1">sleep</span><span class="s4">(</span><span class="s5">0.05</span><span class="s4">)</span>
+<a name="l145"><span class="ln">145  </span></a>            <span class="s3">else</span><span class="s4">:</span>
+<a name="l146"><span class="ln">146  </span></a>                <span class="s0"># Many GUI events coming in, so sleep only very little</span>
+<a name="l147"><span class="ln">147  </span></a>                <span class="s1">time</span><span class="s4">.</span><span class="s1">sleep</span><span class="s4">(</span><span class="s5">0.001</span><span class="s4">)</span>
+<a name="l148"><span class="ln">148  </span></a>    <span class="s3">except </span><span class="s1">KeyboardInterrupt</span><span class="s4">:</span>
+<a name="l149"><span class="ln">149  </span></a>        <span class="s3">pass</span>
+<a name="l150"><span class="ln">150  </span></a>    <span class="s3">return </span><span class="s5">0</span>
+<a name="l151"><span class="ln">151  </span></a></pre>
+</body>
+</html>

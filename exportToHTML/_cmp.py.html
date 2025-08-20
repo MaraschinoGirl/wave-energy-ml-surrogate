@@ -1,0 +1,184 @@
+<html>
+<head>
+<title>_cmp.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #5f826b; font-style: italic;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_cmp.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># SPDX-License-Identifier: MIT</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">import </span><span class="s1">functools</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s2">import </span><span class="s1">types</span>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">from </span><span class="s3">.</span><span class="s1">_make </span><span class="s2">import </span><span class="s1">__ne__</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s1">_operation_names </span><span class="s3">= {</span><span class="s4">&quot;eq&quot;</span><span class="s3">: </span><span class="s4">&quot;==&quot;</span><span class="s3">, </span><span class="s4">&quot;lt&quot;</span><span class="s3">: </span><span class="s4">&quot;&lt;&quot;</span><span class="s3">, </span><span class="s4">&quot;le&quot;</span><span class="s3">: </span><span class="s4">&quot;&lt;=&quot;</span><span class="s3">, </span><span class="s4">&quot;gt&quot;</span><span class="s3">: </span><span class="s4">&quot;&gt;&quot;</span><span class="s3">, </span><span class="s4">&quot;ge&quot;</span><span class="s3">: </span><span class="s4">&quot;&gt;=&quot;</span><span class="s3">}</span>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a><span class="s2">def </span><span class="s1">cmp_using</span><span class="s3">(</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s1">eq</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s1">lt</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s1">le</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s1">gt</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s1">ge</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s1">require_same_type</span><span class="s3">=</span><span class="s2">True</span><span class="s3">,</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s1">class_name</span><span class="s3">=</span><span class="s4">&quot;Comparable&quot;</span><span class="s3">,</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s3">):</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s5">&quot;&quot;&quot; 
+<a name="l23"><span class="ln">23   </span></a>    Create a class that can be passed into `attrs.field`'s ``eq``, ``order``, 
+<a name="l24"><span class="ln">24   </span></a>    and ``cmp`` arguments to customize field comparison. 
+<a name="l25"><span class="ln">25   </span></a> 
+<a name="l26"><span class="ln">26   </span></a>    The resulting class will have a full set of ordering methods if at least 
+<a name="l27"><span class="ln">27   </span></a>    one of ``{lt, le, gt, ge}`` and ``eq``  are provided. 
+<a name="l28"><span class="ln">28   </span></a> 
+<a name="l29"><span class="ln">29   </span></a>    Args: 
+<a name="l30"><span class="ln">30   </span></a>        eq (typing.Callable | None): 
+<a name="l31"><span class="ln">31   </span></a>            Callable used to evaluate equality of two objects. 
+<a name="l32"><span class="ln">32   </span></a> 
+<a name="l33"><span class="ln">33   </span></a>        lt (typing.Callable | None): 
+<a name="l34"><span class="ln">34   </span></a>            Callable used to evaluate whether one object is less than another 
+<a name="l35"><span class="ln">35   </span></a>            object. 
+<a name="l36"><span class="ln">36   </span></a> 
+<a name="l37"><span class="ln">37   </span></a>        le (typing.Callable | None): 
+<a name="l38"><span class="ln">38   </span></a>            Callable used to evaluate whether one object is less than or equal 
+<a name="l39"><span class="ln">39   </span></a>            to another object. 
+<a name="l40"><span class="ln">40   </span></a> 
+<a name="l41"><span class="ln">41   </span></a>        gt (typing.Callable | None): 
+<a name="l42"><span class="ln">42   </span></a>            Callable used to evaluate whether one object is greater than 
+<a name="l43"><span class="ln">43   </span></a>            another object. 
+<a name="l44"><span class="ln">44   </span></a> 
+<a name="l45"><span class="ln">45   </span></a>        ge (typing.Callable | None): 
+<a name="l46"><span class="ln">46   </span></a>            Callable used to evaluate whether one object is greater than or 
+<a name="l47"><span class="ln">47   </span></a>            equal to another object. 
+<a name="l48"><span class="ln">48   </span></a> 
+<a name="l49"><span class="ln">49   </span></a>        require_same_type (bool): 
+<a name="l50"><span class="ln">50   </span></a>            When `True`, equality and ordering methods will return 
+<a name="l51"><span class="ln">51   </span></a>            `NotImplemented` if objects are not of the same type. 
+<a name="l52"><span class="ln">52   </span></a> 
+<a name="l53"><span class="ln">53   </span></a>        class_name (str | None): Name of class. Defaults to &quot;Comparable&quot;. 
+<a name="l54"><span class="ln">54   </span></a> 
+<a name="l55"><span class="ln">55   </span></a>    See `comparison` for more details. 
+<a name="l56"><span class="ln">56   </span></a> 
+<a name="l57"><span class="ln">57   </span></a>    .. versionadded:: 21.1.0 
+<a name="l58"><span class="ln">58   </span></a>    &quot;&quot;&quot;</span>
+<a name="l59"><span class="ln">59   </span></a>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s1">body </span><span class="s3">= {</span>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s4">&quot;__slots__&quot;</span><span class="s3">: [</span><span class="s4">&quot;value&quot;</span><span class="s3">],</span>
+<a name="l62"><span class="ln">62   </span></a>        <span class="s4">&quot;__init__&quot;</span><span class="s3">: </span><span class="s1">_make_init</span><span class="s3">(),</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s4">&quot;_requirements&quot;</span><span class="s3">: [],</span>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s4">&quot;_is_comparable_to&quot;</span><span class="s3">: </span><span class="s1">_is_comparable_to</span><span class="s3">,</span>
+<a name="l65"><span class="ln">65   </span></a>    <span class="s3">}</span>
+<a name="l66"><span class="ln">66   </span></a>
+<a name="l67"><span class="ln">67   </span></a>    <span class="s0"># Add operations.</span>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s1">num_order_functions </span><span class="s3">= </span><span class="s6">0</span>
+<a name="l69"><span class="ln">69   </span></a>    <span class="s1">has_eq_function </span><span class="s3">= </span><span class="s2">False</span>
+<a name="l70"><span class="ln">70   </span></a>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s2">if </span><span class="s1">eq </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l72"><span class="ln">72   </span></a>        <span class="s1">has_eq_function </span><span class="s3">= </span><span class="s2">True</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s1">body</span><span class="s3">[</span><span class="s4">&quot;__eq__&quot;</span><span class="s3">] = </span><span class="s1">_make_operator</span><span class="s3">(</span><span class="s4">&quot;eq&quot;</span><span class="s3">, </span><span class="s1">eq</span><span class="s3">)</span>
+<a name="l74"><span class="ln">74   </span></a>        <span class="s1">body</span><span class="s3">[</span><span class="s4">&quot;__ne__&quot;</span><span class="s3">] = </span><span class="s1">__ne__</span>
+<a name="l75"><span class="ln">75   </span></a>
+<a name="l76"><span class="ln">76   </span></a>    <span class="s2">if </span><span class="s1">lt </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s1">num_order_functions </span><span class="s3">+= </span><span class="s6">1</span>
+<a name="l78"><span class="ln">78   </span></a>        <span class="s1">body</span><span class="s3">[</span><span class="s4">&quot;__lt__&quot;</span><span class="s3">] = </span><span class="s1">_make_operator</span><span class="s3">(</span><span class="s4">&quot;lt&quot;</span><span class="s3">, </span><span class="s1">lt</span><span class="s3">)</span>
+<a name="l79"><span class="ln">79   </span></a>
+<a name="l80"><span class="ln">80   </span></a>    <span class="s2">if </span><span class="s1">le </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l81"><span class="ln">81   </span></a>        <span class="s1">num_order_functions </span><span class="s3">+= </span><span class="s6">1</span>
+<a name="l82"><span class="ln">82   </span></a>        <span class="s1">body</span><span class="s3">[</span><span class="s4">&quot;__le__&quot;</span><span class="s3">] = </span><span class="s1">_make_operator</span><span class="s3">(</span><span class="s4">&quot;le&quot;</span><span class="s3">, </span><span class="s1">le</span><span class="s3">)</span>
+<a name="l83"><span class="ln">83   </span></a>
+<a name="l84"><span class="ln">84   </span></a>    <span class="s2">if </span><span class="s1">gt </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l85"><span class="ln">85   </span></a>        <span class="s1">num_order_functions </span><span class="s3">+= </span><span class="s6">1</span>
+<a name="l86"><span class="ln">86   </span></a>        <span class="s1">body</span><span class="s3">[</span><span class="s4">&quot;__gt__&quot;</span><span class="s3">] = </span><span class="s1">_make_operator</span><span class="s3">(</span><span class="s4">&quot;gt&quot;</span><span class="s3">, </span><span class="s1">gt</span><span class="s3">)</span>
+<a name="l87"><span class="ln">87   </span></a>
+<a name="l88"><span class="ln">88   </span></a>    <span class="s2">if </span><span class="s1">ge </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l89"><span class="ln">89   </span></a>        <span class="s1">num_order_functions </span><span class="s3">+= </span><span class="s6">1</span>
+<a name="l90"><span class="ln">90   </span></a>        <span class="s1">body</span><span class="s3">[</span><span class="s4">&quot;__ge__&quot;</span><span class="s3">] = </span><span class="s1">_make_operator</span><span class="s3">(</span><span class="s4">&quot;ge&quot;</span><span class="s3">, </span><span class="s1">ge</span><span class="s3">)</span>
+<a name="l91"><span class="ln">91   </span></a>
+<a name="l92"><span class="ln">92   </span></a>    <span class="s1">type_ </span><span class="s3">= </span><span class="s1">types</span><span class="s3">.</span><span class="s1">new_class</span><span class="s3">(</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s1">class_name</span><span class="s3">, (</span><span class="s1">object</span><span class="s3">,), {}, </span><span class="s2">lambda </span><span class="s1">ns</span><span class="s3">: </span><span class="s1">ns</span><span class="s3">.</span><span class="s1">update</span><span class="s3">(</span><span class="s1">body</span><span class="s3">)</span>
+<a name="l94"><span class="ln">94   </span></a>    <span class="s3">)</span>
+<a name="l95"><span class="ln">95   </span></a>
+<a name="l96"><span class="ln">96   </span></a>    <span class="s0"># Add same type requirement.</span>
+<a name="l97"><span class="ln">97   </span></a>    <span class="s2">if </span><span class="s1">require_same_type</span><span class="s3">:</span>
+<a name="l98"><span class="ln">98   </span></a>        <span class="s1">type_</span><span class="s3">.</span><span class="s1">_requirements</span><span class="s3">.</span><span class="s1">append</span><span class="s3">(</span><span class="s1">_check_same_type</span><span class="s3">)</span>
+<a name="l99"><span class="ln">99   </span></a>
+<a name="l100"><span class="ln">100  </span></a>    <span class="s0"># Add total ordering if at least one operation was defined.</span>
+<a name="l101"><span class="ln">101  </span></a>    <span class="s2">if </span><span class="s6">0 </span><span class="s3">&lt; </span><span class="s1">num_order_functions </span><span class="s3">&lt; </span><span class="s6">4</span><span class="s3">:</span>
+<a name="l102"><span class="ln">102  </span></a>        <span class="s2">if not </span><span class="s1">has_eq_function</span><span class="s3">:</span>
+<a name="l103"><span class="ln">103  </span></a>            <span class="s0"># functools.total_ordering requires __eq__ to be defined,</span>
+<a name="l104"><span class="ln">104  </span></a>            <span class="s0"># so raise early error here to keep a nice stack.</span>
+<a name="l105"><span class="ln">105  </span></a>            <span class="s1">msg </span><span class="s3">= </span><span class="s4">&quot;eq must be define is order to complete ordering from lt, le, gt, ge.&quot;</span>
+<a name="l106"><span class="ln">106  </span></a>            <span class="s2">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s1">msg</span><span class="s3">)</span>
+<a name="l107"><span class="ln">107  </span></a>        <span class="s1">type_ </span><span class="s3">= </span><span class="s1">functools</span><span class="s3">.</span><span class="s1">total_ordering</span><span class="s3">(</span><span class="s1">type_</span><span class="s3">)</span>
+<a name="l108"><span class="ln">108  </span></a>
+<a name="l109"><span class="ln">109  </span></a>    <span class="s2">return </span><span class="s1">type_</span>
+<a name="l110"><span class="ln">110  </span></a>
+<a name="l111"><span class="ln">111  </span></a>
+<a name="l112"><span class="ln">112  </span></a><span class="s2">def </span><span class="s1">_make_init</span><span class="s3">():</span>
+<a name="l113"><span class="ln">113  </span></a>    <span class="s5">&quot;&quot;&quot; 
+<a name="l114"><span class="ln">114  </span></a>    Create __init__ method. 
+<a name="l115"><span class="ln">115  </span></a>    &quot;&quot;&quot;</span>
+<a name="l116"><span class="ln">116  </span></a>
+<a name="l117"><span class="ln">117  </span></a>    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">value</span><span class="s3">):</span>
+<a name="l118"><span class="ln">118  </span></a>        <span class="s5">&quot;&quot;&quot; 
+<a name="l119"><span class="ln">119  </span></a>        Initialize object with *value*. 
+<a name="l120"><span class="ln">120  </span></a>        &quot;&quot;&quot;</span>
+<a name="l121"><span class="ln">121  </span></a>        <span class="s1">self</span><span class="s3">.</span><span class="s1">value </span><span class="s3">= </span><span class="s1">value</span>
+<a name="l122"><span class="ln">122  </span></a>
+<a name="l123"><span class="ln">123  </span></a>    <span class="s2">return </span><span class="s1">__init__</span>
+<a name="l124"><span class="ln">124  </span></a>
+<a name="l125"><span class="ln">125  </span></a>
+<a name="l126"><span class="ln">126  </span></a><span class="s2">def </span><span class="s1">_make_operator</span><span class="s3">(</span><span class="s1">name</span><span class="s3">, </span><span class="s1">func</span><span class="s3">):</span>
+<a name="l127"><span class="ln">127  </span></a>    <span class="s5">&quot;&quot;&quot; 
+<a name="l128"><span class="ln">128  </span></a>    Create operator method. 
+<a name="l129"><span class="ln">129  </span></a>    &quot;&quot;&quot;</span>
+<a name="l130"><span class="ln">130  </span></a>
+<a name="l131"><span class="ln">131  </span></a>    <span class="s2">def </span><span class="s1">method</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">other</span><span class="s3">):</span>
+<a name="l132"><span class="ln">132  </span></a>        <span class="s2">if not </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_is_comparable_to</span><span class="s3">(</span><span class="s1">other</span><span class="s3">):</span>
+<a name="l133"><span class="ln">133  </span></a>            <span class="s2">return </span><span class="s1">NotImplemented</span>
+<a name="l134"><span class="ln">134  </span></a>
+<a name="l135"><span class="ln">135  </span></a>        <span class="s1">result </span><span class="s3">= </span><span class="s1">func</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">value</span><span class="s3">, </span><span class="s1">other</span><span class="s3">.</span><span class="s1">value</span><span class="s3">)</span>
+<a name="l136"><span class="ln">136  </span></a>        <span class="s2">if </span><span class="s1">result </span><span class="s2">is </span><span class="s1">NotImplemented</span><span class="s3">:</span>
+<a name="l137"><span class="ln">137  </span></a>            <span class="s2">return </span><span class="s1">NotImplemented</span>
+<a name="l138"><span class="ln">138  </span></a>
+<a name="l139"><span class="ln">139  </span></a>        <span class="s2">return </span><span class="s1">result</span>
+<a name="l140"><span class="ln">140  </span></a>
+<a name="l141"><span class="ln">141  </span></a>    <span class="s1">method</span><span class="s3">.</span><span class="s1">__name__ </span><span class="s3">= </span><span class="s4">f&quot;__</span><span class="s2">{</span><span class="s1">name</span><span class="s2">}</span><span class="s4">__&quot;</span>
+<a name="l142"><span class="ln">142  </span></a>    <span class="s1">method</span><span class="s3">.</span><span class="s1">__doc__ </span><span class="s3">= (</span>
+<a name="l143"><span class="ln">143  </span></a>        <span class="s4">f&quot;Return a </span><span class="s2">{</span><span class="s1">_operation_names</span><span class="s3">[</span><span class="s1">name</span><span class="s3">]</span><span class="s2">} </span><span class="s4">b.  Computed by attrs.&quot;</span>
+<a name="l144"><span class="ln">144  </span></a>    <span class="s3">)</span>
+<a name="l145"><span class="ln">145  </span></a>
+<a name="l146"><span class="ln">146  </span></a>    <span class="s2">return </span><span class="s1">method</span>
+<a name="l147"><span class="ln">147  </span></a>
+<a name="l148"><span class="ln">148  </span></a>
+<a name="l149"><span class="ln">149  </span></a><span class="s2">def </span><span class="s1">_is_comparable_to</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">other</span><span class="s3">):</span>
+<a name="l150"><span class="ln">150  </span></a>    <span class="s5">&quot;&quot;&quot; 
+<a name="l151"><span class="ln">151  </span></a>    Check whether `other` is comparable to `self`. 
+<a name="l152"><span class="ln">152  </span></a>    &quot;&quot;&quot;</span>
+<a name="l153"><span class="ln">153  </span></a>    <span class="s2">return </span><span class="s1">all</span><span class="s3">(</span><span class="s1">func</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">other</span><span class="s3">) </span><span class="s2">for </span><span class="s1">func </span><span class="s2">in </span><span class="s1">self</span><span class="s3">.</span><span class="s1">_requirements</span><span class="s3">)</span>
+<a name="l154"><span class="ln">154  </span></a>
+<a name="l155"><span class="ln">155  </span></a>
+<a name="l156"><span class="ln">156  </span></a><span class="s2">def </span><span class="s1">_check_same_type</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">other</span><span class="s3">):</span>
+<a name="l157"><span class="ln">157  </span></a>    <span class="s5">&quot;&quot;&quot; 
+<a name="l158"><span class="ln">158  </span></a>    Return True if *self* and *other* are of the same type, False otherwise. 
+<a name="l159"><span class="ln">159  </span></a>    &quot;&quot;&quot;</span>
+<a name="l160"><span class="ln">160  </span></a>    <span class="s2">return </span><span class="s1">other</span><span class="s3">.</span><span class="s1">value</span><span class="s3">.</span><span class="s1">__class__ </span><span class="s2">is </span><span class="s1">self</span><span class="s3">.</span><span class="s1">value</span><span class="s3">.</span><span class="s1">__class__</span>
+<a name="l161"><span class="ln">161  </span></a></pre>
+</body>
+</html>

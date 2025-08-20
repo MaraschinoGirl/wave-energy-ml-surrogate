@@ -1,0 +1,171 @@
+<html>
+<head>
+<title>tcl.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+tcl.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>    pygments.lexers.tcl 
+<a name="l3"><span class="ln">3    </span></a>    ~~~~~~~~~~~~~~~~~~~ 
+<a name="l4"><span class="ln">4    </span></a> 
+<a name="l5"><span class="ln">5    </span></a>    Lexers for Tcl and related languages. 
+<a name="l6"><span class="ln">6    </span></a> 
+<a name="l7"><span class="ln">7    </span></a>    :copyright: Copyright 2006-2025 by the Pygments team, see AUTHORS. 
+<a name="l8"><span class="ln">8    </span></a>    :license: BSD, see LICENSE for details. 
+<a name="l9"><span class="ln">9    </span></a>&quot;&quot;&quot;</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">lexer </span><span class="s2">import </span><span class="s1">RegexLexer</span><span class="s3">, </span><span class="s1">include</span><span class="s3">, </span><span class="s1">words</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">token </span><span class="s2">import </span><span class="s1">Text</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">, </span><span class="s1">Operator</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">, </span><span class="s1">String</span><span class="s3">, </span><span class="s1">\</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s1">Number</span><span class="s3">, </span><span class="s1">Whitespace</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">util </span><span class="s2">import </span><span class="s1">shebang_matches</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a><span class="s1">__all__ </span><span class="s3">= [</span><span class="s4">'TclLexer'</span><span class="s3">]</span>
+<a name="l17"><span class="ln">17   </span></a>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a><span class="s2">class </span><span class="s1">TclLexer</span><span class="s3">(</span><span class="s1">RegexLexer</span><span class="s3">):</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l21"><span class="ln">21   </span></a>    For Tcl source code. 
+<a name="l22"><span class="ln">22   </span></a>    &quot;&quot;&quot;</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s1">keyword_cmds_re </span><span class="s3">= </span><span class="s1">words</span><span class="s3">((</span>
+<a name="l25"><span class="ln">25   </span></a>        <span class="s4">'after'</span><span class="s3">, </span><span class="s4">'apply'</span><span class="s3">, </span><span class="s4">'array'</span><span class="s3">, </span><span class="s4">'break'</span><span class="s3">, </span><span class="s4">'catch'</span><span class="s3">, </span><span class="s4">'continue'</span><span class="s3">, </span><span class="s4">'elseif'</span><span class="s3">,</span>
+<a name="l26"><span class="ln">26   </span></a>        <span class="s4">'else'</span><span class="s3">, </span><span class="s4">'error'</span><span class="s3">, </span><span class="s4">'eval'</span><span class="s3">, </span><span class="s4">'expr'</span><span class="s3">, </span><span class="s4">'for'</span><span class="s3">, </span><span class="s4">'foreach'</span><span class="s3">, </span><span class="s4">'global'</span><span class="s3">, </span><span class="s4">'if'</span><span class="s3">,</span>
+<a name="l27"><span class="ln">27   </span></a>        <span class="s4">'namespace'</span><span class="s3">, </span><span class="s4">'proc'</span><span class="s3">, </span><span class="s4">'rename'</span><span class="s3">, </span><span class="s4">'return'</span><span class="s3">, </span><span class="s4">'set'</span><span class="s3">, </span><span class="s4">'switch'</span><span class="s3">, </span><span class="s4">'then'</span><span class="s3">,</span>
+<a name="l28"><span class="ln">28   </span></a>        <span class="s4">'trace'</span><span class="s3">, </span><span class="s4">'unset'</span><span class="s3">, </span><span class="s4">'update'</span><span class="s3">, </span><span class="s4">'uplevel'</span><span class="s3">, </span><span class="s4">'upvar'</span><span class="s3">, </span><span class="s4">'variable'</span><span class="s3">, </span><span class="s4">'vwait'</span><span class="s3">,</span>
+<a name="l29"><span class="ln">29   </span></a>        <span class="s4">'while'</span><span class="s3">), </span><span class="s1">prefix</span><span class="s3">=</span><span class="s4">r'\b'</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s4">r'\b'</span><span class="s3">)</span>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s1">builtin_cmds_re </span><span class="s3">= </span><span class="s1">words</span><span class="s3">((</span>
+<a name="l32"><span class="ln">32   </span></a>        <span class="s4">'append'</span><span class="s3">, </span><span class="s4">'bgerror'</span><span class="s3">, </span><span class="s4">'binary'</span><span class="s3">, </span><span class="s4">'cd'</span><span class="s3">, </span><span class="s4">'chan'</span><span class="s3">, </span><span class="s4">'clock'</span><span class="s3">, </span><span class="s4">'close'</span><span class="s3">,</span>
+<a name="l33"><span class="ln">33   </span></a>        <span class="s4">'concat'</span><span class="s3">, </span><span class="s4">'dde'</span><span class="s3">, </span><span class="s4">'dict'</span><span class="s3">, </span><span class="s4">'encoding'</span><span class="s3">, </span><span class="s4">'eof'</span><span class="s3">, </span><span class="s4">'exec'</span><span class="s3">, </span><span class="s4">'exit'</span><span class="s3">, </span><span class="s4">'fblocked'</span><span class="s3">,</span>
+<a name="l34"><span class="ln">34   </span></a>        <span class="s4">'fconfigure'</span><span class="s3">, </span><span class="s4">'fcopy'</span><span class="s3">, </span><span class="s4">'file'</span><span class="s3">, </span><span class="s4">'fileevent'</span><span class="s3">, </span><span class="s4">'flush'</span><span class="s3">, </span><span class="s4">'format'</span><span class="s3">, </span><span class="s4">'gets'</span><span class="s3">,</span>
+<a name="l35"><span class="ln">35   </span></a>        <span class="s4">'glob'</span><span class="s3">, </span><span class="s4">'history'</span><span class="s3">, </span><span class="s4">'http'</span><span class="s3">, </span><span class="s4">'incr'</span><span class="s3">, </span><span class="s4">'info'</span><span class="s3">, </span><span class="s4">'interp'</span><span class="s3">, </span><span class="s4">'join'</span><span class="s3">, </span><span class="s4">'lappend'</span><span class="s3">,</span>
+<a name="l36"><span class="ln">36   </span></a>        <span class="s4">'lassign'</span><span class="s3">, </span><span class="s4">'lindex'</span><span class="s3">, </span><span class="s4">'linsert'</span><span class="s3">, </span><span class="s4">'list'</span><span class="s3">, </span><span class="s4">'llength'</span><span class="s3">, </span><span class="s4">'load'</span><span class="s3">, </span><span class="s4">'loadTk'</span><span class="s3">,</span>
+<a name="l37"><span class="ln">37   </span></a>        <span class="s4">'lrange'</span><span class="s3">, </span><span class="s4">'lrepeat'</span><span class="s3">, </span><span class="s4">'lreplace'</span><span class="s3">, </span><span class="s4">'lreverse'</span><span class="s3">, </span><span class="s4">'lsearch'</span><span class="s3">, </span><span class="s4">'lset'</span><span class="s3">, </span><span class="s4">'lsort'</span><span class="s3">,</span>
+<a name="l38"><span class="ln">38   </span></a>        <span class="s4">'mathfunc'</span><span class="s3">, </span><span class="s4">'mathop'</span><span class="s3">, </span><span class="s4">'memory'</span><span class="s3">, </span><span class="s4">'msgcat'</span><span class="s3">, </span><span class="s4">'open'</span><span class="s3">, </span><span class="s4">'package'</span><span class="s3">, </span><span class="s4">'pid'</span><span class="s3">,</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s4">'pkg::create'</span><span class="s3">, </span><span class="s4">'pkg_mkIndex'</span><span class="s3">, </span><span class="s4">'platform'</span><span class="s3">, </span><span class="s4">'platform::shell'</span><span class="s3">, </span><span class="s4">'puts'</span><span class="s3">,</span>
+<a name="l40"><span class="ln">40   </span></a>        <span class="s4">'pwd'</span><span class="s3">, </span><span class="s4">'re_syntax'</span><span class="s3">, </span><span class="s4">'read'</span><span class="s3">, </span><span class="s4">'refchan'</span><span class="s3">, </span><span class="s4">'regexp'</span><span class="s3">, </span><span class="s4">'registry'</span><span class="s3">, </span><span class="s4">'regsub'</span><span class="s3">,</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s4">'scan'</span><span class="s3">, </span><span class="s4">'seek'</span><span class="s3">, </span><span class="s4">'socket'</span><span class="s3">, </span><span class="s4">'source'</span><span class="s3">, </span><span class="s4">'split'</span><span class="s3">, </span><span class="s4">'string'</span><span class="s3">, </span><span class="s4">'subst'</span><span class="s3">, </span><span class="s4">'tell'</span><span class="s3">,</span>
+<a name="l42"><span class="ln">42   </span></a>        <span class="s4">'time'</span><span class="s3">, </span><span class="s4">'tm'</span><span class="s3">, </span><span class="s4">'unknown'</span><span class="s3">, </span><span class="s4">'unload'</span><span class="s3">), </span><span class="s1">prefix</span><span class="s3">=</span><span class="s4">r'\b'</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s4">r'\b'</span><span class="s3">)</span>
+<a name="l43"><span class="ln">43   </span></a>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s1">name </span><span class="s3">= </span><span class="s4">'Tcl'</span>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s1">url </span><span class="s3">= </span><span class="s4">'https://www.tcl.tk/about/language.html'</span>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s1">aliases </span><span class="s3">= [</span><span class="s4">'tcl'</span><span class="s3">]</span>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s1">filenames </span><span class="s3">= [</span><span class="s4">'*.tcl'</span><span class="s3">, </span><span class="s4">'*.rvt'</span><span class="s3">]</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s1">mimetypes </span><span class="s3">= [</span><span class="s4">'text/x-tcl'</span><span class="s3">, </span><span class="s4">'text/x-script.tcl'</span><span class="s3">, </span><span class="s4">'application/x-tcl'</span><span class="s3">]</span>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s1">version_added </span><span class="s3">= </span><span class="s4">'0.10'</span>
+<a name="l50"><span class="ln">50   </span></a>
+<a name="l51"><span class="ln">51   </span></a>    <span class="s2">def </span><span class="s1">_gen_command_rules</span><span class="s3">(</span><span class="s1">keyword_cmds_re</span><span class="s3">, </span><span class="s1">builtin_cmds_re</span><span class="s3">, </span><span class="s1">context</span><span class="s3">=</span><span class="s4">&quot;&quot;</span><span class="s3">):</span>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s2">return </span><span class="s3">[</span>
+<a name="l53"><span class="ln">53   </span></a>            <span class="s3">(</span><span class="s1">keyword_cmds_re</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, </span><span class="s4">'params' </span><span class="s3">+ </span><span class="s1">context</span><span class="s3">),</span>
+<a name="l54"><span class="ln">54   </span></a>            <span class="s3">(</span><span class="s1">builtin_cmds_re</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Builtin</span><span class="s3">, </span><span class="s4">'params' </span><span class="s3">+ </span><span class="s1">context</span><span class="s3">),</span>
+<a name="l55"><span class="ln">55   </span></a>            <span class="s3">(</span><span class="s4">r'([\w.-]+)'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">, </span><span class="s4">'params' </span><span class="s3">+ </span><span class="s1">context</span><span class="s3">),</span>
+<a name="l56"><span class="ln">56   </span></a>            <span class="s3">(</span><span class="s4">r'#'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">, </span><span class="s4">'comment'</span><span class="s3">),</span>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s3">]</span>
+<a name="l58"><span class="ln">58   </span></a>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s1">tokens </span><span class="s3">= {</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s4">'root'</span><span class="s3">: [</span>
+<a name="l61"><span class="ln">61   </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'command'</span><span class="s3">),</span>
+<a name="l62"><span class="ln">62   </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'basic'</span><span class="s3">),</span>
+<a name="l63"><span class="ln">63   </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'data'</span><span class="s3">),</span>
+<a name="l64"><span class="ln">64   </span></a>            <span class="s3">(</span><span class="s4">r'\}'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">),  </span><span class="s5"># HACK: somehow we miscounted our braces</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s3">],</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s4">'command'</span><span class="s3">: </span><span class="s1">_gen_command_rules</span><span class="s3">(</span><span class="s1">keyword_cmds_re</span><span class="s3">, </span><span class="s1">builtin_cmds_re</span><span class="s3">),</span>
+<a name="l67"><span class="ln">67   </span></a>        <span class="s4">'command-in-brace'</span><span class="s3">: </span><span class="s1">_gen_command_rules</span><span class="s3">(</span><span class="s1">keyword_cmds_re</span><span class="s3">,</span>
+<a name="l68"><span class="ln">68   </span></a>                                               <span class="s1">builtin_cmds_re</span><span class="s3">,</span>
+<a name="l69"><span class="ln">69   </span></a>                                               <span class="s4">&quot;-in-brace&quot;</span><span class="s3">),</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s4">'command-in-bracket'</span><span class="s3">: </span><span class="s1">_gen_command_rules</span><span class="s3">(</span><span class="s1">keyword_cmds_re</span><span class="s3">,</span>
+<a name="l71"><span class="ln">71   </span></a>                                                 <span class="s1">builtin_cmds_re</span><span class="s3">,</span>
+<a name="l72"><span class="ln">72   </span></a>                                                 <span class="s4">&quot;-in-bracket&quot;</span><span class="s3">),</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s4">'command-in-paren'</span><span class="s3">: </span><span class="s1">_gen_command_rules</span><span class="s3">(</span><span class="s1">keyword_cmds_re</span><span class="s3">,</span>
+<a name="l74"><span class="ln">74   </span></a>                                               <span class="s1">builtin_cmds_re</span><span class="s3">,</span>
+<a name="l75"><span class="ln">75   </span></a>                                               <span class="s4">&quot;-in-paren&quot;</span><span class="s3">),</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s4">'basic'</span><span class="s3">: [</span>
+<a name="l77"><span class="ln">77   </span></a>            <span class="s3">(</span><span class="s4">r'\('</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, </span><span class="s4">'paren'</span><span class="s3">),</span>
+<a name="l78"><span class="ln">78   </span></a>            <span class="s3">(</span><span class="s4">r'\['</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, </span><span class="s4">'bracket'</span><span class="s3">),</span>
+<a name="l79"><span class="ln">79   </span></a>            <span class="s3">(</span><span class="s4">r'\{'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, </span><span class="s4">'brace'</span><span class="s3">),</span>
+<a name="l80"><span class="ln">80   </span></a>            <span class="s3">(</span><span class="s4">r'&quot;'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">.</span><span class="s1">Double</span><span class="s3">, </span><span class="s4">'string'</span><span class="s3">),</span>
+<a name="l81"><span class="ln">81   </span></a>            <span class="s3">(</span><span class="s4">r'(eq|ne|in|ni)\b'</span><span class="s3">, </span><span class="s1">Operator</span><span class="s3">.</span><span class="s1">Word</span><span class="s3">),</span>
+<a name="l82"><span class="ln">82   </span></a>            <span class="s3">(</span><span class="s4">r'!=|==|&lt;&lt;|&gt;&gt;|&lt;=|&gt;=|&amp;&amp;|\|\||\*\*|[-+~!*/%&lt;&gt;&amp;^|?:]'</span><span class="s3">, </span><span class="s1">Operator</span><span class="s3">),</span>
+<a name="l83"><span class="ln">83   </span></a>        <span class="s3">],</span>
+<a name="l84"><span class="ln">84   </span></a>        <span class="s4">'data'</span><span class="s3">: [</span>
+<a name="l85"><span class="ln">85   </span></a>            <span class="s3">(</span><span class="s4">r'\s+'</span><span class="s3">, </span><span class="s1">Whitespace</span><span class="s3">),</span>
+<a name="l86"><span class="ln">86   </span></a>            <span class="s3">(</span><span class="s4">r'0x[a-fA-F0-9]+'</span><span class="s3">, </span><span class="s1">Number</span><span class="s3">.</span><span class="s1">Hex</span><span class="s3">),</span>
+<a name="l87"><span class="ln">87   </span></a>            <span class="s3">(</span><span class="s4">r'0[0-7]+'</span><span class="s3">, </span><span class="s1">Number</span><span class="s3">.</span><span class="s1">Oct</span><span class="s3">),</span>
+<a name="l88"><span class="ln">88   </span></a>            <span class="s3">(</span><span class="s4">r'\d+\.\d+'</span><span class="s3">, </span><span class="s1">Number</span><span class="s3">.</span><span class="s1">Float</span><span class="s3">),</span>
+<a name="l89"><span class="ln">89   </span></a>            <span class="s3">(</span><span class="s4">r'\d+'</span><span class="s3">, </span><span class="s1">Number</span><span class="s3">.</span><span class="s1">Integer</span><span class="s3">),</span>
+<a name="l90"><span class="ln">90   </span></a>            <span class="s3">(</span><span class="s4">r'\$[\w.:-]+'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">),</span>
+<a name="l91"><span class="ln">91   </span></a>            <span class="s3">(</span><span class="s4">r'\$\{[\w.:-]+\}'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">),</span>
+<a name="l92"><span class="ln">92   </span></a>            <span class="s3">(</span><span class="s4">r'[\w.,@:-]+'</span><span class="s3">, </span><span class="s1">Text</span><span class="s3">),</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s3">],</span>
+<a name="l94"><span class="ln">94   </span></a>        <span class="s4">'params'</span><span class="s3">: [</span>
+<a name="l95"><span class="ln">95   </span></a>            <span class="s3">(</span><span class="s4">r';'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">),</span>
+<a name="l96"><span class="ln">96   </span></a>            <span class="s3">(</span><span class="s4">r'\n'</span><span class="s3">, </span><span class="s1">Text</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">),</span>
+<a name="l97"><span class="ln">97   </span></a>            <span class="s3">(</span><span class="s4">r'(else|elseif|then)\b'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">),</span>
+<a name="l98"><span class="ln">98   </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'basic'</span><span class="s3">),</span>
+<a name="l99"><span class="ln">99   </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'data'</span><span class="s3">),</span>
+<a name="l100"><span class="ln">100  </span></a>        <span class="s3">],</span>
+<a name="l101"><span class="ln">101  </span></a>        <span class="s4">'params-in-brace'</span><span class="s3">: [</span>
+<a name="l102"><span class="ln">102  </span></a>            <span class="s3">(</span><span class="s4">r'\}'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, (</span><span class="s4">'#pop'</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">)),</span>
+<a name="l103"><span class="ln">103  </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'params'</span><span class="s3">)</span>
+<a name="l104"><span class="ln">104  </span></a>        <span class="s3">],</span>
+<a name="l105"><span class="ln">105  </span></a>        <span class="s4">'params-in-paren'</span><span class="s3">: [</span>
+<a name="l106"><span class="ln">106  </span></a>            <span class="s3">(</span><span class="s4">r'\)'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, (</span><span class="s4">'#pop'</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">)),</span>
+<a name="l107"><span class="ln">107  </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'params'</span><span class="s3">)</span>
+<a name="l108"><span class="ln">108  </span></a>        <span class="s3">],</span>
+<a name="l109"><span class="ln">109  </span></a>        <span class="s4">'params-in-bracket'</span><span class="s3">: [</span>
+<a name="l110"><span class="ln">110  </span></a>            <span class="s3">(</span><span class="s4">r'\]'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, (</span><span class="s4">'#pop'</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">)),</span>
+<a name="l111"><span class="ln">111  </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'params'</span><span class="s3">)</span>
+<a name="l112"><span class="ln">112  </span></a>        <span class="s3">],</span>
+<a name="l113"><span class="ln">113  </span></a>        <span class="s4">'string'</span><span class="s3">: [</span>
+<a name="l114"><span class="ln">114  </span></a>            <span class="s3">(</span><span class="s4">r'\['</span><span class="s3">, </span><span class="s1">String</span><span class="s3">.</span><span class="s1">Double</span><span class="s3">, </span><span class="s4">'string-square'</span><span class="s3">),</span>
+<a name="l115"><span class="ln">115  </span></a>            <span class="s3">(</span><span class="s4">r'(?s)(\\\\|\\[0-7]+|\\.|[^&quot;\\])'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">.</span><span class="s1">Double</span><span class="s3">),</span>
+<a name="l116"><span class="ln">116  </span></a>            <span class="s3">(</span><span class="s4">r'&quot;'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">.</span><span class="s1">Double</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">)</span>
+<a name="l117"><span class="ln">117  </span></a>        <span class="s3">],</span>
+<a name="l118"><span class="ln">118  </span></a>        <span class="s4">'string-square'</span><span class="s3">: [</span>
+<a name="l119"><span class="ln">119  </span></a>            <span class="s3">(</span><span class="s4">r'\['</span><span class="s3">, </span><span class="s1">String</span><span class="s3">.</span><span class="s1">Double</span><span class="s3">, </span><span class="s4">'string-square'</span><span class="s3">),</span>
+<a name="l120"><span class="ln">120  </span></a>            <span class="s3">(</span><span class="s4">r'(?s)(\\\\|\\[0-7]+|\\.|\\\n|[^\]\\])'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">.</span><span class="s1">Double</span><span class="s3">),</span>
+<a name="l121"><span class="ln">121  </span></a>            <span class="s3">(</span><span class="s4">r'\]'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">.</span><span class="s1">Double</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">)</span>
+<a name="l122"><span class="ln">122  </span></a>        <span class="s3">],</span>
+<a name="l123"><span class="ln">123  </span></a>        <span class="s4">'brace'</span><span class="s3">: [</span>
+<a name="l124"><span class="ln">124  </span></a>            <span class="s3">(</span><span class="s4">r'\}'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">),</span>
+<a name="l125"><span class="ln">125  </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'command-in-brace'</span><span class="s3">),</span>
+<a name="l126"><span class="ln">126  </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'basic'</span><span class="s3">),</span>
+<a name="l127"><span class="ln">127  </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'data'</span><span class="s3">),</span>
+<a name="l128"><span class="ln">128  </span></a>        <span class="s3">],</span>
+<a name="l129"><span class="ln">129  </span></a>        <span class="s4">'paren'</span><span class="s3">: [</span>
+<a name="l130"><span class="ln">130  </span></a>            <span class="s3">(</span><span class="s4">r'\)'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">),</span>
+<a name="l131"><span class="ln">131  </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'command-in-paren'</span><span class="s3">),</span>
+<a name="l132"><span class="ln">132  </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'basic'</span><span class="s3">),</span>
+<a name="l133"><span class="ln">133  </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'data'</span><span class="s3">),</span>
+<a name="l134"><span class="ln">134  </span></a>        <span class="s3">],</span>
+<a name="l135"><span class="ln">135  </span></a>        <span class="s4">'bracket'</span><span class="s3">: [</span>
+<a name="l136"><span class="ln">136  </span></a>            <span class="s3">(</span><span class="s4">r'\]'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">),</span>
+<a name="l137"><span class="ln">137  </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'command-in-bracket'</span><span class="s3">),</span>
+<a name="l138"><span class="ln">138  </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'basic'</span><span class="s3">),</span>
+<a name="l139"><span class="ln">139  </span></a>            <span class="s1">include</span><span class="s3">(</span><span class="s4">'data'</span><span class="s3">),</span>
+<a name="l140"><span class="ln">140  </span></a>        <span class="s3">],</span>
+<a name="l141"><span class="ln">141  </span></a>        <span class="s4">'comment'</span><span class="s3">: [</span>
+<a name="l142"><span class="ln">142  </span></a>            <span class="s3">(</span><span class="s4">r'.*[^\\]\n'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">),</span>
+<a name="l143"><span class="ln">143  </span></a>            <span class="s3">(</span><span class="s4">r'.*\\\n'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">),</span>
+<a name="l144"><span class="ln">144  </span></a>        <span class="s3">],</span>
+<a name="l145"><span class="ln">145  </span></a>    <span class="s3">}</span>
+<a name="l146"><span class="ln">146  </span></a>
+<a name="l147"><span class="ln">147  </span></a>    <span class="s2">def </span><span class="s1">analyse_text</span><span class="s3">(</span><span class="s1">text</span><span class="s3">):</span>
+<a name="l148"><span class="ln">148  </span></a>        <span class="s2">return </span><span class="s1">shebang_matches</span><span class="s3">(</span><span class="s1">text</span><span class="s3">, </span><span class="s4">r'(tcl)'</span><span class="s3">)</span>
+<a name="l149"><span class="ln">149  </span></a></pre>
+</body>
+</html>

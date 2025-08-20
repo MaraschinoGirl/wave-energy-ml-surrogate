@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>ipython_console_highlighting.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #7a7e85;}
+.s5 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+ipython_console_highlighting.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>reST directive for syntax-highlighting ipython interactive sessions. 
+<a name="l3"><span class="ln">3    </span></a> 
+<a name="l4"><span class="ln">4    </span></a>&quot;&quot;&quot;</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">from </span><span class="s1">sphinx </span><span class="s2">import </span><span class="s1">highlighting</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">from </span><span class="s1">ipython_pygments_lexers </span><span class="s2">import </span><span class="s1">IPyLexer</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s2">def </span><span class="s1">setup</span><span class="s3">(</span><span class="s1">app</span><span class="s3">):</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s0">&quot;&quot;&quot;Setup as a sphinx extension.&quot;&quot;&quot;</span>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s4"># This is only a lexer, so adding it below to pygments appears sufficient.</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s4"># But if somebody knows what the right API usage should be to do that via</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s4"># sphinx, by all means fix it here.  At least having this setup.py</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s4"># suppresses the sphinx warning we'd get without it.</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s1">metadata </span><span class="s3">= {</span><span class="s5">&quot;parallel_read_safe&quot;</span><span class="s3">: </span><span class="s2">True</span><span class="s3">, </span><span class="s5">&quot;parallel_write_safe&quot;</span><span class="s3">: </span><span class="s2">True</span><span class="s3">}</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s2">return </span><span class="s1">metadata</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a><span class="s4"># Register the extension as a valid pygments lexer.</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s4"># Alternatively, we could register the lexer with pygments instead. This would</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s4"># require using setuptools entrypoints: http://pygments.org/docs/plugins</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a><span class="s1">ipy3 </span><span class="s3">= </span><span class="s1">IPyLexer</span><span class="s3">()</span>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a><span class="s1">highlighting</span><span class="s3">.</span><span class="s1">lexers</span><span class="s3">[</span><span class="s5">&quot;ipython&quot;</span><span class="s3">] = </span><span class="s1">ipy3</span>
+<a name="l28"><span class="ln">28   </span></a><span class="s1">highlighting</span><span class="s3">.</span><span class="s1">lexers</span><span class="s3">[</span><span class="s5">&quot;ipython3&quot;</span><span class="s3">] = </span><span class="s1">ipy3</span>
+<a name="l29"><span class="ln">29   </span></a></pre>
+</body>
+</html>

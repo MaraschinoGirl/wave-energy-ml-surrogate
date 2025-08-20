@@ -1,0 +1,106 @@
+<html>
+<head>
+<title>testDynamic.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+testDynamic.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Test dynamic policy, and running object table.</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s2">import </span><span class="s1">pythoncom</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">import </span><span class="s1">winerror</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s2">from </span><span class="s1">win32com</span><span class="s3">.</span><span class="s1">server</span><span class="s3">.</span><span class="s1">exception </span><span class="s2">import </span><span class="s1">COMException</span>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s1">iid </span><span class="s3">= </span><span class="s1">pythoncom</span><span class="s3">.</span><span class="s1">MakeIID</span><span class="s3">(</span><span class="s4">&quot;{b48969a0-784b-11d0-ae71-d23f56000000}&quot;</span><span class="s3">)</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s2">class </span><span class="s1">VeryPermissive</span><span class="s3">:</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s2">def </span><span class="s1">_dynamic_</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">name</span><span class="s3">, </span><span class="s1">lcid</span><span class="s3">, </span><span class="s1">wFlags</span><span class="s3">, </span><span class="s1">args</span><span class="s3">):</span>
+<a name="l12"><span class="ln">12   </span></a>        <span class="s2">if </span><span class="s1">wFlags </span><span class="s3">&amp; </span><span class="s1">pythoncom</span><span class="s3">.</span><span class="s1">DISPATCH_METHOD</span><span class="s3">:</span>
+<a name="l13"><span class="ln">13   </span></a>            <span class="s2">return </span><span class="s1">getattr</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">name</span><span class="s3">)(*</span><span class="s1">args</span><span class="s3">)</span>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a>        <span class="s2">if </span><span class="s1">wFlags </span><span class="s3">&amp; </span><span class="s1">pythoncom</span><span class="s3">.</span><span class="s1">DISPATCH_PROPERTYGET</span><span class="s3">:</span>
+<a name="l16"><span class="ln">16   </span></a>            <span class="s2">try</span><span class="s3">:</span>
+<a name="l17"><span class="ln">17   </span></a>                <span class="s0"># to avoid problems with byref param handling, tuple results are converted to lists.</span>
+<a name="l18"><span class="ln">18   </span></a>                <span class="s1">ret </span><span class="s3">= </span><span class="s1">self</span><span class="s3">.</span><span class="s1">__dict__</span><span class="s3">[</span><span class="s1">name</span><span class="s3">]</span>
+<a name="l19"><span class="ln">19   </span></a>                <span class="s2">if </span><span class="s1">isinstance</span><span class="s3">(</span><span class="s1">ret</span><span class="s3">, </span><span class="s1">tuple</span><span class="s3">):</span>
+<a name="l20"><span class="ln">20   </span></a>                    <span class="s1">ret </span><span class="s3">= </span><span class="s1">list</span><span class="s3">(</span><span class="s1">ret</span><span class="s3">)</span>
+<a name="l21"><span class="ln">21   </span></a>                <span class="s2">return </span><span class="s1">ret</span>
+<a name="l22"><span class="ln">22   </span></a>            <span class="s2">except </span><span class="s1">KeyError</span><span class="s3">:  </span><span class="s0"># Probably a method request.</span>
+<a name="l23"><span class="ln">23   </span></a>                <span class="s2">raise </span><span class="s1">COMException</span><span class="s3">(</span><span class="s1">scode</span><span class="s3">=</span><span class="s1">winerror</span><span class="s3">.</span><span class="s1">DISP_E_MEMBERNOTFOUND</span><span class="s3">)</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a>        <span class="s2">if </span><span class="s1">wFlags </span><span class="s3">&amp; (</span>
+<a name="l26"><span class="ln">26   </span></a>            <span class="s1">pythoncom</span><span class="s3">.</span><span class="s1">DISPATCH_PROPERTYPUT </span><span class="s3">| </span><span class="s1">pythoncom</span><span class="s3">.</span><span class="s1">DISPATCH_PROPERTYPUTREF</span>
+<a name="l27"><span class="ln">27   </span></a>        <span class="s3">):</span>
+<a name="l28"><span class="ln">28   </span></a>            <span class="s1">setattr</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">name</span><span class="s3">, </span><span class="s1">args</span><span class="s3">[</span><span class="s5">0</span><span class="s3">])</span>
+<a name="l29"><span class="ln">29   </span></a>            <span class="s2">return</span>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a>        <span class="s2">raise </span><span class="s1">COMException</span><span class="s3">(</span><span class="s1">scode</span><span class="s3">=</span><span class="s1">winerror</span><span class="s3">.</span><span class="s1">E_INVALIDARG</span><span class="s3">, </span><span class="s1">desc</span><span class="s3">=</span><span class="s4">&quot;invalid wFlags&quot;</span><span class="s3">)</span>
+<a name="l32"><span class="ln">32   </span></a>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s2">def </span><span class="s1">write</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, *</span><span class="s1">args</span><span class="s3">):</span>
+<a name="l34"><span class="ln">34   </span></a>        <span class="s2">if </span><span class="s1">len</span><span class="s3">(</span><span class="s1">args</span><span class="s3">) == </span><span class="s5">0</span><span class="s3">:</span>
+<a name="l35"><span class="ln">35   </span></a>            <span class="s2">raise </span><span class="s1">COMException</span><span class="s3">(</span>
+<a name="l36"><span class="ln">36   </span></a>                <span class="s1">scode</span><span class="s3">=</span><span class="s1">winerror</span><span class="s3">.</span><span class="s1">DISP_E_BADPARAMCOUNT</span>
+<a name="l37"><span class="ln">37   </span></a>            <span class="s3">)  </span><span class="s0"># Probably call as PROPGET.</span>
+<a name="l38"><span class="ln">38   </span></a>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s2">for </span><span class="s1">arg </span><span class="s2">in </span><span class="s1">args</span><span class="s3">[:-</span><span class="s5">1</span><span class="s3">]:</span>
+<a name="l40"><span class="ln">40   </span></a>            <span class="s1">print</span><span class="s3">(</span><span class="s1">arg</span><span class="s3">, </span><span class="s1">end</span><span class="s3">=</span><span class="s4">&quot; &quot;</span><span class="s3">)</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s1">print</span><span class="s3">(</span><span class="s1">args</span><span class="s3">[-</span><span class="s5">1</span><span class="s3">])</span>
+<a name="l42"><span class="ln">42   </span></a>
+<a name="l43"><span class="ln">43   </span></a>
+<a name="l44"><span class="ln">44   </span></a><span class="s2">def </span><span class="s1">Test</span><span class="s3">():</span>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s2">import </span><span class="s1">win32com</span><span class="s3">.</span><span class="s1">server</span><span class="s3">.</span><span class="s1">policy</span>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s2">import </span><span class="s1">win32com</span><span class="s3">.</span><span class="s1">server</span><span class="s3">.</span><span class="s1">util</span>
+<a name="l47"><span class="ln">47   </span></a>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s0">#       import win32dbg;win32dbg.brk()</span>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s1">ob </span><span class="s3">= </span><span class="s1">win32com</span><span class="s3">.</span><span class="s1">server</span><span class="s3">.</span><span class="s1">util</span><span class="s3">.</span><span class="s1">wrap</span><span class="s3">(</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s1">VeryPermissive</span><span class="s3">(), </span><span class="s1">usePolicy</span><span class="s3">=</span><span class="s1">win32com</span><span class="s3">.</span><span class="s1">server</span><span class="s3">.</span><span class="s1">policy</span><span class="s3">.</span><span class="s1">DynamicPolicy</span>
+<a name="l51"><span class="ln">51   </span></a>    <span class="s3">)</span>
+<a name="l52"><span class="ln">52   </span></a>    <span class="s2">try</span><span class="s3">:</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s1">handle </span><span class="s3">= </span><span class="s1">pythoncom</span><span class="s3">.</span><span class="s1">RegisterActiveObject</span><span class="s3">(</span><span class="s1">ob</span><span class="s3">, </span><span class="s1">iid</span><span class="s3">, </span><span class="s5">0</span><span class="s3">)</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s2">except </span><span class="s1">pythoncom</span><span class="s3">.</span><span class="s1">com_error </span><span class="s2">as </span><span class="s1">details</span><span class="s3">:</span>
+<a name="l55"><span class="ln">55   </span></a>        <span class="s1">print</span><span class="s3">(</span><span class="s4">&quot;Warning - could not register the object in the ROT:&quot;</span><span class="s3">, </span><span class="s1">details</span><span class="s3">)</span>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s1">handle </span><span class="s3">= </span><span class="s2">None</span>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s2">try</span><span class="s3">:</span>
+<a name="l58"><span class="ln">58   </span></a>        <span class="s2">import </span><span class="s1">win32com</span><span class="s3">.</span><span class="s1">client</span><span class="s3">.</span><span class="s1">dynamic</span>
+<a name="l59"><span class="ln">59   </span></a>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s1">client </span><span class="s3">= </span><span class="s1">win32com</span><span class="s3">.</span><span class="s1">client</span><span class="s3">.</span><span class="s1">dynamic</span><span class="s3">.</span><span class="s1">Dispatch</span><span class="s3">(</span><span class="s1">iid</span><span class="s3">)</span>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s1">client</span><span class="s3">.</span><span class="s1">ANewAttr </span><span class="s3">= </span><span class="s4">&quot;Hello&quot;</span>
+<a name="l62"><span class="ln">62   </span></a>        <span class="s2">assert </span><span class="s1">client</span><span class="s3">.</span><span class="s1">ANewAttr </span><span class="s3">== </span><span class="s4">&quot;Hello&quot;</span><span class="s3">, </span><span class="s4">&quot;Could not set dynamic property&quot;</span>
+<a name="l63"><span class="ln">63   </span></a>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s1">v </span><span class="s3">= [</span><span class="s4">&quot;Hello&quot;</span><span class="s3">, </span><span class="s4">&quot;From&quot;</span><span class="s3">, </span><span class="s4">&quot;Python&quot;</span><span class="s3">, </span><span class="s5">1.4</span><span class="s3">]</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s1">client</span><span class="s3">.</span><span class="s1">TestSequence </span><span class="s3">= </span><span class="s1">v</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s2">assert </span><span class="s1">v </span><span class="s3">== </span><span class="s1">list</span><span class="s3">(</span>
+<a name="l67"><span class="ln">67   </span></a>            <span class="s1">client</span><span class="s3">.</span><span class="s1">TestSequence</span>
+<a name="l68"><span class="ln">68   </span></a>        <span class="s3">), </span><span class="s4">f&quot;Dynamic sequences not working! </span><span class="s2">{</span><span class="s1">v</span><span class="s2">!r}</span><span class="s4">/</span><span class="s2">{</span><span class="s1">client</span><span class="s3">.</span><span class="s1">testSequence</span><span class="s2">!r}</span><span class="s4">&quot;</span>
+<a name="l69"><span class="ln">69   </span></a>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s1">client</span><span class="s3">.</span><span class="s1">write</span><span class="s3">(</span><span class="s4">&quot;This&quot;</span><span class="s3">, </span><span class="s4">&quot;output&quot;</span><span class="s3">, </span><span class="s4">&quot;has&quot;</span><span class="s3">, </span><span class="s4">&quot;come&quot;</span><span class="s3">, </span><span class="s4">&quot;via&quot;</span><span class="s3">, </span><span class="s4">&quot;testDynamic.py&quot;</span><span class="s3">)</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s0"># Check our new &quot;_FlagAsMethod&quot; works (kinda!)</span>
+<a name="l72"><span class="ln">72   </span></a>        <span class="s1">client</span><span class="s3">.</span><span class="s1">_FlagAsMethod</span><span class="s3">(</span><span class="s4">&quot;NotReallyAMethod&quot;</span><span class="s3">)</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s2">assert </span><span class="s1">callable</span><span class="s3">(</span><span class="s1">client</span><span class="s3">.</span><span class="s1">NotReallyAMethod</span><span class="s3">), </span><span class="s4">&quot;Method I flagged as callable isn't!&quot;</span>
+<a name="l74"><span class="ln">74   </span></a>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s1">client </span><span class="s3">= </span><span class="s2">None</span>
+<a name="l76"><span class="ln">76   </span></a>    <span class="s2">finally</span><span class="s3">:</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s2">if </span><span class="s1">handle </span><span class="s2">is not None</span><span class="s3">:</span>
+<a name="l78"><span class="ln">78   </span></a>            <span class="s1">pythoncom</span><span class="s3">.</span><span class="s1">RevokeActiveObject</span><span class="s3">(</span><span class="s1">handle</span><span class="s3">)</span>
+<a name="l79"><span class="ln">79   </span></a>    <span class="s1">print</span><span class="s3">(</span><span class="s4">&quot;Test worked!&quot;</span><span class="s3">)</span>
+<a name="l80"><span class="ln">80   </span></a>
+<a name="l81"><span class="ln">81   </span></a>
+<a name="l82"><span class="ln">82   </span></a><span class="s2">if </span><span class="s1">__name__ </span><span class="s3">== </span><span class="s4">&quot;__main__&quot;</span><span class="s3">:</span>
+<a name="l83"><span class="ln">83   </span></a>    <span class="s1">Test</span><span class="s3">()</span>
+<a name="l84"><span class="ln">84   </span></a></pre>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<html>
+<head>
+<title>zero_padding1d.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+zero_padding1d.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src </span><span class="s0">import </span><span class="s1">backend</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src </span><span class="s0">import </span><span class="s1">ops</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">api_export </span><span class="s0">import </span><span class="s1">keras_export</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">layers</span><span class="s2">.</span><span class="s1">input_spec </span><span class="s0">import </span><span class="s1">InputSpec</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">layers</span><span class="s2">.</span><span class="s1">layer </span><span class="s0">import </span><span class="s1">Layer</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">utils </span><span class="s0">import </span><span class="s1">argument_validation</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">@</span><span class="s1">keras_export</span><span class="s2">(</span><span class="s3">&quot;keras.layers.ZeroPadding1D&quot;</span><span class="s2">)</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">class </span><span class="s1">ZeroPadding1D</span><span class="s2">(</span><span class="s1">Layer</span><span class="s2">):</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s4">&quot;&quot;&quot;Zero-padding layer for 1D input (e.g. temporal sequence). 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>    Example: 
+<a name="l14"><span class="ln">14   </span></a> 
+<a name="l15"><span class="ln">15   </span></a>    &gt;&gt;&gt; input_shape = (2, 2, 3) 
+<a name="l16"><span class="ln">16   </span></a>    &gt;&gt;&gt; x = np.arange(np.prod(input_shape)).reshape(input_shape) 
+<a name="l17"><span class="ln">17   </span></a>    &gt;&gt;&gt; x 
+<a name="l18"><span class="ln">18   </span></a>    [[[ 0  1  2] 
+<a name="l19"><span class="ln">19   </span></a>      [ 3  4  5]] 
+<a name="l20"><span class="ln">20   </span></a>     [[ 6  7  8] 
+<a name="l21"><span class="ln">21   </span></a>      [ 9 10 11]]] 
+<a name="l22"><span class="ln">22   </span></a>    &gt;&gt;&gt; y = keras.layers.ZeroPadding1D(padding=2)(x) 
+<a name="l23"><span class="ln">23   </span></a>    &gt;&gt;&gt; y 
+<a name="l24"><span class="ln">24   </span></a>    [[[ 0  0  0] 
+<a name="l25"><span class="ln">25   </span></a>      [ 0  0  0] 
+<a name="l26"><span class="ln">26   </span></a>      [ 0  1  2] 
+<a name="l27"><span class="ln">27   </span></a>      [ 3  4  5] 
+<a name="l28"><span class="ln">28   </span></a>      [ 0  0  0] 
+<a name="l29"><span class="ln">29   </span></a>      [ 0  0  0]] 
+<a name="l30"><span class="ln">30   </span></a>     [[ 0  0  0] 
+<a name="l31"><span class="ln">31   </span></a>      [ 0  0  0] 
+<a name="l32"><span class="ln">32   </span></a>      [ 6  7  8] 
+<a name="l33"><span class="ln">33   </span></a>      [ 9 10 11] 
+<a name="l34"><span class="ln">34   </span></a>      [ 0  0  0] 
+<a name="l35"><span class="ln">35   </span></a>      [ 0  0  0]]] 
+<a name="l36"><span class="ln">36   </span></a> 
+<a name="l37"><span class="ln">37   </span></a>    Args: 
+<a name="l38"><span class="ln">38   </span></a>        padding: Int, or tuple of int (length 2), or dictionary. 
+<a name="l39"><span class="ln">39   </span></a>            - If int: how many zeros to add at the beginning and end of 
+<a name="l40"><span class="ln">40   </span></a>              the padding dimension (axis 1). 
+<a name="l41"><span class="ln">41   </span></a>            - If tuple of 2 ints: how many zeros to add at the beginning and the 
+<a name="l42"><span class="ln">42   </span></a>              end of the padding dimension (`(left_pad, right_pad)`). 
+<a name="l43"><span class="ln">43   </span></a>        data_format: A string, one of `&quot;channels_last&quot;` (default) or 
+<a name="l44"><span class="ln">44   </span></a>            `&quot;channels_first&quot;`. The ordering of the dimensions in the inputs. 
+<a name="l45"><span class="ln">45   </span></a>            `&quot;channels_last&quot;` corresponds to inputs with shape 
+<a name="l46"><span class="ln">46   </span></a>            `(batch_size, axis_to_pad, channels)` while `&quot;channels_first&quot;` 
+<a name="l47"><span class="ln">47   </span></a>            corresponds to inputs with shape 
+<a name="l48"><span class="ln">48   </span></a>            `(batch_size, channels, axis_to_pad)`. 
+<a name="l49"><span class="ln">49   </span></a>            When unspecified, uses `image_data_format` value found in your Keras 
+<a name="l50"><span class="ln">50   </span></a>            config file at `~/.keras/keras.json` (if exists). Defaults to 
+<a name="l51"><span class="ln">51   </span></a>            `&quot;channels_last&quot;`. 
+<a name="l52"><span class="ln">52   </span></a> 
+<a name="l53"><span class="ln">53   </span></a>    Input shape: 
+<a name="l54"><span class="ln">54   </span></a>        3D tensor with shape: 
+<a name="l55"><span class="ln">55   </span></a>        - If `data_format` is `&quot;channels_last&quot;`: 
+<a name="l56"><span class="ln">56   </span></a>          `(batch_size, axis_to_pad, features)` 
+<a name="l57"><span class="ln">57   </span></a>        - If `data_format` is `&quot;channels_first&quot;`: 
+<a name="l58"><span class="ln">58   </span></a>          `(batch_size, features, axis_to_pad)` 
+<a name="l59"><span class="ln">59   </span></a> 
+<a name="l60"><span class="ln">60   </span></a>    Output shape: 
+<a name="l61"><span class="ln">61   </span></a>        3D tensor with shape: 
+<a name="l62"><span class="ln">62   </span></a>        - If `data_format` is `&quot;channels_last&quot;`: 
+<a name="l63"><span class="ln">63   </span></a>          `(batch_size, padded_axis, features)` 
+<a name="l64"><span class="ln">64   </span></a>        - If `data_format` is `&quot;channels_first&quot;`: 
+<a name="l65"><span class="ln">65   </span></a>          `(batch_size, features, padded_axis)` 
+<a name="l66"><span class="ln">66   </span></a>    &quot;&quot;&quot;</span>
+<a name="l67"><span class="ln">67   </span></a>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">padding</span><span class="s2">=</span><span class="s5">1</span><span class="s2">, </span><span class="s1">data_format</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s1">super</span><span class="s2">().</span><span class="s1">__init__</span><span class="s2">(**</span><span class="s1">kwargs</span><span class="s2">)</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">data_format </span><span class="s2">= </span><span class="s1">backend</span><span class="s2">.</span><span class="s1">standardize_data_format</span><span class="s2">(</span><span class="s1">data_format</span><span class="s2">)</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">padding </span><span class="s2">= </span><span class="s1">argument_validation</span><span class="s2">.</span><span class="s1">standardize_tuple</span><span class="s2">(</span>
+<a name="l72"><span class="ln">72   </span></a>            <span class="s1">padding</span><span class="s2">, </span><span class="s5">2</span><span class="s2">, </span><span class="s3">&quot;padding&quot;</span><span class="s2">, </span><span class="s1">allow_zero</span><span class="s2">=</span><span class="s0">True</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s2">)</span>
+<a name="l74"><span class="ln">74   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">input_spec </span><span class="s2">= </span><span class="s1">InputSpec</span><span class="s2">(</span><span class="s1">ndim</span><span class="s2">=</span><span class="s5">3</span><span class="s2">)</span>
+<a name="l75"><span class="ln">75   </span></a>
+<a name="l76"><span class="ln">76   </span></a>    <span class="s0">def </span><span class="s1">compute_output_shape</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">input_shape</span><span class="s2">):</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s1">output_shape </span><span class="s2">= </span><span class="s1">list</span><span class="s2">(</span><span class="s1">input_shape</span><span class="s2">)</span>
+<a name="l78"><span class="ln">78   </span></a>        <span class="s1">padding_dim </span><span class="s2">= </span><span class="s5">2 </span><span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data_format </span><span class="s2">== </span><span class="s3">&quot;channels_first&quot; </span><span class="s0">else </span><span class="s5">1</span>
+<a name="l79"><span class="ln">79   </span></a>        <span class="s0">if </span><span class="s1">output_shape</span><span class="s2">[</span><span class="s1">padding_dim</span><span class="s2">] </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l80"><span class="ln">80   </span></a>            <span class="s1">output_shape</span><span class="s2">[</span><span class="s1">padding_dim</span><span class="s2">] += </span><span class="s1">self</span><span class="s2">.</span><span class="s1">padding</span><span class="s2">[</span><span class="s5">0</span><span class="s2">] + </span><span class="s1">self</span><span class="s2">.</span><span class="s1">padding</span><span class="s2">[</span><span class="s5">1</span><span class="s2">]</span>
+<a name="l81"><span class="ln">81   </span></a>        <span class="s0">return </span><span class="s1">tuple</span><span class="s2">(</span><span class="s1">output_shape</span><span class="s2">)</span>
+<a name="l82"><span class="ln">82   </span></a>
+<a name="l83"><span class="ln">83   </span></a>    <span class="s0">def </span><span class="s1">call</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">inputs</span><span class="s2">):</span>
+<a name="l84"><span class="ln">84   </span></a>        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data_format </span><span class="s2">== </span><span class="s3">&quot;channels_first&quot;</span><span class="s2">:</span>
+<a name="l85"><span class="ln">85   </span></a>            <span class="s1">all_dims_padding </span><span class="s2">= ((</span><span class="s5">0</span><span class="s2">, </span><span class="s5">0</span><span class="s2">), (</span><span class="s5">0</span><span class="s2">, </span><span class="s5">0</span><span class="s2">), </span><span class="s1">self</span><span class="s2">.</span><span class="s1">padding</span><span class="s2">)</span>
+<a name="l86"><span class="ln">86   </span></a>        <span class="s0">else</span><span class="s2">:</span>
+<a name="l87"><span class="ln">87   </span></a>            <span class="s1">all_dims_padding </span><span class="s2">= ((</span><span class="s5">0</span><span class="s2">, </span><span class="s5">0</span><span class="s2">), </span><span class="s1">self</span><span class="s2">.</span><span class="s1">padding</span><span class="s2">, (</span><span class="s5">0</span><span class="s2">, </span><span class="s5">0</span><span class="s2">))</span>
+<a name="l88"><span class="ln">88   </span></a>        <span class="s0">return </span><span class="s1">ops</span><span class="s2">.</span><span class="s1">pad</span><span class="s2">(</span><span class="s1">inputs</span><span class="s2">, </span><span class="s1">all_dims_padding</span><span class="s2">)</span>
+<a name="l89"><span class="ln">89   </span></a>
+<a name="l90"><span class="ln">90   </span></a>    <span class="s0">def </span><span class="s1">get_config</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+<a name="l91"><span class="ln">91   </span></a>        <span class="s1">config </span><span class="s2">= {</span><span class="s3">&quot;padding&quot;</span><span class="s2">: </span><span class="s1">self</span><span class="s2">.</span><span class="s1">padding</span><span class="s2">, </span><span class="s3">&quot;data_format&quot;</span><span class="s2">: </span><span class="s1">self</span><span class="s2">.</span><span class="s1">data_format</span><span class="s2">}</span>
+<a name="l92"><span class="ln">92   </span></a>        <span class="s1">base_config </span><span class="s2">= </span><span class="s1">super</span><span class="s2">().</span><span class="s1">get_config</span><span class="s2">()</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s0">return </span><span class="s2">{**</span><span class="s1">base_config</span><span class="s2">, **</span><span class="s1">config</span><span class="s2">}</span>
+<a name="l94"><span class="ln">94   </span></a></pre>
+</body>
+</html>

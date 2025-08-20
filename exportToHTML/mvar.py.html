@@ -1,0 +1,61 @@
+<html>
+<head>
+<title>mvar.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #bcbec4;}
+.s2 { color: #6aab73;}
+.s3 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+mvar.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">MVAR_ENTRIES </span><span class="s1">= {</span>
+<a name="l2"><span class="ln">2    </span></a>    <span class="s2">&quot;hasc&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;sTypoAscender&quot;</span><span class="s1">),  </span><span class="s3"># horizontal ascender</span>
+<a name="l3"><span class="ln">3    </span></a>    <span class="s2">&quot;hdsc&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;sTypoDescender&quot;</span><span class="s1">),  </span><span class="s3"># horizontal descender</span>
+<a name="l4"><span class="ln">4    </span></a>    <span class="s2">&quot;hlgp&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;sTypoLineGap&quot;</span><span class="s1">),  </span><span class="s3"># horizontal line gap</span>
+<a name="l5"><span class="ln">5    </span></a>    <span class="s2">&quot;hcla&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;usWinAscent&quot;</span><span class="s1">),  </span><span class="s3"># horizontal clipping ascent</span>
+<a name="l6"><span class="ln">6    </span></a>    <span class="s2">&quot;hcld&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;usWinDescent&quot;</span><span class="s1">),  </span><span class="s3"># horizontal clipping descent</span>
+<a name="l7"><span class="ln">7    </span></a>    <span class="s2">&quot;vasc&quot;</span><span class="s1">: (</span><span class="s2">&quot;vhea&quot;</span><span class="s1">, </span><span class="s2">&quot;ascent&quot;</span><span class="s1">),  </span><span class="s3"># vertical ascender</span>
+<a name="l8"><span class="ln">8    </span></a>    <span class="s2">&quot;vdsc&quot;</span><span class="s1">: (</span><span class="s2">&quot;vhea&quot;</span><span class="s1">, </span><span class="s2">&quot;descent&quot;</span><span class="s1">),  </span><span class="s3"># vertical descender</span>
+<a name="l9"><span class="ln">9    </span></a>    <span class="s2">&quot;vlgp&quot;</span><span class="s1">: (</span><span class="s2">&quot;vhea&quot;</span><span class="s1">, </span><span class="s2">&quot;lineGap&quot;</span><span class="s1">),  </span><span class="s3"># vertical line gap</span>
+<a name="l10"><span class="ln">10   </span></a>    <span class="s2">&quot;hcrs&quot;</span><span class="s1">: (</span><span class="s2">&quot;hhea&quot;</span><span class="s1">, </span><span class="s2">&quot;caretSlopeRise&quot;</span><span class="s1">),  </span><span class="s3"># horizontal caret rise</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s2">&quot;hcrn&quot;</span><span class="s1">: (</span><span class="s2">&quot;hhea&quot;</span><span class="s1">, </span><span class="s2">&quot;caretSlopeRun&quot;</span><span class="s1">),  </span><span class="s3"># horizontal caret run</span>
+<a name="l12"><span class="ln">12   </span></a>    <span class="s2">&quot;hcof&quot;</span><span class="s1">: (</span><span class="s2">&quot;hhea&quot;</span><span class="s1">, </span><span class="s2">&quot;caretOffset&quot;</span><span class="s1">),  </span><span class="s3"># horizontal caret offset</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s2">&quot;vcrs&quot;</span><span class="s1">: (</span><span class="s2">&quot;vhea&quot;</span><span class="s1">, </span><span class="s2">&quot;caretSlopeRise&quot;</span><span class="s1">),  </span><span class="s3"># vertical caret rise</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s2">&quot;vcrn&quot;</span><span class="s1">: (</span><span class="s2">&quot;vhea&quot;</span><span class="s1">, </span><span class="s2">&quot;caretSlopeRun&quot;</span><span class="s1">),  </span><span class="s3"># vertical caret run</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s2">&quot;vcof&quot;</span><span class="s1">: (</span><span class="s2">&quot;vhea&quot;</span><span class="s1">, </span><span class="s2">&quot;caretOffset&quot;</span><span class="s1">),  </span><span class="s3"># vertical caret offset</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s2">&quot;xhgt&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;sxHeight&quot;</span><span class="s1">),  </span><span class="s3"># x height</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s2">&quot;cpht&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;sCapHeight&quot;</span><span class="s1">),  </span><span class="s3"># cap height</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s2">&quot;sbxs&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;ySubscriptXSize&quot;</span><span class="s1">),  </span><span class="s3"># subscript em x size</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s2">&quot;sbys&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;ySubscriptYSize&quot;</span><span class="s1">),  </span><span class="s3"># subscript em y size</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s2">&quot;sbxo&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;ySubscriptXOffset&quot;</span><span class="s1">),  </span><span class="s3"># subscript em x offset</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s2">&quot;sbyo&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;ySubscriptYOffset&quot;</span><span class="s1">),  </span><span class="s3"># subscript em y offset</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s2">&quot;spxs&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;ySuperscriptXSize&quot;</span><span class="s1">),  </span><span class="s3"># superscript em x size</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s2">&quot;spys&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;ySuperscriptYSize&quot;</span><span class="s1">),  </span><span class="s3"># superscript em y size</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s2">&quot;spxo&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;ySuperscriptXOffset&quot;</span><span class="s1">),  </span><span class="s3"># superscript em x offset</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s2">&quot;spyo&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;ySuperscriptYOffset&quot;</span><span class="s1">),  </span><span class="s3"># superscript em y offset</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s2">&quot;strs&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;yStrikeoutSize&quot;</span><span class="s1">),  </span><span class="s3"># strikeout size</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s2">&quot;stro&quot;</span><span class="s1">: (</span><span class="s2">&quot;OS/2&quot;</span><span class="s1">, </span><span class="s2">&quot;yStrikeoutPosition&quot;</span><span class="s1">),  </span><span class="s3"># strikeout offset</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s2">&quot;unds&quot;</span><span class="s1">: (</span><span class="s2">&quot;post&quot;</span><span class="s1">, </span><span class="s2">&quot;underlineThickness&quot;</span><span class="s1">),  </span><span class="s3"># underline size</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s2">&quot;undo&quot;</span><span class="s1">: (</span><span class="s2">&quot;post&quot;</span><span class="s1">, </span><span class="s2">&quot;underlinePosition&quot;</span><span class="s1">),  </span><span class="s3"># underline offset</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s3">#'gsp0': ('gasp', 'gaspRange[0].rangeMaxPPEM'),  # gaspRange[0]</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s3">#'gsp1': ('gasp', 'gaspRange[1].rangeMaxPPEM'),  # gaspRange[1]</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s3">#'gsp2': ('gasp', 'gaspRange[2].rangeMaxPPEM'),  # gaspRange[2]</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s3">#'gsp3': ('gasp', 'gaspRange[3].rangeMaxPPEM'),  # gaspRange[3]</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s3">#'gsp4': ('gasp', 'gaspRange[4].rangeMaxPPEM'),  # gaspRange[4]</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s3">#'gsp5': ('gasp', 'gaspRange[5].rangeMaxPPEM'),  # gaspRange[5]</span>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s3">#'gsp6': ('gasp', 'gaspRange[6].rangeMaxPPEM'),  # gaspRange[6]</span>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s3">#'gsp7': ('gasp', 'gaspRange[7].rangeMaxPPEM'),  # gaspRange[7]</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s3">#'gsp8': ('gasp', 'gaspRange[8].rangeMaxPPEM'),  # gaspRange[8]</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s3">#'gsp9': ('gasp', 'gaspRange[9].rangeMaxPPEM'),  # gaspRange[9]</span>
+<a name="l40"><span class="ln">40   </span></a><span class="s1">}</span>
+<a name="l41"><span class="ln">41   </span></a></pre>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<html>
+<head>
+<title>yang.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+yang.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>    pygments.lexers.yang 
+<a name="l3"><span class="ln">3    </span></a>    ~~~~~~~~~~~~~~~~~~~~ 
+<a name="l4"><span class="ln">4    </span></a> 
+<a name="l5"><span class="ln">5    </span></a>    Lexer for the YANG 1.1 modeling language. See :rfc:`7950`. 
+<a name="l6"><span class="ln">6    </span></a> 
+<a name="l7"><span class="ln">7    </span></a>    :copyright: Copyright 2006-2025 by the Pygments team, see AUTHORS. 
+<a name="l8"><span class="ln">8    </span></a>    :license: BSD, see LICENSE for details. 
+<a name="l9"><span class="ln">9    </span></a>&quot;&quot;&quot;</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">lexer </span><span class="s2">import </span><span class="s1">RegexLexer</span><span class="s3">, </span><span class="s1">bygroups</span><span class="s3">, </span><span class="s1">words</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">token </span><span class="s2">import </span><span class="s1">Text</span><span class="s3">, </span><span class="s1">Token</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">, </span><span class="s1">String</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">, </span><span class="s1">Number</span>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a><span class="s1">__all__ </span><span class="s3">= [</span><span class="s4">'YangLexer'</span><span class="s3">]</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s2">class </span><span class="s1">YangLexer</span><span class="s3">(</span><span class="s1">RegexLexer</span><span class="s3">):</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l19"><span class="ln">19   </span></a>    Lexer for YANG, based on RFC7950. 
+<a name="l20"><span class="ln">20   </span></a>    &quot;&quot;&quot;</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s1">name </span><span class="s3">= </span><span class="s4">'YANG'</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s1">url </span><span class="s3">= </span><span class="s4">'https://tools.ietf.org/html/rfc7950/'</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s1">aliases </span><span class="s3">= [</span><span class="s4">'yang'</span><span class="s3">]</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s1">filenames </span><span class="s3">= [</span><span class="s4">'*.yang'</span><span class="s3">]</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s1">mimetypes </span><span class="s3">= [</span><span class="s4">'application/yang'</span><span class="s3">]</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s1">version_added </span><span class="s3">= </span><span class="s4">'2.7'</span>
+<a name="l27"><span class="ln">27   </span></a>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s5">#Keywords from RFC7950 ; oriented at BNF style</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s1">TOP_STMTS_KEYWORDS </span><span class="s3">= (</span><span class="s4">&quot;module&quot;</span><span class="s3">, </span><span class="s4">&quot;submodule&quot;</span><span class="s3">)</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s1">MODULE_HEADER_STMT_KEYWORDS </span><span class="s3">= (</span><span class="s4">&quot;belongs-to&quot;</span><span class="s3">, </span><span class="s4">&quot;namespace&quot;</span><span class="s3">, </span><span class="s4">&quot;prefix&quot;</span><span class="s3">, </span><span class="s4">&quot;yang-version&quot;</span><span class="s3">)</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s1">META_STMT_KEYWORDS </span><span class="s3">= (</span><span class="s4">&quot;contact&quot;</span><span class="s3">, </span><span class="s4">&quot;description&quot;</span><span class="s3">, </span><span class="s4">&quot;organization&quot;</span><span class="s3">,</span>
+<a name="l32"><span class="ln">32   </span></a>                          <span class="s4">&quot;reference&quot;</span><span class="s3">, </span><span class="s4">&quot;revision&quot;</span><span class="s3">)</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s1">LINKAGE_STMTS_KEYWORDS </span><span class="s3">= (</span><span class="s4">&quot;import&quot;</span><span class="s3">, </span><span class="s4">&quot;include&quot;</span><span class="s3">, </span><span class="s4">&quot;revision-date&quot;</span><span class="s3">)</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s1">BODY_STMT_KEYWORDS </span><span class="s3">= (</span><span class="s4">&quot;action&quot;</span><span class="s3">, </span><span class="s4">&quot;argument&quot;</span><span class="s3">, </span><span class="s4">&quot;augment&quot;</span><span class="s3">, </span><span class="s4">&quot;deviation&quot;</span><span class="s3">,</span>
+<a name="l35"><span class="ln">35   </span></a>                          <span class="s4">&quot;extension&quot;</span><span class="s3">, </span><span class="s4">&quot;feature&quot;</span><span class="s3">, </span><span class="s4">&quot;grouping&quot;</span><span class="s3">, </span><span class="s4">&quot;identity&quot;</span><span class="s3">,</span>
+<a name="l36"><span class="ln">36   </span></a>                          <span class="s4">&quot;if-feature&quot;</span><span class="s3">, </span><span class="s4">&quot;input&quot;</span><span class="s3">, </span><span class="s4">&quot;notification&quot;</span><span class="s3">, </span><span class="s4">&quot;output&quot;</span><span class="s3">,</span>
+<a name="l37"><span class="ln">37   </span></a>                          <span class="s4">&quot;rpc&quot;</span><span class="s3">, </span><span class="s4">&quot;typedef&quot;</span><span class="s3">)</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s1">DATA_DEF_STMT_KEYWORDS </span><span class="s3">= (</span><span class="s4">&quot;anydata&quot;</span><span class="s3">, </span><span class="s4">&quot;anyxml&quot;</span><span class="s3">, </span><span class="s4">&quot;case&quot;</span><span class="s3">, </span><span class="s4">&quot;choice&quot;</span><span class="s3">,</span>
+<a name="l39"><span class="ln">39   </span></a>                              <span class="s4">&quot;config&quot;</span><span class="s3">, </span><span class="s4">&quot;container&quot;</span><span class="s3">, </span><span class="s4">&quot;deviate&quot;</span><span class="s3">, </span><span class="s4">&quot;leaf&quot;</span><span class="s3">,</span>
+<a name="l40"><span class="ln">40   </span></a>                              <span class="s4">&quot;leaf-list&quot;</span><span class="s3">, </span><span class="s4">&quot;list&quot;</span><span class="s3">, </span><span class="s4">&quot;must&quot;</span><span class="s3">, </span><span class="s4">&quot;presence&quot;</span><span class="s3">,</span>
+<a name="l41"><span class="ln">41   </span></a>                              <span class="s4">&quot;refine&quot;</span><span class="s3">, </span><span class="s4">&quot;uses&quot;</span><span class="s3">, </span><span class="s4">&quot;when&quot;</span><span class="s3">)</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s1">TYPE_STMT_KEYWORDS </span><span class="s3">= (</span><span class="s4">&quot;base&quot;</span><span class="s3">, </span><span class="s4">&quot;bit&quot;</span><span class="s3">, </span><span class="s4">&quot;default&quot;</span><span class="s3">, </span><span class="s4">&quot;enum&quot;</span><span class="s3">, </span><span class="s4">&quot;error-app-tag&quot;</span><span class="s3">,</span>
+<a name="l43"><span class="ln">43   </span></a>                          <span class="s4">&quot;error-message&quot;</span><span class="s3">, </span><span class="s4">&quot;fraction-digits&quot;</span><span class="s3">, </span><span class="s4">&quot;length&quot;</span><span class="s3">,</span>
+<a name="l44"><span class="ln">44   </span></a>                          <span class="s4">&quot;max-elements&quot;</span><span class="s3">, </span><span class="s4">&quot;min-elements&quot;</span><span class="s3">, </span><span class="s4">&quot;modifier&quot;</span><span class="s3">,</span>
+<a name="l45"><span class="ln">45   </span></a>                          <span class="s4">&quot;ordered-by&quot;</span><span class="s3">, </span><span class="s4">&quot;path&quot;</span><span class="s3">, </span><span class="s4">&quot;pattern&quot;</span><span class="s3">, </span><span class="s4">&quot;position&quot;</span><span class="s3">,</span>
+<a name="l46"><span class="ln">46   </span></a>                          <span class="s4">&quot;range&quot;</span><span class="s3">, </span><span class="s4">&quot;require-instance&quot;</span><span class="s3">, </span><span class="s4">&quot;status&quot;</span><span class="s3">, </span><span class="s4">&quot;type&quot;</span><span class="s3">,</span>
+<a name="l47"><span class="ln">47   </span></a>                          <span class="s4">&quot;units&quot;</span><span class="s3">, </span><span class="s4">&quot;value&quot;</span><span class="s3">, </span><span class="s4">&quot;yin-element&quot;</span><span class="s3">)</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s1">LIST_STMT_KEYWORDS </span><span class="s3">= (</span><span class="s4">&quot;key&quot;</span><span class="s3">, </span><span class="s4">&quot;mandatory&quot;</span><span class="s3">, </span><span class="s4">&quot;unique&quot;</span><span class="s3">)</span>
+<a name="l49"><span class="ln">49   </span></a>
+<a name="l50"><span class="ln">50   </span></a>    <span class="s5">#RFC7950 other keywords</span>
+<a name="l51"><span class="ln">51   </span></a>    <span class="s1">CONSTANTS_KEYWORDS </span><span class="s3">= (</span><span class="s4">&quot;add&quot;</span><span class="s3">, </span><span class="s4">&quot;current&quot;</span><span class="s3">, </span><span class="s4">&quot;delete&quot;</span><span class="s3">, </span><span class="s4">&quot;deprecated&quot;</span><span class="s3">, </span><span class="s4">&quot;false&quot;</span><span class="s3">,</span>
+<a name="l52"><span class="ln">52   </span></a>                          <span class="s4">&quot;invert-match&quot;</span><span class="s3">, </span><span class="s4">&quot;max&quot;</span><span class="s3">, </span><span class="s4">&quot;min&quot;</span><span class="s3">, </span><span class="s4">&quot;not-supported&quot;</span><span class="s3">,</span>
+<a name="l53"><span class="ln">53   </span></a>                          <span class="s4">&quot;obsolete&quot;</span><span class="s3">, </span><span class="s4">&quot;replace&quot;</span><span class="s3">, </span><span class="s4">&quot;true&quot;</span><span class="s3">, </span><span class="s4">&quot;unbounded&quot;</span><span class="s3">, </span><span class="s4">&quot;user&quot;</span><span class="s3">)</span>
+<a name="l54"><span class="ln">54   </span></a>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s5">#RFC7950 Built-In Types</span>
+<a name="l56"><span class="ln">56   </span></a>    <span class="s1">TYPES </span><span class="s3">= (</span><span class="s4">&quot;binary&quot;</span><span class="s3">, </span><span class="s4">&quot;bits&quot;</span><span class="s3">, </span><span class="s4">&quot;boolean&quot;</span><span class="s3">, </span><span class="s4">&quot;decimal64&quot;</span><span class="s3">, </span><span class="s4">&quot;empty&quot;</span><span class="s3">, </span><span class="s4">&quot;enumeration&quot;</span><span class="s3">,</span>
+<a name="l57"><span class="ln">57   </span></a>             <span class="s4">&quot;identityref&quot;</span><span class="s3">, </span><span class="s4">&quot;instance-identifier&quot;</span><span class="s3">, </span><span class="s4">&quot;int16&quot;</span><span class="s3">, </span><span class="s4">&quot;int32&quot;</span><span class="s3">, </span><span class="s4">&quot;int64&quot;</span><span class="s3">,</span>
+<a name="l58"><span class="ln">58   </span></a>             <span class="s4">&quot;int8&quot;</span><span class="s3">, </span><span class="s4">&quot;leafref&quot;</span><span class="s3">, </span><span class="s4">&quot;string&quot;</span><span class="s3">, </span><span class="s4">&quot;uint16&quot;</span><span class="s3">, </span><span class="s4">&quot;uint32&quot;</span><span class="s3">, </span><span class="s4">&quot;uint64&quot;</span><span class="s3">,</span>
+<a name="l59"><span class="ln">59   </span></a>             <span class="s4">&quot;uint8&quot;</span><span class="s3">, </span><span class="s4">&quot;union&quot;</span><span class="s3">)</span>
+<a name="l60"><span class="ln">60   </span></a>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s1">suffix_re_pattern </span><span class="s3">= </span><span class="s4">r'(?=[^\w\-:])'</span>
+<a name="l62"><span class="ln">62   </span></a>
+<a name="l63"><span class="ln">63   </span></a>    <span class="s1">tokens </span><span class="s3">= {</span>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s4">'comments'</span><span class="s3">: [</span>
+<a name="l65"><span class="ln">65   </span></a>            <span class="s3">(</span><span class="s4">r'[^*/]'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">),</span>
+<a name="l66"><span class="ln">66   </span></a>            <span class="s3">(</span><span class="s4">r'/\*'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">, </span><span class="s4">'#push'</span><span class="s3">),</span>
+<a name="l67"><span class="ln">67   </span></a>            <span class="s3">(</span><span class="s4">r'\*/'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">),</span>
+<a name="l68"><span class="ln">68   </span></a>            <span class="s3">(</span><span class="s4">r'[*/]'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">),</span>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s3">],</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s4">&quot;root&quot;</span><span class="s3">: [</span>
+<a name="l71"><span class="ln">71   </span></a>            <span class="s3">(</span><span class="s4">r'\s+'</span><span class="s3">, </span><span class="s1">Text</span><span class="s3">.</span><span class="s1">Whitespace</span><span class="s3">),</span>
+<a name="l72"><span class="ln">72   </span></a>            <span class="s3">(</span><span class="s4">r'[{};]+'</span><span class="s3">, </span><span class="s1">Token</span><span class="s3">.</span><span class="s1">Punctuation</span><span class="s3">),</span>
+<a name="l73"><span class="ln">73   </span></a>            <span class="s3">(</span><span class="s4">r'(?&lt;![\-\w])(and|or|not|\+|\.)(?![\-\w])'</span><span class="s3">, </span><span class="s1">Token</span><span class="s3">.</span><span class="s1">Operator</span><span class="s3">),</span>
+<a name="l74"><span class="ln">74   </span></a>
+<a name="l75"><span class="ln">75   </span></a>            <span class="s3">(</span><span class="s4">r'&quot;(?:\\&quot;|[^&quot;])*?&quot;'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">.</span><span class="s1">Double</span><span class="s3">),</span>
+<a name="l76"><span class="ln">76   </span></a>            <span class="s3">(</span><span class="s4">r&quot;'(?:\\'|[^'])*?'&quot;</span><span class="s3">, </span><span class="s1">String</span><span class="s3">.</span><span class="s1">Single</span><span class="s3">),</span>
+<a name="l77"><span class="ln">77   </span></a>
+<a name="l78"><span class="ln">78   </span></a>            <span class="s3">(</span><span class="s4">r'/\*'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">, </span><span class="s4">'comments'</span><span class="s3">),</span>
+<a name="l79"><span class="ln">79   </span></a>            <span class="s3">(</span><span class="s4">r'//.*?$'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">),</span>
+<a name="l80"><span class="ln">80   </span></a>
+<a name="l81"><span class="ln">81   </span></a>            <span class="s5">#match BNF stmt for `node-identifier` with [ prefix &quot;:&quot;]</span>
+<a name="l82"><span class="ln">82   </span></a>            <span class="s3">(</span><span class="s4">r'(?:^|(?&lt;=[\s{};]))([\w.-]+)(:)([\w.-]+)(?=[\s{};])'</span><span class="s3">,</span>
+<a name="l83"><span class="ln">83   </span></a>             <span class="s1">bygroups</span><span class="s3">(</span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Namespace</span><span class="s3">, </span><span class="s1">Token</span><span class="s3">.</span><span class="s1">Punctuation</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">)),</span>
+<a name="l84"><span class="ln">84   </span></a>
+<a name="l85"><span class="ln">85   </span></a>            <span class="s5">#match BNF stmt `date-arg-str`</span>
+<a name="l86"><span class="ln">86   </span></a>            <span class="s3">(</span><span class="s4">r'([0-9]{4}\-[0-9]{2}\-[0-9]{2})(?=[\s{};])'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Label</span><span class="s3">),</span>
+<a name="l87"><span class="ln">87   </span></a>            <span class="s3">(</span><span class="s4">r'([0-9]+\.[0-9]+)(?=[\s{};])'</span><span class="s3">, </span><span class="s1">Number</span><span class="s3">.</span><span class="s1">Float</span><span class="s3">),</span>
+<a name="l88"><span class="ln">88   </span></a>            <span class="s3">(</span><span class="s4">r'([0-9]+)(?=[\s{};])'</span><span class="s3">, </span><span class="s1">Number</span><span class="s3">.</span><span class="s1">Integer</span><span class="s3">),</span>
+<a name="l89"><span class="ln">89   </span></a>
+<a name="l90"><span class="ln">90   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">TOP_STMTS_KEYWORDS</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s1">suffix_re_pattern</span><span class="s3">), </span><span class="s1">Token</span><span class="s3">.</span><span class="s1">Keyword</span><span class="s3">),</span>
+<a name="l91"><span class="ln">91   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">MODULE_HEADER_STMT_KEYWORDS</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s1">suffix_re_pattern</span><span class="s3">), </span><span class="s1">Token</span><span class="s3">.</span><span class="s1">Keyword</span><span class="s3">),</span>
+<a name="l92"><span class="ln">92   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">META_STMT_KEYWORDS</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s1">suffix_re_pattern</span><span class="s3">), </span><span class="s1">Token</span><span class="s3">.</span><span class="s1">Keyword</span><span class="s3">),</span>
+<a name="l93"><span class="ln">93   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">LINKAGE_STMTS_KEYWORDS</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s1">suffix_re_pattern</span><span class="s3">), </span><span class="s1">Token</span><span class="s3">.</span><span class="s1">Keyword</span><span class="s3">),</span>
+<a name="l94"><span class="ln">94   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">BODY_STMT_KEYWORDS</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s1">suffix_re_pattern</span><span class="s3">), </span><span class="s1">Token</span><span class="s3">.</span><span class="s1">Keyword</span><span class="s3">),</span>
+<a name="l95"><span class="ln">95   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">DATA_DEF_STMT_KEYWORDS</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s1">suffix_re_pattern</span><span class="s3">), </span><span class="s1">Token</span><span class="s3">.</span><span class="s1">Keyword</span><span class="s3">),</span>
+<a name="l96"><span class="ln">96   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">TYPE_STMT_KEYWORDS</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s1">suffix_re_pattern</span><span class="s3">), </span><span class="s1">Token</span><span class="s3">.</span><span class="s1">Keyword</span><span class="s3">),</span>
+<a name="l97"><span class="ln">97   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">LIST_STMT_KEYWORDS</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s1">suffix_re_pattern</span><span class="s3">), </span><span class="s1">Token</span><span class="s3">.</span><span class="s1">Keyword</span><span class="s3">),</span>
+<a name="l98"><span class="ln">98   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">TYPES</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s1">suffix_re_pattern</span><span class="s3">), </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Class</span><span class="s3">),</span>
+<a name="l99"><span class="ln">99   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">CONSTANTS_KEYWORDS</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s1">suffix_re_pattern</span><span class="s3">), </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Class</span><span class="s3">),</span>
+<a name="l100"><span class="ln">100  </span></a>
+<a name="l101"><span class="ln">101  </span></a>            <span class="s3">(</span><span class="s4">r'[^;{}\s\'&quot;]+'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">),</span>
+<a name="l102"><span class="ln">102  </span></a>        <span class="s3">]</span>
+<a name="l103"><span class="ln">103  </span></a>    <span class="s3">}</span>
+<a name="l104"><span class="ln">104  </span></a></pre>
+</body>
+</html>

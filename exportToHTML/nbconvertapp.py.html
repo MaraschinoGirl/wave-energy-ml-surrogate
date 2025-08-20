@@ -1,0 +1,703 @@
+<html>
+<head>
+<title>nbconvertapp.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+nbconvertapp.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">#!/usr/bin/env python</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s2">&quot;&quot;&quot;NbConvert is a utility for conversion of .ipynb files. 
+<a name="l3"><span class="ln">3    </span></a> 
+<a name="l4"><span class="ln">4    </span></a>Command-line interface for the NbConvert conversion utility. 
+<a name="l5"><span class="ln">5    </span></a>&quot;&quot;&quot;</span>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s0"># Copyright (c) IPython Development Team.</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0"># Distributed under the terms of the Modified BSD License.</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s3">from </span><span class="s1">__future__ </span><span class="s3">import </span><span class="s1">annotations</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s3">import </span><span class="s1">asyncio</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s3">import </span><span class="s1">glob</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s3">import </span><span class="s1">logging</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s3">import </span><span class="s1">os</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s3">import </span><span class="s1">sys</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s3">import </span><span class="s1">typing </span><span class="s3">as </span><span class="s1">t</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s3">from </span><span class="s1">textwrap </span><span class="s3">import </span><span class="s1">dedent</span><span class="s4">, </span><span class="s1">fill</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a><span class="s3">from </span><span class="s1">jupyter_core</span><span class="s4">.</span><span class="s1">application </span><span class="s3">import </span><span class="s1">JupyterApp</span><span class="s4">, </span><span class="s1">base_aliases</span><span class="s4">, </span><span class="s1">base_flags</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s3">from </span><span class="s1">traitlets </span><span class="s3">import </span><span class="s1">Bool</span><span class="s4">, </span><span class="s1">DottedObjectName</span><span class="s4">, </span><span class="s1">Instance</span><span class="s4">, </span><span class="s1">List</span><span class="s4">, </span><span class="s1">Type</span><span class="s4">, </span><span class="s1">Unicode</span><span class="s4">, </span><span class="s1">default</span><span class="s4">, </span><span class="s1">observe</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s3">from </span><span class="s1">traitlets</span><span class="s4">.</span><span class="s1">config </span><span class="s3">import </span><span class="s1">Configurable</span><span class="s4">, </span><span class="s1">catch_config_error</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s3">from </span><span class="s1">traitlets</span><span class="s4">.</span><span class="s1">utils</span><span class="s4">.</span><span class="s1">importstring </span><span class="s3">import </span><span class="s1">import_item</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a><span class="s3">from </span><span class="s1">nbconvert </span><span class="s3">import </span><span class="s1">__version__</span><span class="s4">, </span><span class="s1">exporters</span><span class="s4">, </span><span class="s1">postprocessors</span><span class="s4">, </span><span class="s1">preprocessors</span><span class="s4">, </span><span class="s1">writers</span>
+<a name="l25"><span class="ln">25   </span></a><span class="s3">from </span><span class="s1">nbconvert</span><span class="s4">.</span><span class="s1">utils</span><span class="s4">.</span><span class="s1">text </span><span class="s3">import </span><span class="s1">indent</span>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">exporters</span><span class="s4">.</span><span class="s1">base </span><span class="s3">import </span><span class="s1">get_export_names</span><span class="s4">, </span><span class="s1">get_exporter</span>
+<a name="l28"><span class="ln">28   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">utils</span><span class="s4">.</span><span class="s1">base </span><span class="s3">import </span><span class="s1">NbConvertBase</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">utils</span><span class="s4">.</span><span class="s1">exceptions </span><span class="s3">import </span><span class="s1">ConversionException</span>
+<a name="l30"><span class="ln">30   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">utils</span><span class="s4">.</span><span class="s1">io </span><span class="s3">import </span><span class="s1">unicode_stdin_stream</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l33"><span class="ln">33   </span></a><span class="s0"># Classes and functions</span>
+<a name="l34"><span class="ln">34   </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l35"><span class="ln">35   </span></a>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a><span class="s3">class </span><span class="s1">DottedOrNone</span><span class="s4">(</span><span class="s1">DottedObjectName</span><span class="s4">):</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s2">&quot;&quot;&quot;A string holding a valid dotted object name in Python, such as A.b3._c 
+<a name="l39"><span class="ln">39   </span></a>    Also allows for None type. 
+<a name="l40"><span class="ln">40   </span></a>    &quot;&quot;&quot;</span>
+<a name="l41"><span class="ln">41   </span></a>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s1">default_value </span><span class="s4">= </span><span class="s5">&quot;&quot;</span>
+<a name="l43"><span class="ln">43   </span></a>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s3">def </span><span class="s1">validate</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">obj</span><span class="s4">, </span><span class="s1">value</span><span class="s4">):</span>
+<a name="l45"><span class="ln">45   </span></a>        <span class="s2">&quot;&quot;&quot;Validate an input.&quot;&quot;&quot;</span>
+<a name="l46"><span class="ln">46   </span></a>        <span class="s3">if </span><span class="s1">value </span><span class="s3">is not None and </span><span class="s1">len</span><span class="s4">(</span><span class="s1">value</span><span class="s4">) &gt; </span><span class="s6">0</span><span class="s4">:</span>
+<a name="l47"><span class="ln">47   </span></a>            <span class="s3">return </span><span class="s1">super</span><span class="s4">().</span><span class="s1">validate</span><span class="s4">(</span><span class="s1">obj</span><span class="s4">, </span><span class="s1">value</span><span class="s4">)</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s3">return </span><span class="s1">value</span>
+<a name="l49"><span class="ln">49   </span></a>
+<a name="l50"><span class="ln">50   </span></a>
+<a name="l51"><span class="ln">51   </span></a><span class="s1">nbconvert_aliases </span><span class="s4">= {}</span>
+<a name="l52"><span class="ln">52   </span></a><span class="s1">nbconvert_aliases</span><span class="s4">.</span><span class="s1">update</span><span class="s4">(</span><span class="s1">base_aliases</span><span class="s4">)</span>
+<a name="l53"><span class="ln">53   </span></a><span class="s1">nbconvert_aliases</span><span class="s4">.</span><span class="s1">update</span><span class="s4">(</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s4">{</span>
+<a name="l55"><span class="ln">55   </span></a>        <span class="s5">&quot;to&quot;</span><span class="s4">: </span><span class="s5">&quot;NbConvertApp.export_format&quot;</span><span class="s4">,</span>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s5">&quot;template&quot;</span><span class="s4">: </span><span class="s5">&quot;TemplateExporter.template_name&quot;</span><span class="s4">,</span>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s5">&quot;template-file&quot;</span><span class="s4">: </span><span class="s5">&quot;TemplateExporter.template_file&quot;</span><span class="s4">,</span>
+<a name="l58"><span class="ln">58   </span></a>        <span class="s5">&quot;theme&quot;</span><span class="s4">: </span><span class="s5">&quot;HTMLExporter.theme&quot;</span><span class="s4">,</span>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s5">&quot;sanitize_html&quot;</span><span class="s4">: </span><span class="s5">&quot;HTMLExporter.sanitize_html&quot;</span><span class="s4">,</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s5">&quot;writer&quot;</span><span class="s4">: </span><span class="s5">&quot;NbConvertApp.writer_class&quot;</span><span class="s4">,</span>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s5">&quot;post&quot;</span><span class="s4">: </span><span class="s5">&quot;NbConvertApp.postprocessor_class&quot;</span><span class="s4">,</span>
+<a name="l62"><span class="ln">62   </span></a>        <span class="s5">&quot;output&quot;</span><span class="s4">: </span><span class="s5">&quot;NbConvertApp.output_base&quot;</span><span class="s4">,</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s5">&quot;output-dir&quot;</span><span class="s4">: </span><span class="s5">&quot;FilesWriter.build_directory&quot;</span><span class="s4">,</span>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s5">&quot;reveal-prefix&quot;</span><span class="s4">: </span><span class="s5">&quot;SlidesExporter.reveal_url_prefix&quot;</span><span class="s4">,</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s5">&quot;nbformat&quot;</span><span class="s4">: </span><span class="s5">&quot;NotebookExporter.nbformat_version&quot;</span><span class="s4">,</span>
+<a name="l66"><span class="ln">66   </span></a>    <span class="s4">}</span>
+<a name="l67"><span class="ln">67   </span></a><span class="s4">)</span>
+<a name="l68"><span class="ln">68   </span></a>
+<a name="l69"><span class="ln">69   </span></a><span class="s1">nbconvert_flags </span><span class="s4">= {}</span>
+<a name="l70"><span class="ln">70   </span></a><span class="s1">nbconvert_flags</span><span class="s4">.</span><span class="s1">update</span><span class="s4">(</span><span class="s1">base_flags</span><span class="s4">)</span>
+<a name="l71"><span class="ln">71   </span></a><span class="s1">nbconvert_flags</span><span class="s4">.</span><span class="s1">update</span><span class="s4">(</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s4">{</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s5">&quot;execute&quot;</span><span class="s4">: (</span>
+<a name="l74"><span class="ln">74   </span></a>            <span class="s4">{</span><span class="s5">&quot;ExecutePreprocessor&quot;</span><span class="s4">: {</span><span class="s5">&quot;enabled&quot;</span><span class="s4">: </span><span class="s3">True</span><span class="s4">}},</span>
+<a name="l75"><span class="ln">75   </span></a>            <span class="s5">&quot;Execute the notebook prior to export.&quot;</span><span class="s4">,</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s4">),</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s5">&quot;allow-errors&quot;</span><span class="s4">: (</span>
+<a name="l78"><span class="ln">78   </span></a>            <span class="s4">{</span><span class="s5">&quot;ExecutePreprocessor&quot;</span><span class="s4">: {</span><span class="s5">&quot;allow_errors&quot;</span><span class="s4">: </span><span class="s3">True</span><span class="s4">}},</span>
+<a name="l79"><span class="ln">79   </span></a>            <span class="s4">(</span>
+<a name="l80"><span class="ln">80   </span></a>                <span class="s5">&quot;Continue notebook execution even if one of the cells throws &quot;</span>
+<a name="l81"><span class="ln">81   </span></a>                <span class="s5">&quot;an error and include the error message in the cell output &quot;</span>
+<a name="l82"><span class="ln">82   </span></a>                <span class="s5">&quot;(the default behaviour is to abort conversion). This flag &quot;</span>
+<a name="l83"><span class="ln">83   </span></a>                <span class="s5">&quot;is only relevant if '--execute' was specified, too.&quot;</span>
+<a name="l84"><span class="ln">84   </span></a>            <span class="s4">),</span>
+<a name="l85"><span class="ln">85   </span></a>        <span class="s4">),</span>
+<a name="l86"><span class="ln">86   </span></a>        <span class="s5">&quot;stdin&quot;</span><span class="s4">: (</span>
+<a name="l87"><span class="ln">87   </span></a>            <span class="s4">{</span>
+<a name="l88"><span class="ln">88   </span></a>                <span class="s5">&quot;NbConvertApp&quot;</span><span class="s4">: {</span>
+<a name="l89"><span class="ln">89   </span></a>                    <span class="s5">&quot;from_stdin&quot;</span><span class="s4">: </span><span class="s3">True</span><span class="s4">,</span>
+<a name="l90"><span class="ln">90   </span></a>                <span class="s4">}</span>
+<a name="l91"><span class="ln">91   </span></a>            <span class="s4">},</span>
+<a name="l92"><span class="ln">92   </span></a>            <span class="s5">&quot;read a single notebook file from stdin. Write the resulting notebook with default basename 'notebook.*'&quot;</span><span class="s4">,</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s4">),</span>
+<a name="l94"><span class="ln">94   </span></a>        <span class="s5">&quot;stdout&quot;</span><span class="s4">: (</span>
+<a name="l95"><span class="ln">95   </span></a>            <span class="s4">{</span><span class="s5">&quot;NbConvertApp&quot;</span><span class="s4">: {</span><span class="s5">&quot;writer_class&quot;</span><span class="s4">: </span><span class="s5">&quot;StdoutWriter&quot;</span><span class="s4">}},</span>
+<a name="l96"><span class="ln">96   </span></a>            <span class="s5">&quot;Write notebook output to stdout instead of files.&quot;</span><span class="s4">,</span>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s4">),</span>
+<a name="l98"><span class="ln">98   </span></a>        <span class="s5">&quot;inplace&quot;</span><span class="s4">: (</span>
+<a name="l99"><span class="ln">99   </span></a>            <span class="s4">{</span>
+<a name="l100"><span class="ln">100  </span></a>                <span class="s5">&quot;NbConvertApp&quot;</span><span class="s4">: {</span>
+<a name="l101"><span class="ln">101  </span></a>                    <span class="s5">&quot;use_output_suffix&quot;</span><span class="s4">: </span><span class="s3">False</span><span class="s4">,</span>
+<a name="l102"><span class="ln">102  </span></a>                    <span class="s5">&quot;export_format&quot;</span><span class="s4">: </span><span class="s5">&quot;notebook&quot;</span><span class="s4">,</span>
+<a name="l103"><span class="ln">103  </span></a>                <span class="s4">},</span>
+<a name="l104"><span class="ln">104  </span></a>                <span class="s5">&quot;FilesWriter&quot;</span><span class="s4">: {</span><span class="s5">&quot;build_directory&quot;</span><span class="s4">: </span><span class="s5">&quot;&quot;</span><span class="s4">},</span>
+<a name="l105"><span class="ln">105  </span></a>            <span class="s4">},</span>
+<a name="l106"><span class="ln">106  </span></a>            <span class="s5">&quot;&quot;&quot;Run nbconvert in place, overwriting the existing notebook (only 
+<a name="l107"><span class="ln">107  </span></a>        relevant when converting to notebook format)&quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l108"><span class="ln">108  </span></a>        <span class="s4">),</span>
+<a name="l109"><span class="ln">109  </span></a>        <span class="s5">&quot;clear-output&quot;</span><span class="s4">: (</span>
+<a name="l110"><span class="ln">110  </span></a>            <span class="s4">{</span>
+<a name="l111"><span class="ln">111  </span></a>                <span class="s5">&quot;NbConvertApp&quot;</span><span class="s4">: {</span>
+<a name="l112"><span class="ln">112  </span></a>                    <span class="s5">&quot;use_output_suffix&quot;</span><span class="s4">: </span><span class="s3">False</span><span class="s4">,</span>
+<a name="l113"><span class="ln">113  </span></a>                    <span class="s5">&quot;export_format&quot;</span><span class="s4">: </span><span class="s5">&quot;notebook&quot;</span><span class="s4">,</span>
+<a name="l114"><span class="ln">114  </span></a>                <span class="s4">},</span>
+<a name="l115"><span class="ln">115  </span></a>                <span class="s5">&quot;FilesWriter&quot;</span><span class="s4">: {</span><span class="s5">&quot;build_directory&quot;</span><span class="s4">: </span><span class="s5">&quot;&quot;</span><span class="s4">},</span>
+<a name="l116"><span class="ln">116  </span></a>                <span class="s5">&quot;ClearOutputPreprocessor&quot;</span><span class="s4">: {</span><span class="s5">&quot;enabled&quot;</span><span class="s4">: </span><span class="s3">True</span><span class="s4">},</span>
+<a name="l117"><span class="ln">117  </span></a>            <span class="s4">},</span>
+<a name="l118"><span class="ln">118  </span></a>            <span class="s5">&quot;&quot;&quot;Clear output of current file and save in place, 
+<a name="l119"><span class="ln">119  </span></a>        overwriting the existing notebook. &quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l120"><span class="ln">120  </span></a>        <span class="s4">),</span>
+<a name="l121"><span class="ln">121  </span></a>        <span class="s5">&quot;coalesce-streams&quot;</span><span class="s4">: (</span>
+<a name="l122"><span class="ln">122  </span></a>            <span class="s4">{</span>
+<a name="l123"><span class="ln">123  </span></a>                <span class="s5">&quot;NbConvertApp&quot;</span><span class="s4">: {</span><span class="s5">&quot;use_output_suffix&quot;</span><span class="s4">: </span><span class="s3">False</span><span class="s4">, </span><span class="s5">&quot;export_format&quot;</span><span class="s4">: </span><span class="s5">&quot;notebook&quot;</span><span class="s4">},</span>
+<a name="l124"><span class="ln">124  </span></a>                <span class="s5">&quot;FilesWriter&quot;</span><span class="s4">: {</span><span class="s5">&quot;build_directory&quot;</span><span class="s4">: </span><span class="s5">&quot;&quot;</span><span class="s4">},</span>
+<a name="l125"><span class="ln">125  </span></a>                <span class="s5">&quot;CoalesceStreamsPreprocessor&quot;</span><span class="s4">: {</span><span class="s5">&quot;enabled&quot;</span><span class="s4">: </span><span class="s3">True</span><span class="s4">},</span>
+<a name="l126"><span class="ln">126  </span></a>            <span class="s4">},</span>
+<a name="l127"><span class="ln">127  </span></a>            <span class="s5">&quot;&quot;&quot;Coalesce consecutive stdout and stderr outputs into one stream (within each cell).&quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l128"><span class="ln">128  </span></a>        <span class="s4">),</span>
+<a name="l129"><span class="ln">129  </span></a>        <span class="s5">&quot;no-prompt&quot;</span><span class="s4">: (</span>
+<a name="l130"><span class="ln">130  </span></a>            <span class="s4">{</span>
+<a name="l131"><span class="ln">131  </span></a>                <span class="s5">&quot;TemplateExporter&quot;</span><span class="s4">: {</span>
+<a name="l132"><span class="ln">132  </span></a>                    <span class="s5">&quot;exclude_input_prompt&quot;</span><span class="s4">: </span><span class="s3">True</span><span class="s4">,</span>
+<a name="l133"><span class="ln">133  </span></a>                    <span class="s5">&quot;exclude_output_prompt&quot;</span><span class="s4">: </span><span class="s3">True</span><span class="s4">,</span>
+<a name="l134"><span class="ln">134  </span></a>                <span class="s4">}</span>
+<a name="l135"><span class="ln">135  </span></a>            <span class="s4">},</span>
+<a name="l136"><span class="ln">136  </span></a>            <span class="s5">&quot;Exclude input and output prompts from converted document.&quot;</span><span class="s4">,</span>
+<a name="l137"><span class="ln">137  </span></a>        <span class="s4">),</span>
+<a name="l138"><span class="ln">138  </span></a>        <span class="s5">&quot;no-input&quot;</span><span class="s4">: (</span>
+<a name="l139"><span class="ln">139  </span></a>            <span class="s4">{</span>
+<a name="l140"><span class="ln">140  </span></a>                <span class="s5">&quot;TemplateExporter&quot;</span><span class="s4">: {</span>
+<a name="l141"><span class="ln">141  </span></a>                    <span class="s5">&quot;exclude_output_prompt&quot;</span><span class="s4">: </span><span class="s3">True</span><span class="s4">,</span>
+<a name="l142"><span class="ln">142  </span></a>                    <span class="s5">&quot;exclude_input&quot;</span><span class="s4">: </span><span class="s3">True</span><span class="s4">,</span>
+<a name="l143"><span class="ln">143  </span></a>                    <span class="s5">&quot;exclude_input_prompt&quot;</span><span class="s4">: </span><span class="s3">True</span><span class="s4">,</span>
+<a name="l144"><span class="ln">144  </span></a>                <span class="s4">}</span>
+<a name="l145"><span class="ln">145  </span></a>            <span class="s4">},</span>
+<a name="l146"><span class="ln">146  </span></a>            <span class="s5">&quot;&quot;&quot;Exclude input cells and output prompts from converted document. 
+<a name="l147"><span class="ln">147  </span></a>        This mode is ideal for generating code-free reports.&quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l148"><span class="ln">148  </span></a>        <span class="s4">),</span>
+<a name="l149"><span class="ln">149  </span></a>        <span class="s5">&quot;allow-chromium-download&quot;</span><span class="s4">: (</span>
+<a name="l150"><span class="ln">150  </span></a>            <span class="s4">{</span>
+<a name="l151"><span class="ln">151  </span></a>                <span class="s5">&quot;WebPDFExporter&quot;</span><span class="s4">: {</span>
+<a name="l152"><span class="ln">152  </span></a>                    <span class="s5">&quot;allow_chromium_download&quot;</span><span class="s4">: </span><span class="s3">True</span><span class="s4">,</span>
+<a name="l153"><span class="ln">153  </span></a>                <span class="s4">}</span>
+<a name="l154"><span class="ln">154  </span></a>            <span class="s4">},</span>
+<a name="l155"><span class="ln">155  </span></a>            <span class="s5">&quot;&quot;&quot;Whether to allow downloading chromium if no suitable version is found on the system.&quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l156"><span class="ln">156  </span></a>        <span class="s4">),</span>
+<a name="l157"><span class="ln">157  </span></a>        <span class="s5">&quot;disable-chromium-sandbox&quot;</span><span class="s4">: (</span>
+<a name="l158"><span class="ln">158  </span></a>            <span class="s4">{</span>
+<a name="l159"><span class="ln">159  </span></a>                <span class="s5">&quot;WebPDFExporter&quot;</span><span class="s4">: {</span>
+<a name="l160"><span class="ln">160  </span></a>                    <span class="s5">&quot;disable_sandbox&quot;</span><span class="s4">: </span><span class="s3">True</span><span class="s4">,</span>
+<a name="l161"><span class="ln">161  </span></a>                <span class="s4">}</span>
+<a name="l162"><span class="ln">162  </span></a>            <span class="s4">},</span>
+<a name="l163"><span class="ln">163  </span></a>            <span class="s5">&quot;&quot;&quot;Disable chromium security sandbox when converting to PDF..&quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l164"><span class="ln">164  </span></a>        <span class="s4">),</span>
+<a name="l165"><span class="ln">165  </span></a>        <span class="s5">&quot;show-input&quot;</span><span class="s4">: (</span>
+<a name="l166"><span class="ln">166  </span></a>            <span class="s4">{</span>
+<a name="l167"><span class="ln">167  </span></a>                <span class="s5">&quot;TemplateExporter&quot;</span><span class="s4">: {</span>
+<a name="l168"><span class="ln">168  </span></a>                    <span class="s5">&quot;exclude_input&quot;</span><span class="s4">: </span><span class="s3">False</span><span class="s4">,</span>
+<a name="l169"><span class="ln">169  </span></a>                <span class="s4">}</span>
+<a name="l170"><span class="ln">170  </span></a>            <span class="s4">},</span>
+<a name="l171"><span class="ln">171  </span></a>            <span class="s5">&quot;&quot;&quot;Shows code input. This flag is only useful for dejavu users.&quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l172"><span class="ln">172  </span></a>        <span class="s4">),</span>
+<a name="l173"><span class="ln">173  </span></a>        <span class="s5">&quot;embed-images&quot;</span><span class="s4">: (</span>
+<a name="l174"><span class="ln">174  </span></a>            <span class="s4">{</span>
+<a name="l175"><span class="ln">175  </span></a>                <span class="s5">&quot;HTMLExporter&quot;</span><span class="s4">: {</span>
+<a name="l176"><span class="ln">176  </span></a>                    <span class="s5">&quot;embed_images&quot;</span><span class="s4">: </span><span class="s3">True</span><span class="s4">,</span>
+<a name="l177"><span class="ln">177  </span></a>                <span class="s4">}</span>
+<a name="l178"><span class="ln">178  </span></a>            <span class="s4">},</span>
+<a name="l179"><span class="ln">179  </span></a>            <span class="s5">&quot;&quot;&quot;Embed the images as base64 dataurls in the output. This flag is only useful for the HTML/WebPDF/Slides exports.&quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l180"><span class="ln">180  </span></a>        <span class="s4">),</span>
+<a name="l181"><span class="ln">181  </span></a>        <span class="s5">&quot;sanitize-html&quot;</span><span class="s4">: (</span>
+<a name="l182"><span class="ln">182  </span></a>            <span class="s4">{</span>
+<a name="l183"><span class="ln">183  </span></a>                <span class="s5">&quot;HTMLExporter&quot;</span><span class="s4">: {</span>
+<a name="l184"><span class="ln">184  </span></a>                    <span class="s5">&quot;sanitize_html&quot;</span><span class="s4">: </span><span class="s3">True</span><span class="s4">,</span>
+<a name="l185"><span class="ln">185  </span></a>                <span class="s4">}</span>
+<a name="l186"><span class="ln">186  </span></a>            <span class="s4">},</span>
+<a name="l187"><span class="ln">187  </span></a>            <span class="s5">&quot;&quot;&quot;Whether the HTML in Markdown cells and cell outputs should be sanitized..&quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l188"><span class="ln">188  </span></a>        <span class="s4">),</span>
+<a name="l189"><span class="ln">189  </span></a>    <span class="s4">}</span>
+<a name="l190"><span class="ln">190  </span></a><span class="s4">)</span>
+<a name="l191"><span class="ln">191  </span></a>
+<a name="l192"><span class="ln">192  </span></a>
+<a name="l193"><span class="ln">193  </span></a><span class="s3">class </span><span class="s1">NbConvertApp</span><span class="s4">(</span><span class="s1">JupyterApp</span><span class="s4">):</span>
+<a name="l194"><span class="ln">194  </span></a>    <span class="s2">&quot;&quot;&quot;Application used to convert from notebook file type (``*.ipynb``)&quot;&quot;&quot;</span>
+<a name="l195"><span class="ln">195  </span></a>
+<a name="l196"><span class="ln">196  </span></a>    <span class="s1">version </span><span class="s4">= </span><span class="s1">__version__</span>
+<a name="l197"><span class="ln">197  </span></a>    <span class="s1">name </span><span class="s4">= </span><span class="s5">&quot;jupyter-nbconvert&quot;</span>
+<a name="l198"><span class="ln">198  </span></a>    <span class="s1">aliases </span><span class="s4">= </span><span class="s1">nbconvert_aliases</span>
+<a name="l199"><span class="ln">199  </span></a>    <span class="s1">flags </span><span class="s4">= </span><span class="s1">nbconvert_flags</span>
+<a name="l200"><span class="ln">200  </span></a>
+<a name="l201"><span class="ln">201  </span></a>    <span class="s4">@</span><span class="s1">default</span><span class="s4">(</span><span class="s5">&quot;log_level&quot;</span><span class="s4">)</span>
+<a name="l202"><span class="ln">202  </span></a>    <span class="s3">def </span><span class="s1">_log_level_default</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l203"><span class="ln">203  </span></a>        <span class="s3">return </span><span class="s1">logging</span><span class="s4">.</span><span class="s1">INFO</span>
+<a name="l204"><span class="ln">204  </span></a>
+<a name="l205"><span class="ln">205  </span></a>    <span class="s1">classes </span><span class="s4">= </span><span class="s1">List</span><span class="s4">()  </span><span class="s0"># type:ignore[assignment]</span>
+<a name="l206"><span class="ln">206  </span></a>
+<a name="l207"><span class="ln">207  </span></a>    <span class="s4">@</span><span class="s1">default</span><span class="s4">(</span><span class="s5">&quot;classes&quot;</span><span class="s4">)</span>
+<a name="l208"><span class="ln">208  </span></a>    <span class="s3">def </span><span class="s1">_classes_default</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l209"><span class="ln">209  </span></a>        <span class="s1">classes</span><span class="s4">: </span><span class="s1">list</span><span class="s4">[</span><span class="s1">type</span><span class="s4">[</span><span class="s1">t</span><span class="s4">.</span><span class="s1">Any</span><span class="s4">]] = [</span><span class="s1">NbConvertBase</span><span class="s4">]</span>
+<a name="l210"><span class="ln">210  </span></a>        <span class="s3">for </span><span class="s1">pkg </span><span class="s3">in </span><span class="s4">(</span><span class="s1">exporters</span><span class="s4">, </span><span class="s1">preprocessors</span><span class="s4">, </span><span class="s1">writers</span><span class="s4">, </span><span class="s1">postprocessors</span><span class="s4">):</span>
+<a name="l211"><span class="ln">211  </span></a>            <span class="s3">for </span><span class="s1">name </span><span class="s3">in </span><span class="s1">dir</span><span class="s4">(</span><span class="s1">pkg</span><span class="s4">):</span>
+<a name="l212"><span class="ln">212  </span></a>                <span class="s1">cls </span><span class="s4">= </span><span class="s1">getattr</span><span class="s4">(</span><span class="s1">pkg</span><span class="s4">, </span><span class="s1">name</span><span class="s4">)</span>
+<a name="l213"><span class="ln">213  </span></a>                <span class="s3">if </span><span class="s1">isinstance</span><span class="s4">(</span><span class="s1">cls</span><span class="s4">, </span><span class="s1">type</span><span class="s4">) </span><span class="s3">and </span><span class="s1">issubclass</span><span class="s4">(</span><span class="s1">cls</span><span class="s4">, </span><span class="s1">Configurable</span><span class="s4">):</span>
+<a name="l214"><span class="ln">214  </span></a>                    <span class="s1">classes</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">cls</span><span class="s4">)</span>
+<a name="l215"><span class="ln">215  </span></a>
+<a name="l216"><span class="ln">216  </span></a>        <span class="s3">return </span><span class="s1">classes</span>
+<a name="l217"><span class="ln">217  </span></a>
+<a name="l218"><span class="ln">218  </span></a>    <span class="s1">description </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(  </span><span class="s0"># type:ignore[assignment]</span>
+<a name="l219"><span class="ln">219  </span></a>        <span class="s5">&quot;&quot;&quot;This application is used to convert notebook files (*.ipynb) 
+<a name="l220"><span class="ln">220  </span></a>        to various other formats. 
+<a name="l221"><span class="ln">221  </span></a> 
+<a name="l222"><span class="ln">222  </span></a>        WARNING: THE COMMANDLINE INTERFACE MAY CHANGE IN FUTURE RELEASES.&quot;&quot;&quot;</span>
+<a name="l223"><span class="ln">223  </span></a>    <span class="s4">)</span>
+<a name="l224"><span class="ln">224  </span></a>
+<a name="l225"><span class="ln">225  </span></a>    <span class="s1">output_base </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span>
+<a name="l226"><span class="ln">226  </span></a>        <span class="s5">&quot;{notebook_name}&quot;</span><span class="s4">,</span>
+<a name="l227"><span class="ln">227  </span></a>        <span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;&quot;&quot;Overwrite base name use for output files. 
+<a name="l228"><span class="ln">228  </span></a>            Supports pattern replacements '{notebook_name}'. 
+<a name="l229"><span class="ln">229  </span></a>            &quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l230"><span class="ln">230  </span></a>    <span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">config</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l231"><span class="ln">231  </span></a>
+<a name="l232"><span class="ln">232  </span></a>    <span class="s1">use_output_suffix </span><span class="s4">= </span><span class="s1">Bool</span><span class="s4">(</span>
+<a name="l233"><span class="ln">233  </span></a>        <span class="s3">True</span><span class="s4">,</span>
+<a name="l234"><span class="ln">234  </span></a>        <span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;&quot;&quot;Whether to apply a suffix prior to the extension (only relevant 
+<a name="l235"><span class="ln">235  </span></a>            when converting to notebook format). The suffix is determined by 
+<a name="l236"><span class="ln">236  </span></a>            the exporter, and is usually '.nbconvert'.&quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l237"><span class="ln">237  </span></a>    <span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">config</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l238"><span class="ln">238  </span></a>
+<a name="l239"><span class="ln">239  </span></a>    <span class="s1">output_files_dir </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span>
+<a name="l240"><span class="ln">240  </span></a>        <span class="s5">&quot;{notebook_name}_files&quot;</span><span class="s4">,</span>
+<a name="l241"><span class="ln">241  </span></a>        <span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;&quot;&quot;Directory to copy extra files (figures) to. 
+<a name="l242"><span class="ln">242  </span></a>               '{notebook_name}' in the string will be converted to notebook 
+<a name="l243"><span class="ln">243  </span></a>               basename.&quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l244"><span class="ln">244  </span></a>    <span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">config</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l245"><span class="ln">245  </span></a>
+<a name="l246"><span class="ln">246  </span></a>    <span class="s1">examples </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(</span>
+<a name="l247"><span class="ln">247  </span></a>        <span class="s5">f&quot;&quot;&quot;</span>
+<a name="l248"><span class="ln">248  </span></a>        <span class="s5">The simplest way to use nbconvert is</span>
+<a name="l249"><span class="ln">249  </span></a>
+<a name="l250"><span class="ln">250  </span></a>        <span class="s5">&gt; jupyter nbconvert mynotebook.ipynb --to html</span>
+<a name="l251"><span class="ln">251  </span></a>
+<a name="l252"><span class="ln">252  </span></a>        <span class="s5">Options include </span><span class="s3">{</span><span class="s1">get_export_names</span><span class="s4">()</span><span class="s3">}</span><span class="s5">.</span>
+<a name="l253"><span class="ln">253  </span></a>
+<a name="l254"><span class="ln">254  </span></a>        <span class="s5">&gt; jupyter nbconvert --to latex mynotebook.ipynb</span>
+<a name="l255"><span class="ln">255  </span></a>
+<a name="l256"><span class="ln">256  </span></a>        <span class="s5">Both HTML and LaTeX support multiple output templates. LaTeX includes</span>
+<a name="l257"><span class="ln">257  </span></a>        <span class="s5">'base', 'article' and 'report'.  HTML includes 'basic', 'lab' and</span>
+<a name="l258"><span class="ln">258  </span></a>        <span class="s5">'classic'. You can specify the flavor of the format used.</span>
+<a name="l259"><span class="ln">259  </span></a>
+<a name="l260"><span class="ln">260  </span></a>        <span class="s5">&gt; jupyter nbconvert --to html --template lab mynotebook.ipynb</span>
+<a name="l261"><span class="ln">261  </span></a>
+<a name="l262"><span class="ln">262  </span></a>        <span class="s5">You can also pipe the output to stdout, rather than a file</span>
+<a name="l263"><span class="ln">263  </span></a>
+<a name="l264"><span class="ln">264  </span></a>        <span class="s5">&gt; jupyter nbconvert mynotebook.ipynb --stdout</span>
+<a name="l265"><span class="ln">265  </span></a>
+<a name="l266"><span class="ln">266  </span></a>        <span class="s5">PDF is generated via latex</span>
+<a name="l267"><span class="ln">267  </span></a>
+<a name="l268"><span class="ln">268  </span></a>        <span class="s5">&gt; jupyter nbconvert mynotebook.ipynb --to pdf</span>
+<a name="l269"><span class="ln">269  </span></a>
+<a name="l270"><span class="ln">270  </span></a>        <span class="s5">You can get (and serve) a Reveal.js-powered slideshow</span>
+<a name="l271"><span class="ln">271  </span></a>
+<a name="l272"><span class="ln">272  </span></a>        <span class="s5">&gt; jupyter nbconvert myslides.ipynb --to slides --post serve</span>
+<a name="l273"><span class="ln">273  </span></a>
+<a name="l274"><span class="ln">274  </span></a>        <span class="s5">Multiple notebooks can be given at the command line in a couple of</span>
+<a name="l275"><span class="ln">275  </span></a>        <span class="s5">different ways:</span>
+<a name="l276"><span class="ln">276  </span></a>
+<a name="l277"><span class="ln">277  </span></a>        <span class="s5">&gt; jupyter nbconvert notebook*.ipynb</span>
+<a name="l278"><span class="ln">278  </span></a>        <span class="s5">&gt; jupyter nbconvert notebook1.ipynb notebook2.ipynb</span>
+<a name="l279"><span class="ln">279  </span></a>
+<a name="l280"><span class="ln">280  </span></a>        <span class="s5">or you can specify the notebooks list in a config file, containing::</span>
+<a name="l281"><span class="ln">281  </span></a>
+<a name="l282"><span class="ln">282  </span></a>            <span class="s5">c.NbConvertApp.notebooks = [&quot;my_notebook.ipynb&quot;]</span>
+<a name="l283"><span class="ln">283  </span></a>
+<a name="l284"><span class="ln">284  </span></a>        <span class="s5">&gt; jupyter nbconvert --config mycfg.py</span>
+<a name="l285"><span class="ln">285  </span></a>        <span class="s5">&quot;&quot;&quot;</span>
+<a name="l286"><span class="ln">286  </span></a>    <span class="s4">)</span>
+<a name="l287"><span class="ln">287  </span></a>
+<a name="l288"><span class="ln">288  </span></a>    <span class="s0"># Writer specific variables</span>
+<a name="l289"><span class="ln">289  </span></a>    <span class="s1">writer </span><span class="s4">= </span><span class="s1">Instance</span><span class="s4">(</span>
+<a name="l290"><span class="ln">290  </span></a>        <span class="s5">&quot;nbconvert.writers.base.WriterBase&quot;</span><span class="s4">,</span>
+<a name="l291"><span class="ln">291  </span></a>        <span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;&quot;&quot;Instance of the writer class used to write the 
+<a name="l292"><span class="ln">292  </span></a>                      results of the conversion.&quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l293"><span class="ln">293  </span></a>        <span class="s1">allow_none</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l294"><span class="ln">294  </span></a>    <span class="s4">)</span>
+<a name="l295"><span class="ln">295  </span></a>    <span class="s1">writer_class </span><span class="s4">= </span><span class="s1">DottedObjectName</span><span class="s4">(</span>
+<a name="l296"><span class="ln">296  </span></a>        <span class="s5">&quot;FilesWriter&quot;</span><span class="s4">,</span>
+<a name="l297"><span class="ln">297  </span></a>        <span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;&quot;&quot;Writer class used to write the 
+<a name="l298"><span class="ln">298  </span></a>                                    results of the conversion&quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l299"><span class="ln">299  </span></a>    <span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">config</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l300"><span class="ln">300  </span></a>    <span class="s1">writer_aliases </span><span class="s4">= {</span>
+<a name="l301"><span class="ln">301  </span></a>        <span class="s5">&quot;fileswriter&quot;</span><span class="s4">: </span><span class="s5">&quot;nbconvert.writers.files.FilesWriter&quot;</span><span class="s4">,</span>
+<a name="l302"><span class="ln">302  </span></a>        <span class="s5">&quot;debugwriter&quot;</span><span class="s4">: </span><span class="s5">&quot;nbconvert.writers.debug.DebugWriter&quot;</span><span class="s4">,</span>
+<a name="l303"><span class="ln">303  </span></a>        <span class="s5">&quot;stdoutwriter&quot;</span><span class="s4">: </span><span class="s5">&quot;nbconvert.writers.stdout.StdoutWriter&quot;</span><span class="s4">,</span>
+<a name="l304"><span class="ln">304  </span></a>    <span class="s4">}</span>
+<a name="l305"><span class="ln">305  </span></a>    <span class="s1">writer_factory </span><span class="s4">= </span><span class="s1">Type</span><span class="s4">(</span><span class="s1">allow_none</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l306"><span class="ln">306  </span></a>
+<a name="l307"><span class="ln">307  </span></a>    <span class="s4">@</span><span class="s1">observe</span><span class="s4">(</span><span class="s5">&quot;writer_class&quot;</span><span class="s4">)</span>
+<a name="l308"><span class="ln">308  </span></a>    <span class="s3">def </span><span class="s1">_writer_class_changed</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">change</span><span class="s4">):</span>
+<a name="l309"><span class="ln">309  </span></a>        <span class="s1">new </span><span class="s4">= </span><span class="s1">change</span><span class="s4">[</span><span class="s5">&quot;new&quot;</span><span class="s4">]</span>
+<a name="l310"><span class="ln">310  </span></a>        <span class="s3">if </span><span class="s1">new</span><span class="s4">.</span><span class="s1">lower</span><span class="s4">() </span><span class="s3">in </span><span class="s1">self</span><span class="s4">.</span><span class="s1">writer_aliases</span><span class="s4">:</span>
+<a name="l311"><span class="ln">311  </span></a>            <span class="s1">new </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">writer_aliases</span><span class="s4">[</span><span class="s1">new</span><span class="s4">.</span><span class="s1">lower</span><span class="s4">()]</span>
+<a name="l312"><span class="ln">312  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">writer_factory </span><span class="s4">= </span><span class="s1">import_item</span><span class="s4">(</span><span class="s1">new</span><span class="s4">)</span>
+<a name="l313"><span class="ln">313  </span></a>
+<a name="l314"><span class="ln">314  </span></a>    <span class="s0"># Post-processor specific variables</span>
+<a name="l315"><span class="ln">315  </span></a>    <span class="s1">postprocessor </span><span class="s4">= </span><span class="s1">Instance</span><span class="s4">(</span>
+<a name="l316"><span class="ln">316  </span></a>        <span class="s5">&quot;nbconvert.postprocessors.base.PostProcessorBase&quot;</span><span class="s4">,</span>
+<a name="l317"><span class="ln">317  </span></a>        <span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;&quot;&quot;Instance of the PostProcessor class used to write the 
+<a name="l318"><span class="ln">318  </span></a>                      results of the conversion.&quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l319"><span class="ln">319  </span></a>        <span class="s1">allow_none</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l320"><span class="ln">320  </span></a>    <span class="s4">)</span>
+<a name="l321"><span class="ln">321  </span></a>
+<a name="l322"><span class="ln">322  </span></a>    <span class="s1">postprocessor_class </span><span class="s4">= </span><span class="s1">DottedOrNone</span><span class="s4">(</span>
+<a name="l323"><span class="ln">323  </span></a>        <span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;&quot;&quot;PostProcessor class used to write the 
+<a name="l324"><span class="ln">324  </span></a>                                    results of the conversion&quot;&quot;&quot;</span>
+<a name="l325"><span class="ln">325  </span></a>    <span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">config</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l326"><span class="ln">326  </span></a>    <span class="s1">postprocessor_aliases </span><span class="s4">= {</span><span class="s5">&quot;serve&quot;</span><span class="s4">: </span><span class="s5">&quot;nbconvert.postprocessors.serve.ServePostProcessor&quot;</span><span class="s4">}</span>
+<a name="l327"><span class="ln">327  </span></a>    <span class="s1">postprocessor_factory </span><span class="s4">= </span><span class="s1">Type</span><span class="s4">(</span><span class="s3">None</span><span class="s4">, </span><span class="s1">allow_none</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l328"><span class="ln">328  </span></a>
+<a name="l329"><span class="ln">329  </span></a>    <span class="s4">@</span><span class="s1">observe</span><span class="s4">(</span><span class="s5">&quot;postprocessor_class&quot;</span><span class="s4">)</span>
+<a name="l330"><span class="ln">330  </span></a>    <span class="s3">def </span><span class="s1">_postprocessor_class_changed</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">change</span><span class="s4">):</span>
+<a name="l331"><span class="ln">331  </span></a>        <span class="s1">new </span><span class="s4">= </span><span class="s1">change</span><span class="s4">[</span><span class="s5">&quot;new&quot;</span><span class="s4">]</span>
+<a name="l332"><span class="ln">332  </span></a>        <span class="s3">if </span><span class="s1">new</span><span class="s4">.</span><span class="s1">lower</span><span class="s4">() </span><span class="s3">in </span><span class="s1">self</span><span class="s4">.</span><span class="s1">postprocessor_aliases</span><span class="s4">:</span>
+<a name="l333"><span class="ln">333  </span></a>            <span class="s1">new </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">postprocessor_aliases</span><span class="s4">[</span><span class="s1">new</span><span class="s4">.</span><span class="s1">lower</span><span class="s4">()]</span>
+<a name="l334"><span class="ln">334  </span></a>        <span class="s3">if </span><span class="s1">new</span><span class="s4">:</span>
+<a name="l335"><span class="ln">335  </span></a>            <span class="s1">self</span><span class="s4">.</span><span class="s1">postprocessor_factory </span><span class="s4">= </span><span class="s1">import_item</span><span class="s4">(</span><span class="s1">new</span><span class="s4">)</span>
+<a name="l336"><span class="ln">336  </span></a>
+<a name="l337"><span class="ln">337  </span></a>    <span class="s1">export_format </span><span class="s4">= </span><span class="s1">Unicode</span><span class="s4">(  </span><span class="s0"># type:ignore[call-overload]</span>
+<a name="l338"><span class="ln">338  </span></a>        <span class="s1">allow_none</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+<a name="l339"><span class="ln">339  </span></a>        <span class="s1">help</span><span class="s4">=</span><span class="s5">f&quot;&quot;&quot;The export format to be used, either one of the built-in formats</span>
+<a name="l340"><span class="ln">340  </span></a>        <span class="s3">{</span><span class="s1">get_export_names</span><span class="s4">()</span><span class="s3">}</span>
+<a name="l341"><span class="ln">341  </span></a>        <span class="s5">or a dotted object name that represents the import path for an</span>
+<a name="l342"><span class="ln">342  </span></a>        <span class="s5">``Exporter`` class&quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l343"><span class="ln">343  </span></a>    <span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">config</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l344"><span class="ln">344  </span></a>
+<a name="l345"><span class="ln">345  </span></a>    <span class="s1">notebooks </span><span class="s4">= </span><span class="s1">List</span><span class="s4">(</span>
+<a name="l346"><span class="ln">346  </span></a>        <span class="s1">Unicode</span><span class="s4">(),</span>
+<a name="l347"><span class="ln">347  </span></a>        <span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;&quot;&quot;List of notebooks to convert. 
+<a name="l348"><span class="ln">348  </span></a>                     Wildcards are supported. 
+<a name="l349"><span class="ln">349  </span></a>                     Filenames passed positionally will be added to the list. 
+<a name="l350"><span class="ln">350  </span></a>                     &quot;&quot;&quot;</span><span class="s4">,</span>
+<a name="l351"><span class="ln">351  </span></a>    <span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">config</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l352"><span class="ln">352  </span></a>    <span class="s1">from_stdin </span><span class="s4">= </span><span class="s1">Bool</span><span class="s4">(</span><span class="s3">False</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;read a single notebook from stdin.&quot;</span><span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">config</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l353"><span class="ln">353  </span></a>    <span class="s1">recursive_glob </span><span class="s4">= </span><span class="s1">Bool</span><span class="s4">(</span>
+<a name="l354"><span class="ln">354  </span></a>        <span class="s3">False</span><span class="s4">, </span><span class="s1">help</span><span class="s4">=</span><span class="s5">&quot;set the 'recursive' option for glob for searching wildcards.&quot;</span>
+<a name="l355"><span class="ln">355  </span></a>    <span class="s4">).</span><span class="s1">tag</span><span class="s4">(</span><span class="s1">config</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)</span>
+<a name="l356"><span class="ln">356  </span></a>
+<a name="l357"><span class="ln">357  </span></a>    <span class="s4">@</span><span class="s1">catch_config_error</span>
+<a name="l358"><span class="ln">358  </span></a>    <span class="s3">def </span><span class="s1">initialize</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">argv</span><span class="s4">=</span><span class="s3">None</span><span class="s4">):</span>
+<a name="l359"><span class="ln">359  </span></a>        <span class="s2">&quot;&quot;&quot;Initialize application, notebooks, writer, and postprocessor&quot;&quot;&quot;</span>
+<a name="l360"><span class="ln">360  </span></a>        <span class="s0"># See https://bugs.python.org/issue37373 :(</span>
+<a name="l361"><span class="ln">361  </span></a>        <span class="s3">if </span><span class="s1">sys</span><span class="s4">.</span><span class="s1">version_info </span><span class="s4">&gt; (</span><span class="s6">3</span><span class="s4">, </span><span class="s6">8</span><span class="s4">) </span><span class="s3">and </span><span class="s1">sys</span><span class="s4">.</span><span class="s1">platform</span><span class="s4">.</span><span class="s1">startswith</span><span class="s4">(</span><span class="s5">&quot;win&quot;</span><span class="s4">):</span>
+<a name="l362"><span class="ln">362  </span></a>            <span class="s1">asyncio</span><span class="s4">.</span><span class="s1">set_event_loop_policy</span><span class="s4">(</span><span class="s1">asyncio</span><span class="s4">.</span><span class="s1">WindowsSelectorEventLoopPolicy</span><span class="s4">())</span>
+<a name="l363"><span class="ln">363  </span></a>
+<a name="l364"><span class="ln">364  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">init_syspath</span><span class="s4">()</span>
+<a name="l365"><span class="ln">365  </span></a>        <span class="s1">super</span><span class="s4">().</span><span class="s1">initialize</span><span class="s4">(</span><span class="s1">argv</span><span class="s4">)</span>
+<a name="l366"><span class="ln">366  </span></a>        <span class="s3">if </span><span class="s1">hasattr</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s5">&quot;load_config_environ&quot;</span><span class="s4">):</span>
+<a name="l367"><span class="ln">367  </span></a>            <span class="s1">self</span><span class="s4">.</span><span class="s1">load_config_environ</span><span class="s4">()</span>
+<a name="l368"><span class="ln">368  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">init_notebooks</span><span class="s4">()</span>
+<a name="l369"><span class="ln">369  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">init_writer</span><span class="s4">()</span>
+<a name="l370"><span class="ln">370  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">init_postprocessor</span><span class="s4">()</span>
+<a name="l371"><span class="ln">371  </span></a>
+<a name="l372"><span class="ln">372  </span></a>    <span class="s3">def </span><span class="s1">init_syspath</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l373"><span class="ln">373  </span></a>        <span class="s2">&quot;&quot;&quot;Add the cwd to the sys.path ($PYTHONPATH)&quot;&quot;&quot;</span>
+<a name="l374"><span class="ln">374  </span></a>        <span class="s1">sys</span><span class="s4">.</span><span class="s1">path</span><span class="s4">.</span><span class="s1">insert</span><span class="s4">(</span><span class="s6">0</span><span class="s4">, </span><span class="s1">os</span><span class="s4">.</span><span class="s1">getcwd</span><span class="s4">())</span>
+<a name="l375"><span class="ln">375  </span></a>
+<a name="l376"><span class="ln">376  </span></a>    <span class="s3">def </span><span class="s1">init_notebooks</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l377"><span class="ln">377  </span></a>        <span class="s2">&quot;&quot;&quot;Construct the list of notebooks. 
+<a name="l378"><span class="ln">378  </span></a> 
+<a name="l379"><span class="ln">379  </span></a>        If notebooks are passed on the command-line, 
+<a name="l380"><span class="ln">380  </span></a>        they override (rather than add) notebooks specified in config files. 
+<a name="l381"><span class="ln">381  </span></a>        Glob each notebook to replace notebook patterns with filenames. 
+<a name="l382"><span class="ln">382  </span></a>        &quot;&quot;&quot;</span>
+<a name="l383"><span class="ln">383  </span></a>
+<a name="l384"><span class="ln">384  </span></a>        <span class="s0"># Specifying notebooks on the command-line overrides (rather than</span>
+<a name="l385"><span class="ln">385  </span></a>        <span class="s0"># adds) the notebook list</span>
+<a name="l386"><span class="ln">386  </span></a>        <span class="s1">patterns </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">extra_args </span><span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">extra_args </span><span class="s3">else </span><span class="s1">self</span><span class="s4">.</span><span class="s1">notebooks</span>
+<a name="l387"><span class="ln">387  </span></a>
+<a name="l388"><span class="ln">388  </span></a>        <span class="s0"># Use glob to replace all the notebook patterns with filenames.</span>
+<a name="l389"><span class="ln">389  </span></a>        <span class="s1">filenames </span><span class="s4">= []</span>
+<a name="l390"><span class="ln">390  </span></a>        <span class="s3">for </span><span class="s1">pattern </span><span class="s3">in </span><span class="s1">patterns</span><span class="s4">:</span>
+<a name="l391"><span class="ln">391  </span></a>            <span class="s0"># Use glob to find matching filenames.  Allow the user to convert</span>
+<a name="l392"><span class="ln">392  </span></a>            <span class="s0"># notebooks without having to type the extension.</span>
+<a name="l393"><span class="ln">393  </span></a>            <span class="s1">globbed_files </span><span class="s4">= </span><span class="s1">glob</span><span class="s4">.</span><span class="s1">glob</span><span class="s4">(</span><span class="s1">pattern</span><span class="s4">, </span><span class="s1">recursive</span><span class="s4">=</span><span class="s1">self</span><span class="s4">.</span><span class="s1">recursive_glob</span><span class="s4">)</span>
+<a name="l394"><span class="ln">394  </span></a>            <span class="s1">globbed_files</span><span class="s4">.</span><span class="s1">extend</span><span class="s4">(</span><span class="s1">glob</span><span class="s4">.</span><span class="s1">glob</span><span class="s4">(</span><span class="s1">pattern </span><span class="s4">+ </span><span class="s5">&quot;.ipynb&quot;</span><span class="s4">, </span><span class="s1">recursive</span><span class="s4">=</span><span class="s1">self</span><span class="s4">.</span><span class="s1">recursive_glob</span><span class="s4">))</span>
+<a name="l395"><span class="ln">395  </span></a>            <span class="s3">if not </span><span class="s1">globbed_files</span><span class="s4">:</span>
+<a name="l396"><span class="ln">396  </span></a>                <span class="s1">self</span><span class="s4">.</span><span class="s1">log</span><span class="s4">.</span><span class="s1">warning</span><span class="s4">(</span><span class="s5">&quot;pattern %r matched no files&quot;</span><span class="s4">, </span><span class="s1">pattern</span><span class="s4">)</span>
+<a name="l397"><span class="ln">397  </span></a>
+<a name="l398"><span class="ln">398  </span></a>            <span class="s3">for </span><span class="s1">filename </span><span class="s3">in </span><span class="s1">globbed_files</span><span class="s4">:</span>
+<a name="l399"><span class="ln">399  </span></a>                <span class="s3">if </span><span class="s1">filename </span><span class="s3">not in </span><span class="s1">filenames</span><span class="s4">:</span>
+<a name="l400"><span class="ln">400  </span></a>                    <span class="s1">filenames</span><span class="s4">.</span><span class="s1">append</span><span class="s4">(</span><span class="s1">filename</span><span class="s4">)</span>
+<a name="l401"><span class="ln">401  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">notebooks </span><span class="s4">= </span><span class="s1">filenames</span>
+<a name="l402"><span class="ln">402  </span></a>
+<a name="l403"><span class="ln">403  </span></a>    <span class="s3">def </span><span class="s1">init_writer</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l404"><span class="ln">404  </span></a>        <span class="s2">&quot;&quot;&quot;Initialize the writer (which is stateless)&quot;&quot;&quot;</span>
+<a name="l405"><span class="ln">405  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">_writer_class_changed</span><span class="s4">({</span><span class="s5">&quot;new&quot;</span><span class="s4">: </span><span class="s1">self</span><span class="s4">.</span><span class="s1">writer_class</span><span class="s4">})</span>
+<a name="l406"><span class="ln">406  </span></a>        <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">writer_factory</span><span class="s4">:</span>
+<a name="l407"><span class="ln">407  </span></a>            <span class="s1">self</span><span class="s4">.</span><span class="s1">writer </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">writer_factory</span><span class="s4">(</span><span class="s1">parent</span><span class="s4">=</span><span class="s1">self</span><span class="s4">)</span>
+<a name="l408"><span class="ln">408  </span></a>            <span class="s3">if </span><span class="s1">hasattr</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">writer</span><span class="s4">, </span><span class="s5">&quot;build_directory&quot;</span><span class="s4">) </span><span class="s3">and </span><span class="s1">self</span><span class="s4">.</span><span class="s1">writer</span><span class="s4">.</span><span class="s1">build_directory </span><span class="s4">!= </span><span class="s5">&quot;&quot;</span><span class="s4">:</span>
+<a name="l409"><span class="ln">409  </span></a>                <span class="s1">self</span><span class="s4">.</span><span class="s1">use_output_suffix </span><span class="s4">= </span><span class="s3">False</span>
+<a name="l410"><span class="ln">410  </span></a>
+<a name="l411"><span class="ln">411  </span></a>    <span class="s3">def </span><span class="s1">init_postprocessor</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l412"><span class="ln">412  </span></a>        <span class="s2">&quot;&quot;&quot;Initialize the postprocessor (which is stateless)&quot;&quot;&quot;</span>
+<a name="l413"><span class="ln">413  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">_postprocessor_class_changed</span><span class="s4">({</span><span class="s5">&quot;new&quot;</span><span class="s4">: </span><span class="s1">self</span><span class="s4">.</span><span class="s1">postprocessor_class</span><span class="s4">})</span>
+<a name="l414"><span class="ln">414  </span></a>        <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">postprocessor_factory</span><span class="s4">:</span>
+<a name="l415"><span class="ln">415  </span></a>            <span class="s1">self</span><span class="s4">.</span><span class="s1">postprocessor </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">postprocessor_factory</span><span class="s4">(</span><span class="s1">parent</span><span class="s4">=</span><span class="s1">self</span><span class="s4">)</span>
+<a name="l416"><span class="ln">416  </span></a>
+<a name="l417"><span class="ln">417  </span></a>    <span class="s3">def </span><span class="s1">start</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l418"><span class="ln">418  </span></a>        <span class="s2">&quot;&quot;&quot;Run start after initialization process has completed&quot;&quot;&quot;</span>
+<a name="l419"><span class="ln">419  </span></a>        <span class="s1">super</span><span class="s4">().</span><span class="s1">start</span><span class="s4">()</span>
+<a name="l420"><span class="ln">420  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">convert_notebooks</span><span class="s4">()</span>
+<a name="l421"><span class="ln">421  </span></a>
+<a name="l422"><span class="ln">422  </span></a>    <span class="s3">def </span><span class="s1">_notebook_filename_to_name</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">notebook_filename</span><span class="s4">):</span>
+<a name="l423"><span class="ln">423  </span></a>        <span class="s2">&quot;&quot;&quot; 
+<a name="l424"><span class="ln">424  </span></a>        Returns the notebook name from the notebook filename by 
+<a name="l425"><span class="ln">425  </span></a>        applying `output_base` pattern and stripping extension 
+<a name="l426"><span class="ln">426  </span></a>        &quot;&quot;&quot;</span>
+<a name="l427"><span class="ln">427  </span></a>        <span class="s1">basename </span><span class="s4">= </span><span class="s1">os</span><span class="s4">.</span><span class="s1">path</span><span class="s4">.</span><span class="s1">basename</span><span class="s4">(</span><span class="s1">notebook_filename</span><span class="s4">)</span>
+<a name="l428"><span class="ln">428  </span></a>        <span class="s1">notebook_name </span><span class="s4">= </span><span class="s1">basename</span><span class="s4">[: </span><span class="s1">basename</span><span class="s4">.</span><span class="s1">rfind</span><span class="s4">(</span><span class="s5">&quot;.&quot;</span><span class="s4">)]</span>
+<a name="l429"><span class="ln">429  </span></a>        <span class="s1">notebook_name </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">output_base</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span><span class="s1">notebook_name</span><span class="s4">=</span><span class="s1">notebook_name</span><span class="s4">)</span>
+<a name="l430"><span class="ln">430  </span></a>
+<a name="l431"><span class="ln">431  </span></a>        <span class="s3">return </span><span class="s1">notebook_name  </span><span class="s0"># noqa: RET504</span>
+<a name="l432"><span class="ln">432  </span></a>
+<a name="l433"><span class="ln">433  </span></a>    <span class="s3">def </span><span class="s1">init_single_notebook_resources</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">notebook_filename</span><span class="s4">):</span>
+<a name="l434"><span class="ln">434  </span></a>        <span class="s2">&quot;&quot;&quot;Step 1: Initialize resources 
+<a name="l435"><span class="ln">435  </span></a> 
+<a name="l436"><span class="ln">436  </span></a>        This initializes the resources dictionary for a single notebook. 
+<a name="l437"><span class="ln">437  </span></a> 
+<a name="l438"><span class="ln">438  </span></a>        Returns 
+<a name="l439"><span class="ln">439  </span></a>        ------- 
+<a name="l440"><span class="ln">440  </span></a>        dict 
+<a name="l441"><span class="ln">441  </span></a>            resources dictionary for a single notebook that MUST include the following keys: 
+<a name="l442"><span class="ln">442  </span></a>                - config_dir: the location of the Jupyter config directory 
+<a name="l443"><span class="ln">443  </span></a>                - unique_key: the notebook name 
+<a name="l444"><span class="ln">444  </span></a>                - output_files_dir: a directory where output files (not 
+<a name="l445"><span class="ln">445  </span></a>                  including the notebook itself) should be saved 
+<a name="l446"><span class="ln">446  </span></a>        &quot;&quot;&quot;</span>
+<a name="l447"><span class="ln">447  </span></a>        <span class="s1">notebook_name </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_notebook_filename_to_name</span><span class="s4">(</span><span class="s1">notebook_filename</span><span class="s4">)</span>
+<a name="l448"><span class="ln">448  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">log</span><span class="s4">.</span><span class="s1">debug</span><span class="s4">(</span><span class="s5">&quot;Notebook name is '%s'&quot;</span><span class="s4">, </span><span class="s1">notebook_name</span><span class="s4">)</span>
+<a name="l449"><span class="ln">449  </span></a>
+<a name="l450"><span class="ln">450  </span></a>        <span class="s0"># first initialize the resources we want to use</span>
+<a name="l451"><span class="ln">451  </span></a>        <span class="s1">resources </span><span class="s4">= {}</span>
+<a name="l452"><span class="ln">452  </span></a>        <span class="s1">resources</span><span class="s4">[</span><span class="s5">&quot;config_dir&quot;</span><span class="s4">] = </span><span class="s1">self</span><span class="s4">.</span><span class="s1">config_dir</span>
+<a name="l453"><span class="ln">453  </span></a>        <span class="s1">resources</span><span class="s4">[</span><span class="s5">&quot;unique_key&quot;</span><span class="s4">] = </span><span class="s1">notebook_name</span>
+<a name="l454"><span class="ln">454  </span></a>
+<a name="l455"><span class="ln">455  </span></a>        <span class="s1">output_files_dir </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">output_files_dir</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span><span class="s1">notebook_name</span><span class="s4">=</span><span class="s1">notebook_name</span><span class="s4">)</span>
+<a name="l456"><span class="ln">456  </span></a>
+<a name="l457"><span class="ln">457  </span></a>        <span class="s1">resources</span><span class="s4">[</span><span class="s5">&quot;output_files_dir&quot;</span><span class="s4">] = </span><span class="s1">output_files_dir</span>
+<a name="l458"><span class="ln">458  </span></a>
+<a name="l459"><span class="ln">459  </span></a>        <span class="s3">return </span><span class="s1">resources</span>
+<a name="l460"><span class="ln">460  </span></a>
+<a name="l461"><span class="ln">461  </span></a>    <span class="s3">def </span><span class="s1">export_single_notebook</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">notebook_filename</span><span class="s4">, </span><span class="s1">resources</span><span class="s4">, </span><span class="s1">input_buffer</span><span class="s4">=</span><span class="s3">None</span><span class="s4">):</span>
+<a name="l462"><span class="ln">462  </span></a>        <span class="s2">&quot;&quot;&quot;Step 2: Export the notebook 
+<a name="l463"><span class="ln">463  </span></a> 
+<a name="l464"><span class="ln">464  </span></a>        Exports the notebook to a particular format according to the specified 
+<a name="l465"><span class="ln">465  </span></a>        exporter. This function returns the output and (possibly modified) 
+<a name="l466"><span class="ln">466  </span></a>        resources from the exporter. 
+<a name="l467"><span class="ln">467  </span></a> 
+<a name="l468"><span class="ln">468  </span></a>        Parameters 
+<a name="l469"><span class="ln">469  </span></a>        ---------- 
+<a name="l470"><span class="ln">470  </span></a>        notebook_filename : str 
+<a name="l471"><span class="ln">471  </span></a>            name of notebook file. 
+<a name="l472"><span class="ln">472  </span></a>        resources : dict 
+<a name="l473"><span class="ln">473  </span></a>        input_buffer : 
+<a name="l474"><span class="ln">474  </span></a>            readable file-like object returning unicode. 
+<a name="l475"><span class="ln">475  </span></a>            if not None, notebook_filename is ignored 
+<a name="l476"><span class="ln">476  </span></a> 
+<a name="l477"><span class="ln">477  </span></a>        Returns 
+<a name="l478"><span class="ln">478  </span></a>        ------- 
+<a name="l479"><span class="ln">479  </span></a>        output 
+<a name="l480"><span class="ln">480  </span></a>        dict 
+<a name="l481"><span class="ln">481  </span></a>            resources (possibly modified) 
+<a name="l482"><span class="ln">482  </span></a>        &quot;&quot;&quot;</span>
+<a name="l483"><span class="ln">483  </span></a>        <span class="s3">try</span><span class="s4">:</span>
+<a name="l484"><span class="ln">484  </span></a>            <span class="s3">if </span><span class="s1">input_buffer </span><span class="s3">is not None</span><span class="s4">:</span>
+<a name="l485"><span class="ln">485  </span></a>                <span class="s1">output</span><span class="s4">, </span><span class="s1">resources </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">exporter</span><span class="s4">.</span><span class="s1">from_file</span><span class="s4">(</span><span class="s1">input_buffer</span><span class="s4">, </span><span class="s1">resources</span><span class="s4">=</span><span class="s1">resources</span><span class="s4">)</span>
+<a name="l486"><span class="ln">486  </span></a>            <span class="s3">else</span><span class="s4">:</span>
+<a name="l487"><span class="ln">487  </span></a>                <span class="s1">output</span><span class="s4">, </span><span class="s1">resources </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">exporter</span><span class="s4">.</span><span class="s1">from_filename</span><span class="s4">(</span>
+<a name="l488"><span class="ln">488  </span></a>                    <span class="s1">notebook_filename</span><span class="s4">, </span><span class="s1">resources</span><span class="s4">=</span><span class="s1">resources</span>
+<a name="l489"><span class="ln">489  </span></a>                <span class="s4">)</span>
+<a name="l490"><span class="ln">490  </span></a>        <span class="s3">except </span><span class="s1">ConversionException</span><span class="s4">:</span>
+<a name="l491"><span class="ln">491  </span></a>            <span class="s1">self</span><span class="s4">.</span><span class="s1">log</span><span class="s4">.</span><span class="s1">error</span><span class="s4">(</span><span class="s5">&quot;Error while converting '%s'&quot;</span><span class="s4">, </span><span class="s1">notebook_filename</span><span class="s4">, </span><span class="s1">exc_info</span><span class="s4">=</span><span class="s3">True</span><span class="s4">)  </span><span class="s0"># noqa: G201</span>
+<a name="l492"><span class="ln">492  </span></a>            <span class="s1">self</span><span class="s4">.</span><span class="s1">exit</span><span class="s4">(</span><span class="s6">1</span><span class="s4">)</span>
+<a name="l493"><span class="ln">493  </span></a>
+<a name="l494"><span class="ln">494  </span></a>        <span class="s3">return </span><span class="s1">output</span><span class="s4">, </span><span class="s1">resources</span>
+<a name="l495"><span class="ln">495  </span></a>
+<a name="l496"><span class="ln">496  </span></a>    <span class="s3">def </span><span class="s1">write_single_notebook</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">output</span><span class="s4">, </span><span class="s1">resources</span><span class="s4">):</span>
+<a name="l497"><span class="ln">497  </span></a>        <span class="s2">&quot;&quot;&quot;Step 3: Write the notebook to file 
+<a name="l498"><span class="ln">498  </span></a> 
+<a name="l499"><span class="ln">499  </span></a>        This writes output from the exporter to file using the specified writer. 
+<a name="l500"><span class="ln">500  </span></a>        It returns the results from the writer. 
+<a name="l501"><span class="ln">501  </span></a> 
+<a name="l502"><span class="ln">502  </span></a>        Parameters 
+<a name="l503"><span class="ln">503  </span></a>        ---------- 
+<a name="l504"><span class="ln">504  </span></a>        output : 
+<a name="l505"><span class="ln">505  </span></a>        resources : dict 
+<a name="l506"><span class="ln">506  </span></a>            resources for a single notebook including name, config directory 
+<a name="l507"><span class="ln">507  </span></a>            and directory to save output 
+<a name="l508"><span class="ln">508  </span></a> 
+<a name="l509"><span class="ln">509  </span></a>        Returns 
+<a name="l510"><span class="ln">510  </span></a>        ------- 
+<a name="l511"><span class="ln">511  </span></a>        file 
+<a name="l512"><span class="ln">512  </span></a>            results from the specified writer output of exporter 
+<a name="l513"><span class="ln">513  </span></a>        &quot;&quot;&quot;</span>
+<a name="l514"><span class="ln">514  </span></a>
+<a name="l515"><span class="ln">515  </span></a>        <span class="s3">if </span><span class="s5">&quot;unique_key&quot; </span><span class="s3">not in </span><span class="s1">resources</span><span class="s4">:</span>
+<a name="l516"><span class="ln">516  </span></a>            <span class="s1">msg </span><span class="s4">= </span><span class="s5">&quot;unique_key MUST be specified in the resources, but it is not&quot;</span>
+<a name="l517"><span class="ln">517  </span></a>            <span class="s3">raise </span><span class="s1">KeyError</span><span class="s4">(</span><span class="s1">msg</span><span class="s4">)</span>
+<a name="l518"><span class="ln">518  </span></a>
+<a name="l519"><span class="ln">519  </span></a>        <span class="s1">notebook_name </span><span class="s4">= </span><span class="s1">resources</span><span class="s4">[</span><span class="s5">&quot;unique_key&quot;</span><span class="s4">]</span>
+<a name="l520"><span class="ln">520  </span></a>        <span class="s3">if </span><span class="s1">self</span><span class="s4">.</span><span class="s1">use_output_suffix </span><span class="s3">and </span><span class="s1">self</span><span class="s4">.</span><span class="s1">output_base </span><span class="s4">== </span><span class="s5">&quot;{notebook_name}&quot;</span><span class="s4">:</span>
+<a name="l521"><span class="ln">521  </span></a>            <span class="s1">notebook_name </span><span class="s4">+= </span><span class="s1">resources</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">&quot;output_suffix&quot;</span><span class="s4">, </span><span class="s5">&quot;&quot;</span><span class="s4">)</span>
+<a name="l522"><span class="ln">522  </span></a>
+<a name="l523"><span class="ln">523  </span></a>        <span class="s3">if not </span><span class="s1">self</span><span class="s4">.</span><span class="s1">writer</span><span class="s4">:</span>
+<a name="l524"><span class="ln">524  </span></a>            <span class="s1">msg </span><span class="s4">= </span><span class="s5">&quot;No writer object defined!&quot;</span>
+<a name="l525"><span class="ln">525  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s1">msg</span><span class="s4">)</span>
+<a name="l526"><span class="ln">526  </span></a>        <span class="s3">return </span><span class="s1">self</span><span class="s4">.</span><span class="s1">writer</span><span class="s4">.</span><span class="s1">write</span><span class="s4">(</span><span class="s1">output</span><span class="s4">, </span><span class="s1">resources</span><span class="s4">, </span><span class="s1">notebook_name</span><span class="s4">=</span><span class="s1">notebook_name</span><span class="s4">)</span>
+<a name="l527"><span class="ln">527  </span></a>
+<a name="l528"><span class="ln">528  </span></a>    <span class="s3">def </span><span class="s1">postprocess_single_notebook</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">write_results</span><span class="s4">):</span>
+<a name="l529"><span class="ln">529  </span></a>        <span class="s2">&quot;&quot;&quot;Step 4: Post-process the written file 
+<a name="l530"><span class="ln">530  </span></a> 
+<a name="l531"><span class="ln">531  </span></a>        Only used if a postprocessor has been specified. After the 
+<a name="l532"><span class="ln">532  </span></a>        converted notebook is written to a file in Step 3, this post-processes 
+<a name="l533"><span class="ln">533  </span></a>        the notebook. 
+<a name="l534"><span class="ln">534  </span></a>        &quot;&quot;&quot;</span>
+<a name="l535"><span class="ln">535  </span></a>        <span class="s0"># Post-process if post processor has been defined.</span>
+<a name="l536"><span class="ln">536  </span></a>        <span class="s3">if </span><span class="s1">hasattr</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s5">&quot;postprocessor&quot;</span><span class="s4">) </span><span class="s3">and </span><span class="s1">self</span><span class="s4">.</span><span class="s1">postprocessor</span><span class="s4">:</span>
+<a name="l537"><span class="ln">537  </span></a>            <span class="s1">self</span><span class="s4">.</span><span class="s1">postprocessor</span><span class="s4">(</span><span class="s1">write_results</span><span class="s4">)</span>
+<a name="l538"><span class="ln">538  </span></a>
+<a name="l539"><span class="ln">539  </span></a>    <span class="s3">def </span><span class="s1">convert_single_notebook</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">notebook_filename</span><span class="s4">, </span><span class="s1">input_buffer</span><span class="s4">=</span><span class="s3">None</span><span class="s4">):</span>
+<a name="l540"><span class="ln">540  </span></a>        <span class="s2">&quot;&quot;&quot;Convert a single notebook. 
+<a name="l541"><span class="ln">541  </span></a> 
+<a name="l542"><span class="ln">542  </span></a>        Performs the following steps: 
+<a name="l543"><span class="ln">543  </span></a> 
+<a name="l544"><span class="ln">544  </span></a>            1. Initialize notebook resources 
+<a name="l545"><span class="ln">545  </span></a>            2. Export the notebook to a particular format 
+<a name="l546"><span class="ln">546  </span></a>            3. Write the exported notebook to file 
+<a name="l547"><span class="ln">547  </span></a>            4. (Maybe) postprocess the written file 
+<a name="l548"><span class="ln">548  </span></a> 
+<a name="l549"><span class="ln">549  </span></a>        Parameters 
+<a name="l550"><span class="ln">550  </span></a>        ---------- 
+<a name="l551"><span class="ln">551  </span></a>        notebook_filename : str 
+<a name="l552"><span class="ln">552  </span></a>        input_buffer : 
+<a name="l553"><span class="ln">553  </span></a>            If input_buffer is not None, conversion is done and the buffer is 
+<a name="l554"><span class="ln">554  </span></a>            used as source into a file basenamed by the notebook_filename 
+<a name="l555"><span class="ln">555  </span></a>            argument. 
+<a name="l556"><span class="ln">556  </span></a>        &quot;&quot;&quot;</span>
+<a name="l557"><span class="ln">557  </span></a>        <span class="s3">if </span><span class="s1">input_buffer </span><span class="s3">is None</span><span class="s4">:</span>
+<a name="l558"><span class="ln">558  </span></a>            <span class="s1">self</span><span class="s4">.</span><span class="s1">log</span><span class="s4">.</span><span class="s1">info</span><span class="s4">(</span><span class="s5">&quot;Converting notebook %s to %s&quot;</span><span class="s4">, </span><span class="s1">notebook_filename</span><span class="s4">, </span><span class="s1">self</span><span class="s4">.</span><span class="s1">export_format</span><span class="s4">)</span>
+<a name="l559"><span class="ln">559  </span></a>        <span class="s3">else</span><span class="s4">:</span>
+<a name="l560"><span class="ln">560  </span></a>            <span class="s1">self</span><span class="s4">.</span><span class="s1">log</span><span class="s4">.</span><span class="s1">info</span><span class="s4">(</span><span class="s5">&quot;Converting notebook into %s&quot;</span><span class="s4">, </span><span class="s1">self</span><span class="s4">.</span><span class="s1">export_format</span><span class="s4">)</span>
+<a name="l561"><span class="ln">561  </span></a>
+<a name="l562"><span class="ln">562  </span></a>        <span class="s1">resources </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">init_single_notebook_resources</span><span class="s4">(</span><span class="s1">notebook_filename</span><span class="s4">)</span>
+<a name="l563"><span class="ln">563  </span></a>        <span class="s1">output</span><span class="s4">, </span><span class="s1">resources </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">export_single_notebook</span><span class="s4">(</span>
+<a name="l564"><span class="ln">564  </span></a>            <span class="s1">notebook_filename</span><span class="s4">, </span><span class="s1">resources</span><span class="s4">, </span><span class="s1">input_buffer</span><span class="s4">=</span><span class="s1">input_buffer</span>
+<a name="l565"><span class="ln">565  </span></a>        <span class="s4">)</span>
+<a name="l566"><span class="ln">566  </span></a>        <span class="s1">write_results </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">write_single_notebook</span><span class="s4">(</span><span class="s1">output</span><span class="s4">, </span><span class="s1">resources</span><span class="s4">)</span>
+<a name="l567"><span class="ln">567  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">postprocess_single_notebook</span><span class="s4">(</span><span class="s1">write_results</span><span class="s4">)</span>
+<a name="l568"><span class="ln">568  </span></a>
+<a name="l569"><span class="ln">569  </span></a>    <span class="s3">def </span><span class="s1">convert_notebooks</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l570"><span class="ln">570  </span></a>        <span class="s2">&quot;&quot;&quot;Convert the notebooks in the self.notebooks traitlet&quot;&quot;&quot;</span>
+<a name="l571"><span class="ln">571  </span></a>
+<a name="l572"><span class="ln">572  </span></a>        <span class="s0"># no notebooks to convert!</span>
+<a name="l573"><span class="ln">573  </span></a>        <span class="s3">if </span><span class="s1">len</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">notebooks</span><span class="s4">) == </span><span class="s6">0 </span><span class="s3">and not </span><span class="s1">self</span><span class="s4">.</span><span class="s1">from_stdin</span><span class="s4">:</span>
+<a name="l574"><span class="ln">574  </span></a>            <span class="s1">self</span><span class="s4">.</span><span class="s1">print_help</span><span class="s4">()</span>
+<a name="l575"><span class="ln">575  </span></a>            <span class="s1">sys</span><span class="s4">.</span><span class="s1">exit</span><span class="s4">(-</span><span class="s6">1</span><span class="s4">)</span>
+<a name="l576"><span class="ln">576  </span></a>
+<a name="l577"><span class="ln">577  </span></a>        <span class="s3">if not </span><span class="s1">self</span><span class="s4">.</span><span class="s1">export_format</span><span class="s4">:</span>
+<a name="l578"><span class="ln">578  </span></a>            <span class="s1">msg </span><span class="s4">= (</span>
+<a name="l579"><span class="ln">579  </span></a>                <span class="s5">&quot;Please specify an output format with '--to &lt;format&gt;'.&quot;</span>
+<a name="l580"><span class="ln">580  </span></a>                <span class="s5">f&quot;</span><span class="s3">\n</span><span class="s5">The following formats are available: </span><span class="s3">{</span><span class="s1">get_export_names</span><span class="s4">()</span><span class="s3">}</span><span class="s5">&quot;</span>
+<a name="l581"><span class="ln">581  </span></a>            <span class="s4">)</span>
+<a name="l582"><span class="ln">582  </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s1">msg</span><span class="s4">)</span>
+<a name="l583"><span class="ln">583  </span></a>
+<a name="l584"><span class="ln">584  </span></a>        <span class="s0"># initialize the exporter</span>
+<a name="l585"><span class="ln">585  </span></a>        <span class="s1">cls </span><span class="s4">= </span><span class="s1">get_exporter</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">export_format</span><span class="s4">)</span>
+<a name="l586"><span class="ln">586  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">exporter </span><span class="s4">= </span><span class="s1">cls</span><span class="s4">(</span><span class="s1">config</span><span class="s4">=</span><span class="s1">self</span><span class="s4">.</span><span class="s1">config</span><span class="s4">)</span>
+<a name="l587"><span class="ln">587  </span></a>
+<a name="l588"><span class="ln">588  </span></a>        <span class="s0"># strip duplicate extension from output_base, to avoid Basename.ext.ext</span>
+<a name="l589"><span class="ln">589  </span></a>        <span class="s3">if </span><span class="s1">getattr</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">exporter</span><span class="s4">, </span><span class="s5">&quot;file_extension&quot;</span><span class="s4">, </span><span class="s3">False</span><span class="s4">):</span>
+<a name="l590"><span class="ln">590  </span></a>            <span class="s1">base</span><span class="s4">, </span><span class="s1">ext </span><span class="s4">= </span><span class="s1">os</span><span class="s4">.</span><span class="s1">path</span><span class="s4">.</span><span class="s1">splitext</span><span class="s4">(</span><span class="s1">self</span><span class="s4">.</span><span class="s1">output_base</span><span class="s4">)</span>
+<a name="l591"><span class="ln">591  </span></a>            <span class="s3">if </span><span class="s1">ext </span><span class="s4">== </span><span class="s1">self</span><span class="s4">.</span><span class="s1">exporter</span><span class="s4">.</span><span class="s1">file_extension</span><span class="s4">:</span>
+<a name="l592"><span class="ln">592  </span></a>                <span class="s1">self</span><span class="s4">.</span><span class="s1">output_base </span><span class="s4">= </span><span class="s1">base</span>
+<a name="l593"><span class="ln">593  </span></a>
+<a name="l594"><span class="ln">594  </span></a>        <span class="s0"># convert each notebook</span>
+<a name="l595"><span class="ln">595  </span></a>        <span class="s3">if not </span><span class="s1">self</span><span class="s4">.</span><span class="s1">from_stdin</span><span class="s4">:</span>
+<a name="l596"><span class="ln">596  </span></a>            <span class="s3">for </span><span class="s1">notebook_filename </span><span class="s3">in </span><span class="s1">self</span><span class="s4">.</span><span class="s1">notebooks</span><span class="s4">:</span>
+<a name="l597"><span class="ln">597  </span></a>                <span class="s1">self</span><span class="s4">.</span><span class="s1">convert_single_notebook</span><span class="s4">(</span><span class="s1">notebook_filename</span><span class="s4">)</span>
+<a name="l598"><span class="ln">598  </span></a>        <span class="s3">else</span><span class="s4">:</span>
+<a name="l599"><span class="ln">599  </span></a>            <span class="s1">input_buffer </span><span class="s4">= </span><span class="s1">unicode_stdin_stream</span><span class="s4">()</span>
+<a name="l600"><span class="ln">600  </span></a>            <span class="s0"># default name when conversion from stdin</span>
+<a name="l601"><span class="ln">601  </span></a>            <span class="s1">self</span><span class="s4">.</span><span class="s1">convert_single_notebook</span><span class="s4">(</span><span class="s5">&quot;notebook.ipynb&quot;</span><span class="s4">, </span><span class="s1">input_buffer</span><span class="s4">=</span><span class="s1">input_buffer</span><span class="s4">)</span>
+<a name="l602"><span class="ln">602  </span></a>            <span class="s1">input_buffer</span><span class="s4">.</span><span class="s1">close</span><span class="s4">()</span>
+<a name="l603"><span class="ln">603  </span></a>
+<a name="l604"><span class="ln">604  </span></a>    <span class="s3">def </span><span class="s1">document_flag_help</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l605"><span class="ln">605  </span></a>        <span class="s2">&quot;&quot;&quot; 
+<a name="l606"><span class="ln">606  </span></a>        Return a string containing descriptions of all the flags. 
+<a name="l607"><span class="ln">607  </span></a>        &quot;&quot;&quot;</span>
+<a name="l608"><span class="ln">608  </span></a>        <span class="s1">flags </span><span class="s4">= </span><span class="s5">&quot;The following flags are defined:</span><span class="s3">\n\n</span><span class="s5">&quot;</span>
+<a name="l609"><span class="ln">609  </span></a>        <span class="s3">for </span><span class="s1">flag</span><span class="s4">, (</span><span class="s1">cfg</span><span class="s4">, </span><span class="s1">fhelp</span><span class="s4">) </span><span class="s3">in </span><span class="s1">self</span><span class="s4">.</span><span class="s1">flags</span><span class="s4">.</span><span class="s1">items</span><span class="s4">():</span>
+<a name="l610"><span class="ln">610  </span></a>            <span class="s1">flags </span><span class="s4">+= </span><span class="s5">f&quot;</span><span class="s3">{</span><span class="s1">flag</span><span class="s3">}\n</span><span class="s5">&quot;</span>
+<a name="l611"><span class="ln">611  </span></a>            <span class="s1">flags </span><span class="s4">+= </span><span class="s1">indent</span><span class="s4">(</span><span class="s1">fill</span><span class="s4">(</span><span class="s1">fhelp</span><span class="s4">, </span><span class="s6">80</span><span class="s4">)) + </span><span class="s5">&quot;</span><span class="s3">\n\n</span><span class="s5">&quot;</span>
+<a name="l612"><span class="ln">612  </span></a>            <span class="s1">flags </span><span class="s4">+= </span><span class="s1">indent</span><span class="s4">(</span><span class="s1">fill</span><span class="s4">(</span><span class="s5">&quot;Long Form: &quot; </span><span class="s4">+ </span><span class="s1">str</span><span class="s4">(</span><span class="s1">cfg</span><span class="s4">), </span><span class="s6">80</span><span class="s4">)) + </span><span class="s5">&quot;</span><span class="s3">\n\n</span><span class="s5">&quot;</span>
+<a name="l613"><span class="ln">613  </span></a>        <span class="s3">return </span><span class="s1">flags</span>
+<a name="l614"><span class="ln">614  </span></a>
+<a name="l615"><span class="ln">615  </span></a>    <span class="s3">def </span><span class="s1">document_alias_help</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l616"><span class="ln">616  </span></a>        <span class="s2">&quot;&quot;&quot;Return a string containing all of the aliases&quot;&quot;&quot;</span>
+<a name="l617"><span class="ln">617  </span></a>
+<a name="l618"><span class="ln">618  </span></a>        <span class="s1">aliases </span><span class="s4">= </span><span class="s5">&quot;The following aliases are defined:</span><span class="s3">\n\n</span><span class="s5">&quot;</span>
+<a name="l619"><span class="ln">619  </span></a>        <span class="s3">for </span><span class="s1">alias</span><span class="s4">, </span><span class="s1">longname </span><span class="s3">in </span><span class="s1">self</span><span class="s4">.</span><span class="s1">aliases</span><span class="s4">.</span><span class="s1">items</span><span class="s4">():</span>
+<a name="l620"><span class="ln">620  </span></a>            <span class="s1">aliases </span><span class="s4">+= </span><span class="s5">f&quot;</span><span class="s3">\t</span><span class="s5">**</span><span class="s3">{</span><span class="s1">alias</span><span class="s3">}</span><span class="s5">** (</span><span class="s3">{</span><span class="s1">longname</span><span class="s3">}</span><span class="s5">)</span><span class="s3">\n\n</span><span class="s5">&quot;</span>
+<a name="l621"><span class="ln">621  </span></a>        <span class="s3">return </span><span class="s1">aliases</span>
+<a name="l622"><span class="ln">622  </span></a>
+<a name="l623"><span class="ln">623  </span></a>    <span class="s3">def </span><span class="s1">document_config_options</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l624"><span class="ln">624  </span></a>        <span class="s2">&quot;&quot;&quot; 
+<a name="l625"><span class="ln">625  </span></a>        Provides a much improves version of the configuration documentation by 
+<a name="l626"><span class="ln">626  </span></a>        breaking the configuration options into app, exporter, writer, 
+<a name="l627"><span class="ln">627  </span></a>        preprocessor, postprocessor, and other sections. 
+<a name="l628"><span class="ln">628  </span></a>        &quot;&quot;&quot;</span>
+<a name="l629"><span class="ln">629  </span></a>        <span class="s1">categories </span><span class="s4">= {</span>
+<a name="l630"><span class="ln">630  </span></a>            <span class="s1">category</span><span class="s4">: [</span><span class="s1">c </span><span class="s3">for </span><span class="s1">c </span><span class="s3">in </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_classes_inc_parents</span><span class="s4">() </span><span class="s3">if </span><span class="s1">category </span><span class="s3">in </span><span class="s1">c</span><span class="s4">.</span><span class="s1">__name__</span><span class="s4">.</span><span class="s1">lower</span><span class="s4">()]</span>
+<a name="l631"><span class="ln">631  </span></a>            <span class="s3">for </span><span class="s1">category </span><span class="s3">in </span><span class="s4">[</span><span class="s5">&quot;app&quot;</span><span class="s4">, </span><span class="s5">&quot;exporter&quot;</span><span class="s4">, </span><span class="s5">&quot;writer&quot;</span><span class="s4">, </span><span class="s5">&quot;preprocessor&quot;</span><span class="s4">, </span><span class="s5">&quot;postprocessor&quot;</span><span class="s4">]</span>
+<a name="l632"><span class="ln">632  </span></a>        <span class="s4">}</span>
+<a name="l633"><span class="ln">633  </span></a>        <span class="s1">accounted_for </span><span class="s4">= {</span><span class="s1">c </span><span class="s3">for </span><span class="s1">category </span><span class="s3">in </span><span class="s1">categories</span><span class="s4">.</span><span class="s1">values</span><span class="s4">() </span><span class="s3">for </span><span class="s1">c </span><span class="s3">in </span><span class="s1">category</span><span class="s4">}</span>
+<a name="l634"><span class="ln">634  </span></a>        <span class="s1">categories</span><span class="s4">[</span><span class="s5">&quot;other&quot;</span><span class="s4">] = [</span><span class="s1">c </span><span class="s3">for </span><span class="s1">c </span><span class="s3">in </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_classes_inc_parents</span><span class="s4">() </span><span class="s3">if </span><span class="s1">c </span><span class="s3">not in </span><span class="s1">accounted_for</span><span class="s4">]</span>
+<a name="l635"><span class="ln">635  </span></a>
+<a name="l636"><span class="ln">636  </span></a>        <span class="s1">header </span><span class="s4">= </span><span class="s1">dedent</span><span class="s4">(</span>
+<a name="l637"><span class="ln">637  </span></a>            <span class="s5">&quot;&quot;&quot; 
+<a name="l638"><span class="ln">638  </span></a>                        {section} Options 
+<a name="l639"><span class="ln">639  </span></a>                        ----------------------- 
+<a name="l640"><span class="ln">640  </span></a> 
+<a name="l641"><span class="ln">641  </span></a>                        &quot;&quot;&quot;</span>
+<a name="l642"><span class="ln">642  </span></a>        <span class="s4">)</span>
+<a name="l643"><span class="ln">643  </span></a>        <span class="s1">sections </span><span class="s4">= </span><span class="s5">&quot;&quot;</span>
+<a name="l644"><span class="ln">644  </span></a>        <span class="s3">for </span><span class="s1">category </span><span class="s3">in </span><span class="s1">categories</span><span class="s4">:</span>
+<a name="l645"><span class="ln">645  </span></a>            <span class="s1">sections </span><span class="s4">+= </span><span class="s1">header</span><span class="s4">.</span><span class="s1">format</span><span class="s4">(</span><span class="s1">section</span><span class="s4">=</span><span class="s1">category</span><span class="s4">.</span><span class="s1">title</span><span class="s4">())</span>
+<a name="l646"><span class="ln">646  </span></a>            <span class="s3">if </span><span class="s1">category </span><span class="s3">in </span><span class="s4">[</span><span class="s5">&quot;exporter&quot;</span><span class="s4">, </span><span class="s5">&quot;preprocessor&quot;</span><span class="s4">, </span><span class="s5">&quot;writer&quot;</span><span class="s4">]:</span>
+<a name="l647"><span class="ln">647  </span></a>                <span class="s1">sections </span><span class="s4">+= </span><span class="s5">f&quot;.. image:: _static/</span><span class="s3">{</span><span class="s1">category</span><span class="s3">}</span><span class="s5">_inheritance.png</span><span class="s3">\n\n</span><span class="s5">&quot;</span>
+<a name="l648"><span class="ln">648  </span></a>            <span class="s1">sections </span><span class="s4">+= </span><span class="s5">&quot;</span><span class="s3">\n</span><span class="s5">&quot;</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">c</span><span class="s4">.</span><span class="s1">class_config_rst_doc</span><span class="s4">() </span><span class="s3">for </span><span class="s1">c </span><span class="s3">in </span><span class="s1">categories</span><span class="s4">[</span><span class="s1">category</span><span class="s4">])</span>
+<a name="l649"><span class="ln">649  </span></a>
+<a name="l650"><span class="ln">650  </span></a>        <span class="s3">return </span><span class="s1">sections</span><span class="s4">.</span><span class="s1">replace</span><span class="s4">(</span><span class="s5">&quot; : &quot;</span><span class="s4">, </span><span class="s5">r&quot; \: &quot;</span><span class="s4">)</span>
+<a name="l651"><span class="ln">651  </span></a>
+<a name="l652"><span class="ln">652  </span></a>
+<a name="l653"><span class="ln">653  </span></a><span class="s3">class </span><span class="s1">DejavuApp</span><span class="s4">(</span><span class="s1">NbConvertApp</span><span class="s4">):</span>
+<a name="l654"><span class="ln">654  </span></a>    <span class="s2">&quot;&quot;&quot;A deja vu app.&quot;&quot;&quot;</span>
+<a name="l655"><span class="ln">655  </span></a>
+<a name="l656"><span class="ln">656  </span></a>    <span class="s3">def </span><span class="s1">initialize</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">argv</span><span class="s4">=</span><span class="s3">None</span><span class="s4">):</span>
+<a name="l657"><span class="ln">657  </span></a>        <span class="s2">&quot;&quot;&quot;Initialize the app.&quot;&quot;&quot;</span>
+<a name="l658"><span class="ln">658  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">config</span><span class="s4">.</span><span class="s1">TemplateExporter</span><span class="s4">.</span><span class="s1">exclude_input </span><span class="s4">= </span><span class="s3">True</span>
+<a name="l659"><span class="ln">659  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">config</span><span class="s4">.</span><span class="s1">TemplateExporter</span><span class="s4">.</span><span class="s1">exclude_output_prompt </span><span class="s4">= </span><span class="s3">True</span>
+<a name="l660"><span class="ln">660  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">config</span><span class="s4">.</span><span class="s1">TemplateExporter</span><span class="s4">.</span><span class="s1">exclude_input_prompt </span><span class="s4">= </span><span class="s3">True</span>
+<a name="l661"><span class="ln">661  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">config</span><span class="s4">.</span><span class="s1">ExecutePreprocessor</span><span class="s4">.</span><span class="s1">enabled </span><span class="s4">= </span><span class="s3">True</span>
+<a name="l662"><span class="ln">662  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">config</span><span class="s4">.</span><span class="s1">WebPDFExporter</span><span class="s4">.</span><span class="s1">paginate </span><span class="s4">= </span><span class="s3">False</span>
+<a name="l663"><span class="ln">663  </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">config</span><span class="s4">.</span><span class="s1">QtPDFExporter</span><span class="s4">.</span><span class="s1">paginate </span><span class="s4">= </span><span class="s3">False</span>
+<a name="l664"><span class="ln">664  </span></a>
+<a name="l665"><span class="ln">665  </span></a>        <span class="s1">super</span><span class="s4">().</span><span class="s1">initialize</span><span class="s4">(</span><span class="s1">argv</span><span class="s4">)</span>
+<a name="l666"><span class="ln">666  </span></a>        <span class="s3">if </span><span class="s1">hasattr</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s5">&quot;load_config_environ&quot;</span><span class="s4">):</span>
+<a name="l667"><span class="ln">667  </span></a>            <span class="s1">self</span><span class="s4">.</span><span class="s1">load_config_environ</span><span class="s4">()</span>
+<a name="l668"><span class="ln">668  </span></a>
+<a name="l669"><span class="ln">669  </span></a>    <span class="s4">@</span><span class="s1">default</span><span class="s4">(</span><span class="s5">&quot;export_format&quot;</span><span class="s4">)</span>
+<a name="l670"><span class="ln">670  </span></a>    <span class="s3">def </span><span class="s1">_default_export_format</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l671"><span class="ln">671  </span></a>        <span class="s3">return </span><span class="s5">&quot;html&quot;</span>
+<a name="l672"><span class="ln">672  </span></a>
+<a name="l673"><span class="ln">673  </span></a>
+<a name="l674"><span class="ln">674  </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l675"><span class="ln">675  </span></a><span class="s0"># Main entry point</span>
+<a name="l676"><span class="ln">676  </span></a><span class="s0"># -----------------------------------------------------------------------------</span>
+<a name="l677"><span class="ln">677  </span></a>
+<a name="l678"><span class="ln">678  </span></a><span class="s1">main </span><span class="s4">= </span><span class="s1">launch_new_instance </span><span class="s4">= </span><span class="s1">NbConvertApp</span><span class="s4">.</span><span class="s1">launch_instance</span>
+<a name="l679"><span class="ln">679  </span></a><span class="s1">dejavu_main </span><span class="s4">= </span><span class="s1">DejavuApp</span><span class="s4">.</span><span class="s1">launch_instance</span>
+<a name="l680"><span class="ln">680  </span></a></pre>
+</body>
+</html>

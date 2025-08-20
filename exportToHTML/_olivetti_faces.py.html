@@ -1,0 +1,208 @@
+<html>
+<head>
+<title>_olivetti_faces.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #7a7e85;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_olivetti_faces.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot;Modified Olivetti faces dataset. 
+<a name="l2"><span class="ln">2    </span></a> 
+<a name="l3"><span class="ln">3    </span></a>The original database was available from (now defunct) 
+<a name="l4"><span class="ln">4    </span></a> 
+<a name="l5"><span class="ln">5    </span></a>    https://www.cl.cam.ac.uk/research/dtg/attarchive/facedatabase.html 
+<a name="l6"><span class="ln">6    </span></a> 
+<a name="l7"><span class="ln">7    </span></a>The version retrieved here comes in MATLAB format from the personal 
+<a name="l8"><span class="ln">8    </span></a>web page of Sam Roweis: 
+<a name="l9"><span class="ln">9    </span></a> 
+<a name="l10"><span class="ln">10   </span></a>    https://cs.nyu.edu/~roweis/ 
+<a name="l11"><span class="ln">11   </span></a>&quot;&quot;&quot;</span>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a><span class="s2"># Authors: The scikit-learn developers</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s2"># SPDX-License-Identifier: BSD-3-Clause</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a><span class="s3">from </span><span class="s1">numbers </span><span class="s3">import </span><span class="s1">Integral</span><span class="s4">, </span><span class="s1">Real</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s3">from </span><span class="s1">os </span><span class="s3">import </span><span class="s1">PathLike</span><span class="s4">, </span><span class="s1">makedirs</span><span class="s4">, </span><span class="s1">remove</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s3">from </span><span class="s1">os</span><span class="s4">.</span><span class="s1">path </span><span class="s3">import </span><span class="s1">exists</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s3">import </span><span class="s1">joblib</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s3">import </span><span class="s1">numpy </span><span class="s3">as </span><span class="s1">np</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s3">from </span><span class="s1">scipy</span><span class="s4">.</span><span class="s1">io </span><span class="s3">import </span><span class="s1">loadmat</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">utils </span><span class="s3">import </span><span class="s1">Bunch</span><span class="s4">, </span><span class="s1">check_random_state</span>
+<a name="l25"><span class="ln">25   </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">utils</span><span class="s4">.</span><span class="s1">_param_validation </span><span class="s3">import </span><span class="s1">Interval</span><span class="s4">, </span><span class="s1">validate_params</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s3">from </span><span class="s4">. </span><span class="s3">import </span><span class="s1">get_data_home</span>
+<a name="l27"><span class="ln">27   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">_base </span><span class="s3">import </span><span class="s1">RemoteFileMetadata</span><span class="s4">, </span><span class="s1">_fetch_remote</span><span class="s4">, </span><span class="s1">_pkl_filepath</span><span class="s4">, </span><span class="s1">load_descr</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a><span class="s2"># The original data can be found at:</span>
+<a name="l30"><span class="ln">30   </span></a><span class="s2"># https://cs.nyu.edu/~roweis/data/olivettifaces.mat</span>
+<a name="l31"><span class="ln">31   </span></a><span class="s1">FACES </span><span class="s4">= </span><span class="s1">RemoteFileMetadata</span><span class="s4">(</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">filename</span><span class="s4">=</span><span class="s5">&quot;olivettifaces.mat&quot;</span><span class="s4">,</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s1">url</span><span class="s4">=</span><span class="s5">&quot;https://ndownloader.figshare.com/files/5976027&quot;</span><span class="s4">,</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s1">checksum</span><span class="s4">=</span><span class="s5">&quot;b612fb967f2dc77c9c62d3e1266e0c73d5fca46a4b8906c18e454d41af987794&quot;</span><span class="s4">,</span>
+<a name="l35"><span class="ln">35   </span></a><span class="s4">)</span>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a><span class="s4">@</span><span class="s1">validate_params</span><span class="s4">(</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s4">{</span>
+<a name="l40"><span class="ln">40   </span></a>        <span class="s5">&quot;data_home&quot;</span><span class="s4">: [</span><span class="s1">str</span><span class="s4">, </span><span class="s1">PathLike</span><span class="s4">, </span><span class="s3">None</span><span class="s4">],</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s5">&quot;shuffle&quot;</span><span class="s4">: [</span><span class="s5">&quot;boolean&quot;</span><span class="s4">],</span>
+<a name="l42"><span class="ln">42   </span></a>        <span class="s5">&quot;random_state&quot;</span><span class="s4">: [</span><span class="s5">&quot;random_state&quot;</span><span class="s4">],</span>
+<a name="l43"><span class="ln">43   </span></a>        <span class="s5">&quot;download_if_missing&quot;</span><span class="s4">: [</span><span class="s5">&quot;boolean&quot;</span><span class="s4">],</span>
+<a name="l44"><span class="ln">44   </span></a>        <span class="s5">&quot;return_X_y&quot;</span><span class="s4">: [</span><span class="s5">&quot;boolean&quot;</span><span class="s4">],</span>
+<a name="l45"><span class="ln">45   </span></a>        <span class="s5">&quot;n_retries&quot;</span><span class="s4">: [</span><span class="s1">Interval</span><span class="s4">(</span><span class="s1">Integral</span><span class="s4">, </span><span class="s6">1</span><span class="s4">, </span><span class="s3">None</span><span class="s4">, </span><span class="s1">closed</span><span class="s4">=</span><span class="s5">&quot;left&quot;</span><span class="s4">)],</span>
+<a name="l46"><span class="ln">46   </span></a>        <span class="s5">&quot;delay&quot;</span><span class="s4">: [</span><span class="s1">Interval</span><span class="s4">(</span><span class="s1">Real</span><span class="s4">, </span><span class="s6">0.0</span><span class="s4">, </span><span class="s3">None</span><span class="s4">, </span><span class="s1">closed</span><span class="s4">=</span><span class="s5">&quot;neither&quot;</span><span class="s4">)],</span>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s4">},</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s1">prefer_skip_nested_validation</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l49"><span class="ln">49   </span></a><span class="s4">)</span>
+<a name="l50"><span class="ln">50   </span></a><span class="s3">def </span><span class="s1">fetch_olivetti_faces</span><span class="s4">(</span>
+<a name="l51"><span class="ln">51   </span></a>    <span class="s4">*,</span>
+<a name="l52"><span class="ln">52   </span></a>    <span class="s1">data_home</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l53"><span class="ln">53   </span></a>    <span class="s1">shuffle</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s1">random_state</span><span class="s4">=</span><span class="s6">0</span><span class="s4">,</span>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s1">download_if_missing</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l56"><span class="ln">56   </span></a>    <span class="s1">return_X_y</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s1">n_retries</span><span class="s4">=</span><span class="s6">3</span><span class="s4">,</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s1">delay</span><span class="s4">=</span><span class="s6">1.0</span><span class="s4">,</span>
+<a name="l59"><span class="ln">59   </span></a><span class="s4">):</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s0">&quot;&quot;&quot;Load the Olivetti faces data-set from AT&amp;T (classification). 
+<a name="l61"><span class="ln">61   </span></a> 
+<a name="l62"><span class="ln">62   </span></a>    Download it if necessary. 
+<a name="l63"><span class="ln">63   </span></a> 
+<a name="l64"><span class="ln">64   </span></a>    =================   ===================== 
+<a name="l65"><span class="ln">65   </span></a>    Classes                                40 
+<a name="l66"><span class="ln">66   </span></a>    Samples total                         400 
+<a name="l67"><span class="ln">67   </span></a>    Dimensionality                       4096 
+<a name="l68"><span class="ln">68   </span></a>    Features            real, between 0 and 1 
+<a name="l69"><span class="ln">69   </span></a>    =================   ===================== 
+<a name="l70"><span class="ln">70   </span></a> 
+<a name="l71"><span class="ln">71   </span></a>    Read more in the :ref:`User Guide &lt;olivetti_faces_dataset&gt;`. 
+<a name="l72"><span class="ln">72   </span></a> 
+<a name="l73"><span class="ln">73   </span></a>    Parameters 
+<a name="l74"><span class="ln">74   </span></a>    ---------- 
+<a name="l75"><span class="ln">75   </span></a>    data_home : str or path-like, default=None 
+<a name="l76"><span class="ln">76   </span></a>        Specify another download and cache folder for the datasets. By default 
+<a name="l77"><span class="ln">77   </span></a>        all scikit-learn data is stored in '~/scikit_learn_data' subfolders. 
+<a name="l78"><span class="ln">78   </span></a> 
+<a name="l79"><span class="ln">79   </span></a>    shuffle : bool, default=False 
+<a name="l80"><span class="ln">80   </span></a>        If True the order of the dataset is shuffled to avoid having 
+<a name="l81"><span class="ln">81   </span></a>        images of the same person grouped. 
+<a name="l82"><span class="ln">82   </span></a> 
+<a name="l83"><span class="ln">83   </span></a>    random_state : int, RandomState instance or None, default=0 
+<a name="l84"><span class="ln">84   </span></a>        Determines random number generation for dataset shuffling. Pass an int 
+<a name="l85"><span class="ln">85   </span></a>        for reproducible output across multiple function calls. 
+<a name="l86"><span class="ln">86   </span></a>        See :term:`Glossary &lt;random_state&gt;`. 
+<a name="l87"><span class="ln">87   </span></a> 
+<a name="l88"><span class="ln">88   </span></a>    download_if_missing : bool, default=True 
+<a name="l89"><span class="ln">89   </span></a>        If False, raise an OSError if the data is not locally available 
+<a name="l90"><span class="ln">90   </span></a>        instead of trying to download the data from the source site. 
+<a name="l91"><span class="ln">91   </span></a> 
+<a name="l92"><span class="ln">92   </span></a>    return_X_y : bool, default=False 
+<a name="l93"><span class="ln">93   </span></a>        If True, returns `(data, target)` instead of a `Bunch` object. See 
+<a name="l94"><span class="ln">94   </span></a>        below for more information about the `data` and `target` object. 
+<a name="l95"><span class="ln">95   </span></a> 
+<a name="l96"><span class="ln">96   </span></a>        .. versionadded:: 0.22 
+<a name="l97"><span class="ln">97   </span></a> 
+<a name="l98"><span class="ln">98   </span></a>    n_retries : int, default=3 
+<a name="l99"><span class="ln">99   </span></a>        Number of retries when HTTP errors are encountered. 
+<a name="l100"><span class="ln">100  </span></a> 
+<a name="l101"><span class="ln">101  </span></a>        .. versionadded:: 1.5 
+<a name="l102"><span class="ln">102  </span></a> 
+<a name="l103"><span class="ln">103  </span></a>    delay : float, default=1.0 
+<a name="l104"><span class="ln">104  </span></a>        Number of seconds between retries. 
+<a name="l105"><span class="ln">105  </span></a> 
+<a name="l106"><span class="ln">106  </span></a>        .. versionadded:: 1.5 
+<a name="l107"><span class="ln">107  </span></a> 
+<a name="l108"><span class="ln">108  </span></a>    Returns 
+<a name="l109"><span class="ln">109  </span></a>    ------- 
+<a name="l110"><span class="ln">110  </span></a>    data : :class:`~sklearn.utils.Bunch` 
+<a name="l111"><span class="ln">111  </span></a>        Dictionary-like object, with the following attributes. 
+<a name="l112"><span class="ln">112  </span></a> 
+<a name="l113"><span class="ln">113  </span></a>        data: ndarray, shape (400, 4096) 
+<a name="l114"><span class="ln">114  </span></a>            Each row corresponds to a ravelled 
+<a name="l115"><span class="ln">115  </span></a>            face image of original size 64 x 64 pixels. 
+<a name="l116"><span class="ln">116  </span></a>        images : ndarray, shape (400, 64, 64) 
+<a name="l117"><span class="ln">117  </span></a>            Each row is a face image 
+<a name="l118"><span class="ln">118  </span></a>            corresponding to one of the 40 subjects of the dataset. 
+<a name="l119"><span class="ln">119  </span></a>        target : ndarray, shape (400,) 
+<a name="l120"><span class="ln">120  </span></a>            Labels associated to each face image. 
+<a name="l121"><span class="ln">121  </span></a>            Those labels are ranging from 0-39 and correspond to the 
+<a name="l122"><span class="ln">122  </span></a>            Subject IDs. 
+<a name="l123"><span class="ln">123  </span></a>        DESCR : str 
+<a name="l124"><span class="ln">124  </span></a>            Description of the modified Olivetti Faces Dataset. 
+<a name="l125"><span class="ln">125  </span></a> 
+<a name="l126"><span class="ln">126  </span></a>    (data, target) : tuple if `return_X_y=True` 
+<a name="l127"><span class="ln">127  </span></a>        Tuple with the `data` and `target` objects described above. 
+<a name="l128"><span class="ln">128  </span></a> 
+<a name="l129"><span class="ln">129  </span></a>        .. versionadded:: 0.22 
+<a name="l130"><span class="ln">130  </span></a> 
+<a name="l131"><span class="ln">131  </span></a>    Examples 
+<a name="l132"><span class="ln">132  </span></a>    -------- 
+<a name="l133"><span class="ln">133  </span></a>    &gt;&gt;&gt; from sklearn.datasets import fetch_olivetti_faces 
+<a name="l134"><span class="ln">134  </span></a>    &gt;&gt;&gt; olivetti_faces = fetch_olivetti_faces() 
+<a name="l135"><span class="ln">135  </span></a>    &gt;&gt;&gt; olivetti_faces.data.shape 
+<a name="l136"><span class="ln">136  </span></a>    (400, 4096) 
+<a name="l137"><span class="ln">137  </span></a>    &gt;&gt;&gt; olivetti_faces.target.shape 
+<a name="l138"><span class="ln">138  </span></a>    (400,) 
+<a name="l139"><span class="ln">139  </span></a>    &gt;&gt;&gt; olivetti_faces.images.shape 
+<a name="l140"><span class="ln">140  </span></a>    (400, 64, 64) 
+<a name="l141"><span class="ln">141  </span></a>    &quot;&quot;&quot;</span>
+<a name="l142"><span class="ln">142  </span></a>    <span class="s1">data_home </span><span class="s4">= </span><span class="s1">get_data_home</span><span class="s4">(</span><span class="s1">data_home</span><span class="s4">=</span><span class="s1">data_home</span><span class="s4">)</span>
+<a name="l143"><span class="ln">143  </span></a>    <span class="s3">if not </span><span class="s1">exists</span><span class="s4">(</span><span class="s1">data_home</span><span class="s4">):</span>
+<a name="l144"><span class="ln">144  </span></a>        <span class="s1">makedirs</span><span class="s4">(</span><span class="s1">data_home</span><span class="s4">)</span>
+<a name="l145"><span class="ln">145  </span></a>    <span class="s1">filepath </span><span class="s4">= </span><span class="s1">_pkl_filepath</span><span class="s4">(</span><span class="s1">data_home</span><span class="s4">, </span><span class="s5">&quot;olivetti.pkz&quot;</span><span class="s4">)</span>
+<a name="l146"><span class="ln">146  </span></a>    <span class="s3">if not </span><span class="s1">exists</span><span class="s4">(</span><span class="s1">filepath</span><span class="s4">):</span>
+<a name="l147"><span class="ln">147  </span></a>        <span class="s3">if not </span><span class="s1">download_if_missing</span><span class="s4">:</span>
+<a name="l148"><span class="ln">148  </span></a>            <span class="s3">raise </span><span class="s1">OSError</span><span class="s4">(</span><span class="s5">&quot;Data not found and `download_if_missing` is False&quot;</span><span class="s4">)</span>
+<a name="l149"><span class="ln">149  </span></a>
+<a name="l150"><span class="ln">150  </span></a>        <span class="s1">print</span><span class="s4">(</span><span class="s5">&quot;downloading Olivetti faces from %s to %s&quot; </span><span class="s4">% (</span><span class="s1">FACES</span><span class="s4">.</span><span class="s1">url</span><span class="s4">, </span><span class="s1">data_home</span><span class="s4">))</span>
+<a name="l151"><span class="ln">151  </span></a>        <span class="s1">mat_path </span><span class="s4">= </span><span class="s1">_fetch_remote</span><span class="s4">(</span>
+<a name="l152"><span class="ln">152  </span></a>            <span class="s1">FACES</span><span class="s4">, </span><span class="s1">dirname</span><span class="s4">=</span><span class="s1">data_home</span><span class="s4">, </span><span class="s1">n_retries</span><span class="s4">=</span><span class="s1">n_retries</span><span class="s4">, </span><span class="s1">delay</span><span class="s4">=</span><span class="s1">delay</span>
+<a name="l153"><span class="ln">153  </span></a>        <span class="s4">)</span>
+<a name="l154"><span class="ln">154  </span></a>        <span class="s1">mfile </span><span class="s4">= </span><span class="s1">loadmat</span><span class="s4">(</span><span class="s1">file_name</span><span class="s4">=</span><span class="s1">mat_path</span><span class="s4">)</span>
+<a name="l155"><span class="ln">155  </span></a>        <span class="s2"># delete raw .mat data</span>
+<a name="l156"><span class="ln">156  </span></a>        <span class="s1">remove</span><span class="s4">(</span><span class="s1">mat_path</span><span class="s4">)</span>
+<a name="l157"><span class="ln">157  </span></a>
+<a name="l158"><span class="ln">158  </span></a>        <span class="s1">faces </span><span class="s4">= </span><span class="s1">mfile</span><span class="s4">[</span><span class="s5">&quot;faces&quot;</span><span class="s4">].</span><span class="s1">T</span><span class="s4">.</span><span class="s1">copy</span><span class="s4">()</span>
+<a name="l159"><span class="ln">159  </span></a>        <span class="s1">joblib</span><span class="s4">.</span><span class="s1">dump</span><span class="s4">(</span><span class="s1">faces</span><span class="s4">, </span><span class="s1">filepath</span><span class="s4">, </span><span class="s1">compress</span><span class="s4">=</span><span class="s6">6</span><span class="s4">)</span>
+<a name="l160"><span class="ln">160  </span></a>        <span class="s3">del </span><span class="s1">mfile</span>
+<a name="l161"><span class="ln">161  </span></a>    <span class="s3">else</span><span class="s4">:</span>
+<a name="l162"><span class="ln">162  </span></a>        <span class="s1">faces </span><span class="s4">= </span><span class="s1">joblib</span><span class="s4">.</span><span class="s1">load</span><span class="s4">(</span><span class="s1">filepath</span><span class="s4">)</span>
+<a name="l163"><span class="ln">163  </span></a>
+<a name="l164"><span class="ln">164  </span></a>    <span class="s2"># We want floating point data, but float32 is enough (there is only</span>
+<a name="l165"><span class="ln">165  </span></a>    <span class="s2"># one byte of precision in the original uint8s anyway)</span>
+<a name="l166"><span class="ln">166  </span></a>    <span class="s1">faces </span><span class="s4">= </span><span class="s1">np</span><span class="s4">.</span><span class="s1">float32</span><span class="s4">(</span><span class="s1">faces</span><span class="s4">)</span>
+<a name="l167"><span class="ln">167  </span></a>    <span class="s1">faces </span><span class="s4">= </span><span class="s1">faces </span><span class="s4">- </span><span class="s1">faces</span><span class="s4">.</span><span class="s1">min</span><span class="s4">()</span>
+<a name="l168"><span class="ln">168  </span></a>    <span class="s1">faces </span><span class="s4">/= </span><span class="s1">faces</span><span class="s4">.</span><span class="s1">max</span><span class="s4">()</span>
+<a name="l169"><span class="ln">169  </span></a>    <span class="s1">faces </span><span class="s4">= </span><span class="s1">faces</span><span class="s4">.</span><span class="s1">reshape</span><span class="s4">((</span><span class="s6">400</span><span class="s4">, </span><span class="s6">64</span><span class="s4">, </span><span class="s6">64</span><span class="s4">)).</span><span class="s1">transpose</span><span class="s4">(</span><span class="s6">0</span><span class="s4">, </span><span class="s6">2</span><span class="s4">, </span><span class="s6">1</span><span class="s4">)</span>
+<a name="l170"><span class="ln">170  </span></a>    <span class="s2"># 10 images per class, 400 images total, each class is contiguous.</span>
+<a name="l171"><span class="ln">171  </span></a>    <span class="s1">target </span><span class="s4">= </span><span class="s1">np</span><span class="s4">.</span><span class="s1">array</span><span class="s4">([</span><span class="s1">i </span><span class="s4">// </span><span class="s6">10 </span><span class="s3">for </span><span class="s1">i </span><span class="s3">in </span><span class="s1">range</span><span class="s4">(</span><span class="s6">400</span><span class="s4">)])</span>
+<a name="l172"><span class="ln">172  </span></a>    <span class="s3">if </span><span class="s1">shuffle</span><span class="s4">:</span>
+<a name="l173"><span class="ln">173  </span></a>        <span class="s1">random_state </span><span class="s4">= </span><span class="s1">check_random_state</span><span class="s4">(</span><span class="s1">random_state</span><span class="s4">)</span>
+<a name="l174"><span class="ln">174  </span></a>        <span class="s1">order </span><span class="s4">= </span><span class="s1">random_state</span><span class="s4">.</span><span class="s1">permutation</span><span class="s4">(</span><span class="s1">len</span><span class="s4">(</span><span class="s1">faces</span><span class="s4">))</span>
+<a name="l175"><span class="ln">175  </span></a>        <span class="s1">faces </span><span class="s4">= </span><span class="s1">faces</span><span class="s4">[</span><span class="s1">order</span><span class="s4">]</span>
+<a name="l176"><span class="ln">176  </span></a>        <span class="s1">target </span><span class="s4">= </span><span class="s1">target</span><span class="s4">[</span><span class="s1">order</span><span class="s4">]</span>
+<a name="l177"><span class="ln">177  </span></a>    <span class="s1">faces_vectorized </span><span class="s4">= </span><span class="s1">faces</span><span class="s4">.</span><span class="s1">reshape</span><span class="s4">(</span><span class="s1">len</span><span class="s4">(</span><span class="s1">faces</span><span class="s4">), -</span><span class="s6">1</span><span class="s4">)</span>
+<a name="l178"><span class="ln">178  </span></a>
+<a name="l179"><span class="ln">179  </span></a>    <span class="s1">fdescr </span><span class="s4">= </span><span class="s1">load_descr</span><span class="s4">(</span><span class="s5">&quot;olivetti_faces.rst&quot;</span><span class="s4">)</span>
+<a name="l180"><span class="ln">180  </span></a>
+<a name="l181"><span class="ln">181  </span></a>    <span class="s3">if </span><span class="s1">return_X_y</span><span class="s4">:</span>
+<a name="l182"><span class="ln">182  </span></a>        <span class="s3">return </span><span class="s1">faces_vectorized</span><span class="s4">, </span><span class="s1">target</span>
+<a name="l183"><span class="ln">183  </span></a>
+<a name="l184"><span class="ln">184  </span></a>    <span class="s3">return </span><span class="s1">Bunch</span><span class="s4">(</span><span class="s1">data</span><span class="s4">=</span><span class="s1">faces_vectorized</span><span class="s4">, </span><span class="s1">images</span><span class="s4">=</span><span class="s1">faces</span><span class="s4">, </span><span class="s1">target</span><span class="s4">=</span><span class="s1">target</span><span class="s4">, </span><span class="s1">DESCR</span><span class="s4">=</span><span class="s1">fdescr</span><span class="s4">)</span>
+<a name="l185"><span class="ln">185  </span></a></pre>
+</body>
+</html>

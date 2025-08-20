@@ -1,0 +1,65 @@
+<html>
+<head>
+<title>activity_regularization.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+activity_regularization.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src </span><span class="s0">import </span><span class="s1">regularizers</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">api_export </span><span class="s0">import </span><span class="s1">keras_export</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">layers</span><span class="s2">.</span><span class="s1">layer </span><span class="s0">import </span><span class="s1">Layer</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">@</span><span class="s1">keras_export</span><span class="s2">(</span><span class="s3">&quot;keras.layers.ActivityRegularization&quot;</span><span class="s2">)</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">class </span><span class="s1">ActivityRegularization</span><span class="s2">(</span><span class="s1">Layer</span><span class="s2">):</span>
+<a name="l8"><span class="ln">8    </span></a>    <span class="s4">&quot;&quot;&quot;Layer that applies an update to the cost function based input activity. 
+<a name="l9"><span class="ln">9    </span></a> 
+<a name="l10"><span class="ln">10   </span></a>    Args: 
+<a name="l11"><span class="ln">11   </span></a>        l1: L1 regularization factor (positive float). 
+<a name="l12"><span class="ln">12   </span></a>        l2: L2 regularization factor (positive float). 
+<a name="l13"><span class="ln">13   </span></a> 
+<a name="l14"><span class="ln">14   </span></a>    Input shape: 
+<a name="l15"><span class="ln">15   </span></a>        Arbitrary. Use the keyword argument `input_shape` 
+<a name="l16"><span class="ln">16   </span></a>        (tuple of integers, does not include the samples axis) 
+<a name="l17"><span class="ln">17   </span></a>        when using this layer as the first layer in a model. 
+<a name="l18"><span class="ln">18   </span></a> 
+<a name="l19"><span class="ln">19   </span></a>    Output shape: 
+<a name="l20"><span class="ln">20   </span></a>        Same shape as input. 
+<a name="l21"><span class="ln">21   </span></a>    &quot;&quot;&quot;</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">l1</span><span class="s2">=</span><span class="s5">0.0</span><span class="s2">, </span><span class="s1">l2</span><span class="s2">=</span><span class="s5">0.0</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">):</span>
+<a name="l24"><span class="ln">24   </span></a>        <span class="s1">super</span><span class="s2">().</span><span class="s1">__init__</span><span class="s2">(</span>
+<a name="l25"><span class="ln">25   </span></a>            <span class="s1">activity_regularizer</span><span class="s2">=</span><span class="s1">regularizers</span><span class="s2">.</span><span class="s1">L1L2</span><span class="s2">(</span><span class="s1">l1</span><span class="s2">=</span><span class="s1">l1</span><span class="s2">, </span><span class="s1">l2</span><span class="s2">=</span><span class="s1">l2</span><span class="s2">), **</span><span class="s1">kwargs</span>
+<a name="l26"><span class="ln">26   </span></a>        <span class="s2">)</span>
+<a name="l27"><span class="ln">27   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">supports_masking </span><span class="s2">= </span><span class="s0">True</span>
+<a name="l28"><span class="ln">28   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">l1 </span><span class="s2">= </span><span class="s1">l1</span>
+<a name="l29"><span class="ln">29   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">l2 </span><span class="s2">= </span><span class="s1">l2</span>
+<a name="l30"><span class="ln">30   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">built </span><span class="s2">= </span><span class="s0">True</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s0">def </span><span class="s1">call</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">inputs</span><span class="s2">):</span>
+<a name="l33"><span class="ln">33   </span></a>        <span class="s0">return </span><span class="s1">inputs</span>
+<a name="l34"><span class="ln">34   </span></a>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s0">def </span><span class="s1">compute_output_shape</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">input_shape</span><span class="s2">):</span>
+<a name="l36"><span class="ln">36   </span></a>        <span class="s0">return </span><span class="s1">input_shape</span>
+<a name="l37"><span class="ln">37   </span></a>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s0">def </span><span class="s1">get_config</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s1">base_config </span><span class="s2">= </span><span class="s1">super</span><span class="s2">().</span><span class="s1">get_config</span><span class="s2">()</span>
+<a name="l40"><span class="ln">40   </span></a>        <span class="s1">base_config</span><span class="s2">.</span><span class="s1">pop</span><span class="s2">(</span><span class="s3">&quot;activity_regularizer&quot;</span><span class="s2">, </span><span class="s0">None</span><span class="s2">)</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s1">config </span><span class="s2">= {</span><span class="s3">&quot;l1&quot;</span><span class="s2">: </span><span class="s1">self</span><span class="s2">.</span><span class="s1">l1</span><span class="s2">, </span><span class="s3">&quot;l2&quot;</span><span class="s2">: </span><span class="s1">self</span><span class="s2">.</span><span class="s1">l2</span><span class="s2">}</span>
+<a name="l42"><span class="ln">42   </span></a>        <span class="s0">return </span><span class="s2">{**</span><span class="s1">base_config</span><span class="s2">, **</span><span class="s1">config</span><span class="s2">}</span>
+<a name="l43"><span class="ln">43   </span></a></pre>
+</body>
+</html>

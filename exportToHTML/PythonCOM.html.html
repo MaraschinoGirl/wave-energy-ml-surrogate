@@ -1,0 +1,112 @@
+<html>
+<head>
+<title>PythonCOM.html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #d5b778;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bababa;}
+.s3 { color: #6aab73;}
+.s4 { color: #56a8f5;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+PythonCOM.html</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&lt;HTML&gt;</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">&lt;HEAD&gt;</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">&lt;META </span><span class="s2">HTTP-EQUIV</span><span class="s3">=&quot;Content-Type&quot; </span><span class="s2">CONTENT</span><span class="s3">=&quot;text/html; charset=windows-1252&quot;</span><span class="s0">&gt;</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">&lt;META </span><span class="s2">NAME</span><span class="s3">=&quot;Generator&quot; </span><span class="s2">CONTENT</span><span class="s3">=&quot;Microsoft Word 97&quot;</span><span class="s0">&gt;</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">&lt;TITLE&gt;</span><span class="s1">Untitled</span><span class="s0">&lt;/TITLE&gt;</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">&lt;META </span><span class="s2">NAME</span><span class="s3">=&quot;Template&quot; </span><span class="s2">CONTENT</span><span class="s3">=&quot;D:\Program Files\Microsoft Office\Office\html.dot&quot;</span><span class="s0">&gt;</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">&lt;/HEAD&gt;</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">&lt;BODY </span><span class="s2">LINK</span><span class="s3">=&quot;#0000ff&quot; </span><span class="s2">VLINK</span><span class="s3">=&quot;#800080&quot;</span><span class="s0">&gt;</span>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">&lt;H1&gt;&lt;IMG </span><span class="s2">SRC</span><span class="s3">=&quot;image/pycom_blowing.gif&quot; </span><span class="s2">WIDTH</span><span class="s3">=549 </span><span class="s2">HEIGHT</span><span class="s3">=99 </span><span class="s2">ALT</span><span class="s3">=&quot;Python and COM - Blowing the others away&quot;</span><span class="s0">&gt;&lt;/H1&gt;</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s0">&lt;H1&gt;</span><span class="s1">Python and COM - Implementation Details </span><span class="s0">&lt;/H1&gt;</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0">&lt;H2&gt;</span><span class="s1">Introduction </span><span class="s0">&lt;/H2&gt;</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">This document describes the technical implementation of the COM support in Python. It is primarily concerned with the underlying C++ interface to COM, although general Python issues are touched. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">This document is targeted at people who wish to maintain/enhance the standard COM support (typically by writing extension modules). For information on using Python and COM from a Python programmers perspective, please see the </span><span class="s0">&lt;A </span><span class="s2">HREF</span><span class="s3">=&quot;docindex.html&quot;</span><span class="s0">&gt;</span><span class="s1">documentation index</span><span class="s0">&lt;/A&gt;</span><span class="s1">. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s0">&lt;H2&gt;</span><span class="s1">General COM Support. </span><span class="s0">&lt;/H2&gt;</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">COM support in Python can be broken into 2 general areas - C++ support, and Python support. C++ support exists in the core PythonCOM module (plus any PythonCOM extension modules). Python support exists in the .py files that accompany the core module. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s0">&lt;H2&gt;</span><span class="s1">Naming Conventions </span><span class="s0">&lt;/H2&gt;</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">The naming conventions used by Python code will be: </span><span class="s0">&lt;/P&gt;</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s0">&lt;UL&gt;</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s0">&lt;LI&gt;</span><span class="s1">The Python &quot;New Import&quot; (ni) module will be used, allowing packages, or nested modules. </span><span class="s0">&lt;/LI&gt;</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s0">&lt;LI&gt;</span><span class="s1">The package name will be &quot;win32com&quot;. </span><span class="s0">&lt;/LI&gt;</span>
+<a name="l23"><span class="ln">23   </span></a><span class="s0">&lt;LI&gt;</span><span class="s1">The core module name will be &quot;pythoncom&quot; (ie, &quot;win32com.pythoncom&quot;) </span><span class="s0">&lt;/LI&gt;&lt;/UL&gt;</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">The rest of the naming conventions are yet to be worked out. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s0">&lt;H2&gt;</span><span class="s1">Core COM support. </span><span class="s0">&lt;/H2&gt;</span>
+<a name="l27"><span class="ln">27   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">This section is involved with the core C++ support in &quot;pythoncom&quot;. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l28"><span class="ln">28   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">The organisation of PythonCOM support falls into 3 discrete areas. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s0">&lt;H3&gt;</span><span class="s1">COM Client Support </span><span class="s0">&lt;/H3&gt;</span>
+<a name="l30"><span class="ln">30   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">This is the ability to manipulate other COM objects via their exposed interface. This includes use of IDispatch (eg using Python to start Microsoft Word, open a file, and print it.) but also all client side IUnknown derived objects fall into this category, including ITypeLib and IConnectionPoint support. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l31"><span class="ln">31   </span></a><span class="s0">&lt;H3&gt;</span><span class="s1">COM Server Support </span><span class="s0">&lt;/H3&gt;</span>
+<a name="l32"><span class="ln">32   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">This is ability for Python to create COM Servers, which can be manipulated by another COM client. This includes server side IDispatch (eg, Visual Basic starting a Python interpreter, and asking it to evaluate some code) but also all supported server side IUnknown derived classes. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l33"><span class="ln">33   </span></a><span class="s0">&lt;H3&gt;</span><span class="s1">Python/COM type and value conversion </span><span class="s0">&lt;/H3&gt;</span>
+<a name="l34"><span class="ln">34   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">This is internal code used by the above areas to managed the conversion to and from Python/COM types and values. This includes code to convert an arbitrary Python object into a COM variant, manages return types, and a few other helpers. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l35"><span class="ln">35   </span></a><span class="s0">&lt;H2&gt;</span><span class="s1">COM Structures and Python Types </span><span class="s0">&lt;/H2&gt;</span>
+<a name="l36"><span class="ln">36   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">OLE supports many C level structures for the COM API, which must be mapped to Python. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l37"><span class="ln">37   </span></a><span class="s0">&lt;H3&gt;</span><span class="s1">VARIANT </span><span class="s0">&lt;/H3&gt;</span>
+<a name="l38"><span class="ln">38   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">Variants are never exposed as such to Python programs. The internal framework always converts all variants to and from Python types. In some cases, type descriptions may be used, which force specific mappings, although in general the automatic conversion works fine. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l39"><span class="ln">39   </span></a><span class="s0">&lt;H3&gt;</span><span class="s1">TYPEDESC </span><span class="s0">&lt;/H3&gt;</span>
+<a name="l40"><span class="ln">40   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">A tuple, containing the elements of the C union. This union will be correctly decoded by the support code. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l41"><span class="ln">41   </span></a><span class="s0">&lt;H3&gt;</span><span class="s1">ELEMDESC </span><span class="s0">&lt;/H3&gt;</span>
+<a name="l42"><span class="ln">42   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">A tuple of TYPEDESC and PARAMDESC objects. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l43"><span class="ln">43   </span></a><span class="s0">&lt;H3&gt;</span><span class="s1">FUNCDESC </span><span class="s0">&lt;/H3&gt;</span>
+<a name="l44"><span class="ln">44   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">A funcdesc is a large and unwieldy tuple. Documentation to be supplied. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l45"><span class="ln">45   </span></a><span class="s0">&lt;H3&gt;</span><span class="s1">IID/CLSID </span><span class="s0">&lt;/H3&gt;</span>
+<a name="l46"><span class="ln">46   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">A native IID in Python is a special type, defined in pythoncom. Whenever a CLSID/IID is required, typically either an object, a tuple of type &quot;iii(iiiiiiii)&quot; or string can be used. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l47"><span class="ln">47   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">Helper functions are available to convert to and from IID/CLSID and strings. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l48"><span class="ln">48   </span></a><span class="s0">&lt;H2&gt;</span><span class="s1">COM Framework </span><span class="s0">&lt;/H2&gt;</span>
+<a name="l49"><span class="ln">49   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">Both client and server side support have a specific framework in place to assist in supporting the widest possible set of interfaces. The framework allows external extension DLLs to be written, which extend the interfaces available to the Python user. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l50"><span class="ln">50   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">This allows the core PythonCOM module to support a wide set of common interfaces, and other extensions to support anything obscure. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l51"><span class="ln">51   </span></a><span class="s0">&lt;H3&gt;</span><span class="s1">Client Framework </span><span class="s0">&lt;/H3&gt;</span>
+<a name="l52"><span class="ln">52   </span></a><span class="s0">&lt;H4&gt;</span><span class="s1">QueryInterface and Types </span><span class="s0">&lt;/H4&gt;</span>
+<a name="l53"><span class="ln">53   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">When the only support required by Python is IDispatch, everything is simple - every object returned from QueryInterface is a PyIDispatch object. But this does not extend to other types, such as ITypeLib, IConnectionPoint etc., which are required for full COM support. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l54"><span class="ln">54   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">For example, consider the following C++ psuedo-code: </span><span class="s0">&lt;/P&gt;</span>
+<a name="l55"><span class="ln">55   </span></a><span class="s0">&lt;CODE&gt;&lt;P&gt;</span><span class="s1">IConnectionPoint *conPt;</span><span class="s0">&lt;BR&gt;</span>
+<a name="l56"><span class="ln">56   </span></a><span class="s1">someIDispatch-</span><span class="s4">&amp;gt;</span><span class="s1">QueryInterface(IID_IConnectionPoint, (void **)</span><span class="s4">&amp;amp;</span><span class="s1">conPt);</span><span class="s0">&lt;BR&gt;</span>
+<a name="l57"><span class="ln">57   </span></a><span class="s1">// Note the IID_ and type of the * could be anything!</span><span class="s0">&lt;/CODE&gt; &lt;/P&gt;</span>
+<a name="l58"><span class="ln">58   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">This cast, and knowledge of a specific IID_* to type must be simulated in Python. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l59"><span class="ln">59   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">Python/COM will therefore maintain a map of UID's to Python type objects. Whenever QueryInterface is called, Python will lookup this map, to determine if the object type is supported. If the object is supported, then an object of that type will be returned. If the object is not supported, then a PyIUnknown object will be returned. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l60"><span class="ln">60   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">Note that PyIDispatch will be supported by the core engine. Therefore: </span><span class="s0">&lt;/P&gt;</span>
+<a name="l61"><span class="ln">61   </span></a><span class="s0">&lt;CODE&gt;&lt;P&gt;</span><span class="s4">&amp;gt;&amp;gt;&amp;gt; </span><span class="s1">disp=someobj.QueryInterface(win32com.IID_Dispatch) </span><span class="s0">&lt;/P&gt;</span>
+<a name="l62"><span class="ln">62   </span></a><span class="s0">&lt;/CODE&gt;&lt;P&gt;</span><span class="s1">will return a PyIDispatch object, whereas </span><span class="s0">&lt;/P&gt;</span>
+<a name="l63"><span class="ln">63   </span></a><span class="s0">&lt;CODE&gt;&lt;P&gt;</span><span class="s4">&amp;gt;&amp;gt;&amp;gt; </span><span class="s1">unk=someobj.QueryInterface(SomeUnknownIID) # returns PyIUnknown</span><span class="s0">&lt;BR&gt;</span>
+<a name="l64"><span class="ln">64   </span></a><span class="s4">&amp;gt;&amp;gt;&amp;gt; </span><span class="s1">disp=unk.QueryInterface(win32com.IID_Dispatch) </span><span class="s0">&lt;BR&gt;</span>
+<a name="l65"><span class="ln">65   </span></a><span class="s4">&amp;gt;&amp;gt;&amp;gt; </span><span class="s1">unk.Release() # Clean up now, rather than waiting for unk death.</span><span class="s0">&lt;/CODE&gt; &lt;/P&gt;</span>
+<a name="l66"><span class="ln">66   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">Is needed to convert to an IDispatch object. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l67"><span class="ln">67   </span></a><span class="s0">&lt;H4&gt;</span><span class="s1">Core Support </span><span class="s0">&lt;/H4&gt;</span>
+<a name="l68"><span class="ln">68   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">The core COM support module will support the IUnknown, IDispatch, ITypeInfo, ITypeLib and IConnectionPointContainer and IConnectionPoint interfaces. This implies the core COM module supports 6 different OLE client object types, mapped to the 6 IID_*'s representing the objects. (The IConnection* objects allow for Python to repsond to COM events) </span><span class="s0">&lt;/P&gt;</span>
+<a name="l69"><span class="ln">69   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">A psuedo-inheritance scheme is used. The Python types are all derived from the Python IUnknown type (PyIUnknown). Therefore all IUnknown methods are automatically available to all types, just as it should be. The PyIUnknown type manages all object reference counts and destruction. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l70"><span class="ln">70   </span></a><span class="s0">&lt;H4&gt;</span><span class="s1">Extensibility </span><span class="s0">&lt;/H4&gt;</span>
+<a name="l71"><span class="ln">71   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">To provide the above functionality, a Python map is provided, which maps from a GUID to a Python type object. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l72"><span class="ln">72   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">The advantage of this scheme is an external extension modules can hook into the core support. For example, imagine the following code: </span><span class="s0">&lt;/P&gt;</span>
+<a name="l73"><span class="ln">73   </span></a><span class="s0">&lt;CODE&gt;&lt;P&gt;</span><span class="s4">&amp;gt;&amp;gt;&amp;gt; </span><span class="s1">import myextracom # external .pyd supporting some interface.</span><span class="s0">&lt;BR&gt;</span>
+<a name="l74"><span class="ln">74   </span></a><span class="s1"># myextracom.pyd will do the equivilent of</span><span class="s0">&lt;/CODE&gt; &lt;/P&gt;</span>
+<a name="l75"><span class="ln">75   </span></a><span class="s0">&lt;CODE&gt;&lt;P&gt;</span><span class="s1"># pythoncom.mapSupportedTypes(myextracom.IID_Extra, myextracom.ExtraType) </span><span class="s0">&lt;BR&gt;</span>
+<a name="l76"><span class="ln">76   </span></a><span class="s4">&amp;gt;&amp;gt;&amp;gt; </span><span class="s1">someobj.QueryInterface(myextracom.IID_Extra)</span><span class="s0">&lt;/CODE&gt; &lt;/P&gt;</span>
+<a name="l77"><span class="ln">77   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">Would correctly return an object defined in the extension module. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l78"><span class="ln">78   </span></a><span class="s0">&lt;H3&gt;</span><span class="s1">Server Framework </span><span class="s0">&lt;/H3&gt;</span>
+<a name="l79"><span class="ln">79   </span></a><span class="s0">&lt;H4&gt;</span><span class="s1">General Framework </span><span class="s0">&lt;/H4&gt;</span>
+<a name="l80"><span class="ln">80   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">A server framework has been put in place which provides the following features: </span><span class="s0">&lt;/P&gt;</span>
+<a name="l81"><span class="ln">81   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">All Interfaces provide VTBL support - this means that the Servers exposed by Python are callable from C++ and other compiled languages. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l82"><span class="ln">82   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">Supports full &quot;inproc&quot; servers. This means that no external .EXE is needed making Python COM servers available in almost all cases. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l83"><span class="ln">83   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">An extensible model which allows for extension modules to provide server support for interfaces defined in that module. A map is provided which maps from a GUID to a function pointer which creates the interface. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l84"><span class="ln">84   </span></a><span class="s0">&lt;H3&gt;</span><span class="s1">Python and Variant Types Conversion </span><span class="s0">&lt;/H3&gt;</span>
+<a name="l85"><span class="ln">85   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">In general, Python and COM are both &quot;type-less&quot;. COM is type-less via the VARIANT object, which supports many types, and Python is type-less due to its object model. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l86"><span class="ln">86   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">There are a number of areas where Python and OLE clash. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l87"><span class="ln">87   </span></a><span class="s0">&lt;H4&gt;</span><span class="s1">Parameters and conversions. </span><span class="s0">&lt;/H4&gt;</span>
+<a name="l88"><span class="ln">88   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">For simple calls, there are 2 helpers available which will convert to and from PyObjects and VARIANTS. The call to convert a Python object to a VARIANT is simple in that it returns a VARIANT of the most appropriate type for the Python object - ie, the type of the Python object determines the resulting VARIANT type. </span><span class="s0">&lt;/P&gt;</span>
+<a name="l89"><span class="ln">89   </span></a><span class="s0">&lt;P&gt;</span><span class="s1">There are also more complex conversion routines available, wrapped in a C++ helper class. Typically, these helpers are used whenever a specific variant type is known (eg, when an ITypeInfo is available for the object being used). In this case, all efforts are made to convert the Python type to the requested variant type - ie, in this situation, the VARIANT type determines how the Python object is coerced. In addition, this code supports the use of &quot;ByRef&quot; and pointer paramaters, providing and freeing any buffers necessary for the call. </span><span class="s0">&lt;/P&gt;&lt;/BODY&gt;</span>
+<a name="l90"><span class="ln">90   </span></a><span class="s0">&lt;/HTML&gt;</span>
+<a name="l91"><span class="ln">91   </span></a></pre>
+</body>
+</html>

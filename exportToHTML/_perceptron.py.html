@@ -1,0 +1,250 @@
+<html>
+<head>
+<title>_perceptron.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_perceptron.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Authors: The scikit-learn developers</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># SPDX-License-Identifier: BSD-3-Clause</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">from </span><span class="s1">numbers </span><span class="s2">import </span><span class="s1">Real</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">from </span><span class="s3">..</span><span class="s1">utils</span><span class="s3">.</span><span class="s1">_param_validation </span><span class="s2">import </span><span class="s1">Interval</span><span class="s3">, </span><span class="s1">StrOptions</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">from </span><span class="s3">.</span><span class="s1">_stochastic_gradient </span><span class="s2">import </span><span class="s1">BaseSGDClassifier</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s2">class </span><span class="s1">Perceptron</span><span class="s3">(</span><span class="s1">BaseSGDClassifier</span><span class="s3">):</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s4">&quot;&quot;&quot;Linear perceptron classifier. 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>    The implementation is a wrapper around :class:`~sklearn.linear_model.SGDClassifier` 
+<a name="l14"><span class="ln">14   </span></a>    by fixing the `loss` and `learning_rate` parameters as:: 
+<a name="l15"><span class="ln">15   </span></a> 
+<a name="l16"><span class="ln">16   </span></a>        SGDClassifier(loss=&quot;perceptron&quot;, learning_rate=&quot;constant&quot;) 
+<a name="l17"><span class="ln">17   </span></a> 
+<a name="l18"><span class="ln">18   </span></a>    Other available parameters are described below and are forwarded to 
+<a name="l19"><span class="ln">19   </span></a>    :class:`~sklearn.linear_model.SGDClassifier`. 
+<a name="l20"><span class="ln">20   </span></a> 
+<a name="l21"><span class="ln">21   </span></a>    Read more in the :ref:`User Guide &lt;perceptron&gt;`. 
+<a name="l22"><span class="ln">22   </span></a> 
+<a name="l23"><span class="ln">23   </span></a>    Parameters 
+<a name="l24"><span class="ln">24   </span></a>    ---------- 
+<a name="l25"><span class="ln">25   </span></a> 
+<a name="l26"><span class="ln">26   </span></a>    penalty : {'l2','l1','elasticnet'}, default=None 
+<a name="l27"><span class="ln">27   </span></a>        The penalty (aka regularization term) to be used. 
+<a name="l28"><span class="ln">28   </span></a> 
+<a name="l29"><span class="ln">29   </span></a>    alpha : float, default=0.0001 
+<a name="l30"><span class="ln">30   </span></a>        Constant that multiplies the regularization term if regularization is 
+<a name="l31"><span class="ln">31   </span></a>        used. 
+<a name="l32"><span class="ln">32   </span></a> 
+<a name="l33"><span class="ln">33   </span></a>    l1_ratio : float, default=0.15 
+<a name="l34"><span class="ln">34   </span></a>        The Elastic Net mixing parameter, with `0 &lt;= l1_ratio &lt;= 1`. 
+<a name="l35"><span class="ln">35   </span></a>        `l1_ratio=0` corresponds to L2 penalty, `l1_ratio=1` to L1. 
+<a name="l36"><span class="ln">36   </span></a>        Only used if `penalty='elasticnet'`. 
+<a name="l37"><span class="ln">37   </span></a> 
+<a name="l38"><span class="ln">38   </span></a>        .. versionadded:: 0.24 
+<a name="l39"><span class="ln">39   </span></a> 
+<a name="l40"><span class="ln">40   </span></a>    fit_intercept : bool, default=True 
+<a name="l41"><span class="ln">41   </span></a>        Whether the intercept should be estimated or not. If False, the 
+<a name="l42"><span class="ln">42   </span></a>        data is assumed to be already centered. 
+<a name="l43"><span class="ln">43   </span></a> 
+<a name="l44"><span class="ln">44   </span></a>    max_iter : int, default=1000 
+<a name="l45"><span class="ln">45   </span></a>        The maximum number of passes over the training data (aka epochs). 
+<a name="l46"><span class="ln">46   </span></a>        It only impacts the behavior in the ``fit`` method, and not the 
+<a name="l47"><span class="ln">47   </span></a>        :meth:`partial_fit` method. 
+<a name="l48"><span class="ln">48   </span></a> 
+<a name="l49"><span class="ln">49   </span></a>        .. versionadded:: 0.19 
+<a name="l50"><span class="ln">50   </span></a> 
+<a name="l51"><span class="ln">51   </span></a>    tol : float or None, default=1e-3 
+<a name="l52"><span class="ln">52   </span></a>        The stopping criterion. If it is not None, the iterations will stop 
+<a name="l53"><span class="ln">53   </span></a>        when (loss &gt; previous_loss - tol). 
+<a name="l54"><span class="ln">54   </span></a> 
+<a name="l55"><span class="ln">55   </span></a>        .. versionadded:: 0.19 
+<a name="l56"><span class="ln">56   </span></a> 
+<a name="l57"><span class="ln">57   </span></a>    shuffle : bool, default=True 
+<a name="l58"><span class="ln">58   </span></a>        Whether or not the training data should be shuffled after each epoch. 
+<a name="l59"><span class="ln">59   </span></a> 
+<a name="l60"><span class="ln">60   </span></a>    verbose : int, default=0 
+<a name="l61"><span class="ln">61   </span></a>        The verbosity level. 
+<a name="l62"><span class="ln">62   </span></a> 
+<a name="l63"><span class="ln">63   </span></a>    eta0 : float, default=1 
+<a name="l64"><span class="ln">64   </span></a>        Constant by which the updates are multiplied. 
+<a name="l65"><span class="ln">65   </span></a> 
+<a name="l66"><span class="ln">66   </span></a>    n_jobs : int, default=None 
+<a name="l67"><span class="ln">67   </span></a>        The number of CPUs to use to do the OVA (One Versus All, for 
+<a name="l68"><span class="ln">68   </span></a>        multi-class problems) computation. 
+<a name="l69"><span class="ln">69   </span></a>        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context. 
+<a name="l70"><span class="ln">70   </span></a>        ``-1`` means using all processors. See :term:`Glossary &lt;n_jobs&gt;` 
+<a name="l71"><span class="ln">71   </span></a>        for more details. 
+<a name="l72"><span class="ln">72   </span></a> 
+<a name="l73"><span class="ln">73   </span></a>    random_state : int, RandomState instance or None, default=0 
+<a name="l74"><span class="ln">74   </span></a>        Used to shuffle the training data, when ``shuffle`` is set to 
+<a name="l75"><span class="ln">75   </span></a>        ``True``. Pass an int for reproducible output across multiple 
+<a name="l76"><span class="ln">76   </span></a>        function calls. 
+<a name="l77"><span class="ln">77   </span></a>        See :term:`Glossary &lt;random_state&gt;`. 
+<a name="l78"><span class="ln">78   </span></a> 
+<a name="l79"><span class="ln">79   </span></a>    early_stopping : bool, default=False 
+<a name="l80"><span class="ln">80   </span></a>        Whether to use early stopping to terminate training when validation 
+<a name="l81"><span class="ln">81   </span></a>        score is not improving. If set to True, it will automatically set aside 
+<a name="l82"><span class="ln">82   </span></a>        a stratified fraction of training data as validation and terminate 
+<a name="l83"><span class="ln">83   </span></a>        training when validation score is not improving by at least `tol` for 
+<a name="l84"><span class="ln">84   </span></a>        `n_iter_no_change` consecutive epochs. 
+<a name="l85"><span class="ln">85   </span></a> 
+<a name="l86"><span class="ln">86   </span></a>        .. versionadded:: 0.20 
+<a name="l87"><span class="ln">87   </span></a> 
+<a name="l88"><span class="ln">88   </span></a>    validation_fraction : float, default=0.1 
+<a name="l89"><span class="ln">89   </span></a>        The proportion of training data to set aside as validation set for 
+<a name="l90"><span class="ln">90   </span></a>        early stopping. Must be between 0 and 1. 
+<a name="l91"><span class="ln">91   </span></a>        Only used if early_stopping is True. 
+<a name="l92"><span class="ln">92   </span></a> 
+<a name="l93"><span class="ln">93   </span></a>        .. versionadded:: 0.20 
+<a name="l94"><span class="ln">94   </span></a> 
+<a name="l95"><span class="ln">95   </span></a>    n_iter_no_change : int, default=5 
+<a name="l96"><span class="ln">96   </span></a>        Number of iterations with no improvement to wait before early stopping. 
+<a name="l97"><span class="ln">97   </span></a> 
+<a name="l98"><span class="ln">98   </span></a>        .. versionadded:: 0.20 
+<a name="l99"><span class="ln">99   </span></a> 
+<a name="l100"><span class="ln">100  </span></a>    class_weight : dict, {class_label: weight} or &quot;balanced&quot;, default=None 
+<a name="l101"><span class="ln">101  </span></a>        Preset for the class_weight fit parameter. 
+<a name="l102"><span class="ln">102  </span></a> 
+<a name="l103"><span class="ln">103  </span></a>        Weights associated with classes. If not given, all classes 
+<a name="l104"><span class="ln">104  </span></a>        are supposed to have weight one. 
+<a name="l105"><span class="ln">105  </span></a> 
+<a name="l106"><span class="ln">106  </span></a>        The &quot;balanced&quot; mode uses the values of y to automatically adjust 
+<a name="l107"><span class="ln">107  </span></a>        weights inversely proportional to class frequencies in the input data 
+<a name="l108"><span class="ln">108  </span></a>        as ``n_samples / (n_classes * np.bincount(y))``. 
+<a name="l109"><span class="ln">109  </span></a> 
+<a name="l110"><span class="ln">110  </span></a>    warm_start : bool, default=False 
+<a name="l111"><span class="ln">111  </span></a>        When set to True, reuse the solution of the previous call to fit as 
+<a name="l112"><span class="ln">112  </span></a>        initialization, otherwise, just erase the previous solution. See 
+<a name="l113"><span class="ln">113  </span></a>        :term:`the Glossary &lt;warm_start&gt;`. 
+<a name="l114"><span class="ln">114  </span></a> 
+<a name="l115"><span class="ln">115  </span></a>    Attributes 
+<a name="l116"><span class="ln">116  </span></a>    ---------- 
+<a name="l117"><span class="ln">117  </span></a>    classes_ : ndarray of shape (n_classes,) 
+<a name="l118"><span class="ln">118  </span></a>        The unique classes labels. 
+<a name="l119"><span class="ln">119  </span></a> 
+<a name="l120"><span class="ln">120  </span></a>    coef_ : ndarray of shape (1, n_features) if n_classes == 2 else \ 
+<a name="l121"><span class="ln">121  </span></a>            (n_classes, n_features) 
+<a name="l122"><span class="ln">122  </span></a>        Weights assigned to the features. 
+<a name="l123"><span class="ln">123  </span></a> 
+<a name="l124"><span class="ln">124  </span></a>    intercept_ : ndarray of shape (1,) if n_classes == 2 else (n_classes,) 
+<a name="l125"><span class="ln">125  </span></a>        Constants in decision function. 
+<a name="l126"><span class="ln">126  </span></a> 
+<a name="l127"><span class="ln">127  </span></a>    n_features_in_ : int 
+<a name="l128"><span class="ln">128  </span></a>        Number of features seen during :term:`fit`. 
+<a name="l129"><span class="ln">129  </span></a> 
+<a name="l130"><span class="ln">130  </span></a>        .. versionadded:: 0.24 
+<a name="l131"><span class="ln">131  </span></a> 
+<a name="l132"><span class="ln">132  </span></a>    feature_names_in_ : ndarray of shape (`n_features_in_`,) 
+<a name="l133"><span class="ln">133  </span></a>        Names of features seen during :term:`fit`. Defined only when `X` 
+<a name="l134"><span class="ln">134  </span></a>        has feature names that are all strings. 
+<a name="l135"><span class="ln">135  </span></a> 
+<a name="l136"><span class="ln">136  </span></a>        .. versionadded:: 1.0 
+<a name="l137"><span class="ln">137  </span></a> 
+<a name="l138"><span class="ln">138  </span></a>    n_iter_ : int 
+<a name="l139"><span class="ln">139  </span></a>        The actual number of iterations to reach the stopping criterion. 
+<a name="l140"><span class="ln">140  </span></a>        For multiclass fits, it is the maximum over every binary fit. 
+<a name="l141"><span class="ln">141  </span></a> 
+<a name="l142"><span class="ln">142  </span></a>    t_ : int 
+<a name="l143"><span class="ln">143  </span></a>        Number of weight updates performed during training. 
+<a name="l144"><span class="ln">144  </span></a>        Same as ``(n_iter_ * n_samples + 1)``. 
+<a name="l145"><span class="ln">145  </span></a> 
+<a name="l146"><span class="ln">146  </span></a>    See Also 
+<a name="l147"><span class="ln">147  </span></a>    -------- 
+<a name="l148"><span class="ln">148  </span></a>    sklearn.linear_model.SGDClassifier : Linear classifiers 
+<a name="l149"><span class="ln">149  </span></a>        (SVM, logistic regression, etc.) with SGD training. 
+<a name="l150"><span class="ln">150  </span></a> 
+<a name="l151"><span class="ln">151  </span></a>    Notes 
+<a name="l152"><span class="ln">152  </span></a>    ----- 
+<a name="l153"><span class="ln">153  </span></a>    ``Perceptron`` is a classification algorithm which shares the same 
+<a name="l154"><span class="ln">154  </span></a>    underlying implementation with ``SGDClassifier``. In fact, 
+<a name="l155"><span class="ln">155  </span></a>    ``Perceptron()`` is equivalent to `SGDClassifier(loss=&quot;perceptron&quot;, 
+<a name="l156"><span class="ln">156  </span></a>    eta0=1, learning_rate=&quot;constant&quot;, penalty=None)`. 
+<a name="l157"><span class="ln">157  </span></a> 
+<a name="l158"><span class="ln">158  </span></a>    References 
+<a name="l159"><span class="ln">159  </span></a>    ---------- 
+<a name="l160"><span class="ln">160  </span></a>    https://en.wikipedia.org/wiki/Perceptron and references therein. 
+<a name="l161"><span class="ln">161  </span></a> 
+<a name="l162"><span class="ln">162  </span></a>    Examples 
+<a name="l163"><span class="ln">163  </span></a>    -------- 
+<a name="l164"><span class="ln">164  </span></a>    &gt;&gt;&gt; from sklearn.datasets import load_digits 
+<a name="l165"><span class="ln">165  </span></a>    &gt;&gt;&gt; from sklearn.linear_model import Perceptron 
+<a name="l166"><span class="ln">166  </span></a>    &gt;&gt;&gt; X, y = load_digits(return_X_y=True) 
+<a name="l167"><span class="ln">167  </span></a>    &gt;&gt;&gt; clf = Perceptron(tol=1e-3, random_state=0) 
+<a name="l168"><span class="ln">168  </span></a>    &gt;&gt;&gt; clf.fit(X, y) 
+<a name="l169"><span class="ln">169  </span></a>    Perceptron() 
+<a name="l170"><span class="ln">170  </span></a>    &gt;&gt;&gt; clf.score(X, y) 
+<a name="l171"><span class="ln">171  </span></a>    0.939... 
+<a name="l172"><span class="ln">172  </span></a>    &quot;&quot;&quot;</span>
+<a name="l173"><span class="ln">173  </span></a>
+<a name="l174"><span class="ln">174  </span></a>    <span class="s1">_parameter_constraints</span><span class="s3">: </span><span class="s1">dict </span><span class="s3">= {**</span><span class="s1">BaseSGDClassifier</span><span class="s3">.</span><span class="s1">_parameter_constraints</span><span class="s3">}</span>
+<a name="l175"><span class="ln">175  </span></a>    <span class="s1">_parameter_constraints</span><span class="s3">.</span><span class="s1">pop</span><span class="s3">(</span><span class="s5">&quot;loss&quot;</span><span class="s3">)</span>
+<a name="l176"><span class="ln">176  </span></a>    <span class="s1">_parameter_constraints</span><span class="s3">.</span><span class="s1">pop</span><span class="s3">(</span><span class="s5">&quot;average&quot;</span><span class="s3">)</span>
+<a name="l177"><span class="ln">177  </span></a>    <span class="s1">_parameter_constraints</span><span class="s3">.</span><span class="s1">update</span><span class="s3">(</span>
+<a name="l178"><span class="ln">178  </span></a>        <span class="s3">{</span>
+<a name="l179"><span class="ln">179  </span></a>            <span class="s5">&quot;penalty&quot;</span><span class="s3">: [</span><span class="s1">StrOptions</span><span class="s3">({</span><span class="s5">&quot;l2&quot;</span><span class="s3">, </span><span class="s5">&quot;l1&quot;</span><span class="s3">, </span><span class="s5">&quot;elasticnet&quot;</span><span class="s3">}), </span><span class="s2">None</span><span class="s3">],</span>
+<a name="l180"><span class="ln">180  </span></a>            <span class="s5">&quot;alpha&quot;</span><span class="s3">: [</span><span class="s1">Interval</span><span class="s3">(</span><span class="s1">Real</span><span class="s3">, </span><span class="s6">0</span><span class="s3">, </span><span class="s2">None</span><span class="s3">, </span><span class="s1">closed</span><span class="s3">=</span><span class="s5">&quot;left&quot;</span><span class="s3">)],</span>
+<a name="l181"><span class="ln">181  </span></a>            <span class="s5">&quot;l1_ratio&quot;</span><span class="s3">: [</span><span class="s1">Interval</span><span class="s3">(</span><span class="s1">Real</span><span class="s3">, </span><span class="s6">0</span><span class="s3">, </span><span class="s6">1</span><span class="s3">, </span><span class="s1">closed</span><span class="s3">=</span><span class="s5">&quot;both&quot;</span><span class="s3">)],</span>
+<a name="l182"><span class="ln">182  </span></a>            <span class="s5">&quot;eta0&quot;</span><span class="s3">: [</span><span class="s1">Interval</span><span class="s3">(</span><span class="s1">Real</span><span class="s3">, </span><span class="s6">0</span><span class="s3">, </span><span class="s2">None</span><span class="s3">, </span><span class="s1">closed</span><span class="s3">=</span><span class="s5">&quot;left&quot;</span><span class="s3">)],</span>
+<a name="l183"><span class="ln">183  </span></a>        <span class="s3">}</span>
+<a name="l184"><span class="ln">184  </span></a>    <span class="s3">)</span>
+<a name="l185"><span class="ln">185  </span></a>
+<a name="l186"><span class="ln">186  </span></a>    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span>
+<a name="l187"><span class="ln">187  </span></a>        <span class="s1">self</span><span class="s3">,</span>
+<a name="l188"><span class="ln">188  </span></a>        <span class="s3">*,</span>
+<a name="l189"><span class="ln">189  </span></a>        <span class="s1">penalty</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l190"><span class="ln">190  </span></a>        <span class="s1">alpha</span><span class="s3">=</span><span class="s6">0.0001</span><span class="s3">,</span>
+<a name="l191"><span class="ln">191  </span></a>        <span class="s1">l1_ratio</span><span class="s3">=</span><span class="s6">0.15</span><span class="s3">,</span>
+<a name="l192"><span class="ln">192  </span></a>        <span class="s1">fit_intercept</span><span class="s3">=</span><span class="s2">True</span><span class="s3">,</span>
+<a name="l193"><span class="ln">193  </span></a>        <span class="s1">max_iter</span><span class="s3">=</span><span class="s6">1000</span><span class="s3">,</span>
+<a name="l194"><span class="ln">194  </span></a>        <span class="s1">tol</span><span class="s3">=</span><span class="s6">1e-3</span><span class="s3">,</span>
+<a name="l195"><span class="ln">195  </span></a>        <span class="s1">shuffle</span><span class="s3">=</span><span class="s2">True</span><span class="s3">,</span>
+<a name="l196"><span class="ln">196  </span></a>        <span class="s1">verbose</span><span class="s3">=</span><span class="s6">0</span><span class="s3">,</span>
+<a name="l197"><span class="ln">197  </span></a>        <span class="s1">eta0</span><span class="s3">=</span><span class="s6">1.0</span><span class="s3">,</span>
+<a name="l198"><span class="ln">198  </span></a>        <span class="s1">n_jobs</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l199"><span class="ln">199  </span></a>        <span class="s1">random_state</span><span class="s3">=</span><span class="s6">0</span><span class="s3">,</span>
+<a name="l200"><span class="ln">200  </span></a>        <span class="s1">early_stopping</span><span class="s3">=</span><span class="s2">False</span><span class="s3">,</span>
+<a name="l201"><span class="ln">201  </span></a>        <span class="s1">validation_fraction</span><span class="s3">=</span><span class="s6">0.1</span><span class="s3">,</span>
+<a name="l202"><span class="ln">202  </span></a>        <span class="s1">n_iter_no_change</span><span class="s3">=</span><span class="s6">5</span><span class="s3">,</span>
+<a name="l203"><span class="ln">203  </span></a>        <span class="s1">class_weight</span><span class="s3">=</span><span class="s2">None</span><span class="s3">,</span>
+<a name="l204"><span class="ln">204  </span></a>        <span class="s1">warm_start</span><span class="s3">=</span><span class="s2">False</span><span class="s3">,</span>
+<a name="l205"><span class="ln">205  </span></a>    <span class="s3">):</span>
+<a name="l206"><span class="ln">206  </span></a>        <span class="s1">super</span><span class="s3">().</span><span class="s1">__init__</span><span class="s3">(</span>
+<a name="l207"><span class="ln">207  </span></a>            <span class="s1">loss</span><span class="s3">=</span><span class="s5">&quot;perceptron&quot;</span><span class="s3">,</span>
+<a name="l208"><span class="ln">208  </span></a>            <span class="s1">penalty</span><span class="s3">=</span><span class="s1">penalty</span><span class="s3">,</span>
+<a name="l209"><span class="ln">209  </span></a>            <span class="s1">alpha</span><span class="s3">=</span><span class="s1">alpha</span><span class="s3">,</span>
+<a name="l210"><span class="ln">210  </span></a>            <span class="s1">l1_ratio</span><span class="s3">=</span><span class="s1">l1_ratio</span><span class="s3">,</span>
+<a name="l211"><span class="ln">211  </span></a>            <span class="s1">fit_intercept</span><span class="s3">=</span><span class="s1">fit_intercept</span><span class="s3">,</span>
+<a name="l212"><span class="ln">212  </span></a>            <span class="s1">max_iter</span><span class="s3">=</span><span class="s1">max_iter</span><span class="s3">,</span>
+<a name="l213"><span class="ln">213  </span></a>            <span class="s1">tol</span><span class="s3">=</span><span class="s1">tol</span><span class="s3">,</span>
+<a name="l214"><span class="ln">214  </span></a>            <span class="s1">shuffle</span><span class="s3">=</span><span class="s1">shuffle</span><span class="s3">,</span>
+<a name="l215"><span class="ln">215  </span></a>            <span class="s1">verbose</span><span class="s3">=</span><span class="s1">verbose</span><span class="s3">,</span>
+<a name="l216"><span class="ln">216  </span></a>            <span class="s1">random_state</span><span class="s3">=</span><span class="s1">random_state</span><span class="s3">,</span>
+<a name="l217"><span class="ln">217  </span></a>            <span class="s1">learning_rate</span><span class="s3">=</span><span class="s5">&quot;constant&quot;</span><span class="s3">,</span>
+<a name="l218"><span class="ln">218  </span></a>            <span class="s1">eta0</span><span class="s3">=</span><span class="s1">eta0</span><span class="s3">,</span>
+<a name="l219"><span class="ln">219  </span></a>            <span class="s1">early_stopping</span><span class="s3">=</span><span class="s1">early_stopping</span><span class="s3">,</span>
+<a name="l220"><span class="ln">220  </span></a>            <span class="s1">validation_fraction</span><span class="s3">=</span><span class="s1">validation_fraction</span><span class="s3">,</span>
+<a name="l221"><span class="ln">221  </span></a>            <span class="s1">n_iter_no_change</span><span class="s3">=</span><span class="s1">n_iter_no_change</span><span class="s3">,</span>
+<a name="l222"><span class="ln">222  </span></a>            <span class="s1">power_t</span><span class="s3">=</span><span class="s6">0.5</span><span class="s3">,</span>
+<a name="l223"><span class="ln">223  </span></a>            <span class="s1">warm_start</span><span class="s3">=</span><span class="s1">warm_start</span><span class="s3">,</span>
+<a name="l224"><span class="ln">224  </span></a>            <span class="s1">class_weight</span><span class="s3">=</span><span class="s1">class_weight</span><span class="s3">,</span>
+<a name="l225"><span class="ln">225  </span></a>            <span class="s1">n_jobs</span><span class="s3">=</span><span class="s1">n_jobs</span><span class="s3">,</span>
+<a name="l226"><span class="ln">226  </span></a>        <span class="s3">)</span>
+<a name="l227"><span class="ln">227  </span></a></pre>
+</body>
+</html>

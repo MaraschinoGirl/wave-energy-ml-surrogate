@@ -1,0 +1,32 @@
+<html>
+<head>
+<title>model_xgboost.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+model_xgboost.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># src/model_xgboost.py</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s2">from </span><span class="s1">xgboost </span><span class="s2">import </span><span class="s1">XGBRegressor</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s2">def </span><span class="s1">train_xgboost_model</span><span class="s3">(</span><span class="s1">X</span><span class="s3">, </span><span class="s1">y</span><span class="s3">):</span>
+<a name="l5"><span class="ln">5    </span></a>    <span class="s1">model </span><span class="s3">= </span><span class="s1">XGBRegressor</span><span class="s3">()</span>
+<a name="l6"><span class="ln">6    </span></a>    <span class="s1">model</span><span class="s3">.</span><span class="s1">fit</span><span class="s3">(</span><span class="s1">X</span><span class="s3">, </span><span class="s1">y</span><span class="s3">)</span>
+<a name="l7"><span class="ln">7    </span></a>    <span class="s2">return </span><span class="s1">model</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">def </span><span class="s1">predict</span><span class="s3">(</span><span class="s1">model</span><span class="s3">, </span><span class="s1">X</span><span class="s3">):</span>
+<a name="l10"><span class="ln">10   </span></a>    <span class="s2">return </span><span class="s1">model</span><span class="s3">.</span><span class="s1">predict</span><span class="s3">(</span><span class="s1">X</span><span class="s3">)</span>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a></pre>
+</body>
+</html>

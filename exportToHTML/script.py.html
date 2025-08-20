@@ -1,0 +1,100 @@
+<html>
+<head>
+<title>script.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #7a7e85;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #2aacb8;}
+.s6 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+script.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot;Generic script exporter class for any kernel language&quot;&quot;&quot;</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s2"># Copyright (c) Jupyter Development Team.</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s2"># Distributed under the terms of the Modified BSD License.</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s3">import </span><span class="s1">sys</span>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s3">if </span><span class="s1">sys</span><span class="s4">.</span><span class="s1">version_info </span><span class="s4">&lt; (</span><span class="s5">3</span><span class="s4">, </span><span class="s5">10</span><span class="s4">):</span>
+<a name="l8"><span class="ln">8    </span></a>    <span class="s3">from </span><span class="s1">importlib_metadata </span><span class="s3">import </span><span class="s1">entry_points  </span><span class="s2"># type:ignore[import-not-found]</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s3">else</span><span class="s4">:</span>
+<a name="l10"><span class="ln">10   </span></a>    <span class="s3">from </span><span class="s1">importlib</span><span class="s4">.</span><span class="s1">metadata </span><span class="s3">import </span><span class="s1">entry_points</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s3">from </span><span class="s1">traitlets </span><span class="s3">import </span><span class="s1">Dict</span><span class="s4">, </span><span class="s1">default</span>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">base </span><span class="s3">import </span><span class="s1">get_exporter</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">templateexporter </span><span class="s3">import </span><span class="s1">TemplateExporter</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s3">class </span><span class="s1">ScriptExporter</span><span class="s4">(</span><span class="s1">TemplateExporter</span><span class="s4">):</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s0">&quot;&quot;&quot;A script exporter.&quot;&quot;&quot;</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s2"># Caches of already looked-up and instantiated exporters for delegation:</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s1">_exporters </span><span class="s4">= </span><span class="s1">Dict</span><span class="s4">()</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s1">_lang_exporters </span><span class="s4">= </span><span class="s1">Dict</span><span class="s4">()</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s1">export_from_notebook </span><span class="s4">= </span><span class="s6">&quot;Script&quot;</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s4">@</span><span class="s1">default</span><span class="s4">(</span><span class="s6">&quot;template_file&quot;</span><span class="s4">)</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s3">def </span><span class="s1">_template_file_default</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l27"><span class="ln">27   </span></a>        <span class="s3">return </span><span class="s6">&quot;script.j2&quot;</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s4">@</span><span class="s1">default</span><span class="s4">(</span><span class="s6">&quot;template_name&quot;</span><span class="s4">)</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s3">def </span><span class="s1">_template_name_default</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l31"><span class="ln">31   </span></a>        <span class="s3">return </span><span class="s6">&quot;script&quot;</span>
+<a name="l32"><span class="ln">32   </span></a>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s3">def </span><span class="s1">_get_language_exporter</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">lang_name</span><span class="s4">):</span>
+<a name="l34"><span class="ln">34   </span></a>        <span class="s0">&quot;&quot;&quot;Find an exporter for the language name from notebook metadata. 
+<a name="l35"><span class="ln">35   </span></a> 
+<a name="l36"><span class="ln">36   </span></a>        Uses the nbconvert.exporters.script group of entry points. 
+<a name="l37"><span class="ln">37   </span></a>        Returns None if no exporter is found. 
+<a name="l38"><span class="ln">38   </span></a>        &quot;&quot;&quot;</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s3">if </span><span class="s1">lang_name </span><span class="s3">not in </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_lang_exporters</span><span class="s4">:</span>
+<a name="l40"><span class="ln">40   </span></a>            <span class="s3">try</span><span class="s4">:</span>
+<a name="l41"><span class="ln">41   </span></a>                <span class="s1">exporters </span><span class="s4">= </span><span class="s1">entry_points</span><span class="s4">(</span><span class="s1">group</span><span class="s4">=</span><span class="s6">&quot;nbconvert.exporters.script&quot;</span><span class="s4">)</span>
+<a name="l42"><span class="ln">42   </span></a>                <span class="s1">exporter </span><span class="s4">= [</span><span class="s1">e </span><span class="s3">for </span><span class="s1">e </span><span class="s3">in </span><span class="s1">exporters </span><span class="s3">if </span><span class="s1">e</span><span class="s4">.</span><span class="s1">name </span><span class="s4">== </span><span class="s1">lang_name</span><span class="s4">][</span><span class="s5">0</span><span class="s4">].</span><span class="s1">load</span><span class="s4">()  </span><span class="s2"># noqa: RUF015</span>
+<a name="l43"><span class="ln">43   </span></a>            <span class="s3">except </span><span class="s4">(</span><span class="s1">KeyError</span><span class="s4">, </span><span class="s1">IndexError</span><span class="s4">):</span>
+<a name="l44"><span class="ln">44   </span></a>                <span class="s1">self</span><span class="s4">.</span><span class="s1">_lang_exporters</span><span class="s4">[</span><span class="s1">lang_name</span><span class="s4">] = </span><span class="s3">None</span>
+<a name="l45"><span class="ln">45   </span></a>            <span class="s3">else</span><span class="s4">:</span>
+<a name="l46"><span class="ln">46   </span></a>                <span class="s2"># TODO: passing config is wrong, but changing this revealed more complicated issues</span>
+<a name="l47"><span class="ln">47   </span></a>                <span class="s1">self</span><span class="s4">.</span><span class="s1">_lang_exporters</span><span class="s4">[</span><span class="s1">lang_name</span><span class="s4">] = </span><span class="s1">exporter</span><span class="s4">(</span><span class="s1">config</span><span class="s4">=</span><span class="s1">self</span><span class="s4">.</span><span class="s1">config</span><span class="s4">, </span><span class="s1">parent</span><span class="s4">=</span><span class="s1">self</span><span class="s4">)</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s3">return </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_lang_exporters</span><span class="s4">[</span><span class="s1">lang_name</span><span class="s4">]</span>
+<a name="l49"><span class="ln">49   </span></a>
+<a name="l50"><span class="ln">50   </span></a>    <span class="s3">def </span><span class="s1">from_notebook_node</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">nb</span><span class="s4">, </span><span class="s1">resources</span><span class="s4">=</span><span class="s3">None</span><span class="s4">, **</span><span class="s1">kw</span><span class="s4">):</span>
+<a name="l51"><span class="ln">51   </span></a>        <span class="s0">&quot;&quot;&quot;Convert from notebook node.&quot;&quot;&quot;</span>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s1">langinfo </span><span class="s4">= </span><span class="s1">nb</span><span class="s4">.</span><span class="s1">metadata</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s6">&quot;language_info&quot;</span><span class="s4">, {})</span>
+<a name="l53"><span class="ln">53   </span></a>
+<a name="l54"><span class="ln">54   </span></a>        <span class="s2"># delegate to custom exporter, if specified</span>
+<a name="l55"><span class="ln">55   </span></a>        <span class="s1">exporter_name </span><span class="s4">= </span><span class="s1">langinfo</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s6">&quot;nbconvert_exporter&quot;</span><span class="s4">)</span>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s3">if </span><span class="s1">exporter_name </span><span class="s3">and </span><span class="s1">exporter_name </span><span class="s4">!= </span><span class="s6">&quot;script&quot;</span><span class="s4">:</span>
+<a name="l57"><span class="ln">57   </span></a>            <span class="s1">self</span><span class="s4">.</span><span class="s1">log</span><span class="s4">.</span><span class="s1">debug</span><span class="s4">(</span><span class="s6">&quot;Loading script exporter: %s&quot;</span><span class="s4">, </span><span class="s1">exporter_name</span><span class="s4">)</span>
+<a name="l58"><span class="ln">58   </span></a>            <span class="s3">if </span><span class="s1">exporter_name </span><span class="s3">not in </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_exporters</span><span class="s4">:</span>
+<a name="l59"><span class="ln">59   </span></a>                <span class="s1">exporter </span><span class="s4">= </span><span class="s1">get_exporter</span><span class="s4">(</span><span class="s1">exporter_name</span><span class="s4">)</span>
+<a name="l60"><span class="ln">60   </span></a>                <span class="s2"># TODO: passing config is wrong, but changing this revealed more complicated issues</span>
+<a name="l61"><span class="ln">61   </span></a>                <span class="s1">self</span><span class="s4">.</span><span class="s1">_exporters</span><span class="s4">[</span><span class="s1">exporter_name</span><span class="s4">] = </span><span class="s1">exporter</span><span class="s4">(</span><span class="s1">config</span><span class="s4">=</span><span class="s1">self</span><span class="s4">.</span><span class="s1">config</span><span class="s4">, </span><span class="s1">parent</span><span class="s4">=</span><span class="s1">self</span><span class="s4">)</span>
+<a name="l62"><span class="ln">62   </span></a>            <span class="s1">exporter </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_exporters</span><span class="s4">[</span><span class="s1">exporter_name</span><span class="s4">]</span>
+<a name="l63"><span class="ln">63   </span></a>            <span class="s3">return </span><span class="s1">exporter</span><span class="s4">.</span><span class="s1">from_notebook_node</span><span class="s4">(</span><span class="s1">nb</span><span class="s4">, </span><span class="s1">resources</span><span class="s4">, **</span><span class="s1">kw</span><span class="s4">)</span>
+<a name="l64"><span class="ln">64   </span></a>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s2"># Look up a script exporter for this notebook's language</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s1">lang_name </span><span class="s4">= </span><span class="s1">langinfo</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s6">&quot;name&quot;</span><span class="s4">)</span>
+<a name="l67"><span class="ln">67   </span></a>        <span class="s3">if </span><span class="s1">lang_name</span><span class="s4">:</span>
+<a name="l68"><span class="ln">68   </span></a>            <span class="s1">self</span><span class="s4">.</span><span class="s1">log</span><span class="s4">.</span><span class="s1">debug</span><span class="s4">(</span><span class="s6">&quot;Using script exporter for language: %s&quot;</span><span class="s4">, </span><span class="s1">lang_name</span><span class="s4">)</span>
+<a name="l69"><span class="ln">69   </span></a>            <span class="s1">exporter </span><span class="s4">= </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_get_language_exporter</span><span class="s4">(</span><span class="s1">lang_name</span><span class="s4">)</span>
+<a name="l70"><span class="ln">70   </span></a>            <span class="s3">if </span><span class="s1">exporter </span><span class="s3">is not None</span><span class="s4">:</span>
+<a name="l71"><span class="ln">71   </span></a>                <span class="s3">return </span><span class="s1">exporter</span><span class="s4">.</span><span class="s1">from_notebook_node</span><span class="s4">(</span><span class="s1">nb</span><span class="s4">, </span><span class="s1">resources</span><span class="s4">, **</span><span class="s1">kw</span><span class="s4">)</span>
+<a name="l72"><span class="ln">72   </span></a>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s2"># Fall back to plain script export</span>
+<a name="l74"><span class="ln">74   </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">file_extension </span><span class="s4">= </span><span class="s1">langinfo</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s6">&quot;file_extension&quot;</span><span class="s4">, </span><span class="s6">&quot;.txt&quot;</span><span class="s4">)</span>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s1">self</span><span class="s4">.</span><span class="s1">output_mimetype </span><span class="s4">= </span><span class="s1">langinfo</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s6">&quot;mimetype&quot;</span><span class="s4">, </span><span class="s6">&quot;text/plain&quot;</span><span class="s4">)</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s3">return </span><span class="s1">super</span><span class="s4">().</span><span class="s1">from_notebook_node</span><span class="s4">(</span><span class="s1">nb</span><span class="s4">, </span><span class="s1">resources</span><span class="s4">, **</span><span class="s1">kw</span><span class="s4">)</span>
+<a name="l77"><span class="ln">77   </span></a></pre>
+</body>
+</html>

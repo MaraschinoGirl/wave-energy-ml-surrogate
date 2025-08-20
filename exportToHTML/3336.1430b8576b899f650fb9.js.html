@@ -1,0 +1,162 @@
+<html>
+<head>
+<title>3336.1430b8576b899f650fb9.js</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #6aab73;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #2aacb8;}
+.s4 { color: #7a7e85;}
+.s5 { color: #cf8e6d;}
+.s6 { color: #42c3d4;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+3336.1430b8576b899f650fb9.js</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;use strict&quot;</span><span class="s1">;</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s1">(</span><span class="s2">self</span><span class="s1">[</span><span class="s0">&quot;webpackChunk_JUPYTERLAB_CORE_OUTPUT&quot;</span><span class="s1">] = </span><span class="s2">self</span><span class="s1">[</span><span class="s0">&quot;webpackChunk_JUPYTERLAB_CORE_OUTPUT&quot;</span><span class="s1">] || []).</span><span class="s2">push</span><span class="s1">([[</span><span class="s3">3336</span><span class="s1">],{</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s4">/***/ </span><span class="s3">33336</span><span class="s1">:</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s4">/***/ </span><span class="s1">((</span><span class="s2">__unused_webpack_module</span><span class="s1">, </span><span class="s2">__webpack_exports__</span><span class="s1">, </span><span class="s2">__webpack_require__</span><span class="s1">) =&gt; {</span>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">__webpack_require__</span><span class="s1">.</span><span class="s2">r</span><span class="s1">(</span><span class="s2">__webpack_exports__</span><span class="s1">);</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s4">/* harmony export */ </span><span class="s2">__webpack_require__</span><span class="s1">.</span><span class="s2">d</span><span class="s1">(</span><span class="s2">__webpack_exports__</span><span class="s1">, {</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s4">/* harmony export */   </span><span class="s2">octave</span><span class="s1">: () =&gt; (</span><span class="s4">/* binding */ </span><span class="s2">octave</span><span class="s1">)</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s4">/* harmony export */ </span><span class="s1">});</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s5">function </span><span class="s2">wordRegexp</span><span class="s1">(</span><span class="s2">words</span><span class="s1">) {</span>
+<a name="l12"><span class="ln">12   </span></a>  <span class="s5">return new </span><span class="s2">RegExp</span><span class="s1">(</span><span class="s0">&quot;^((&quot; </span><span class="s1">+ </span><span class="s2">words</span><span class="s1">.</span><span class="s2">join</span><span class="s1">(</span><span class="s0">&quot;)|(&quot;</span><span class="s1">) + </span><span class="s0">&quot;))</span><span class="s5">\\</span><span class="s0">b&quot;</span><span class="s1">);</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s1">}</span>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a><span class="s5">var </span><span class="s2">singleOperators </span><span class="s1">= </span><span class="s5">new </span><span class="s2">RegExp</span><span class="s1">(</span><span class="s0">&quot;^[</span><span class="s5">\\</span><span class="s0">+</span><span class="s5">\\</span><span class="s0">-</span><span class="s5">\\</span><span class="s0">*/&amp;|</span><span class="s5">\\</span><span class="s0">^~&lt;&gt;!@'</span><span class="s5">\\\\</span><span class="s0">]&quot;</span><span class="s1">);</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s5">var </span><span class="s2">singleDelimiters </span><span class="s1">= </span><span class="s5">new </span><span class="s2">RegExp</span><span class="s1">(</span><span class="s0">'^[</span><span class="s5">\\</span><span class="s0">(</span><span class="s5">\\</span><span class="s0">[</span><span class="s5">\\</span><span class="s0">{</span><span class="s5">\\</span><span class="s0">},:=;</span><span class="s5">\\</span><span class="s0">.]'</span><span class="s1">);</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s5">var </span><span class="s2">doubleOperators </span><span class="s1">= </span><span class="s5">new </span><span class="s2">RegExp</span><span class="s1">(</span><span class="s0">&quot;^((==)|(~=)|(&lt;=)|(&gt;=)|(&lt;&lt;)|(&gt;&gt;)|(</span><span class="s5">\\</span><span class="s0">.[</span><span class="s5">\\</span><span class="s0">+</span><span class="s5">\\</span><span class="s0">-</span><span class="s5">\\</span><span class="s0">*/</span><span class="s5">\\</span><span class="s0">^</span><span class="s5">\\\\</span><span class="s0">]))&quot;</span><span class="s1">);</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s5">var </span><span class="s2">doubleDelimiters </span><span class="s1">= </span><span class="s5">new </span><span class="s2">RegExp</span><span class="s1">(</span><span class="s0">&quot;^((!=)|(</span><span class="s5">\\</span><span class="s0">+=)|(</span><span class="s5">\\</span><span class="s0">-=)|(</span><span class="s5">\\</span><span class="s0">*=)|(/=)|(&amp;=)|(</span><span class="s5">\\</span><span class="s0">|=)|(</span><span class="s5">\\</span><span class="s0">^=))&quot;</span><span class="s1">);</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s5">var </span><span class="s2">tripleDelimiters </span><span class="s1">= </span><span class="s5">new </span><span class="s2">RegExp</span><span class="s1">(</span><span class="s0">&quot;^((&gt;&gt;=)|(&lt;&lt;=))&quot;</span><span class="s1">);</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s5">var </span><span class="s2">expressionEnd </span><span class="s1">= </span><span class="s5">new </span><span class="s2">RegExp</span><span class="s1">(</span><span class="s0">&quot;^[</span><span class="s5">\\</span><span class="s0">]</span><span class="s5">\\</span><span class="s0">)]&quot;</span><span class="s1">);</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s5">var </span><span class="s2">identifiers </span><span class="s1">= </span><span class="s5">new </span><span class="s2">RegExp</span><span class="s1">(</span><span class="s0">&quot;^[_A-Za-z</span><span class="s5">\xa1</span><span class="s0">-</span><span class="s5">\uffff</span><span class="s0">][_A-Za-z0-9</span><span class="s5">\xa1</span><span class="s0">-</span><span class="s5">\uffff</span><span class="s0">]*&quot;</span><span class="s1">);</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a><span class="s5">var </span><span class="s2">builtins </span><span class="s1">= </span><span class="s2">wordRegexp</span><span class="s1">([</span>
+<a name="l24"><span class="ln">24   </span></a>  <span class="s0">'error'</span><span class="s1">, </span><span class="s0">'eval'</span><span class="s1">, </span><span class="s0">'function'</span><span class="s1">, </span><span class="s0">'abs'</span><span class="s1">, </span><span class="s0">'acos'</span><span class="s1">, </span><span class="s0">'atan'</span><span class="s1">, </span><span class="s0">'asin'</span><span class="s1">, </span><span class="s0">'cos'</span><span class="s1">,</span>
+<a name="l25"><span class="ln">25   </span></a>  <span class="s0">'cosh'</span><span class="s1">, </span><span class="s0">'exp'</span><span class="s1">, </span><span class="s0">'log'</span><span class="s1">, </span><span class="s0">'prod'</span><span class="s1">, </span><span class="s0">'sum'</span><span class="s1">, </span><span class="s0">'log10'</span><span class="s1">, </span><span class="s0">'max'</span><span class="s1">, </span><span class="s0">'min'</span><span class="s1">, </span><span class="s0">'sign'</span><span class="s1">, </span><span class="s0">'sin'</span><span class="s1">, </span><span class="s0">'sinh'</span><span class="s1">,</span>
+<a name="l26"><span class="ln">26   </span></a>  <span class="s0">'sqrt'</span><span class="s1">, </span><span class="s0">'tan'</span><span class="s1">, </span><span class="s0">'reshape'</span><span class="s1">, </span><span class="s0">'break'</span><span class="s1">, </span><span class="s0">'zeros'</span><span class="s1">, </span><span class="s0">'default'</span><span class="s1">, </span><span class="s0">'margin'</span><span class="s1">, </span><span class="s0">'round'</span><span class="s1">, </span><span class="s0">'ones'</span><span class="s1">,</span>
+<a name="l27"><span class="ln">27   </span></a>  <span class="s0">'rand'</span><span class="s1">, </span><span class="s0">'syn'</span><span class="s1">, </span><span class="s0">'ceil'</span><span class="s1">, </span><span class="s0">'floor'</span><span class="s1">, </span><span class="s0">'size'</span><span class="s1">, </span><span class="s0">'clear'</span><span class="s1">, </span><span class="s0">'zeros'</span><span class="s1">, </span><span class="s0">'eye'</span><span class="s1">, </span><span class="s0">'mean'</span><span class="s1">, </span><span class="s0">'std'</span><span class="s1">, </span><span class="s0">'cov'</span><span class="s1">,</span>
+<a name="l28"><span class="ln">28   </span></a>  <span class="s0">'det'</span><span class="s1">, </span><span class="s0">'eig'</span><span class="s1">, </span><span class="s0">'inv'</span><span class="s1">, </span><span class="s0">'norm'</span><span class="s1">, </span><span class="s0">'rank'</span><span class="s1">, </span><span class="s0">'trace'</span><span class="s1">, </span><span class="s0">'expm'</span><span class="s1">, </span><span class="s0">'logm'</span><span class="s1">, </span><span class="s0">'sqrtm'</span><span class="s1">, </span><span class="s0">'linspace'</span><span class="s1">, </span><span class="s0">'plot'</span><span class="s1">,</span>
+<a name="l29"><span class="ln">29   </span></a>  <span class="s0">'title'</span><span class="s1">, </span><span class="s0">'xlabel'</span><span class="s1">, </span><span class="s0">'ylabel'</span><span class="s1">, </span><span class="s0">'legend'</span><span class="s1">, </span><span class="s0">'text'</span><span class="s1">, </span><span class="s0">'grid'</span><span class="s1">, </span><span class="s0">'meshgrid'</span><span class="s1">, </span><span class="s0">'mesh'</span><span class="s1">, </span><span class="s0">'num2str'</span><span class="s1">,</span>
+<a name="l30"><span class="ln">30   </span></a>  <span class="s0">'fft'</span><span class="s1">, </span><span class="s0">'ifft'</span><span class="s1">, </span><span class="s0">'arrayfun'</span><span class="s1">, </span><span class="s0">'cellfun'</span><span class="s1">, </span><span class="s0">'input'</span><span class="s1">, </span><span class="s0">'fliplr'</span><span class="s1">, </span><span class="s0">'flipud'</span><span class="s1">, </span><span class="s0">'ismember'</span>
+<a name="l31"><span class="ln">31   </span></a><span class="s1">]);</span>
+<a name="l32"><span class="ln">32   </span></a>
+<a name="l33"><span class="ln">33   </span></a><span class="s5">var </span><span class="s2">keywords </span><span class="s1">= </span><span class="s2">wordRegexp</span><span class="s1">([</span>
+<a name="l34"><span class="ln">34   </span></a>  <span class="s0">'return'</span><span class="s1">, </span><span class="s0">'case'</span><span class="s1">, </span><span class="s0">'switch'</span><span class="s1">, </span><span class="s0">'else'</span><span class="s1">, </span><span class="s0">'elseif'</span><span class="s1">, </span><span class="s0">'end'</span><span class="s1">, </span><span class="s0">'endif'</span><span class="s1">, </span><span class="s0">'endfunction'</span><span class="s1">,</span>
+<a name="l35"><span class="ln">35   </span></a>  <span class="s0">'if'</span><span class="s1">, </span><span class="s0">'otherwise'</span><span class="s1">, </span><span class="s0">'do'</span><span class="s1">, </span><span class="s0">'for'</span><span class="s1">, </span><span class="s0">'while'</span><span class="s1">, </span><span class="s0">'try'</span><span class="s1">, </span><span class="s0">'catch'</span><span class="s1">, </span><span class="s0">'classdef'</span><span class="s1">, </span><span class="s0">'properties'</span><span class="s1">, </span><span class="s0">'events'</span><span class="s1">,</span>
+<a name="l36"><span class="ln">36   </span></a>  <span class="s0">'methods'</span><span class="s1">, </span><span class="s0">'global'</span><span class="s1">, </span><span class="s0">'persistent'</span><span class="s1">, </span><span class="s0">'endfor'</span><span class="s1">, </span><span class="s0">'endwhile'</span><span class="s1">, </span><span class="s0">'printf'</span><span class="s1">, </span><span class="s0">'sprintf'</span><span class="s1">, </span><span class="s0">'disp'</span><span class="s1">, </span><span class="s0">'until'</span><span class="s1">,</span>
+<a name="l37"><span class="ln">37   </span></a>  <span class="s0">'continue'</span><span class="s1">, </span><span class="s0">'pkg'</span>
+<a name="l38"><span class="ln">38   </span></a><span class="s1">]);</span>
+<a name="l39"><span class="ln">39   </span></a>
+<a name="l40"><span class="ln">40   </span></a>
+<a name="l41"><span class="ln">41   </span></a><span class="s4">// tokenizers</span>
+<a name="l42"><span class="ln">42   </span></a><span class="s5">function </span><span class="s2">tokenTranspose</span><span class="s1">(</span><span class="s2">stream</span><span class="s1">, </span><span class="s2">state</span><span class="s1">) {</span>
+<a name="l43"><span class="ln">43   </span></a>  <span class="s5">if </span><span class="s1">(!</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">sol</span><span class="s1">() &amp;&amp; </span><span class="s2">stream</span><span class="s1">.</span><span class="s2">peek</span><span class="s1">() === </span><span class="s0">'</span><span class="s5">\'</span><span class="s0">'</span><span class="s1">) {</span>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s2">stream</span><span class="s1">.</span><span class="s2">next</span><span class="s1">();</span>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s2">state</span><span class="s1">.</span><span class="s2">tokenize </span><span class="s1">= </span><span class="s2">tokenBase</span><span class="s1">;</span>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s5">return </span><span class="s0">'operator'</span><span class="s1">;</span>
+<a name="l47"><span class="ln">47   </span></a>  <span class="s1">}</span>
+<a name="l48"><span class="ln">48   </span></a>  <span class="s2">state</span><span class="s1">.</span><span class="s2">tokenize </span><span class="s1">= </span><span class="s2">tokenBase</span><span class="s1">;</span>
+<a name="l49"><span class="ln">49   </span></a>  <span class="s5">return </span><span class="s2">tokenBase</span><span class="s1">(</span><span class="s2">stream</span><span class="s1">, </span><span class="s2">state</span><span class="s1">);</span>
+<a name="l50"><span class="ln">50   </span></a><span class="s1">}</span>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a>
+<a name="l53"><span class="ln">53   </span></a><span class="s5">function </span><span class="s2">tokenComment</span><span class="s1">(</span><span class="s2">stream</span><span class="s1">, </span><span class="s2">state</span><span class="s1">) {</span>
+<a name="l54"><span class="ln">54   </span></a>  <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s6">/^.*%}/</span><span class="s1">)) {</span>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s2">state</span><span class="s1">.</span><span class="s2">tokenize </span><span class="s1">= </span><span class="s2">tokenBase</span><span class="s1">;</span>
+<a name="l56"><span class="ln">56   </span></a>    <span class="s5">return </span><span class="s0">'comment'</span><span class="s1">;</span>
+<a name="l57"><span class="ln">57   </span></a>  <span class="s1">};</span>
+<a name="l58"><span class="ln">58   </span></a>  <span class="s2">stream</span><span class="s1">.</span><span class="s2">skipToEnd</span><span class="s1">();</span>
+<a name="l59"><span class="ln">59   </span></a>  <span class="s5">return </span><span class="s0">'comment'</span><span class="s1">;</span>
+<a name="l60"><span class="ln">60   </span></a><span class="s1">}</span>
+<a name="l61"><span class="ln">61   </span></a>
+<a name="l62"><span class="ln">62   </span></a><span class="s5">function </span><span class="s2">tokenBase</span><span class="s1">(</span><span class="s2">stream</span><span class="s1">, </span><span class="s2">state</span><span class="s1">) {</span>
+<a name="l63"><span class="ln">63   </span></a>  <span class="s4">// whitespaces</span>
+<a name="l64"><span class="ln">64   </span></a>  <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">eatSpace</span><span class="s1">()) </span><span class="s5">return null</span><span class="s1">;</span>
+<a name="l65"><span class="ln">65   </span></a>
+<a name="l66"><span class="ln">66   </span></a>  <span class="s4">// Handle one line Comments</span>
+<a name="l67"><span class="ln">67   </span></a>  <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s0">'%{'</span><span class="s1">)){</span>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s2">state</span><span class="s1">.</span><span class="s2">tokenize </span><span class="s1">= </span><span class="s2">tokenComment</span><span class="s1">;</span>
+<a name="l69"><span class="ln">69   </span></a>    <span class="s2">stream</span><span class="s1">.</span><span class="s2">skipToEnd</span><span class="s1">();</span>
+<a name="l70"><span class="ln">70   </span></a>    <span class="s5">return </span><span class="s0">'comment'</span><span class="s1">;</span>
+<a name="l71"><span class="ln">71   </span></a>  <span class="s1">}</span>
+<a name="l72"><span class="ln">72   </span></a>
+<a name="l73"><span class="ln">73   </span></a>  <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s6">/^[%#]/</span><span class="s1">)){</span>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s2">stream</span><span class="s1">.</span><span class="s2">skipToEnd</span><span class="s1">();</span>
+<a name="l75"><span class="ln">75   </span></a>    <span class="s5">return </span><span class="s0">'comment'</span><span class="s1">;</span>
+<a name="l76"><span class="ln">76   </span></a>  <span class="s1">}</span>
+<a name="l77"><span class="ln">77   </span></a>
+<a name="l78"><span class="ln">78   </span></a>  <span class="s4">// Handle Number Literals</span>
+<a name="l79"><span class="ln">79   </span></a>  <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s6">/^[0-9\.+-]/</span><span class="s1">, </span><span class="s5">false</span><span class="s1">)) {</span>
+<a name="l80"><span class="ln">80   </span></a>    <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s6">/^[+-]?0x[0-9a-fA-F]+[ij]?/</span><span class="s1">)) {</span>
+<a name="l81"><span class="ln">81   </span></a>      <span class="s2">stream</span><span class="s1">.</span><span class="s2">tokenize </span><span class="s1">= </span><span class="s2">tokenBase</span><span class="s1">;</span>
+<a name="l82"><span class="ln">82   </span></a>      <span class="s5">return </span><span class="s0">'number'</span><span class="s1">; };</span>
+<a name="l83"><span class="ln">83   </span></a>    <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s6">/^[+-]?\d*\.\d+([EeDd][+-]?\d+)?[ij]?/</span><span class="s1">)) { </span><span class="s5">return </span><span class="s0">'number'</span><span class="s1">; };</span>
+<a name="l84"><span class="ln">84   </span></a>    <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s6">/^[+-]?\d+([EeDd][+-]?\d+)?[ij]?/</span><span class="s1">)) { </span><span class="s5">return </span><span class="s0">'number'</span><span class="s1">; };</span>
+<a name="l85"><span class="ln">85   </span></a>  <span class="s1">}</span>
+<a name="l86"><span class="ln">86   </span></a>  <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s2">wordRegexp</span><span class="s1">([</span><span class="s0">'nan'</span><span class="s1">,</span><span class="s0">'NaN'</span><span class="s1">,</span><span class="s0">'inf'</span><span class="s1">,</span><span class="s0">'Inf'</span><span class="s1">]))) { </span><span class="s5">return </span><span class="s0">'number'</span><span class="s1">; };</span>
+<a name="l87"><span class="ln">87   </span></a>
+<a name="l88"><span class="ln">88   </span></a>  <span class="s4">// Handle Strings</span>
+<a name="l89"><span class="ln">89   </span></a>  <span class="s5">var </span><span class="s2">m </span><span class="s1">= </span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s6">/^&quot;(?:[^&quot;]|&quot;&quot;)*(&quot;|$)/</span><span class="s1">) || </span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s6">/^'(?:[^']|'')*('|$)/</span><span class="s1">)</span>
+<a name="l90"><span class="ln">90   </span></a>  <span class="s5">if </span><span class="s1">(</span><span class="s2">m</span><span class="s1">) { </span><span class="s5">return </span><span class="s2">m</span><span class="s1">[</span><span class="s3">1</span><span class="s1">] ? </span><span class="s0">'string' </span><span class="s1">: </span><span class="s0">&quot;error&quot;</span><span class="s1">; }</span>
+<a name="l91"><span class="ln">91   </span></a>
+<a name="l92"><span class="ln">92   </span></a>  <span class="s4">// Handle words</span>
+<a name="l93"><span class="ln">93   </span></a>  <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s2">keywords</span><span class="s1">)) { </span><span class="s5">return </span><span class="s0">'keyword'</span><span class="s1">; } ;</span>
+<a name="l94"><span class="ln">94   </span></a>  <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s2">builtins</span><span class="s1">)) { </span><span class="s5">return </span><span class="s0">'builtin'</span><span class="s1">; } ;</span>
+<a name="l95"><span class="ln">95   </span></a>  <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s2">identifiers</span><span class="s1">)) { </span><span class="s5">return </span><span class="s0">'variable'</span><span class="s1">; } ;</span>
+<a name="l96"><span class="ln">96   </span></a>
+<a name="l97"><span class="ln">97   </span></a>  <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s2">singleOperators</span><span class="s1">) || </span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s2">doubleOperators</span><span class="s1">)) { </span><span class="s5">return </span><span class="s0">'operator'</span><span class="s1">; };</span>
+<a name="l98"><span class="ln">98   </span></a>  <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s2">singleDelimiters</span><span class="s1">) || </span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s2">doubleDelimiters</span><span class="s1">) || </span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s2">tripleDelimiters</span><span class="s1">)) { </span><span class="s5">return null</span><span class="s1">; };</span>
+<a name="l99"><span class="ln">99   </span></a>
+<a name="l100"><span class="ln">100  </span></a>  <span class="s5">if </span><span class="s1">(</span><span class="s2">stream</span><span class="s1">.</span><span class="s2">match</span><span class="s1">(</span><span class="s2">expressionEnd</span><span class="s1">)) {</span>
+<a name="l101"><span class="ln">101  </span></a>    <span class="s2">state</span><span class="s1">.</span><span class="s2">tokenize </span><span class="s1">= </span><span class="s2">tokenTranspose</span><span class="s1">;</span>
+<a name="l102"><span class="ln">102  </span></a>    <span class="s5">return null</span><span class="s1">;</span>
+<a name="l103"><span class="ln">103  </span></a>  <span class="s1">};</span>
+<a name="l104"><span class="ln">104  </span></a>
+<a name="l105"><span class="ln">105  </span></a>
+<a name="l106"><span class="ln">106  </span></a>  <span class="s4">// Handle non-detected items</span>
+<a name="l107"><span class="ln">107  </span></a>  <span class="s2">stream</span><span class="s1">.</span><span class="s2">next</span><span class="s1">();</span>
+<a name="l108"><span class="ln">108  </span></a>  <span class="s5">return </span><span class="s0">'error'</span><span class="s1">;</span>
+<a name="l109"><span class="ln">109  </span></a><span class="s1">};</span>
+<a name="l110"><span class="ln">110  </span></a>
+<a name="l111"><span class="ln">111  </span></a>
+<a name="l112"><span class="ln">112  </span></a><span class="s5">const </span><span class="s2">octave </span><span class="s1">= {</span>
+<a name="l113"><span class="ln">113  </span></a>  <span class="s2">name</span><span class="s1">: </span><span class="s0">&quot;octave&quot;</span><span class="s1">,</span>
+<a name="l114"><span class="ln">114  </span></a>
+<a name="l115"><span class="ln">115  </span></a>  <span class="s2">startState</span><span class="s1">: </span><span class="s5">function</span><span class="s1">() {</span>
+<a name="l116"><span class="ln">116  </span></a>    <span class="s5">return </span><span class="s1">{</span>
+<a name="l117"><span class="ln">117  </span></a>      <span class="s2">tokenize</span><span class="s1">: </span><span class="s2">tokenBase</span>
+<a name="l118"><span class="ln">118  </span></a>    <span class="s1">};</span>
+<a name="l119"><span class="ln">119  </span></a>  <span class="s1">},</span>
+<a name="l120"><span class="ln">120  </span></a>
+<a name="l121"><span class="ln">121  </span></a>  <span class="s2">token</span><span class="s1">: </span><span class="s5">function</span><span class="s1">(</span><span class="s2">stream</span><span class="s1">, </span><span class="s2">state</span><span class="s1">) {</span>
+<a name="l122"><span class="ln">122  </span></a>    <span class="s5">var </span><span class="s2">style </span><span class="s1">= </span><span class="s2">state</span><span class="s1">.</span><span class="s2">tokenize</span><span class="s1">(</span><span class="s2">stream</span><span class="s1">, </span><span class="s2">state</span><span class="s1">);</span>
+<a name="l123"><span class="ln">123  </span></a>    <span class="s5">if </span><span class="s1">(</span><span class="s2">style </span><span class="s1">=== </span><span class="s0">'number' </span><span class="s1">|| </span><span class="s2">style </span><span class="s1">=== </span><span class="s0">'variable'</span><span class="s1">){</span>
+<a name="l124"><span class="ln">124  </span></a>      <span class="s2">state</span><span class="s1">.</span><span class="s2">tokenize </span><span class="s1">= </span><span class="s2">tokenTranspose</span><span class="s1">;</span>
+<a name="l125"><span class="ln">125  </span></a>    <span class="s1">}</span>
+<a name="l126"><span class="ln">126  </span></a>    <span class="s5">return </span><span class="s2">style</span><span class="s1">;</span>
+<a name="l127"><span class="ln">127  </span></a>  <span class="s1">},</span>
+<a name="l128"><span class="ln">128  </span></a>
+<a name="l129"><span class="ln">129  </span></a>  <span class="s2">languageData</span><span class="s1">: {</span>
+<a name="l130"><span class="ln">130  </span></a>    <span class="s2">commentTokens</span><span class="s1">: {</span><span class="s2">line</span><span class="s1">: </span><span class="s0">&quot;%&quot;</span><span class="s1">}</span>
+<a name="l131"><span class="ln">131  </span></a>  <span class="s1">}</span>
+<a name="l132"><span class="ln">132  </span></a><span class="s1">};</span>
+<a name="l133"><span class="ln">133  </span></a>
+<a name="l134"><span class="ln">134  </span></a>
+<a name="l135"><span class="ln">135  </span></a>
+<a name="l136"><span class="ln">136  </span></a><span class="s4">/***/ </span><span class="s1">})</span>
+<a name="l137"><span class="ln">137  </span></a>
+<a name="l138"><span class="ln">138  </span></a><span class="s1">}]);</span>
+<a name="l139"><span class="ln">139  </span></a><span class="s4">//# sourceMappingURL=3336.1430b8576b899f650fb9.js.map?v=1430b8576b899f650fb9</span></pre>
+</body>
+</html>

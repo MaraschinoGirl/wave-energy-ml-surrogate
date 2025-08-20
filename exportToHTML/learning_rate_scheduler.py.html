@@ -1,0 +1,105 @@
+<html>
+<head>
+<title>learning_rate_scheduler.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #2aacb8;}
+.s6 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+learning_rate_scheduler.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src </span><span class="s0">import </span><span class="s1">backend</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">api_export </span><span class="s0">import </span><span class="s1">keras_export</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">callbacks</span><span class="s2">.</span><span class="s1">callback </span><span class="s0">import </span><span class="s1">Callback</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">utils </span><span class="s0">import </span><span class="s1">io_utils</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">@</span><span class="s1">keras_export</span><span class="s2">(</span><span class="s3">&quot;keras.callbacks.LearningRateScheduler&quot;</span><span class="s2">)</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">class </span><span class="s1">LearningRateScheduler</span><span class="s2">(</span><span class="s1">Callback</span><span class="s2">):</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s4">&quot;&quot;&quot;Learning rate scheduler. 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>    At the beginning of every epoch, this callback gets the updated learning 
+<a name="l14"><span class="ln">14   </span></a>    rate value from `schedule` function provided at `__init__`, with the current 
+<a name="l15"><span class="ln">15   </span></a>    epoch and current learning rate, and applies the updated learning rate on 
+<a name="l16"><span class="ln">16   </span></a>    the optimizer. 
+<a name="l17"><span class="ln">17   </span></a> 
+<a name="l18"><span class="ln">18   </span></a>    Args: 
+<a name="l19"><span class="ln">19   </span></a>        schedule: A function that takes an epoch index (integer, indexed from 0) 
+<a name="l20"><span class="ln">20   </span></a>            and current learning rate (float) as inputs and returns a new 
+<a name="l21"><span class="ln">21   </span></a>            learning rate as output (float). 
+<a name="l22"><span class="ln">22   </span></a>        verbose: Integer. 0: quiet, 1: log update messages. 
+<a name="l23"><span class="ln">23   </span></a> 
+<a name="l24"><span class="ln">24   </span></a>    Example: 
+<a name="l25"><span class="ln">25   </span></a> 
+<a name="l26"><span class="ln">26   </span></a>    &gt;&gt;&gt; # This function keeps the initial learning rate for the first ten epochs 
+<a name="l27"><span class="ln">27   </span></a>    &gt;&gt;&gt; # and decreases it exponentially after that. 
+<a name="l28"><span class="ln">28   </span></a>    &gt;&gt;&gt; def scheduler(epoch, lr): 
+<a name="l29"><span class="ln">29   </span></a>    ...     if epoch &lt; 10: 
+<a name="l30"><span class="ln">30   </span></a>    ...         return lr 
+<a name="l31"><span class="ln">31   </span></a>    ...     else: 
+<a name="l32"><span class="ln">32   </span></a>    ...         return lr * ops.exp(-0.1) 
+<a name="l33"><span class="ln">33   </span></a>    &gt;&gt;&gt; 
+<a name="l34"><span class="ln">34   </span></a>    &gt;&gt;&gt; model = keras.models.Sequential([keras.layers.Dense(10)]) 
+<a name="l35"><span class="ln">35   </span></a>    &gt;&gt;&gt; model.compile(keras.optimizers.SGD(), loss='mse') 
+<a name="l36"><span class="ln">36   </span></a>    &gt;&gt;&gt; round(model.optimizer.learning_rate, 5) 
+<a name="l37"><span class="ln">37   </span></a>    0.01 
+<a name="l38"><span class="ln">38   </span></a> 
+<a name="l39"><span class="ln">39   </span></a>    &gt;&gt;&gt; callback = keras.callbacks.LearningRateScheduler(scheduler) 
+<a name="l40"><span class="ln">40   </span></a>    &gt;&gt;&gt; history = model.fit(np.arange(100).reshape(5, 20), np.zeros(5), 
+<a name="l41"><span class="ln">41   </span></a>    ...                     epochs=15, callbacks=[callback], verbose=0) 
+<a name="l42"><span class="ln">42   </span></a>    &gt;&gt;&gt; round(model.optimizer.learning_rate, 5) 
+<a name="l43"><span class="ln">43   </span></a>    0.00607 
+<a name="l44"><span class="ln">44   </span></a> 
+<a name="l45"><span class="ln">45   </span></a>    &quot;&quot;&quot;</span>
+<a name="l46"><span class="ln">46   </span></a>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">schedule</span><span class="s2">, </span><span class="s1">verbose</span><span class="s2">=</span><span class="s5">0</span><span class="s2">):</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s1">super</span><span class="s2">().</span><span class="s1">__init__</span><span class="s2">()</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">schedule </span><span class="s2">= </span><span class="s1">schedule</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">verbose </span><span class="s2">= </span><span class="s1">verbose</span>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a>    <span class="s0">def </span><span class="s1">on_epoch_begin</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">epoch</span><span class="s2">, </span><span class="s1">logs</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s0">if not </span><span class="s1">hasattr</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">model</span><span class="s2">.</span><span class="s1">optimizer</span><span class="s2">, </span><span class="s3">&quot;learning_rate&quot;</span><span class="s2">):</span>
+<a name="l54"><span class="ln">54   </span></a>            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s3">'Optimizer must have a &quot;learning_rate&quot; attribute.'</span><span class="s2">)</span>
+<a name="l55"><span class="ln">55   </span></a>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s0">try</span><span class="s2">:  </span><span class="s6"># new API</span>
+<a name="l57"><span class="ln">57   </span></a>            <span class="s1">learning_rate </span><span class="s2">= </span><span class="s1">float</span><span class="s2">(</span>
+<a name="l58"><span class="ln">58   </span></a>                <span class="s1">backend</span><span class="s2">.</span><span class="s1">convert_to_numpy</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">model</span><span class="s2">.</span><span class="s1">optimizer</span><span class="s2">.</span><span class="s1">learning_rate</span><span class="s2">)</span>
+<a name="l59"><span class="ln">59   </span></a>            <span class="s2">)</span>
+<a name="l60"><span class="ln">60   </span></a>            <span class="s1">learning_rate </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">schedule</span><span class="s2">(</span><span class="s1">epoch</span><span class="s2">, </span><span class="s1">learning_rate</span><span class="s2">)</span>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s0">except </span><span class="s1">TypeError</span><span class="s2">:  </span><span class="s6"># Support for old API for backward compatibility</span>
+<a name="l62"><span class="ln">62   </span></a>            <span class="s1">learning_rate </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">schedule</span><span class="s2">(</span><span class="s1">epoch</span><span class="s2">)</span>
+<a name="l63"><span class="ln">63   </span></a>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s0">if not </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">learning_rate</span><span class="s2">, (</span><span class="s1">float</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float32</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">)):</span>
+<a name="l65"><span class="ln">65   </span></a>            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+<a name="l66"><span class="ln">66   </span></a>                <span class="s3">&quot;The output of the `schedule` function should be a float. &quot;</span>
+<a name="l67"><span class="ln">67   </span></a>                <span class="s3">f&quot;Got: </span><span class="s0">{</span><span class="s1">learning_rate</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l68"><span class="ln">68   </span></a>            <span class="s2">)</span>
+<a name="l69"><span class="ln">69   </span></a>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">model</span><span class="s2">.</span><span class="s1">optimizer</span><span class="s2">.</span><span class="s1">learning_rate </span><span class="s2">= </span><span class="s1">learning_rate</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">verbose </span><span class="s2">&gt; </span><span class="s5">0</span><span class="s2">:</span>
+<a name="l72"><span class="ln">72   </span></a>            <span class="s1">io_utils</span><span class="s2">.</span><span class="s1">print_msg</span><span class="s2">(</span>
+<a name="l73"><span class="ln">73   </span></a>                <span class="s3">f&quot;</span><span class="s0">\n</span><span class="s3">Epoch </span><span class="s0">{</span><span class="s1">epoch </span><span class="s2">+ </span><span class="s5">1</span><span class="s0">}</span><span class="s3">: LearningRateScheduler setting learning &quot;</span>
+<a name="l74"><span class="ln">74   </span></a>                <span class="s3">f&quot;rate to </span><span class="s0">{</span><span class="s1">learning_rate</span><span class="s0">}</span><span class="s3">.&quot;</span>
+<a name="l75"><span class="ln">75   </span></a>            <span class="s2">)</span>
+<a name="l76"><span class="ln">76   </span></a>
+<a name="l77"><span class="ln">77   </span></a>    <span class="s0">def </span><span class="s1">on_epoch_end</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">epoch</span><span class="s2">, </span><span class="s1">logs</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+<a name="l78"><span class="ln">78   </span></a>        <span class="s1">logs </span><span class="s2">= </span><span class="s1">logs </span><span class="s0">or </span><span class="s2">{}</span>
+<a name="l79"><span class="ln">79   </span></a>        <span class="s1">logs</span><span class="s2">[</span><span class="s3">&quot;learning_rate&quot;</span><span class="s2">] = </span><span class="s1">float</span><span class="s2">(</span>
+<a name="l80"><span class="ln">80   </span></a>            <span class="s1">backend</span><span class="s2">.</span><span class="s1">convert_to_numpy</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">model</span><span class="s2">.</span><span class="s1">optimizer</span><span class="s2">.</span><span class="s1">learning_rate</span><span class="s2">)</span>
+<a name="l81"><span class="ln">81   </span></a>        <span class="s2">)</span>
+<a name="l82"><span class="ln">82   </span></a></pre>
+</body>
+</html>

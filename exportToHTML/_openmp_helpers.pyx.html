@@ -1,0 +1,101 @@
+<html>
+<head>
+<title>_openmp_helpers.pyx</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #7a7e85;}
+.s3 { color: #bcbec4;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_openmp_helpers.pyx</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">import </span><span class="s1">os</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">from </span><span class="s1">joblib </span><span class="s0">import </span><span class="s1">cpu_count</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s2"># Module level cache for cpu_count as we do not expect this to change during</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s2"># the lifecycle of a Python program. This dictionary is keyed by</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s2"># only_physical_cores.</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s1">_CPU_COUNTS </span><span class="s3">= {}</span>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s0">def </span><span class="s1">_openmp_parallelism_enabled</span><span class="s3">():</span>
+<a name="l12"><span class="ln">12   </span></a>    <span class="s4">&quot;&quot;&quot;Determines whether scikit-learn has been built with OpenMP 
+<a name="l13"><span class="ln">13   </span></a> 
+<a name="l14"><span class="ln">14   </span></a>    It allows to retrieve at runtime the information gathered at compile time. 
+<a name="l15"><span class="ln">15   </span></a>    &quot;&quot;&quot;</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s2"># SKLEARN_OPENMP_PARALLELISM_ENABLED is resolved at compile time and defined</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s2"># in _openmp_helpers.pxd as a boolean. This function exposes it to Python.</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s0">return </span><span class="s1">SKLEARN_OPENMP_PARALLELISM_ENABLED</span>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a><span class="s0">cpdef </span><span class="s1">_openmp_effective_n_threads</span><span class="s3">(</span><span class="s1">n_threads</span><span class="s3">=</span><span class="s0">None</span><span class="s3">, </span><span class="s1">only_physical_cores</span><span class="s3">=</span><span class="s0">True</span><span class="s3">):</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s5">&quot;&quot;&quot;Determine the effective number of threads to be used for OpenMP calls 
+<a name="l23"><span class="ln">23   </span></a> 
+<a name="l24"><span class="ln">24   </span></a>    - For ``n_threads = None``, 
+<a name="l25"><span class="ln">25   </span></a>      - if the ``OMP_NUM_THREADS`` environment variable is set, return 
+<a name="l26"><span class="ln">26   </span></a>        ``openmp.omp_get_max_threads()`` 
+<a name="l27"><span class="ln">27   </span></a>      - otherwise, return the minimum between ``openmp.omp_get_max_threads()`` 
+<a name="l28"><span class="ln">28   </span></a>        and the number of cpus, taking cgroups quotas into account. Cgroups 
+<a name="l29"><span class="ln">29   </span></a>        quotas can typically be set by tools such as Docker. 
+<a name="l30"><span class="ln">30   </span></a>      The result of ``omp_get_max_threads`` can be influenced by environment 
+<a name="l31"><span class="ln">31   </span></a>      variable ``OMP_NUM_THREADS`` or at runtime by ``omp_set_num_threads``. 
+<a name="l32"><span class="ln">32   </span></a> 
+<a name="l33"><span class="ln">33   </span></a>    - For ``n_threads &gt; 0``, return this as the maximal number of threads for 
+<a name="l34"><span class="ln">34   </span></a>      parallel OpenMP calls. 
+<a name="l35"><span class="ln">35   </span></a> 
+<a name="l36"><span class="ln">36   </span></a>    - For ``n_threads &lt; 0``, return the maximal number of threads minus 
+<a name="l37"><span class="ln">37   </span></a>      ``|n_threads + 1|``. In particular ``n_threads = -1`` will use as many 
+<a name="l38"><span class="ln">38   </span></a>      threads as there are available cores on the machine. 
+<a name="l39"><span class="ln">39   </span></a> 
+<a name="l40"><span class="ln">40   </span></a>    - Raise a ValueError for ``n_threads = 0``. 
+<a name="l41"><span class="ln">41   </span></a> 
+<a name="l42"><span class="ln">42   </span></a>    Passing the `only_physical_cores=False` flag makes it possible to use extra 
+<a name="l43"><span class="ln">43   </span></a>    threads for SMT/HyperThreading logical cores. It has been empirically 
+<a name="l44"><span class="ln">44   </span></a>    observed that using as many threads as available SMT cores can slightly 
+<a name="l45"><span class="ln">45   </span></a>    improve the performance in some cases, but can severely degrade 
+<a name="l46"><span class="ln">46   </span></a>    performance other times. Therefore it is recommended to use 
+<a name="l47"><span class="ln">47   </span></a>    `only_physical_cores=True` unless an empirical study has been conducted to 
+<a name="l48"><span class="ln">48   </span></a>    assess the impact of SMT on a case-by-case basis (using various input data 
+<a name="l49"><span class="ln">49   </span></a>    shapes, in particular small data shapes). 
+<a name="l50"><span class="ln">50   </span></a> 
+<a name="l51"><span class="ln">51   </span></a>    If scikit-learn is built without OpenMP support, always return 1. 
+<a name="l52"><span class="ln">52   </span></a>    &quot;&quot;&quot;</span>
+<a name="l53"><span class="ln">53   </span></a>    <span class="s0">if </span><span class="s1">n_threads </span><span class="s3">== </span><span class="s6">0</span><span class="s3">:</span>
+<a name="l54"><span class="ln">54   </span></a>        <span class="s0">raise </span><span class="s1">ValueError</span><span class="s3">(</span><span class="s5">&quot;n_threads = 0 is invalid&quot;</span><span class="s3">)</span>
+<a name="l55"><span class="ln">55   </span></a>
+<a name="l56"><span class="ln">56   </span></a>    <span class="s0">if not </span><span class="s1">SKLEARN_OPENMP_PARALLELISM_ENABLED</span><span class="s3">:</span>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s2"># OpenMP disabled at build-time =&gt; sequential mode</span>
+<a name="l58"><span class="ln">58   </span></a>        <span class="s0">return </span><span class="s6">1</span>
+<a name="l59"><span class="ln">59   </span></a>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s0">if </span><span class="s1">os</span><span class="s3">.</span><span class="s1">getenv</span><span class="s3">(</span><span class="s5">&quot;OMP_NUM_THREADS&quot;</span><span class="s3">):</span>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s2"># Fall back to user provided number of threads making it possible</span>
+<a name="l62"><span class="ln">62   </span></a>        <span class="s2"># to exceed the number of cpus.</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s1">max_n_threads </span><span class="s3">= </span><span class="s1">omp_get_max_threads</span><span class="s3">()</span>
+<a name="l64"><span class="ln">64   </span></a>    <span class="s0">else</span><span class="s3">:</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s0">try</span><span class="s3">:</span>
+<a name="l66"><span class="ln">66   </span></a>            <span class="s1">n_cpus </span><span class="s3">= </span><span class="s1">_CPU_COUNTS</span><span class="s3">[</span><span class="s1">only_physical_cores</span><span class="s3">]</span>
+<a name="l67"><span class="ln">67   </span></a>        <span class="s0">except </span><span class="s1">KeyError</span><span class="s3">:</span>
+<a name="l68"><span class="ln">68   </span></a>            <span class="s1">n_cpus </span><span class="s3">= </span><span class="s1">cpu_count</span><span class="s3">(</span><span class="s1">only_physical_cores</span><span class="s3">=</span><span class="s1">only_physical_cores</span><span class="s3">)</span>
+<a name="l69"><span class="ln">69   </span></a>            <span class="s1">_CPU_COUNTS</span><span class="s3">[</span><span class="s1">only_physical_cores</span><span class="s3">] = </span><span class="s1">n_cpus</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s1">max_n_threads </span><span class="s3">= </span><span class="s1">min</span><span class="s3">(</span><span class="s1">omp_get_max_threads</span><span class="s3">(), </span><span class="s1">n_cpus</span><span class="s3">)</span>
+<a name="l71"><span class="ln">71   </span></a>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s0">if </span><span class="s1">n_threads </span><span class="s0">is None</span><span class="s3">:</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s0">return </span><span class="s1">max_n_threads</span>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s0">elif </span><span class="s1">n_threads </span><span class="s3">&lt; </span><span class="s6">0</span><span class="s3">:</span>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s0">return </span><span class="s1">max</span><span class="s3">(</span><span class="s6">1</span><span class="s3">, </span><span class="s1">max_n_threads </span><span class="s3">+ </span><span class="s1">n_threads </span><span class="s3">+ </span><span class="s6">1</span><span class="s3">)</span>
+<a name="l76"><span class="ln">76   </span></a>
+<a name="l77"><span class="ln">77   </span></a>    <span class="s0">return </span><span class="s1">n_threads</span>
+<a name="l78"><span class="ln">78   </span></a></pre>
+</body>
+</html>

@@ -1,0 +1,470 @@
+<html>
+<head>
+<title>test_monotonic_constraints.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #2aacb8;}
+.s4 { color: #7a7e85;}
+.s5 { color: #5f826b; font-style: italic;}
+.s6 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_monotonic_constraints.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">import </span><span class="s1">re</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">import </span><span class="s1">pytest</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">from </span><span class="s1">sklearn</span><span class="s2">.</span><span class="s1">ensemble </span><span class="s0">import </span><span class="s2">(</span>
+<a name="l7"><span class="ln">7    </span></a>    <span class="s1">HistGradientBoostingClassifier</span><span class="s2">,</span>
+<a name="l8"><span class="ln">8    </span></a>    <span class="s1">HistGradientBoostingRegressor</span><span class="s2">,</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s2">)</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">from </span><span class="s1">sklearn</span><span class="s2">.</span><span class="s1">ensemble</span><span class="s2">.</span><span class="s1">_hist_gradient_boosting</span><span class="s2">.</span><span class="s1">common </span><span class="s0">import </span><span class="s2">(</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s1">G_H_DTYPE</span><span class="s2">,</span>
+<a name="l12"><span class="ln">12   </span></a>    <span class="s1">X_BINNED_DTYPE</span><span class="s2">,</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s1">MonotonicConstraint</span><span class="s2">,</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s2">)</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s0">from </span><span class="s1">sklearn</span><span class="s2">.</span><span class="s1">ensemble</span><span class="s2">.</span><span class="s1">_hist_gradient_boosting</span><span class="s2">.</span><span class="s1">grower </span><span class="s0">import </span><span class="s1">TreeGrower</span>
+<a name="l16"><span class="ln">16   </span></a><span class="s0">from </span><span class="s1">sklearn</span><span class="s2">.</span><span class="s1">ensemble</span><span class="s2">.</span><span class="s1">_hist_gradient_boosting</span><span class="s2">.</span><span class="s1">histogram </span><span class="s0">import </span><span class="s1">HistogramBuilder</span>
+<a name="l17"><span class="ln">17   </span></a><span class="s0">from </span><span class="s1">sklearn</span><span class="s2">.</span><span class="s1">ensemble</span><span class="s2">.</span><span class="s1">_hist_gradient_boosting</span><span class="s2">.</span><span class="s1">splitting </span><span class="s0">import </span><span class="s2">(</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s1">Splitter</span><span class="s2">,</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s1">compute_node_value</span><span class="s2">,</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s2">)</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s0">from </span><span class="s1">sklearn</span><span class="s2">.</span><span class="s1">utils</span><span class="s2">.</span><span class="s1">_openmp_helpers </span><span class="s0">import </span><span class="s1">_openmp_effective_n_threads</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s0">from </span><span class="s1">sklearn</span><span class="s2">.</span><span class="s1">utils</span><span class="s2">.</span><span class="s1">_testing </span><span class="s0">import </span><span class="s1">_convert_container</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a><span class="s1">n_threads </span><span class="s2">= </span><span class="s1">_openmp_effective_n_threads</span><span class="s2">()</span>
+<a name="l25"><span class="ln">25   </span></a>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a><span class="s0">def </span><span class="s1">is_increasing</span><span class="s2">(</span><span class="s1">a</span><span class="s2">):</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s0">return </span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">diff</span><span class="s2">(</span><span class="s1">a</span><span class="s2">) &gt;= </span><span class="s3">0.0</span><span class="s2">).</span><span class="s1">all</span><span class="s2">()</span>
+<a name="l29"><span class="ln">29   </span></a>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a><span class="s0">def </span><span class="s1">is_decreasing</span><span class="s2">(</span><span class="s1">a</span><span class="s2">):</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s0">return </span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">diff</span><span class="s2">(</span><span class="s1">a</span><span class="s2">) &lt;= </span><span class="s3">0.0</span><span class="s2">).</span><span class="s1">all</span><span class="s2">()</span>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a>
+<a name="l35"><span class="ln">35   </span></a><span class="s0">def </span><span class="s1">assert_leaves_values_monotonic</span><span class="s2">(</span><span class="s1">predictor</span><span class="s2">, </span><span class="s1">monotonic_cst</span><span class="s2">):</span>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s4"># make sure leaves values (from left to right) are either all increasing</span>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s4"># or all decreasing (or neither) depending on the monotonic constraint.</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s1">nodes </span><span class="s2">= </span><span class="s1">predictor</span><span class="s2">.</span><span class="s1">nodes</span>
+<a name="l39"><span class="ln">39   </span></a>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s0">def </span><span class="s1">get_leaves_values</span><span class="s2">():</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s5">&quot;&quot;&quot;get leaves values from left to right&quot;&quot;&quot;</span>
+<a name="l42"><span class="ln">42   </span></a>        <span class="s1">values </span><span class="s2">= []</span>
+<a name="l43"><span class="ln">43   </span></a>
+<a name="l44"><span class="ln">44   </span></a>        <span class="s0">def </span><span class="s1">depth_first_collect_leaf_values</span><span class="s2">(</span><span class="s1">node_idx</span><span class="s2">):</span>
+<a name="l45"><span class="ln">45   </span></a>            <span class="s1">node </span><span class="s2">= </span><span class="s1">nodes</span><span class="s2">[</span><span class="s1">node_idx</span><span class="s2">]</span>
+<a name="l46"><span class="ln">46   </span></a>            <span class="s0">if </span><span class="s1">node</span><span class="s2">[</span><span class="s6">&quot;is_leaf&quot;</span><span class="s2">]:</span>
+<a name="l47"><span class="ln">47   </span></a>                <span class="s1">values</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">node</span><span class="s2">[</span><span class="s6">&quot;value&quot;</span><span class="s2">])</span>
+<a name="l48"><span class="ln">48   </span></a>                <span class="s0">return</span>
+<a name="l49"><span class="ln">49   </span></a>            <span class="s1">depth_first_collect_leaf_values</span><span class="s2">(</span><span class="s1">node</span><span class="s2">[</span><span class="s6">&quot;left&quot;</span><span class="s2">])</span>
+<a name="l50"><span class="ln">50   </span></a>            <span class="s1">depth_first_collect_leaf_values</span><span class="s2">(</span><span class="s1">node</span><span class="s2">[</span><span class="s6">&quot;right&quot;</span><span class="s2">])</span>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s1">depth_first_collect_leaf_values</span><span class="s2">(</span><span class="s3">0</span><span class="s2">)  </span><span class="s4"># start at root (0)</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s0">return </span><span class="s1">values</span>
+<a name="l54"><span class="ln">54   </span></a>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s1">values </span><span class="s2">= </span><span class="s1">get_leaves_values</span><span class="s2">()</span>
+<a name="l56"><span class="ln">56   </span></a>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s0">if </span><span class="s1">monotonic_cst </span><span class="s2">== </span><span class="s1">MonotonicConstraint</span><span class="s2">.</span><span class="s1">NO_CST</span><span class="s2">:</span>
+<a name="l58"><span class="ln">58   </span></a>        <span class="s4"># some increasing, some decreasing</span>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s0">assert not </span><span class="s1">is_increasing</span><span class="s2">(</span><span class="s1">values</span><span class="s2">) </span><span class="s0">and not </span><span class="s1">is_decreasing</span><span class="s2">(</span><span class="s1">values</span><span class="s2">)</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s0">elif </span><span class="s1">monotonic_cst </span><span class="s2">== </span><span class="s1">MonotonicConstraint</span><span class="s2">.</span><span class="s1">POS</span><span class="s2">:</span>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s4"># all increasing</span>
+<a name="l62"><span class="ln">62   </span></a>        <span class="s0">assert </span><span class="s1">is_increasing</span><span class="s2">(</span><span class="s1">values</span><span class="s2">)</span>
+<a name="l63"><span class="ln">63   </span></a>    <span class="s0">else</span><span class="s2">:  </span><span class="s4"># NEG</span>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s4"># all decreasing</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s0">assert </span><span class="s1">is_decreasing</span><span class="s2">(</span><span class="s1">values</span><span class="s2">)</span>
+<a name="l66"><span class="ln">66   </span></a>
+<a name="l67"><span class="ln">67   </span></a>
+<a name="l68"><span class="ln">68   </span></a><span class="s0">def </span><span class="s1">assert_children_values_monotonic</span><span class="s2">(</span><span class="s1">predictor</span><span class="s2">, </span><span class="s1">monotonic_cst</span><span class="s2">):</span>
+<a name="l69"><span class="ln">69   </span></a>    <span class="s4"># Make sure siblings values respect the monotonic constraints. Left should</span>
+<a name="l70"><span class="ln">70   </span></a>    <span class="s4"># be lower (resp greater) than right child if constraint is POS (resp.</span>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s4"># NEG).</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s4"># Note that this property alone isn't enough to ensure full monotonicity,</span>
+<a name="l73"><span class="ln">73   </span></a>    <span class="s4"># since we also need to guanrantee that all the descendents of the left</span>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s4"># child won't be greater (resp. lower) than the right child, or its</span>
+<a name="l75"><span class="ln">75   </span></a>    <span class="s4"># descendents. That's why we need to bound the predicted values (this is</span>
+<a name="l76"><span class="ln">76   </span></a>    <span class="s4"># tested in assert_children_values_bounded)</span>
+<a name="l77"><span class="ln">77   </span></a>    <span class="s1">nodes </span><span class="s2">= </span><span class="s1">predictor</span><span class="s2">.</span><span class="s1">nodes</span>
+<a name="l78"><span class="ln">78   </span></a>    <span class="s1">left_lower </span><span class="s2">= []</span>
+<a name="l79"><span class="ln">79   </span></a>    <span class="s1">left_greater </span><span class="s2">= []</span>
+<a name="l80"><span class="ln">80   </span></a>    <span class="s0">for </span><span class="s1">node </span><span class="s0">in </span><span class="s1">nodes</span><span class="s2">:</span>
+<a name="l81"><span class="ln">81   </span></a>        <span class="s0">if </span><span class="s1">node</span><span class="s2">[</span><span class="s6">&quot;is_leaf&quot;</span><span class="s2">]:</span>
+<a name="l82"><span class="ln">82   </span></a>            <span class="s0">continue</span>
+<a name="l83"><span class="ln">83   </span></a>
+<a name="l84"><span class="ln">84   </span></a>        <span class="s1">left_idx </span><span class="s2">= </span><span class="s1">node</span><span class="s2">[</span><span class="s6">&quot;left&quot;</span><span class="s2">]</span>
+<a name="l85"><span class="ln">85   </span></a>        <span class="s1">right_idx </span><span class="s2">= </span><span class="s1">node</span><span class="s2">[</span><span class="s6">&quot;right&quot;</span><span class="s2">]</span>
+<a name="l86"><span class="ln">86   </span></a>
+<a name="l87"><span class="ln">87   </span></a>        <span class="s0">if </span><span class="s1">nodes</span><span class="s2">[</span><span class="s1">left_idx</span><span class="s2">][</span><span class="s6">&quot;value&quot;</span><span class="s2">] &lt; </span><span class="s1">nodes</span><span class="s2">[</span><span class="s1">right_idx</span><span class="s2">][</span><span class="s6">&quot;value&quot;</span><span class="s2">]:</span>
+<a name="l88"><span class="ln">88   </span></a>            <span class="s1">left_lower</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">node</span><span class="s2">)</span>
+<a name="l89"><span class="ln">89   </span></a>        <span class="s0">elif </span><span class="s1">nodes</span><span class="s2">[</span><span class="s1">left_idx</span><span class="s2">][</span><span class="s6">&quot;value&quot;</span><span class="s2">] &gt; </span><span class="s1">nodes</span><span class="s2">[</span><span class="s1">right_idx</span><span class="s2">][</span><span class="s6">&quot;value&quot;</span><span class="s2">]:</span>
+<a name="l90"><span class="ln">90   </span></a>            <span class="s1">left_greater</span><span class="s2">.</span><span class="s1">append</span><span class="s2">(</span><span class="s1">node</span><span class="s2">)</span>
+<a name="l91"><span class="ln">91   </span></a>
+<a name="l92"><span class="ln">92   </span></a>    <span class="s0">if </span><span class="s1">monotonic_cst </span><span class="s2">== </span><span class="s1">MonotonicConstraint</span><span class="s2">.</span><span class="s1">NO_CST</span><span class="s2">:</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s0">assert </span><span class="s1">left_lower </span><span class="s0">and </span><span class="s1">left_greater</span>
+<a name="l94"><span class="ln">94   </span></a>    <span class="s0">elif </span><span class="s1">monotonic_cst </span><span class="s2">== </span><span class="s1">MonotonicConstraint</span><span class="s2">.</span><span class="s1">POS</span><span class="s2">:</span>
+<a name="l95"><span class="ln">95   </span></a>        <span class="s0">assert </span><span class="s1">left_lower </span><span class="s0">and not </span><span class="s1">left_greater</span>
+<a name="l96"><span class="ln">96   </span></a>    <span class="s0">else</span><span class="s2">:  </span><span class="s4"># NEG</span>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s0">assert not </span><span class="s1">left_lower </span><span class="s0">and </span><span class="s1">left_greater</span>
+<a name="l98"><span class="ln">98   </span></a>
+<a name="l99"><span class="ln">99   </span></a>
+<a name="l100"><span class="ln">100  </span></a><span class="s0">def </span><span class="s1">assert_children_values_bounded</span><span class="s2">(</span><span class="s1">grower</span><span class="s2">, </span><span class="s1">monotonic_cst</span><span class="s2">):</span>
+<a name="l101"><span class="ln">101  </span></a>    <span class="s4"># Make sure that the values of the children of a node are bounded by the</span>
+<a name="l102"><span class="ln">102  </span></a>    <span class="s4"># middle value between that node and its sibling (if there is a monotonic</span>
+<a name="l103"><span class="ln">103  </span></a>    <span class="s4"># constraint).</span>
+<a name="l104"><span class="ln">104  </span></a>    <span class="s4"># As a bonus, we also check that the siblings values are properly ordered</span>
+<a name="l105"><span class="ln">105  </span></a>    <span class="s4"># which is slightly redundant with assert_children_values_monotonic (but</span>
+<a name="l106"><span class="ln">106  </span></a>    <span class="s4"># this check is done on the grower nodes whereas</span>
+<a name="l107"><span class="ln">107  </span></a>    <span class="s4"># assert_children_values_monotonic is done on the predictor nodes)</span>
+<a name="l108"><span class="ln">108  </span></a>
+<a name="l109"><span class="ln">109  </span></a>    <span class="s0">if </span><span class="s1">monotonic_cst </span><span class="s2">== </span><span class="s1">MonotonicConstraint</span><span class="s2">.</span><span class="s1">NO_CST</span><span class="s2">:</span>
+<a name="l110"><span class="ln">110  </span></a>        <span class="s0">return</span>
+<a name="l111"><span class="ln">111  </span></a>
+<a name="l112"><span class="ln">112  </span></a>    <span class="s0">def </span><span class="s1">recursively_check_children_node_values</span><span class="s2">(</span><span class="s1">node</span><span class="s2">, </span><span class="s1">right_sibling</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+<a name="l113"><span class="ln">113  </span></a>        <span class="s0">if </span><span class="s1">node</span><span class="s2">.</span><span class="s1">is_leaf</span><span class="s2">:</span>
+<a name="l114"><span class="ln">114  </span></a>            <span class="s0">return</span>
+<a name="l115"><span class="ln">115  </span></a>        <span class="s0">if </span><span class="s1">right_sibling </span><span class="s0">is not None</span><span class="s2">:</span>
+<a name="l116"><span class="ln">116  </span></a>            <span class="s1">middle </span><span class="s2">= (</span><span class="s1">node</span><span class="s2">.</span><span class="s1">value </span><span class="s2">+ </span><span class="s1">right_sibling</span><span class="s2">.</span><span class="s1">value</span><span class="s2">) / </span><span class="s3">2</span>
+<a name="l117"><span class="ln">117  </span></a>            <span class="s0">if </span><span class="s1">monotonic_cst </span><span class="s2">== </span><span class="s1">MonotonicConstraint</span><span class="s2">.</span><span class="s1">POS</span><span class="s2">:</span>
+<a name="l118"><span class="ln">118  </span></a>                <span class="s0">assert </span><span class="s1">node</span><span class="s2">.</span><span class="s1">left_child</span><span class="s2">.</span><span class="s1">value </span><span class="s2">&lt;= </span><span class="s1">node</span><span class="s2">.</span><span class="s1">right_child</span><span class="s2">.</span><span class="s1">value </span><span class="s2">&lt;= </span><span class="s1">middle</span>
+<a name="l119"><span class="ln">119  </span></a>                <span class="s0">if not </span><span class="s1">right_sibling</span><span class="s2">.</span><span class="s1">is_leaf</span><span class="s2">:</span>
+<a name="l120"><span class="ln">120  </span></a>                    <span class="s0">assert </span><span class="s2">(</span>
+<a name="l121"><span class="ln">121  </span></a>                        <span class="s1">middle</span>
+<a name="l122"><span class="ln">122  </span></a>                        <span class="s2">&lt;= </span><span class="s1">right_sibling</span><span class="s2">.</span><span class="s1">left_child</span><span class="s2">.</span><span class="s1">value</span>
+<a name="l123"><span class="ln">123  </span></a>                        <span class="s2">&lt;= </span><span class="s1">right_sibling</span><span class="s2">.</span><span class="s1">right_child</span><span class="s2">.</span><span class="s1">value</span>
+<a name="l124"><span class="ln">124  </span></a>                    <span class="s2">)</span>
+<a name="l125"><span class="ln">125  </span></a>            <span class="s0">else</span><span class="s2">:  </span><span class="s4"># NEG</span>
+<a name="l126"><span class="ln">126  </span></a>                <span class="s0">assert </span><span class="s1">node</span><span class="s2">.</span><span class="s1">left_child</span><span class="s2">.</span><span class="s1">value </span><span class="s2">&gt;= </span><span class="s1">node</span><span class="s2">.</span><span class="s1">right_child</span><span class="s2">.</span><span class="s1">value </span><span class="s2">&gt;= </span><span class="s1">middle</span>
+<a name="l127"><span class="ln">127  </span></a>                <span class="s0">if not </span><span class="s1">right_sibling</span><span class="s2">.</span><span class="s1">is_leaf</span><span class="s2">:</span>
+<a name="l128"><span class="ln">128  </span></a>                    <span class="s0">assert </span><span class="s2">(</span>
+<a name="l129"><span class="ln">129  </span></a>                        <span class="s1">middle</span>
+<a name="l130"><span class="ln">130  </span></a>                        <span class="s2">&gt;= </span><span class="s1">right_sibling</span><span class="s2">.</span><span class="s1">left_child</span><span class="s2">.</span><span class="s1">value</span>
+<a name="l131"><span class="ln">131  </span></a>                        <span class="s2">&gt;= </span><span class="s1">right_sibling</span><span class="s2">.</span><span class="s1">right_child</span><span class="s2">.</span><span class="s1">value</span>
+<a name="l132"><span class="ln">132  </span></a>                    <span class="s2">)</span>
+<a name="l133"><span class="ln">133  </span></a>
+<a name="l134"><span class="ln">134  </span></a>        <span class="s1">recursively_check_children_node_values</span><span class="s2">(</span>
+<a name="l135"><span class="ln">135  </span></a>            <span class="s1">node</span><span class="s2">.</span><span class="s1">left_child</span><span class="s2">, </span><span class="s1">right_sibling</span><span class="s2">=</span><span class="s1">node</span><span class="s2">.</span><span class="s1">right_child</span>
+<a name="l136"><span class="ln">136  </span></a>        <span class="s2">)</span>
+<a name="l137"><span class="ln">137  </span></a>        <span class="s1">recursively_check_children_node_values</span><span class="s2">(</span><span class="s1">node</span><span class="s2">.</span><span class="s1">right_child</span><span class="s2">)</span>
+<a name="l138"><span class="ln">138  </span></a>
+<a name="l139"><span class="ln">139  </span></a>    <span class="s1">recursively_check_children_node_values</span><span class="s2">(</span><span class="s1">grower</span><span class="s2">.</span><span class="s1">root</span><span class="s2">)</span>
+<a name="l140"><span class="ln">140  </span></a>
+<a name="l141"><span class="ln">141  </span></a>
+<a name="l142"><span class="ln">142  </span></a><span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span><span class="s6">&quot;seed&quot;</span><span class="s2">, </span><span class="s1">range</span><span class="s2">(</span><span class="s3">3</span><span class="s2">))</span>
+<a name="l143"><span class="ln">143  </span></a><span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span>
+<a name="l144"><span class="ln">144  </span></a>    <span class="s6">&quot;monotonic_cst&quot;</span><span class="s2">,</span>
+<a name="l145"><span class="ln">145  </span></a>    <span class="s2">(</span>
+<a name="l146"><span class="ln">146  </span></a>        <span class="s1">MonotonicConstraint</span><span class="s2">.</span><span class="s1">NO_CST</span><span class="s2">,</span>
+<a name="l147"><span class="ln">147  </span></a>        <span class="s1">MonotonicConstraint</span><span class="s2">.</span><span class="s1">POS</span><span class="s2">,</span>
+<a name="l148"><span class="ln">148  </span></a>        <span class="s1">MonotonicConstraint</span><span class="s2">.</span><span class="s1">NEG</span><span class="s2">,</span>
+<a name="l149"><span class="ln">149  </span></a>    <span class="s2">),</span>
+<a name="l150"><span class="ln">150  </span></a><span class="s2">)</span>
+<a name="l151"><span class="ln">151  </span></a><span class="s0">def </span><span class="s1">test_nodes_values</span><span class="s2">(</span><span class="s1">monotonic_cst</span><span class="s2">, </span><span class="s1">seed</span><span class="s2">):</span>
+<a name="l152"><span class="ln">152  </span></a>    <span class="s4"># Build a single tree with only one feature, and make sure the nodes</span>
+<a name="l153"><span class="ln">153  </span></a>    <span class="s4"># values respect the monotonic constraints.</span>
+<a name="l154"><span class="ln">154  </span></a>
+<a name="l155"><span class="ln">155  </span></a>    <span class="s4"># Considering the following tree with a monotonic POS constraint, we</span>
+<a name="l156"><span class="ln">156  </span></a>    <span class="s4"># should have:</span>
+<a name="l157"><span class="ln">157  </span></a>    <span class="s4">#</span>
+<a name="l158"><span class="ln">158  </span></a>    <span class="s4">#       root</span>
+<a name="l159"><span class="ln">159  </span></a>    <span class="s4">#      /    \</span>
+<a name="l160"><span class="ln">160  </span></a>    <span class="s4">#     5     10    # middle = 7.5</span>
+<a name="l161"><span class="ln">161  </span></a>    <span class="s4">#    / \   / \</span>
+<a name="l162"><span class="ln">162  </span></a>    <span class="s4">#   a  b  c  d</span>
+<a name="l163"><span class="ln">163  </span></a>    <span class="s4">#</span>
+<a name="l164"><span class="ln">164  </span></a>    <span class="s4"># a &lt;= b and c &lt;= d  (assert_children_values_monotonic)</span>
+<a name="l165"><span class="ln">165  </span></a>    <span class="s4"># a, b &lt;= middle &lt;= c, d (assert_children_values_bounded)</span>
+<a name="l166"><span class="ln">166  </span></a>    <span class="s4"># a &lt;= b &lt;= c &lt;= d (assert_leaves_values_monotonic)</span>
+<a name="l167"><span class="ln">167  </span></a>    <span class="s4">#</span>
+<a name="l168"><span class="ln">168  </span></a>    <span class="s4"># The last one is a consequence of the others, but can't hurt to check</span>
+<a name="l169"><span class="ln">169  </span></a>
+<a name="l170"><span class="ln">170  </span></a>    <span class="s1">rng </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">random</span><span class="s2">.</span><span class="s1">RandomState</span><span class="s2">(</span><span class="s1">seed</span><span class="s2">)</span>
+<a name="l171"><span class="ln">171  </span></a>    <span class="s1">n_samples </span><span class="s2">= </span><span class="s3">1000</span>
+<a name="l172"><span class="ln">172  </span></a>    <span class="s1">n_features </span><span class="s2">= </span><span class="s3">1</span>
+<a name="l173"><span class="ln">173  </span></a>    <span class="s1">X_binned </span><span class="s2">= </span><span class="s1">rng</span><span class="s2">.</span><span class="s1">randint</span><span class="s2">(</span><span class="s3">0</span><span class="s2">, </span><span class="s3">255</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=(</span><span class="s1">n_samples</span><span class="s2">, </span><span class="s1">n_features</span><span class="s2">), </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">uint8</span><span class="s2">)</span>
+<a name="l174"><span class="ln">174  </span></a>    <span class="s1">X_binned </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">asfortranarray</span><span class="s2">(</span><span class="s1">X_binned</span><span class="s2">)</span>
+<a name="l175"><span class="ln">175  </span></a>
+<a name="l176"><span class="ln">176  </span></a>    <span class="s1">gradients </span><span class="s2">= </span><span class="s1">rng</span><span class="s2">.</span><span class="s1">normal</span><span class="s2">(</span><span class="s1">size</span><span class="s2">=</span><span class="s1">n_samples</span><span class="s2">).</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">G_H_DTYPE</span><span class="s2">)</span>
+<a name="l177"><span class="ln">177  </span></a>    <span class="s1">hessians </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">ones</span><span class="s2">(</span><span class="s1">shape</span><span class="s2">=</span><span class="s3">1</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">G_H_DTYPE</span><span class="s2">)</span>
+<a name="l178"><span class="ln">178  </span></a>
+<a name="l179"><span class="ln">179  </span></a>    <span class="s1">grower </span><span class="s2">= </span><span class="s1">TreeGrower</span><span class="s2">(</span>
+<a name="l180"><span class="ln">180  </span></a>        <span class="s1">X_binned</span><span class="s2">, </span><span class="s1">gradients</span><span class="s2">, </span><span class="s1">hessians</span><span class="s2">, </span><span class="s1">monotonic_cst</span><span class="s2">=[</span><span class="s1">monotonic_cst</span><span class="s2">], </span><span class="s1">shrinkage</span><span class="s2">=</span><span class="s3">0.1</span>
+<a name="l181"><span class="ln">181  </span></a>    <span class="s2">)</span>
+<a name="l182"><span class="ln">182  </span></a>    <span class="s1">grower</span><span class="s2">.</span><span class="s1">grow</span><span class="s2">()</span>
+<a name="l183"><span class="ln">183  </span></a>
+<a name="l184"><span class="ln">184  </span></a>    <span class="s4"># grow() will shrink the leaves values at the very end. For our comparison</span>
+<a name="l185"><span class="ln">185  </span></a>    <span class="s4"># tests, we need to revert the shrinkage of the leaves, else we would</span>
+<a name="l186"><span class="ln">186  </span></a>    <span class="s4"># compare the value of a leaf (shrunk) with a node (not shrunk) and the</span>
+<a name="l187"><span class="ln">187  </span></a>    <span class="s4"># test would not be correct.</span>
+<a name="l188"><span class="ln">188  </span></a>    <span class="s0">for </span><span class="s1">leave </span><span class="s0">in </span><span class="s1">grower</span><span class="s2">.</span><span class="s1">finalized_leaves</span><span class="s2">:</span>
+<a name="l189"><span class="ln">189  </span></a>        <span class="s1">leave</span><span class="s2">.</span><span class="s1">value </span><span class="s2">/= </span><span class="s1">grower</span><span class="s2">.</span><span class="s1">shrinkage</span>
+<a name="l190"><span class="ln">190  </span></a>
+<a name="l191"><span class="ln">191  </span></a>    <span class="s4"># We pass undefined binning_thresholds because we won't use predict anyway</span>
+<a name="l192"><span class="ln">192  </span></a>    <span class="s1">predictor </span><span class="s2">= </span><span class="s1">grower</span><span class="s2">.</span><span class="s1">make_predictor</span><span class="s2">(</span>
+<a name="l193"><span class="ln">193  </span></a>        <span class="s1">binning_thresholds</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">zeros</span><span class="s2">((</span><span class="s1">X_binned</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s3">1</span><span class="s2">], </span><span class="s1">X_binned</span><span class="s2">.</span><span class="s1">max</span><span class="s2">() + </span><span class="s3">1</span><span class="s2">))</span>
+<a name="l194"><span class="ln">194  </span></a>    <span class="s2">)</span>
+<a name="l195"><span class="ln">195  </span></a>
+<a name="l196"><span class="ln">196  </span></a>    <span class="s4"># The consistency of the bounds can only be checked on the tree grower</span>
+<a name="l197"><span class="ln">197  </span></a>    <span class="s4"># as the node bounds are not copied into the predictor tree. The</span>
+<a name="l198"><span class="ln">198  </span></a>    <span class="s4"># consistency checks on the values of node children and leaves can be</span>
+<a name="l199"><span class="ln">199  </span></a>    <span class="s4"># done either on the grower tree or on the predictor tree. We only</span>
+<a name="l200"><span class="ln">200  </span></a>    <span class="s4"># do those checks on the predictor tree as the latter is derived from</span>
+<a name="l201"><span class="ln">201  </span></a>    <span class="s4"># the former.</span>
+<a name="l202"><span class="ln">202  </span></a>    <span class="s1">assert_children_values_monotonic</span><span class="s2">(</span><span class="s1">predictor</span><span class="s2">, </span><span class="s1">monotonic_cst</span><span class="s2">)</span>
+<a name="l203"><span class="ln">203  </span></a>    <span class="s1">assert_children_values_bounded</span><span class="s2">(</span><span class="s1">grower</span><span class="s2">, </span><span class="s1">monotonic_cst</span><span class="s2">)</span>
+<a name="l204"><span class="ln">204  </span></a>    <span class="s1">assert_leaves_values_monotonic</span><span class="s2">(</span><span class="s1">predictor</span><span class="s2">, </span><span class="s1">monotonic_cst</span><span class="s2">)</span>
+<a name="l205"><span class="ln">205  </span></a>
+<a name="l206"><span class="ln">206  </span></a>
+<a name="l207"><span class="ln">207  </span></a><span class="s2">@</span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">mark</span><span class="s2">.</span><span class="s1">parametrize</span><span class="s2">(</span><span class="s6">&quot;use_feature_names&quot;</span><span class="s2">, (</span><span class="s0">True</span><span class="s2">, </span><span class="s0">False</span><span class="s2">))</span>
+<a name="l208"><span class="ln">208  </span></a><span class="s0">def </span><span class="s1">test_predictions</span><span class="s2">(</span><span class="s1">global_random_seed</span><span class="s2">, </span><span class="s1">use_feature_names</span><span class="s2">):</span>
+<a name="l209"><span class="ln">209  </span></a>    <span class="s4"># Train a model with a POS constraint on the first non-categorical feature</span>
+<a name="l210"><span class="ln">210  </span></a>    <span class="s4"># and a NEG constraint on the second non-categorical feature, and make sure</span>
+<a name="l211"><span class="ln">211  </span></a>    <span class="s4"># the constraints are respected by checking the predictions.</span>
+<a name="l212"><span class="ln">212  </span></a>    <span class="s4"># test adapted from lightgbm's test_monotone_constraint(), itself inspired</span>
+<a name="l213"><span class="ln">213  </span></a>    <span class="s4"># by https://xgboost.readthedocs.io/en/latest/tutorials/monotonic.html</span>
+<a name="l214"><span class="ln">214  </span></a>
+<a name="l215"><span class="ln">215  </span></a>    <span class="s1">rng </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">random</span><span class="s2">.</span><span class="s1">RandomState</span><span class="s2">(</span><span class="s1">global_random_seed</span><span class="s2">)</span>
+<a name="l216"><span class="ln">216  </span></a>
+<a name="l217"><span class="ln">217  </span></a>    <span class="s1">n_samples </span><span class="s2">= </span><span class="s3">1000</span>
+<a name="l218"><span class="ln">218  </span></a>    <span class="s1">f_0 </span><span class="s2">= </span><span class="s1">rng</span><span class="s2">.</span><span class="s1">rand</span><span class="s2">(</span><span class="s1">n_samples</span><span class="s2">)  </span><span class="s4"># positive correlation with y</span>
+<a name="l219"><span class="ln">219  </span></a>    <span class="s1">f_1 </span><span class="s2">= </span><span class="s1">rng</span><span class="s2">.</span><span class="s1">rand</span><span class="s2">(</span><span class="s1">n_samples</span><span class="s2">)  </span><span class="s4"># negative correlation with y</span>
+<a name="l220"><span class="ln">220  </span></a>
+<a name="l221"><span class="ln">221  </span></a>    <span class="s4"># extra categorical features, no correlation with y,</span>
+<a name="l222"><span class="ln">222  </span></a>    <span class="s4"># to check the correctness of monotonicity constraint remapping, see issue #28898</span>
+<a name="l223"><span class="ln">223  </span></a>    <span class="s1">f_a </span><span class="s2">= </span><span class="s1">rng</span><span class="s2">.</span><span class="s1">randint</span><span class="s2">(</span><span class="s1">low</span><span class="s2">=</span><span class="s3">0</span><span class="s2">, </span><span class="s1">high</span><span class="s2">=</span><span class="s3">9</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=</span><span class="s1">n_samples</span><span class="s2">)</span>
+<a name="l224"><span class="ln">224  </span></a>    <span class="s1">f_b </span><span class="s2">= </span><span class="s1">rng</span><span class="s2">.</span><span class="s1">randint</span><span class="s2">(</span><span class="s1">low</span><span class="s2">=</span><span class="s3">0</span><span class="s2">, </span><span class="s1">high</span><span class="s2">=</span><span class="s3">9</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=</span><span class="s1">n_samples</span><span class="s2">)</span>
+<a name="l225"><span class="ln">225  </span></a>    <span class="s1">f_c </span><span class="s2">= </span><span class="s1">rng</span><span class="s2">.</span><span class="s1">randint</span><span class="s2">(</span><span class="s1">low</span><span class="s2">=</span><span class="s3">0</span><span class="s2">, </span><span class="s1">high</span><span class="s2">=</span><span class="s3">9</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=</span><span class="s1">n_samples</span><span class="s2">)</span>
+<a name="l226"><span class="ln">226  </span></a>
+<a name="l227"><span class="ln">227  </span></a>    <span class="s1">X </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">c_</span><span class="s2">[</span><span class="s1">f_a</span><span class="s2">, </span><span class="s1">f_0</span><span class="s2">, </span><span class="s1">f_b</span><span class="s2">, </span><span class="s1">f_1</span><span class="s2">, </span><span class="s1">f_c</span><span class="s2">]</span>
+<a name="l228"><span class="ln">228  </span></a>    <span class="s1">columns_name </span><span class="s2">= [</span><span class="s6">&quot;f_a&quot;</span><span class="s2">, </span><span class="s6">&quot;f_0&quot;</span><span class="s2">, </span><span class="s6">&quot;f_b&quot;</span><span class="s2">, </span><span class="s6">&quot;f_1&quot;</span><span class="s2">, </span><span class="s6">&quot;f_c&quot;</span><span class="s2">]</span>
+<a name="l229"><span class="ln">229  </span></a>    <span class="s1">constructor_name </span><span class="s2">= </span><span class="s6">&quot;dataframe&quot; </span><span class="s0">if </span><span class="s1">use_feature_names </span><span class="s0">else </span><span class="s6">&quot;array&quot;</span>
+<a name="l230"><span class="ln">230  </span></a>    <span class="s1">X </span><span class="s2">= </span><span class="s1">_convert_container</span><span class="s2">(</span><span class="s1">X</span><span class="s2">, </span><span class="s1">constructor_name</span><span class="s2">, </span><span class="s1">columns_name</span><span class="s2">=</span><span class="s1">columns_name</span><span class="s2">)</span>
+<a name="l231"><span class="ln">231  </span></a>
+<a name="l232"><span class="ln">232  </span></a>    <span class="s1">noise </span><span class="s2">= </span><span class="s1">rng</span><span class="s2">.</span><span class="s1">normal</span><span class="s2">(</span><span class="s1">loc</span><span class="s2">=</span><span class="s3">0.0</span><span class="s2">, </span><span class="s1">scale</span><span class="s2">=</span><span class="s3">0.01</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=</span><span class="s1">n_samples</span><span class="s2">)</span>
+<a name="l233"><span class="ln">233  </span></a>    <span class="s1">y </span><span class="s2">= </span><span class="s3">5 </span><span class="s2">* </span><span class="s1">f_0 </span><span class="s2">+ </span><span class="s1">np</span><span class="s2">.</span><span class="s1">sin</span><span class="s2">(</span><span class="s3">10 </span><span class="s2">* </span><span class="s1">np</span><span class="s2">.</span><span class="s1">pi </span><span class="s2">* </span><span class="s1">f_0</span><span class="s2">) - </span><span class="s3">5 </span><span class="s2">* </span><span class="s1">f_1 </span><span class="s2">- </span><span class="s1">np</span><span class="s2">.</span><span class="s1">cos</span><span class="s2">(</span><span class="s3">10 </span><span class="s2">* </span><span class="s1">np</span><span class="s2">.</span><span class="s1">pi </span><span class="s2">* </span><span class="s1">f_1</span><span class="s2">) + </span><span class="s1">noise</span>
+<a name="l234"><span class="ln">234  </span></a>
+<a name="l235"><span class="ln">235  </span></a>    <span class="s0">if </span><span class="s1">use_feature_names</span><span class="s2">:</span>
+<a name="l236"><span class="ln">236  </span></a>        <span class="s1">monotonic_cst </span><span class="s2">= {</span><span class="s6">&quot;f_0&quot;</span><span class="s2">: +</span><span class="s3">1</span><span class="s2">, </span><span class="s6">&quot;f_1&quot;</span><span class="s2">: -</span><span class="s3">1</span><span class="s2">}</span>
+<a name="l237"><span class="ln">237  </span></a>        <span class="s1">categorical_features </span><span class="s2">= [</span><span class="s6">&quot;f_a&quot;</span><span class="s2">, </span><span class="s6">&quot;f_b&quot;</span><span class="s2">, </span><span class="s6">&quot;f_c&quot;</span><span class="s2">]</span>
+<a name="l238"><span class="ln">238  </span></a>    <span class="s0">else</span><span class="s2">:</span>
+<a name="l239"><span class="ln">239  </span></a>        <span class="s1">monotonic_cst </span><span class="s2">= [</span><span class="s3">0</span><span class="s2">, +</span><span class="s3">1</span><span class="s2">, </span><span class="s3">0</span><span class="s2">, -</span><span class="s3">1</span><span class="s2">, </span><span class="s3">0</span><span class="s2">]</span>
+<a name="l240"><span class="ln">240  </span></a>        <span class="s1">categorical_features </span><span class="s2">= [</span><span class="s3">0</span><span class="s2">, </span><span class="s3">2</span><span class="s2">, </span><span class="s3">4</span><span class="s2">]</span>
+<a name="l241"><span class="ln">241  </span></a>
+<a name="l242"><span class="ln">242  </span></a>    <span class="s1">gbdt </span><span class="s2">= </span><span class="s1">HistGradientBoostingRegressor</span><span class="s2">(</span>
+<a name="l243"><span class="ln">243  </span></a>        <span class="s1">monotonic_cst</span><span class="s2">=</span><span class="s1">monotonic_cst</span><span class="s2">, </span><span class="s1">categorical_features</span><span class="s2">=</span><span class="s1">categorical_features</span>
+<a name="l244"><span class="ln">244  </span></a>    <span class="s2">)</span>
+<a name="l245"><span class="ln">245  </span></a>    <span class="s1">gbdt</span><span class="s2">.</span><span class="s1">fit</span><span class="s2">(</span><span class="s1">X</span><span class="s2">, </span><span class="s1">y</span><span class="s2">)</span>
+<a name="l246"><span class="ln">246  </span></a>
+<a name="l247"><span class="ln">247  </span></a>    <span class="s1">linspace </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">linspace</span><span class="s2">(</span><span class="s3">0</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">100</span><span class="s2">)</span>
+<a name="l248"><span class="ln">248  </span></a>    <span class="s1">sin </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">sin</span><span class="s2">(</span><span class="s1">linspace</span><span class="s2">)</span>
+<a name="l249"><span class="ln">249  </span></a>    <span class="s1">constant </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">full_like</span><span class="s2">(</span><span class="s1">linspace</span><span class="s2">, </span><span class="s1">fill_value</span><span class="s2">=</span><span class="s3">0.5</span><span class="s2">)</span>
+<a name="l250"><span class="ln">250  </span></a>
+<a name="l251"><span class="ln">251  </span></a>    <span class="s4"># We now assert the predictions properly respect the constraints, on each</span>
+<a name="l252"><span class="ln">252  </span></a>    <span class="s4"># feature. When testing for a feature we need to set the other one to a</span>
+<a name="l253"><span class="ln">253  </span></a>    <span class="s4"># constant, because the monotonic constraints are only a &quot;all else being</span>
+<a name="l254"><span class="ln">254  </span></a>    <span class="s4"># equal&quot; type of constraints:</span>
+<a name="l255"><span class="ln">255  </span></a>    <span class="s4"># a constraint on the first feature only means that</span>
+<a name="l256"><span class="ln">256  </span></a>    <span class="s4"># x0 &lt; x0' =&gt; f(x0, x1) &lt; f(x0', x1)</span>
+<a name="l257"><span class="ln">257  </span></a>    <span class="s4"># while x1 stays constant.</span>
+<a name="l258"><span class="ln">258  </span></a>    <span class="s4"># The constraint does not guanrantee that</span>
+<a name="l259"><span class="ln">259  </span></a>    <span class="s4"># x0 &lt; x0' =&gt; f(x0, x1) &lt; f(x0', x1')</span>
+<a name="l260"><span class="ln">260  </span></a>
+<a name="l261"><span class="ln">261  </span></a>    <span class="s4"># First non-categorical feature (POS)</span>
+<a name="l262"><span class="ln">262  </span></a>    <span class="s4"># assert pred is all increasing when f_0 is all increasing</span>
+<a name="l263"><span class="ln">263  </span></a>    <span class="s1">X </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">c_</span><span class="s2">[</span><span class="s1">constant</span><span class="s2">, </span><span class="s1">linspace</span><span class="s2">, </span><span class="s1">constant</span><span class="s2">, </span><span class="s1">constant</span><span class="s2">, </span><span class="s1">constant</span><span class="s2">]</span>
+<a name="l264"><span class="ln">264  </span></a>    <span class="s1">X </span><span class="s2">= </span><span class="s1">_convert_container</span><span class="s2">(</span><span class="s1">X</span><span class="s2">, </span><span class="s1">constructor_name</span><span class="s2">, </span><span class="s1">columns_name</span><span class="s2">=</span><span class="s1">columns_name</span><span class="s2">)</span>
+<a name="l265"><span class="ln">265  </span></a>    <span class="s1">pred </span><span class="s2">= </span><span class="s1">gbdt</span><span class="s2">.</span><span class="s1">predict</span><span class="s2">(</span><span class="s1">X</span><span class="s2">)</span>
+<a name="l266"><span class="ln">266  </span></a>    <span class="s0">assert </span><span class="s1">is_increasing</span><span class="s2">(</span><span class="s1">pred</span><span class="s2">)</span>
+<a name="l267"><span class="ln">267  </span></a>    <span class="s4"># assert pred actually follows the variations of f_0</span>
+<a name="l268"><span class="ln">268  </span></a>    <span class="s1">X </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">c_</span><span class="s2">[</span><span class="s1">constant</span><span class="s2">, </span><span class="s1">sin</span><span class="s2">, </span><span class="s1">constant</span><span class="s2">, </span><span class="s1">constant</span><span class="s2">, </span><span class="s1">constant</span><span class="s2">]</span>
+<a name="l269"><span class="ln">269  </span></a>    <span class="s1">X </span><span class="s2">= </span><span class="s1">_convert_container</span><span class="s2">(</span><span class="s1">X</span><span class="s2">, </span><span class="s1">constructor_name</span><span class="s2">, </span><span class="s1">columns_name</span><span class="s2">=</span><span class="s1">columns_name</span><span class="s2">)</span>
+<a name="l270"><span class="ln">270  </span></a>    <span class="s1">pred </span><span class="s2">= </span><span class="s1">gbdt</span><span class="s2">.</span><span class="s1">predict</span><span class="s2">(</span><span class="s1">X</span><span class="s2">)</span>
+<a name="l271"><span class="ln">271  </span></a>    <span class="s0">assert </span><span class="s1">np</span><span class="s2">.</span><span class="s1">all</span><span class="s2">((</span><span class="s1">np</span><span class="s2">.</span><span class="s1">diff</span><span class="s2">(</span><span class="s1">pred</span><span class="s2">) &gt;= </span><span class="s3">0</span><span class="s2">) == (</span><span class="s1">np</span><span class="s2">.</span><span class="s1">diff</span><span class="s2">(</span><span class="s1">sin</span><span class="s2">) &gt;= </span><span class="s3">0</span><span class="s2">))</span>
+<a name="l272"><span class="ln">272  </span></a>
+<a name="l273"><span class="ln">273  </span></a>    <span class="s4"># Second non-categorical feature (NEG)</span>
+<a name="l274"><span class="ln">274  </span></a>    <span class="s4"># assert pred is all decreasing when f_1 is all increasing</span>
+<a name="l275"><span class="ln">275  </span></a>    <span class="s1">X </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">c_</span><span class="s2">[</span><span class="s1">constant</span><span class="s2">, </span><span class="s1">constant</span><span class="s2">, </span><span class="s1">constant</span><span class="s2">, </span><span class="s1">linspace</span><span class="s2">, </span><span class="s1">constant</span><span class="s2">]</span>
+<a name="l276"><span class="ln">276  </span></a>    <span class="s1">X </span><span class="s2">= </span><span class="s1">_convert_container</span><span class="s2">(</span><span class="s1">X</span><span class="s2">, </span><span class="s1">constructor_name</span><span class="s2">, </span><span class="s1">columns_name</span><span class="s2">=</span><span class="s1">columns_name</span><span class="s2">)</span>
+<a name="l277"><span class="ln">277  </span></a>    <span class="s1">pred </span><span class="s2">= </span><span class="s1">gbdt</span><span class="s2">.</span><span class="s1">predict</span><span class="s2">(</span><span class="s1">X</span><span class="s2">)</span>
+<a name="l278"><span class="ln">278  </span></a>    <span class="s0">assert </span><span class="s1">is_decreasing</span><span class="s2">(</span><span class="s1">pred</span><span class="s2">)</span>
+<a name="l279"><span class="ln">279  </span></a>    <span class="s4"># assert pred actually follows the inverse variations of f_1</span>
+<a name="l280"><span class="ln">280  </span></a>    <span class="s1">X </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">c_</span><span class="s2">[</span><span class="s1">constant</span><span class="s2">, </span><span class="s1">constant</span><span class="s2">, </span><span class="s1">constant</span><span class="s2">, </span><span class="s1">sin</span><span class="s2">, </span><span class="s1">constant</span><span class="s2">]</span>
+<a name="l281"><span class="ln">281  </span></a>    <span class="s1">X </span><span class="s2">= </span><span class="s1">_convert_container</span><span class="s2">(</span><span class="s1">X</span><span class="s2">, </span><span class="s1">constructor_name</span><span class="s2">, </span><span class="s1">columns_name</span><span class="s2">=</span><span class="s1">columns_name</span><span class="s2">)</span>
+<a name="l282"><span class="ln">282  </span></a>    <span class="s1">pred </span><span class="s2">= </span><span class="s1">gbdt</span><span class="s2">.</span><span class="s1">predict</span><span class="s2">(</span><span class="s1">X</span><span class="s2">)</span>
+<a name="l283"><span class="ln">283  </span></a>    <span class="s0">assert </span><span class="s2">((</span><span class="s1">np</span><span class="s2">.</span><span class="s1">diff</span><span class="s2">(</span><span class="s1">pred</span><span class="s2">) &lt;= </span><span class="s3">0</span><span class="s2">) == (</span><span class="s1">np</span><span class="s2">.</span><span class="s1">diff</span><span class="s2">(</span><span class="s1">sin</span><span class="s2">) &gt;= </span><span class="s3">0</span><span class="s2">)).</span><span class="s1">all</span><span class="s2">()</span>
+<a name="l284"><span class="ln">284  </span></a>
+<a name="l285"><span class="ln">285  </span></a>
+<a name="l286"><span class="ln">286  </span></a><span class="s0">def </span><span class="s1">test_input_error</span><span class="s2">():</span>
+<a name="l287"><span class="ln">287  </span></a>    <span class="s1">X </span><span class="s2">= [[</span><span class="s3">1</span><span class="s2">, </span><span class="s3">2</span><span class="s2">], [</span><span class="s3">2</span><span class="s2">, </span><span class="s3">3</span><span class="s2">], [</span><span class="s3">3</span><span class="s2">, </span><span class="s3">4</span><span class="s2">]]</span>
+<a name="l288"><span class="ln">288  </span></a>    <span class="s1">y </span><span class="s2">= [</span><span class="s3">0</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">2</span><span class="s2">]</span>
+<a name="l289"><span class="ln">289  </span></a>
+<a name="l290"><span class="ln">290  </span></a>    <span class="s1">gbdt </span><span class="s2">= </span><span class="s1">HistGradientBoostingRegressor</span><span class="s2">(</span><span class="s1">monotonic_cst</span><span class="s2">=[</span><span class="s3">1</span><span class="s2">, </span><span class="s3">0</span><span class="s2">, -</span><span class="s3">1</span><span class="s2">])</span>
+<a name="l291"><span class="ln">291  </span></a>    <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span>
+<a name="l292"><span class="ln">292  </span></a>        <span class="s1">ValueError</span><span class="s2">, </span><span class="s1">match</span><span class="s2">=</span><span class="s1">re</span><span class="s2">.</span><span class="s1">escape</span><span class="s2">(</span><span class="s6">&quot;monotonic_cst has shape (3,) but the input data&quot;</span><span class="s2">)</span>
+<a name="l293"><span class="ln">293  </span></a>    <span class="s2">):</span>
+<a name="l294"><span class="ln">294  </span></a>        <span class="s1">gbdt</span><span class="s2">.</span><span class="s1">fit</span><span class="s2">(</span><span class="s1">X</span><span class="s2">, </span><span class="s1">y</span><span class="s2">)</span>
+<a name="l295"><span class="ln">295  </span></a>
+<a name="l296"><span class="ln">296  </span></a>    <span class="s0">for </span><span class="s1">monotonic_cst </span><span class="s0">in </span><span class="s2">([</span><span class="s3">1</span><span class="s2">, </span><span class="s3">3</span><span class="s2">], [</span><span class="s3">1</span><span class="s2">, -</span><span class="s3">3</span><span class="s2">], [</span><span class="s3">0.3</span><span class="s2">, -</span><span class="s3">0.7</span><span class="s2">]):</span>
+<a name="l297"><span class="ln">297  </span></a>        <span class="s1">gbdt </span><span class="s2">= </span><span class="s1">HistGradientBoostingRegressor</span><span class="s2">(</span><span class="s1">monotonic_cst</span><span class="s2">=</span><span class="s1">monotonic_cst</span><span class="s2">)</span>
+<a name="l298"><span class="ln">298  </span></a>        <span class="s1">expected_msg </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">escape</span><span class="s2">(</span>
+<a name="l299"><span class="ln">299  </span></a>            <span class="s6">&quot;must be an array-like of -1, 0 or 1. Observed values:&quot;</span>
+<a name="l300"><span class="ln">300  </span></a>        <span class="s2">)</span>
+<a name="l301"><span class="ln">301  </span></a>        <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">ValueError</span><span class="s2">, </span><span class="s1">match</span><span class="s2">=</span><span class="s1">expected_msg</span><span class="s2">):</span>
+<a name="l302"><span class="ln">302  </span></a>            <span class="s1">gbdt</span><span class="s2">.</span><span class="s1">fit</span><span class="s2">(</span><span class="s1">X</span><span class="s2">, </span><span class="s1">y</span><span class="s2">)</span>
+<a name="l303"><span class="ln">303  </span></a>
+<a name="l304"><span class="ln">304  </span></a>    <span class="s1">gbdt </span><span class="s2">= </span><span class="s1">HistGradientBoostingClassifier</span><span class="s2">(</span><span class="s1">monotonic_cst</span><span class="s2">=[</span><span class="s3">0</span><span class="s2">, </span><span class="s3">1</span><span class="s2">])</span>
+<a name="l305"><span class="ln">305  </span></a>    <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span>
+<a name="l306"><span class="ln">306  </span></a>        <span class="s1">ValueError</span><span class="s2">,</span>
+<a name="l307"><span class="ln">307  </span></a>        <span class="s1">match</span><span class="s2">=</span><span class="s6">&quot;monotonic constraints are not supported for multiclass classification&quot;</span><span class="s2">,</span>
+<a name="l308"><span class="ln">308  </span></a>    <span class="s2">):</span>
+<a name="l309"><span class="ln">309  </span></a>        <span class="s1">gbdt</span><span class="s2">.</span><span class="s1">fit</span><span class="s2">(</span><span class="s1">X</span><span class="s2">, </span><span class="s1">y</span><span class="s2">)</span>
+<a name="l310"><span class="ln">310  </span></a>
+<a name="l311"><span class="ln">311  </span></a>
+<a name="l312"><span class="ln">312  </span></a><span class="s0">def </span><span class="s1">test_input_error_related_to_feature_names</span><span class="s2">():</span>
+<a name="l313"><span class="ln">313  </span></a>    <span class="s1">pd </span><span class="s2">= </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">importorskip</span><span class="s2">(</span><span class="s6">&quot;pandas&quot;</span><span class="s2">)</span>
+<a name="l314"><span class="ln">314  </span></a>    <span class="s1">X </span><span class="s2">= </span><span class="s1">pd</span><span class="s2">.</span><span class="s1">DataFrame</span><span class="s2">({</span><span class="s6">&quot;a&quot;</span><span class="s2">: [</span><span class="s3">0</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">2</span><span class="s2">], </span><span class="s6">&quot;b&quot;</span><span class="s2">: [</span><span class="s3">0</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">2</span><span class="s2">]})</span>
+<a name="l315"><span class="ln">315  </span></a>    <span class="s1">y </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([</span><span class="s3">0</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">0</span><span class="s2">])</span>
+<a name="l316"><span class="ln">316  </span></a>
+<a name="l317"><span class="ln">317  </span></a>    <span class="s1">monotonic_cst </span><span class="s2">= {</span><span class="s6">&quot;d&quot;</span><span class="s2">: </span><span class="s3">1</span><span class="s2">, </span><span class="s6">&quot;a&quot;</span><span class="s2">: </span><span class="s3">1</span><span class="s2">, </span><span class="s6">&quot;c&quot;</span><span class="s2">: -</span><span class="s3">1</span><span class="s2">}</span>
+<a name="l318"><span class="ln">318  </span></a>    <span class="s1">gbdt </span><span class="s2">= </span><span class="s1">HistGradientBoostingRegressor</span><span class="s2">(</span><span class="s1">monotonic_cst</span><span class="s2">=</span><span class="s1">monotonic_cst</span><span class="s2">)</span>
+<a name="l319"><span class="ln">319  </span></a>    <span class="s1">expected_msg </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">escape</span><span class="s2">(</span>
+<a name="l320"><span class="ln">320  </span></a>        <span class="s6">&quot;monotonic_cst contains 2 unexpected feature names: ['c', 'd'].&quot;</span>
+<a name="l321"><span class="ln">321  </span></a>    <span class="s2">)</span>
+<a name="l322"><span class="ln">322  </span></a>    <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">ValueError</span><span class="s2">, </span><span class="s1">match</span><span class="s2">=</span><span class="s1">expected_msg</span><span class="s2">):</span>
+<a name="l323"><span class="ln">323  </span></a>        <span class="s1">gbdt</span><span class="s2">.</span><span class="s1">fit</span><span class="s2">(</span><span class="s1">X</span><span class="s2">, </span><span class="s1">y</span><span class="s2">)</span>
+<a name="l324"><span class="ln">324  </span></a>
+<a name="l325"><span class="ln">325  </span></a>    <span class="s1">monotonic_cst </span><span class="s2">= {</span><span class="s1">k</span><span class="s2">: </span><span class="s3">1 </span><span class="s0">for </span><span class="s1">k </span><span class="s0">in </span><span class="s6">&quot;abcdefghijklmnopqrstuvwxyz&quot;</span><span class="s2">}</span>
+<a name="l326"><span class="ln">326  </span></a>    <span class="s1">gbdt </span><span class="s2">= </span><span class="s1">HistGradientBoostingRegressor</span><span class="s2">(</span><span class="s1">monotonic_cst</span><span class="s2">=</span><span class="s1">monotonic_cst</span><span class="s2">)</span>
+<a name="l327"><span class="ln">327  </span></a>    <span class="s1">expected_msg </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">escape</span><span class="s2">(</span>
+<a name="l328"><span class="ln">328  </span></a>        <span class="s6">&quot;monotonic_cst contains 24 unexpected feature names: &quot;</span>
+<a name="l329"><span class="ln">329  </span></a>        <span class="s6">&quot;['c', 'd', 'e', 'f', 'g', '...'].&quot;</span>
+<a name="l330"><span class="ln">330  </span></a>    <span class="s2">)</span>
+<a name="l331"><span class="ln">331  </span></a>    <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">ValueError</span><span class="s2">, </span><span class="s1">match</span><span class="s2">=</span><span class="s1">expected_msg</span><span class="s2">):</span>
+<a name="l332"><span class="ln">332  </span></a>        <span class="s1">gbdt</span><span class="s2">.</span><span class="s1">fit</span><span class="s2">(</span><span class="s1">X</span><span class="s2">, </span><span class="s1">y</span><span class="s2">)</span>
+<a name="l333"><span class="ln">333  </span></a>
+<a name="l334"><span class="ln">334  </span></a>    <span class="s1">monotonic_cst </span><span class="s2">= {</span><span class="s6">&quot;a&quot;</span><span class="s2">: </span><span class="s3">1</span><span class="s2">}</span>
+<a name="l335"><span class="ln">335  </span></a>    <span class="s1">gbdt </span><span class="s2">= </span><span class="s1">HistGradientBoostingRegressor</span><span class="s2">(</span><span class="s1">monotonic_cst</span><span class="s2">=</span><span class="s1">monotonic_cst</span><span class="s2">)</span>
+<a name="l336"><span class="ln">336  </span></a>    <span class="s1">expected_msg </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">escape</span><span class="s2">(</span>
+<a name="l337"><span class="ln">337  </span></a>        <span class="s6">&quot;HistGradientBoostingRegressor was not fitted on data with feature &quot;</span>
+<a name="l338"><span class="ln">338  </span></a>        <span class="s6">&quot;names. Pass monotonic_cst as an integer array instead.&quot;</span>
+<a name="l339"><span class="ln">339  </span></a>    <span class="s2">)</span>
+<a name="l340"><span class="ln">340  </span></a>    <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">ValueError</span><span class="s2">, </span><span class="s1">match</span><span class="s2">=</span><span class="s1">expected_msg</span><span class="s2">):</span>
+<a name="l341"><span class="ln">341  </span></a>        <span class="s1">gbdt</span><span class="s2">.</span><span class="s1">fit</span><span class="s2">(</span><span class="s1">X</span><span class="s2">.</span><span class="s1">values</span><span class="s2">, </span><span class="s1">y</span><span class="s2">)</span>
+<a name="l342"><span class="ln">342  </span></a>
+<a name="l343"><span class="ln">343  </span></a>    <span class="s1">monotonic_cst </span><span class="s2">= {</span><span class="s6">&quot;b&quot;</span><span class="s2">: -</span><span class="s3">1</span><span class="s2">, </span><span class="s6">&quot;a&quot;</span><span class="s2">: </span><span class="s6">&quot;+&quot;</span><span class="s2">}</span>
+<a name="l344"><span class="ln">344  </span></a>    <span class="s1">gbdt </span><span class="s2">= </span><span class="s1">HistGradientBoostingRegressor</span><span class="s2">(</span><span class="s1">monotonic_cst</span><span class="s2">=</span><span class="s1">monotonic_cst</span><span class="s2">)</span>
+<a name="l345"><span class="ln">345  </span></a>    <span class="s1">expected_msg </span><span class="s2">= </span><span class="s1">re</span><span class="s2">.</span><span class="s1">escape</span><span class="s2">(</span><span class="s6">&quot;monotonic_cst['a'] must be either -1, 0 or 1. Got '+'.&quot;</span><span class="s2">)</span>
+<a name="l346"><span class="ln">346  </span></a>    <span class="s0">with </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">raises</span><span class="s2">(</span><span class="s1">ValueError</span><span class="s2">, </span><span class="s1">match</span><span class="s2">=</span><span class="s1">expected_msg</span><span class="s2">):</span>
+<a name="l347"><span class="ln">347  </span></a>        <span class="s1">gbdt</span><span class="s2">.</span><span class="s1">fit</span><span class="s2">(</span><span class="s1">X</span><span class="s2">, </span><span class="s1">y</span><span class="s2">)</span>
+<a name="l348"><span class="ln">348  </span></a>
+<a name="l349"><span class="ln">349  </span></a>
+<a name="l350"><span class="ln">350  </span></a><span class="s0">def </span><span class="s1">test_bounded_value_min_gain_to_split</span><span class="s2">():</span>
+<a name="l351"><span class="ln">351  </span></a>    <span class="s4"># The purpose of this test is to show that when computing the gain at a</span>
+<a name="l352"><span class="ln">352  </span></a>    <span class="s4"># given split, the value of the current node should be properly bounded to</span>
+<a name="l353"><span class="ln">353  </span></a>    <span class="s4"># respect the monotonic constraints, because it strongly interacts with</span>
+<a name="l354"><span class="ln">354  </span></a>    <span class="s4"># min_gain_to_split. We build a simple example where gradients are [1, 1,</span>
+<a name="l355"><span class="ln">355  </span></a>    <span class="s4"># 100, 1, 1] (hessians are all ones). The best split happens on the 3rd</span>
+<a name="l356"><span class="ln">356  </span></a>    <span class="s4"># bin, and depending on whether the value of the node is bounded or not,</span>
+<a name="l357"><span class="ln">357  </span></a>    <span class="s4"># the min_gain_to_split constraint is or isn't satisfied.</span>
+<a name="l358"><span class="ln">358  </span></a>    <span class="s1">l2_regularization </span><span class="s2">= </span><span class="s3">0</span>
+<a name="l359"><span class="ln">359  </span></a>    <span class="s1">min_hessian_to_split </span><span class="s2">= </span><span class="s3">0</span>
+<a name="l360"><span class="ln">360  </span></a>    <span class="s1">min_samples_leaf </span><span class="s2">= </span><span class="s3">1</span>
+<a name="l361"><span class="ln">361  </span></a>    <span class="s1">n_bins </span><span class="s2">= </span><span class="s1">n_samples </span><span class="s2">= </span><span class="s3">5</span>
+<a name="l362"><span class="ln">362  </span></a>    <span class="s1">X_binned </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s1">n_samples</span><span class="s2">).</span><span class="s1">reshape</span><span class="s2">(-</span><span class="s3">1</span><span class="s2">, </span><span class="s3">1</span><span class="s2">).</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">X_BINNED_DTYPE</span><span class="s2">)</span>
+<a name="l363"><span class="ln">363  </span></a>    <span class="s1">sample_indices </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s1">n_samples</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">uint32</span><span class="s2">)</span>
+<a name="l364"><span class="ln">364  </span></a>    <span class="s1">all_hessians </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">ones</span><span class="s2">(</span><span class="s1">n_samples</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">G_H_DTYPE</span><span class="s2">)</span>
+<a name="l365"><span class="ln">365  </span></a>    <span class="s1">all_gradients </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([</span><span class="s3">1</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">100</span><span class="s2">, </span><span class="s3">1</span><span class="s2">, </span><span class="s3">1</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">G_H_DTYPE</span><span class="s2">)</span>
+<a name="l366"><span class="ln">366  </span></a>    <span class="s1">sum_gradients </span><span class="s2">= </span><span class="s1">all_gradients</span><span class="s2">.</span><span class="s1">sum</span><span class="s2">()</span>
+<a name="l367"><span class="ln">367  </span></a>    <span class="s1">sum_hessians </span><span class="s2">= </span><span class="s1">all_hessians</span><span class="s2">.</span><span class="s1">sum</span><span class="s2">()</span>
+<a name="l368"><span class="ln">368  </span></a>    <span class="s1">hessians_are_constant </span><span class="s2">= </span><span class="s0">False</span>
+<a name="l369"><span class="ln">369  </span></a>
+<a name="l370"><span class="ln">370  </span></a>    <span class="s1">builder </span><span class="s2">= </span><span class="s1">HistogramBuilder</span><span class="s2">(</span>
+<a name="l371"><span class="ln">371  </span></a>        <span class="s1">X_binned</span><span class="s2">, </span><span class="s1">n_bins</span><span class="s2">, </span><span class="s1">all_gradients</span><span class="s2">, </span><span class="s1">all_hessians</span><span class="s2">, </span><span class="s1">hessians_are_constant</span><span class="s2">, </span><span class="s1">n_threads</span>
+<a name="l372"><span class="ln">372  </span></a>    <span class="s2">)</span>
+<a name="l373"><span class="ln">373  </span></a>    <span class="s1">n_bins_non_missing </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([</span><span class="s1">n_bins </span><span class="s2">- </span><span class="s3">1</span><span class="s2">] * </span><span class="s1">X_binned</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s3">1</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">uint32</span><span class="s2">)</span>
+<a name="l374"><span class="ln">374  </span></a>    <span class="s1">has_missing_values </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([</span><span class="s0">False</span><span class="s2">] * </span><span class="s1">X_binned</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s3">1</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">uint8</span><span class="s2">)</span>
+<a name="l375"><span class="ln">375  </span></a>    <span class="s1">monotonic_cst </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span>
+<a name="l376"><span class="ln">376  </span></a>        <span class="s2">[</span><span class="s1">MonotonicConstraint</span><span class="s2">.</span><span class="s1">NO_CST</span><span class="s2">] * </span><span class="s1">X_binned</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s3">1</span><span class="s2">], </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">int8</span>
+<a name="l377"><span class="ln">377  </span></a>    <span class="s2">)</span>
+<a name="l378"><span class="ln">378  </span></a>    <span class="s1">is_categorical </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">zeros_like</span><span class="s2">(</span><span class="s1">monotonic_cst</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">np</span><span class="s2">.</span><span class="s1">uint8</span><span class="s2">)</span>
+<a name="l379"><span class="ln">379  </span></a>    <span class="s1">missing_values_bin_idx </span><span class="s2">= </span><span class="s1">n_bins </span><span class="s2">- </span><span class="s3">1</span>
+<a name="l380"><span class="ln">380  </span></a>    <span class="s1">children_lower_bound</span><span class="s2">, </span><span class="s1">children_upper_bound </span><span class="s2">= -</span><span class="s1">np</span><span class="s2">.</span><span class="s1">inf</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">inf</span>
+<a name="l381"><span class="ln">381  </span></a>
+<a name="l382"><span class="ln">382  </span></a>    <span class="s1">min_gain_to_split </span><span class="s2">= </span><span class="s3">2000</span>
+<a name="l383"><span class="ln">383  </span></a>    <span class="s1">splitter </span><span class="s2">= </span><span class="s1">Splitter</span><span class="s2">(</span>
+<a name="l384"><span class="ln">384  </span></a>        <span class="s1">X_binned</span><span class="s2">,</span>
+<a name="l385"><span class="ln">385  </span></a>        <span class="s1">n_bins_non_missing</span><span class="s2">,</span>
+<a name="l386"><span class="ln">386  </span></a>        <span class="s1">missing_values_bin_idx</span><span class="s2">,</span>
+<a name="l387"><span class="ln">387  </span></a>        <span class="s1">has_missing_values</span><span class="s2">,</span>
+<a name="l388"><span class="ln">388  </span></a>        <span class="s1">is_categorical</span><span class="s2">,</span>
+<a name="l389"><span class="ln">389  </span></a>        <span class="s1">monotonic_cst</span><span class="s2">,</span>
+<a name="l390"><span class="ln">390  </span></a>        <span class="s1">l2_regularization</span><span class="s2">,</span>
+<a name="l391"><span class="ln">391  </span></a>        <span class="s1">min_hessian_to_split</span><span class="s2">,</span>
+<a name="l392"><span class="ln">392  </span></a>        <span class="s1">min_samples_leaf</span><span class="s2">,</span>
+<a name="l393"><span class="ln">393  </span></a>        <span class="s1">min_gain_to_split</span><span class="s2">,</span>
+<a name="l394"><span class="ln">394  </span></a>        <span class="s1">hessians_are_constant</span><span class="s2">,</span>
+<a name="l395"><span class="ln">395  </span></a>    <span class="s2">)</span>
+<a name="l396"><span class="ln">396  </span></a>
+<a name="l397"><span class="ln">397  </span></a>    <span class="s1">histograms </span><span class="s2">= </span><span class="s1">builder</span><span class="s2">.</span><span class="s1">compute_histograms_brute</span><span class="s2">(</span><span class="s1">sample_indices</span><span class="s2">)</span>
+<a name="l398"><span class="ln">398  </span></a>
+<a name="l399"><span class="ln">399  </span></a>    <span class="s4"># Since the gradient array is [1, 1, 100, 1, 1]</span>
+<a name="l400"><span class="ln">400  </span></a>    <span class="s4"># the max possible gain happens on the 3rd bin (or equivalently in the 2nd)</span>
+<a name="l401"><span class="ln">401  </span></a>    <span class="s4"># and is equal to about 1307, which less than min_gain_to_split = 2000, so</span>
+<a name="l402"><span class="ln">402  </span></a>    <span class="s4"># the node is considered unsplittable (gain = -1)</span>
+<a name="l403"><span class="ln">403  </span></a>    <span class="s1">current_lower_bound</span><span class="s2">, </span><span class="s1">current_upper_bound </span><span class="s2">= -</span><span class="s1">np</span><span class="s2">.</span><span class="s1">inf</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">inf</span>
+<a name="l404"><span class="ln">404  </span></a>    <span class="s1">value </span><span class="s2">= </span><span class="s1">compute_node_value</span><span class="s2">(</span>
+<a name="l405"><span class="ln">405  </span></a>        <span class="s1">sum_gradients</span><span class="s2">,</span>
+<a name="l406"><span class="ln">406  </span></a>        <span class="s1">sum_hessians</span><span class="s2">,</span>
+<a name="l407"><span class="ln">407  </span></a>        <span class="s1">current_lower_bound</span><span class="s2">,</span>
+<a name="l408"><span class="ln">408  </span></a>        <span class="s1">current_upper_bound</span><span class="s2">,</span>
+<a name="l409"><span class="ln">409  </span></a>        <span class="s1">l2_regularization</span><span class="s2">,</span>
+<a name="l410"><span class="ln">410  </span></a>    <span class="s2">)</span>
+<a name="l411"><span class="ln">411  </span></a>    <span class="s4"># the unbounded value is equal to -sum_gradients / sum_hessians</span>
+<a name="l412"><span class="ln">412  </span></a>    <span class="s0">assert </span><span class="s1">value </span><span class="s2">== </span><span class="s1">pytest</span><span class="s2">.</span><span class="s1">approx</span><span class="s2">(-</span><span class="s3">104 </span><span class="s2">/ </span><span class="s3">5</span><span class="s2">)</span>
+<a name="l413"><span class="ln">413  </span></a>    <span class="s1">split_info </span><span class="s2">= </span><span class="s1">splitter</span><span class="s2">.</span><span class="s1">find_node_split</span><span class="s2">(</span>
+<a name="l414"><span class="ln">414  </span></a>        <span class="s1">n_samples</span><span class="s2">,</span>
+<a name="l415"><span class="ln">415  </span></a>        <span class="s1">histograms</span><span class="s2">,</span>
+<a name="l416"><span class="ln">416  </span></a>        <span class="s1">sum_gradients</span><span class="s2">,</span>
+<a name="l417"><span class="ln">417  </span></a>        <span class="s1">sum_hessians</span><span class="s2">,</span>
+<a name="l418"><span class="ln">418  </span></a>        <span class="s1">value</span><span class="s2">,</span>
+<a name="l419"><span class="ln">419  </span></a>        <span class="s1">lower_bound</span><span class="s2">=</span><span class="s1">children_lower_bound</span><span class="s2">,</span>
+<a name="l420"><span class="ln">420  </span></a>        <span class="s1">upper_bound</span><span class="s2">=</span><span class="s1">children_upper_bound</span><span class="s2">,</span>
+<a name="l421"><span class="ln">421  </span></a>    <span class="s2">)</span>
+<a name="l422"><span class="ln">422  </span></a>    <span class="s0">assert </span><span class="s1">split_info</span><span class="s2">.</span><span class="s1">gain </span><span class="s2">== -</span><span class="s3">1  </span><span class="s4"># min_gain_to_split not respected</span>
+<a name="l423"><span class="ln">423  </span></a>
+<a name="l424"><span class="ln">424  </span></a>    <span class="s4"># here again the max possible gain is on the 3rd bin but we now cap the</span>
+<a name="l425"><span class="ln">425  </span></a>    <span class="s4"># value of the node into [-10, inf].</span>
+<a name="l426"><span class="ln">426  </span></a>    <span class="s4"># This means the gain is now about 2430 which is more than the</span>
+<a name="l427"><span class="ln">427  </span></a>    <span class="s4"># min_gain_to_split constraint.</span>
+<a name="l428"><span class="ln">428  </span></a>    <span class="s1">current_lower_bound</span><span class="s2">, </span><span class="s1">current_upper_bound </span><span class="s2">= -</span><span class="s3">10</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">inf</span>
+<a name="l429"><span class="ln">429  </span></a>    <span class="s1">value </span><span class="s2">= </span><span class="s1">compute_node_value</span><span class="s2">(</span>
+<a name="l430"><span class="ln">430  </span></a>        <span class="s1">sum_gradients</span><span class="s2">,</span>
+<a name="l431"><span class="ln">431  </span></a>        <span class="s1">sum_hessians</span><span class="s2">,</span>
+<a name="l432"><span class="ln">432  </span></a>        <span class="s1">current_lower_bound</span><span class="s2">,</span>
+<a name="l433"><span class="ln">433  </span></a>        <span class="s1">current_upper_bound</span><span class="s2">,</span>
+<a name="l434"><span class="ln">434  </span></a>        <span class="s1">l2_regularization</span><span class="s2">,</span>
+<a name="l435"><span class="ln">435  </span></a>    <span class="s2">)</span>
+<a name="l436"><span class="ln">436  </span></a>    <span class="s0">assert </span><span class="s1">value </span><span class="s2">== -</span><span class="s3">10</span>
+<a name="l437"><span class="ln">437  </span></a>    <span class="s1">split_info </span><span class="s2">= </span><span class="s1">splitter</span><span class="s2">.</span><span class="s1">find_node_split</span><span class="s2">(</span>
+<a name="l438"><span class="ln">438  </span></a>        <span class="s1">n_samples</span><span class="s2">,</span>
+<a name="l439"><span class="ln">439  </span></a>        <span class="s1">histograms</span><span class="s2">,</span>
+<a name="l440"><span class="ln">440  </span></a>        <span class="s1">sum_gradients</span><span class="s2">,</span>
+<a name="l441"><span class="ln">441  </span></a>        <span class="s1">sum_hessians</span><span class="s2">,</span>
+<a name="l442"><span class="ln">442  </span></a>        <span class="s1">value</span><span class="s2">,</span>
+<a name="l443"><span class="ln">443  </span></a>        <span class="s1">lower_bound</span><span class="s2">=</span><span class="s1">children_lower_bound</span><span class="s2">,</span>
+<a name="l444"><span class="ln">444  </span></a>        <span class="s1">upper_bound</span><span class="s2">=</span><span class="s1">children_upper_bound</span><span class="s2">,</span>
+<a name="l445"><span class="ln">445  </span></a>    <span class="s2">)</span>
+<a name="l446"><span class="ln">446  </span></a>    <span class="s0">assert </span><span class="s1">split_info</span><span class="s2">.</span><span class="s1">gain </span><span class="s2">&gt; </span><span class="s1">min_gain_to_split</span>
+<a name="l447"><span class="ln">447  </span></a></pre>
+</body>
+</html>

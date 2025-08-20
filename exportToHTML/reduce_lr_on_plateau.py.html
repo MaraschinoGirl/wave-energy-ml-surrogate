@@ -1,0 +1,173 @@
+<html>
+<head>
+<title>reduce_lr_on_plateau.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #2aacb8;}
+.s6 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+reduce_lr_on_plateau.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">import </span><span class="s1">warnings</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src </span><span class="s0">import </span><span class="s1">backend</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">api_export </span><span class="s0">import </span><span class="s1">keras_export</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">callbacks</span><span class="s2">.</span><span class="s1">callback </span><span class="s0">import </span><span class="s1">Callback</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">utils </span><span class="s0">import </span><span class="s1">io_utils</span>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s2">@</span><span class="s1">keras_export</span><span class="s2">(</span><span class="s3">&quot;keras.callbacks.ReduceLROnPlateau&quot;</span><span class="s2">)</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0">class </span><span class="s1">ReduceLROnPlateau</span><span class="s2">(</span><span class="s1">Callback</span><span class="s2">):</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s4">&quot;&quot;&quot;Reduce learning rate when a metric has stopped improving. 
+<a name="l14"><span class="ln">14   </span></a> 
+<a name="l15"><span class="ln">15   </span></a>    Models often benefit from reducing the learning rate by a factor 
+<a name="l16"><span class="ln">16   </span></a>    of 2-10 once learning stagnates. This callback monitors a 
+<a name="l17"><span class="ln">17   </span></a>    quantity and if no improvement is seen for a 'patience' number 
+<a name="l18"><span class="ln">18   </span></a>    of epochs, the learning rate is reduced. 
+<a name="l19"><span class="ln">19   </span></a> 
+<a name="l20"><span class="ln">20   </span></a>    Example: 
+<a name="l21"><span class="ln">21   </span></a> 
+<a name="l22"><span class="ln">22   </span></a>    ```python 
+<a name="l23"><span class="ln">23   </span></a>    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, 
+<a name="l24"><span class="ln">24   </span></a>                                  patience=5, min_lr=0.001) 
+<a name="l25"><span class="ln">25   </span></a>    model.fit(x_train, y_train, callbacks=[reduce_lr]) 
+<a name="l26"><span class="ln">26   </span></a>    ``` 
+<a name="l27"><span class="ln">27   </span></a> 
+<a name="l28"><span class="ln">28   </span></a>    Args: 
+<a name="l29"><span class="ln">29   </span></a>        monitor: String. Quantity to be monitored. 
+<a name="l30"><span class="ln">30   </span></a>        factor: Float. Factor by which the learning rate will be reduced. 
+<a name="l31"><span class="ln">31   </span></a>            `new_lr = lr * factor`. 
+<a name="l32"><span class="ln">32   </span></a>        patience: Integer. Number of epochs with no improvement after which 
+<a name="l33"><span class="ln">33   </span></a>            learning rate will be reduced. 
+<a name="l34"><span class="ln">34   </span></a>        verbose: Integer. 0: quiet, 1: update messages. 
+<a name="l35"><span class="ln">35   </span></a>        mode: String. One of `{'auto', 'min', 'max'}`. In `'min'` mode, 
+<a name="l36"><span class="ln">36   </span></a>            the learning rate will be reduced when the 
+<a name="l37"><span class="ln">37   </span></a>            quantity monitored has stopped decreasing; in `'max'` mode it will 
+<a name="l38"><span class="ln">38   </span></a>            be reduced when the quantity monitored has stopped increasing; in 
+<a name="l39"><span class="ln">39   </span></a>            `'auto'` mode, the direction is automatically inferred from the name 
+<a name="l40"><span class="ln">40   </span></a>            of the monitored quantity. 
+<a name="l41"><span class="ln">41   </span></a>        min_delta: Float. Threshold for measuring the new optimum, to only focus 
+<a name="l42"><span class="ln">42   </span></a>            on significant changes. 
+<a name="l43"><span class="ln">43   </span></a>        cooldown: Integer. Number of epochs to wait before resuming normal 
+<a name="l44"><span class="ln">44   </span></a>            operation after the learning rate has been reduced. 
+<a name="l45"><span class="ln">45   </span></a>        min_lr: Float. Lower bound on the learning rate. 
+<a name="l46"><span class="ln">46   </span></a>    &quot;&quot;&quot;</span>
+<a name="l47"><span class="ln">47   </span></a>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s1">self</span><span class="s2">,</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s1">monitor</span><span class="s2">=</span><span class="s3">&quot;val_loss&quot;</span><span class="s2">,</span>
+<a name="l51"><span class="ln">51   </span></a>        <span class="s1">factor</span><span class="s2">=</span><span class="s5">0.1</span><span class="s2">,</span>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s1">patience</span><span class="s2">=</span><span class="s5">10</span><span class="s2">,</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s1">verbose</span><span class="s2">=</span><span class="s5">0</span><span class="s2">,</span>
+<a name="l54"><span class="ln">54   </span></a>        <span class="s1">mode</span><span class="s2">=</span><span class="s3">&quot;auto&quot;</span><span class="s2">,</span>
+<a name="l55"><span class="ln">55   </span></a>        <span class="s1">min_delta</span><span class="s2">=</span><span class="s5">1e-4</span><span class="s2">,</span>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s1">cooldown</span><span class="s2">=</span><span class="s5">0</span><span class="s2">,</span>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s1">min_lr</span><span class="s2">=</span><span class="s5">0.0</span><span class="s2">,</span>
+<a name="l58"><span class="ln">58   </span></a>        <span class="s2">**</span><span class="s1">kwargs</span><span class="s2">,</span>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s2">):</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s1">super</span><span class="s2">().</span><span class="s1">__init__</span><span class="s2">()</span>
+<a name="l61"><span class="ln">61   </span></a>
+<a name="l62"><span class="ln">62   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">monitor </span><span class="s2">= </span><span class="s1">monitor</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s0">if </span><span class="s1">factor </span><span class="s2">&gt;= </span><span class="s5">1.0</span><span class="s2">:</span>
+<a name="l64"><span class="ln">64   </span></a>            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+<a name="l65"><span class="ln">65   </span></a>                <span class="s3">&quot;ReduceLROnPlateau does not support a factor &gt;= 1.0. &quot;</span>
+<a name="l66"><span class="ln">66   </span></a>                <span class="s3">f&quot;Received factor=</span><span class="s0">{</span><span class="s1">factor</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l67"><span class="ln">67   </span></a>            <span class="s2">)</span>
+<a name="l68"><span class="ln">68   </span></a>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">factor </span><span class="s2">= </span><span class="s1">factor</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">min_lr </span><span class="s2">= </span><span class="s1">min_lr</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">min_delta </span><span class="s2">= </span><span class="s1">min_delta</span>
+<a name="l72"><span class="ln">72   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">patience </span><span class="s2">= </span><span class="s1">patience</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">verbose </span><span class="s2">= </span><span class="s1">verbose</span>
+<a name="l74"><span class="ln">74   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">cooldown </span><span class="s2">= </span><span class="s1">cooldown</span>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">cooldown_counter </span><span class="s2">= </span><span class="s5">0  </span><span class="s6"># Cooldown counter.</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">wait </span><span class="s2">= </span><span class="s5">0</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">best </span><span class="s2">= </span><span class="s5">0</span>
+<a name="l78"><span class="ln">78   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">mode </span><span class="s2">= </span><span class="s1">mode</span>
+<a name="l79"><span class="ln">79   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">monitor_op </span><span class="s2">= </span><span class="s0">None</span>
+<a name="l80"><span class="ln">80   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">_reset</span><span class="s2">()</span>
+<a name="l81"><span class="ln">81   </span></a>
+<a name="l82"><span class="ln">82   </span></a>    <span class="s0">def </span><span class="s1">_reset</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+<a name="l83"><span class="ln">83   </span></a>        <span class="s4">&quot;&quot;&quot;Resets wait counter and cooldown counter.&quot;&quot;&quot;</span>
+<a name="l84"><span class="ln">84   </span></a>        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">mode </span><span class="s0">not in </span><span class="s2">{</span><span class="s3">&quot;auto&quot;</span><span class="s2">, </span><span class="s3">&quot;min&quot;</span><span class="s2">, </span><span class="s3">&quot;max&quot;</span><span class="s2">}:</span>
+<a name="l85"><span class="ln">85   </span></a>            <span class="s1">warnings</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span>
+<a name="l86"><span class="ln">86   </span></a>                <span class="s3">f&quot;Learning rate reduction mode </span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">mode</span><span class="s0">} </span><span class="s3">is unknown, &quot;</span>
+<a name="l87"><span class="ln">87   </span></a>                <span class="s3">&quot;fallback to auto mode.&quot;</span><span class="s2">,</span>
+<a name="l88"><span class="ln">88   </span></a>                <span class="s1">stacklevel</span><span class="s2">=</span><span class="s5">2</span><span class="s2">,</span>
+<a name="l89"><span class="ln">89   </span></a>            <span class="s2">)</span>
+<a name="l90"><span class="ln">90   </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">mode </span><span class="s2">= </span><span class="s3">&quot;auto&quot;</span>
+<a name="l91"><span class="ln">91   </span></a>        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">mode </span><span class="s2">== </span><span class="s3">&quot;min&quot; </span><span class="s0">or </span><span class="s2">(</span>
+<a name="l92"><span class="ln">92   </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">mode </span><span class="s2">== </span><span class="s3">&quot;auto&quot; </span><span class="s0">and </span><span class="s3">&quot;acc&quot; </span><span class="s0">not in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">monitor</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s2">):</span>
+<a name="l94"><span class="ln">94   </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">monitor_op </span><span class="s2">= </span><span class="s0">lambda </span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">: </span><span class="s1">np</span><span class="s2">.</span><span class="s1">less</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">b </span><span class="s2">- </span><span class="s1">self</span><span class="s2">.</span><span class="s1">min_delta</span><span class="s2">)</span>
+<a name="l95"><span class="ln">95   </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">best </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">inf</span>
+<a name="l96"><span class="ln">96   </span></a>        <span class="s0">else</span><span class="s2">:</span>
+<a name="l97"><span class="ln">97   </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">monitor_op </span><span class="s2">= </span><span class="s0">lambda </span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">: </span><span class="s1">np</span><span class="s2">.</span><span class="s1">greater</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">b </span><span class="s2">+ </span><span class="s1">self</span><span class="s2">.</span><span class="s1">min_delta</span><span class="s2">)</span>
+<a name="l98"><span class="ln">98   </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">best </span><span class="s2">= -</span><span class="s1">np</span><span class="s2">.</span><span class="s1">inf</span>
+<a name="l99"><span class="ln">99   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">cooldown_counter </span><span class="s2">= </span><span class="s5">0</span>
+<a name="l100"><span class="ln">100  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">wait </span><span class="s2">= </span><span class="s5">0</span>
+<a name="l101"><span class="ln">101  </span></a>
+<a name="l102"><span class="ln">102  </span></a>    <span class="s0">def </span><span class="s1">on_train_begin</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">logs</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+<a name="l103"><span class="ln">103  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">_reset</span><span class="s2">()</span>
+<a name="l104"><span class="ln">104  </span></a>
+<a name="l105"><span class="ln">105  </span></a>    <span class="s0">def </span><span class="s1">on_epoch_end</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">epoch</span><span class="s2">, </span><span class="s1">logs</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+<a name="l106"><span class="ln">106  </span></a>        <span class="s1">logs </span><span class="s2">= </span><span class="s1">logs </span><span class="s0">or </span><span class="s2">{}</span>
+<a name="l107"><span class="ln">107  </span></a>        <span class="s1">logs</span><span class="s2">[</span><span class="s3">&quot;learning_rate&quot;</span><span class="s2">] = </span><span class="s1">float</span><span class="s2">(</span>
+<a name="l108"><span class="ln">108  </span></a>            <span class="s1">backend</span><span class="s2">.</span><span class="s1">convert_to_numpy</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">model</span><span class="s2">.</span><span class="s1">optimizer</span><span class="s2">.</span><span class="s1">learning_rate</span><span class="s2">)</span>
+<a name="l109"><span class="ln">109  </span></a>        <span class="s2">)</span>
+<a name="l110"><span class="ln">110  </span></a>        <span class="s1">current </span><span class="s2">= </span><span class="s1">logs</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">monitor</span><span class="s2">)</span>
+<a name="l111"><span class="ln">111  </span></a>
+<a name="l112"><span class="ln">112  </span></a>        <span class="s0">if </span><span class="s1">current </span><span class="s0">is None</span><span class="s2">:</span>
+<a name="l113"><span class="ln">113  </span></a>            <span class="s1">warnings</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span>
+<a name="l114"><span class="ln">114  </span></a>                <span class="s3">&quot;Learning rate reduction is conditioned on metric &quot;</span>
+<a name="l115"><span class="ln">115  </span></a>                <span class="s3">f&quot;`</span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">monitor</span><span class="s0">}</span><span class="s3">` which is not available. Available metrics &quot;</span>
+<a name="l116"><span class="ln">116  </span></a>                <span class="s3">f&quot;are: </span><span class="s0">{</span><span class="s3">','</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">list</span><span class="s2">(</span><span class="s1">logs</span><span class="s2">.</span><span class="s1">keys</span><span class="s2">()))</span><span class="s0">}</span><span class="s3">.&quot;</span><span class="s2">,</span>
+<a name="l117"><span class="ln">117  </span></a>                <span class="s1">stacklevel</span><span class="s2">=</span><span class="s5">2</span><span class="s2">,</span>
+<a name="l118"><span class="ln">118  </span></a>            <span class="s2">)</span>
+<a name="l119"><span class="ln">119  </span></a>        <span class="s0">else</span><span class="s2">:</span>
+<a name="l120"><span class="ln">120  </span></a>            <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">in_cooldown</span><span class="s2">():</span>
+<a name="l121"><span class="ln">121  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">cooldown_counter </span><span class="s2">-= </span><span class="s5">1</span>
+<a name="l122"><span class="ln">122  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">wait </span><span class="s2">= </span><span class="s5">0</span>
+<a name="l123"><span class="ln">123  </span></a>
+<a name="l124"><span class="ln">124  </span></a>            <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">monitor_op</span><span class="s2">(</span><span class="s1">current</span><span class="s2">, </span><span class="s1">self</span><span class="s2">.</span><span class="s1">best</span><span class="s2">):</span>
+<a name="l125"><span class="ln">125  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">best </span><span class="s2">= </span><span class="s1">current</span>
+<a name="l126"><span class="ln">126  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">wait </span><span class="s2">= </span><span class="s5">0</span>
+<a name="l127"><span class="ln">127  </span></a>            <span class="s0">elif not </span><span class="s1">self</span><span class="s2">.</span><span class="s1">in_cooldown</span><span class="s2">():</span>
+<a name="l128"><span class="ln">128  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">wait </span><span class="s2">+= </span><span class="s5">1</span>
+<a name="l129"><span class="ln">129  </span></a>                <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">wait </span><span class="s2">&gt;= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">patience</span><span class="s2">:</span>
+<a name="l130"><span class="ln">130  </span></a>                    <span class="s1">old_lr </span><span class="s2">= </span><span class="s1">float</span><span class="s2">(</span>
+<a name="l131"><span class="ln">131  </span></a>                        <span class="s1">backend</span><span class="s2">.</span><span class="s1">convert_to_numpy</span><span class="s2">(</span>
+<a name="l132"><span class="ln">132  </span></a>                            <span class="s1">self</span><span class="s2">.</span><span class="s1">model</span><span class="s2">.</span><span class="s1">optimizer</span><span class="s2">.</span><span class="s1">learning_rate</span>
+<a name="l133"><span class="ln">133  </span></a>                        <span class="s2">)</span>
+<a name="l134"><span class="ln">134  </span></a>                    <span class="s2">)</span>
+<a name="l135"><span class="ln">135  </span></a>                    <span class="s0">if </span><span class="s1">old_lr </span><span class="s2">&gt; </span><span class="s1">np</span><span class="s2">.</span><span class="s1">float32</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">min_lr</span><span class="s2">):</span>
+<a name="l136"><span class="ln">136  </span></a>                        <span class="s1">new_lr </span><span class="s2">= </span><span class="s1">old_lr </span><span class="s2">* </span><span class="s1">self</span><span class="s2">.</span><span class="s1">factor</span>
+<a name="l137"><span class="ln">137  </span></a>                        <span class="s1">new_lr </span><span class="s2">= </span><span class="s1">max</span><span class="s2">(</span><span class="s1">new_lr</span><span class="s2">, </span><span class="s1">self</span><span class="s2">.</span><span class="s1">min_lr</span><span class="s2">)</span>
+<a name="l138"><span class="ln">138  </span></a>                        <span class="s1">self</span><span class="s2">.</span><span class="s1">model</span><span class="s2">.</span><span class="s1">optimizer</span><span class="s2">.</span><span class="s1">learning_rate </span><span class="s2">= </span><span class="s1">new_lr</span>
+<a name="l139"><span class="ln">139  </span></a>                        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">verbose </span><span class="s2">&gt; </span><span class="s5">0</span><span class="s2">:</span>
+<a name="l140"><span class="ln">140  </span></a>                            <span class="s1">io_utils</span><span class="s2">.</span><span class="s1">print_msg</span><span class="s2">(</span>
+<a name="l141"><span class="ln">141  </span></a>                                <span class="s3">f&quot;</span><span class="s0">\n</span><span class="s3">Epoch </span><span class="s0">{</span><span class="s1">epoch </span><span class="s2">+ </span><span class="s5">1</span><span class="s0">}</span><span class="s3">: &quot;</span>
+<a name="l142"><span class="ln">142  </span></a>                                <span class="s3">&quot;ReduceLROnPlateau reducing &quot;</span>
+<a name="l143"><span class="ln">143  </span></a>                                <span class="s3">f&quot;learning rate to </span><span class="s0">{</span><span class="s1">new_lr</span><span class="s0">}</span><span class="s3">.&quot;</span>
+<a name="l144"><span class="ln">144  </span></a>                            <span class="s2">)</span>
+<a name="l145"><span class="ln">145  </span></a>                        <span class="s1">self</span><span class="s2">.</span><span class="s1">cooldown_counter </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">cooldown</span>
+<a name="l146"><span class="ln">146  </span></a>                        <span class="s1">self</span><span class="s2">.</span><span class="s1">wait </span><span class="s2">= </span><span class="s5">0</span>
+<a name="l147"><span class="ln">147  </span></a>
+<a name="l148"><span class="ln">148  </span></a>    <span class="s0">def </span><span class="s1">in_cooldown</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+<a name="l149"><span class="ln">149  </span></a>        <span class="s0">return </span><span class="s1">self</span><span class="s2">.</span><span class="s1">cooldown_counter </span><span class="s2">&gt; </span><span class="s5">0</span>
+<a name="l150"><span class="ln">150  </span></a></pre>
+</body>
+</html>

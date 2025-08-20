@@ -1,0 +1,443 @@
+<html>
+<head>
+<title>model_checkpoint.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #2aacb8;}
+.s6 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+model_checkpoint.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">import </span><span class="s1">os</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">import </span><span class="s1">re</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">import </span><span class="s1">warnings</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src </span><span class="s0">import </span><span class="s1">backend</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">api_export </span><span class="s0">import </span><span class="s1">keras_export</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">callbacks</span><span class="s2">.</span><span class="s1">callback </span><span class="s0">import </span><span class="s1">Callback</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">utils </span><span class="s0">import </span><span class="s1">file_utils</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">utils </span><span class="s0">import </span><span class="s1">io_utils</span>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a><span class="s2">@</span><span class="s1">keras_export</span><span class="s2">(</span><span class="s3">&quot;keras.callbacks.ModelCheckpoint&quot;</span><span class="s2">)</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s0">class </span><span class="s1">ModelCheckpoint</span><span class="s2">(</span><span class="s1">Callback</span><span class="s2">):</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s4">&quot;&quot;&quot;Callback to save the Keras model or model weights at some frequency. 
+<a name="l17"><span class="ln">17   </span></a> 
+<a name="l18"><span class="ln">18   </span></a>    `ModelCheckpoint` callback is used in conjunction with training using 
+<a name="l19"><span class="ln">19   </span></a>    `model.fit()` to save a model or weights (in a checkpoint file) at some 
+<a name="l20"><span class="ln">20   </span></a>    interval, so the model or weights can be loaded later to continue the 
+<a name="l21"><span class="ln">21   </span></a>    training from the state saved. 
+<a name="l22"><span class="ln">22   </span></a> 
+<a name="l23"><span class="ln">23   </span></a>    A few options this callback provides include: 
+<a name="l24"><span class="ln">24   </span></a> 
+<a name="l25"><span class="ln">25   </span></a>    - Whether to only keep the model that has achieved the &quot;best performance&quot; so 
+<a name="l26"><span class="ln">26   </span></a>      far, or whether to save the model at the end of every epoch regardless of 
+<a name="l27"><span class="ln">27   </span></a>      performance. 
+<a name="l28"><span class="ln">28   </span></a>    - Definition of &quot;best&quot;; which quantity to monitor and whether it should be 
+<a name="l29"><span class="ln">29   </span></a>      maximized or minimized. 
+<a name="l30"><span class="ln">30   </span></a>    - The frequency it should save at. Currently, the callback supports saving 
+<a name="l31"><span class="ln">31   </span></a>      at the end of every epoch, or after a fixed number of training batches. 
+<a name="l32"><span class="ln">32   </span></a>    - Whether only weights are saved, or the whole model is saved. 
+<a name="l33"><span class="ln">33   </span></a> 
+<a name="l34"><span class="ln">34   </span></a>    Example: 
+<a name="l35"><span class="ln">35   </span></a> 
+<a name="l36"><span class="ln">36   </span></a>    ```python 
+<a name="l37"><span class="ln">37   </span></a>    model.compile(loss=..., optimizer=..., 
+<a name="l38"><span class="ln">38   </span></a>                  metrics=['accuracy']) 
+<a name="l39"><span class="ln">39   </span></a> 
+<a name="l40"><span class="ln">40   </span></a>    EPOCHS = 10 
+<a name="l41"><span class="ln">41   </span></a>    checkpoint_filepath = '/tmp/ckpt/checkpoint.model.keras' 
+<a name="l42"><span class="ln">42   </span></a>    model_checkpoint_callback = keras.callbacks.ModelCheckpoint( 
+<a name="l43"><span class="ln">43   </span></a>        filepath=checkpoint_filepath, 
+<a name="l44"><span class="ln">44   </span></a>        monitor='val_accuracy', 
+<a name="l45"><span class="ln">45   </span></a>        mode='max', 
+<a name="l46"><span class="ln">46   </span></a>        save_best_only=True) 
+<a name="l47"><span class="ln">47   </span></a> 
+<a name="l48"><span class="ln">48   </span></a>    # Model is saved at the end of every epoch, if it's the best seen so far. 
+<a name="l49"><span class="ln">49   </span></a>    model.fit(epochs=EPOCHS, callbacks=[model_checkpoint_callback]) 
+<a name="l50"><span class="ln">50   </span></a> 
+<a name="l51"><span class="ln">51   </span></a>    # The model (that are considered the best) can be loaded as - 
+<a name="l52"><span class="ln">52   </span></a>    keras.models.load_model(checkpoint_filepath) 
+<a name="l53"><span class="ln">53   </span></a> 
+<a name="l54"><span class="ln">54   </span></a>    # Alternatively, one could checkpoint just the model weights as - 
+<a name="l55"><span class="ln">55   </span></a>    checkpoint_filepath = '/tmp/ckpt/checkpoint.weights.h5' 
+<a name="l56"><span class="ln">56   </span></a>    model_checkpoint_callback = keras.callbacks.ModelCheckpoint( 
+<a name="l57"><span class="ln">57   </span></a>        filepath=checkpoint_filepath, 
+<a name="l58"><span class="ln">58   </span></a>        save_weights_only=True, 
+<a name="l59"><span class="ln">59   </span></a>        monitor='val_accuracy', 
+<a name="l60"><span class="ln">60   </span></a>        mode='max', 
+<a name="l61"><span class="ln">61   </span></a>        save_best_only=True) 
+<a name="l62"><span class="ln">62   </span></a> 
+<a name="l63"><span class="ln">63   </span></a>    # Model weights are saved at the end of every epoch, if it's the best seen 
+<a name="l64"><span class="ln">64   </span></a>    # so far. 
+<a name="l65"><span class="ln">65   </span></a>    model.fit(epochs=EPOCHS, callbacks=[model_checkpoint_callback]) 
+<a name="l66"><span class="ln">66   </span></a> 
+<a name="l67"><span class="ln">67   </span></a>    # The model weights (that are considered the best) can be loaded as - 
+<a name="l68"><span class="ln">68   </span></a>    model.load_weights(checkpoint_filepath) 
+<a name="l69"><span class="ln">69   </span></a>    ``` 
+<a name="l70"><span class="ln">70   </span></a> 
+<a name="l71"><span class="ln">71   </span></a>    Args: 
+<a name="l72"><span class="ln">72   </span></a>        filepath: string or `PathLike`, path to save the model file. 
+<a name="l73"><span class="ln">73   </span></a>            `filepath` can contain named formatting options, 
+<a name="l74"><span class="ln">74   </span></a>            which will be filled the value of `epoch` and keys in `logs` 
+<a name="l75"><span class="ln">75   </span></a>            (passed in `on_epoch_end`). 
+<a name="l76"><span class="ln">76   </span></a>            The `filepath` name needs to end with `&quot;.weights.h5&quot;` when 
+<a name="l77"><span class="ln">77   </span></a>            `save_weights_only=True` or should end with `&quot;.keras&quot;` or `&quot;.h5&quot;` 
+<a name="l78"><span class="ln">78   </span></a>            when checkpoint saving the whole model (default). 
+<a name="l79"><span class="ln">79   </span></a>            For example: 
+<a name="l80"><span class="ln">80   </span></a>            if `filepath` is `&quot;{epoch:02d}-{val_loss:.2f}.keras&quot;` or 
+<a name="l81"><span class="ln">81   </span></a>            &quot;{epoch:02d}-{val_loss:.2f}.weights.h5&quot;`, then the model 
+<a name="l82"><span class="ln">82   </span></a>            checkpoints will be saved with the epoch number and the validation 
+<a name="l83"><span class="ln">83   </span></a>            loss in the filename. The directory of the filepath 
+<a name="l84"><span class="ln">84   </span></a>            should not be reused by any other callbacks to avoid conflicts. 
+<a name="l85"><span class="ln">85   </span></a>        monitor: The metric name to monitor. Typically the metrics are set by 
+<a name="l86"><span class="ln">86   </span></a>            the `Model.compile` method. Note: 
+<a name="l87"><span class="ln">87   </span></a>            * Prefix the name with `&quot;val_&quot;` to monitor validation metrics. 
+<a name="l88"><span class="ln">88   </span></a>            * Use `&quot;loss&quot;` or `&quot;val_loss&quot;` to monitor the model's total loss. 
+<a name="l89"><span class="ln">89   </span></a>            * If you specify metrics as strings, like `&quot;accuracy&quot;`, pass the 
+<a name="l90"><span class="ln">90   </span></a>                same string (with or without the `&quot;val_&quot;` prefix). 
+<a name="l91"><span class="ln">91   </span></a>            * If you pass `metrics.Metric` objects, `monitor` should be set to 
+<a name="l92"><span class="ln">92   </span></a>                `metric.name` 
+<a name="l93"><span class="ln">93   </span></a>            * If you're not sure about the metric names you can check the 
+<a name="l94"><span class="ln">94   </span></a>                contents of the `history.history` dictionary returned by 
+<a name="l95"><span class="ln">95   </span></a>                `history = model.fit()` 
+<a name="l96"><span class="ln">96   </span></a>            * Multi-output models set additional prefixes on the metric names. 
+<a name="l97"><span class="ln">97   </span></a>        verbose: Verbosity mode, 0 or 1. Mode 0 is silent, and mode 1 
+<a name="l98"><span class="ln">98   </span></a>            displays messages when the callback takes an action. 
+<a name="l99"><span class="ln">99   </span></a>        save_best_only: if `save_best_only=True`, it only saves when the model 
+<a name="l100"><span class="ln">100  </span></a>            is considered the &quot;best&quot; and the latest best model according to the 
+<a name="l101"><span class="ln">101  </span></a>            quantity monitored will not be overwritten. If `filepath` doesn't 
+<a name="l102"><span class="ln">102  </span></a>            contain formatting options like `{epoch}` then `filepath` will be 
+<a name="l103"><span class="ln">103  </span></a>            overwritten by each new better model. 
+<a name="l104"><span class="ln">104  </span></a>        mode: one of {`&quot;auto&quot;`, `&quot;min&quot;`, `&quot;max&quot;`}. If `save_best_only=True`, the 
+<a name="l105"><span class="ln">105  </span></a>            decision to overwrite the current save file is made based on either 
+<a name="l106"><span class="ln">106  </span></a>            the maximization or the minimization of the monitored quantity. 
+<a name="l107"><span class="ln">107  </span></a>            For `val_acc`, this should be `&quot;max&quot;`, for `val_loss` this should be 
+<a name="l108"><span class="ln">108  </span></a>            `&quot;min&quot;`, etc. In `&quot;auto&quot;` mode, the mode is set to `&quot;max&quot;` if the 
+<a name="l109"><span class="ln">109  </span></a>            quantities monitored are `&quot;acc&quot;` or start with `&quot;fmeasure&quot;` and are 
+<a name="l110"><span class="ln">110  </span></a>            set to `&quot;min&quot;` for the rest of the quantities. 
+<a name="l111"><span class="ln">111  </span></a>        save_weights_only: if `True`, then only the model's weights will be 
+<a name="l112"><span class="ln">112  </span></a>            saved (`model.save_weights(filepath)`), else the full model is 
+<a name="l113"><span class="ln">113  </span></a>            saved (`model.save(filepath)`). 
+<a name="l114"><span class="ln">114  </span></a>        save_freq: `&quot;epoch&quot;` or integer. When using `&quot;epoch&quot;`, the callback 
+<a name="l115"><span class="ln">115  </span></a>            saves the model after each epoch. When using integer, the callback 
+<a name="l116"><span class="ln">116  </span></a>            saves the model at end of this many batches. If the `Model` is 
+<a name="l117"><span class="ln">117  </span></a>            compiled with `steps_per_execution=N`, then the saving criteria will 
+<a name="l118"><span class="ln">118  </span></a>            be checked every Nth batch. Note that if the saving isn't aligned to 
+<a name="l119"><span class="ln">119  </span></a>            epochs, the monitored metric may potentially be less reliable (it 
+<a name="l120"><span class="ln">120  </span></a>            could reflect as little as 1 batch, since the metrics get reset 
+<a name="l121"><span class="ln">121  </span></a>            every epoch). Defaults to `&quot;epoch&quot;`. 
+<a name="l122"><span class="ln">122  </span></a>        initial_value_threshold: Floating point initial &quot;best&quot; value of the 
+<a name="l123"><span class="ln">123  </span></a>            metric to be monitored. Only applies if `save_best_value=True`. Only 
+<a name="l124"><span class="ln">124  </span></a>            overwrites the model weights already saved if the performance of 
+<a name="l125"><span class="ln">125  </span></a>            current model is better than this value. 
+<a name="l126"><span class="ln">126  </span></a>    &quot;&quot;&quot;</span>
+<a name="l127"><span class="ln">127  </span></a>
+<a name="l128"><span class="ln">128  </span></a>    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span>
+<a name="l129"><span class="ln">129  </span></a>        <span class="s1">self</span><span class="s2">,</span>
+<a name="l130"><span class="ln">130  </span></a>        <span class="s1">filepath</span><span class="s2">,</span>
+<a name="l131"><span class="ln">131  </span></a>        <span class="s1">monitor</span><span class="s2">=</span><span class="s3">&quot;val_loss&quot;</span><span class="s2">,</span>
+<a name="l132"><span class="ln">132  </span></a>        <span class="s1">verbose</span><span class="s2">=</span><span class="s5">0</span><span class="s2">,</span>
+<a name="l133"><span class="ln">133  </span></a>        <span class="s1">save_best_only</span><span class="s2">=</span><span class="s0">False</span><span class="s2">,</span>
+<a name="l134"><span class="ln">134  </span></a>        <span class="s1">save_weights_only</span><span class="s2">=</span><span class="s0">False</span><span class="s2">,</span>
+<a name="l135"><span class="ln">135  </span></a>        <span class="s1">mode</span><span class="s2">=</span><span class="s3">&quot;auto&quot;</span><span class="s2">,</span>
+<a name="l136"><span class="ln">136  </span></a>        <span class="s1">save_freq</span><span class="s2">=</span><span class="s3">&quot;epoch&quot;</span><span class="s2">,</span>
+<a name="l137"><span class="ln">137  </span></a>        <span class="s1">initial_value_threshold</span><span class="s2">=</span><span class="s0">None</span><span class="s2">,</span>
+<a name="l138"><span class="ln">138  </span></a>    <span class="s2">):</span>
+<a name="l139"><span class="ln">139  </span></a>        <span class="s1">super</span><span class="s2">().</span><span class="s1">__init__</span><span class="s2">()</span>
+<a name="l140"><span class="ln">140  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">monitor </span><span class="s2">= </span><span class="s1">monitor</span>
+<a name="l141"><span class="ln">141  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">verbose </span><span class="s2">= </span><span class="s1">verbose</span>
+<a name="l142"><span class="ln">142  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">filepath </span><span class="s2">= </span><span class="s1">file_utils</span><span class="s2">.</span><span class="s1">path_to_string</span><span class="s2">(</span><span class="s1">filepath</span><span class="s2">)</span>
+<a name="l143"><span class="ln">143  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">save_best_only </span><span class="s2">= </span><span class="s1">save_best_only</span>
+<a name="l144"><span class="ln">144  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">save_weights_only </span><span class="s2">= </span><span class="s1">save_weights_only</span>
+<a name="l145"><span class="ln">145  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">save_freq </span><span class="s2">= </span><span class="s1">save_freq</span>
+<a name="l146"><span class="ln">146  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">_batches_seen_since_last_saving </span><span class="s2">= </span><span class="s5">0</span>
+<a name="l147"><span class="ln">147  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">_last_batch_seen </span><span class="s2">= </span><span class="s5">0</span>
+<a name="l148"><span class="ln">148  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">best </span><span class="s2">= </span><span class="s1">initial_value_threshold</span>
+<a name="l149"><span class="ln">149  </span></a>
+<a name="l150"><span class="ln">150  </span></a>        <span class="s0">if </span><span class="s1">mode </span><span class="s0">not in </span><span class="s2">[</span><span class="s3">&quot;auto&quot;</span><span class="s2">, </span><span class="s3">&quot;min&quot;</span><span class="s2">, </span><span class="s3">&quot;max&quot;</span><span class="s2">]:</span>
+<a name="l151"><span class="ln">151  </span></a>            <span class="s1">warnings</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span>
+<a name="l152"><span class="ln">152  </span></a>                <span class="s3">f&quot;ModelCheckpoint mode '</span><span class="s0">{</span><span class="s1">mode</span><span class="s0">}</span><span class="s3">' is unknown, &quot;</span>
+<a name="l153"><span class="ln">153  </span></a>                <span class="s3">&quot;fallback to auto mode.&quot;</span><span class="s2">,</span>
+<a name="l154"><span class="ln">154  </span></a>                <span class="s1">stacklevel</span><span class="s2">=</span><span class="s5">2</span><span class="s2">,</span>
+<a name="l155"><span class="ln">155  </span></a>            <span class="s2">)</span>
+<a name="l156"><span class="ln">156  </span></a>            <span class="s1">mode </span><span class="s2">= </span><span class="s3">&quot;auto&quot;</span>
+<a name="l157"><span class="ln">157  </span></a>
+<a name="l158"><span class="ln">158  </span></a>        <span class="s0">if </span><span class="s1">mode </span><span class="s2">== </span><span class="s3">&quot;min&quot;</span><span class="s2">:</span>
+<a name="l159"><span class="ln">159  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">monitor_op </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">less</span>
+<a name="l160"><span class="ln">160  </span></a>            <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">best </span><span class="s0">is None</span><span class="s2">:</span>
+<a name="l161"><span class="ln">161  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">best </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">inf</span>
+<a name="l162"><span class="ln">162  </span></a>        <span class="s0">elif </span><span class="s1">mode </span><span class="s2">== </span><span class="s3">&quot;max&quot;</span><span class="s2">:</span>
+<a name="l163"><span class="ln">163  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">monitor_op </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">greater</span>
+<a name="l164"><span class="ln">164  </span></a>            <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">best </span><span class="s0">is None</span><span class="s2">:</span>
+<a name="l165"><span class="ln">165  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">best </span><span class="s2">= -</span><span class="s1">np</span><span class="s2">.</span><span class="s1">inf</span>
+<a name="l166"><span class="ln">166  </span></a>        <span class="s0">else</span><span class="s2">:</span>
+<a name="l167"><span class="ln">167  </span></a>            <span class="s0">if </span><span class="s3">&quot;acc&quot; </span><span class="s0">in </span><span class="s1">self</span><span class="s2">.</span><span class="s1">monitor </span><span class="s0">or </span><span class="s1">self</span><span class="s2">.</span><span class="s1">monitor</span><span class="s2">.</span><span class="s1">startswith</span><span class="s2">(</span><span class="s3">&quot;fmeasure&quot;</span><span class="s2">):</span>
+<a name="l168"><span class="ln">168  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">monitor_op </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">greater</span>
+<a name="l169"><span class="ln">169  </span></a>                <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">best </span><span class="s0">is None</span><span class="s2">:</span>
+<a name="l170"><span class="ln">170  </span></a>                    <span class="s1">self</span><span class="s2">.</span><span class="s1">best </span><span class="s2">= -</span><span class="s1">np</span><span class="s2">.</span><span class="s1">inf</span>
+<a name="l171"><span class="ln">171  </span></a>            <span class="s0">else</span><span class="s2">:</span>
+<a name="l172"><span class="ln">172  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">monitor_op </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">less</span>
+<a name="l173"><span class="ln">173  </span></a>                <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">best </span><span class="s0">is None</span><span class="s2">:</span>
+<a name="l174"><span class="ln">174  </span></a>                    <span class="s1">self</span><span class="s2">.</span><span class="s1">best </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">inf</span>
+<a name="l175"><span class="ln">175  </span></a>
+<a name="l176"><span class="ln">176  </span></a>        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">save_freq </span><span class="s2">!= </span><span class="s3">&quot;epoch&quot; </span><span class="s0">and not </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">save_freq</span><span class="s2">, </span><span class="s1">int</span><span class="s2">):</span>
+<a name="l177"><span class="ln">177  </span></a>            <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+<a name="l178"><span class="ln">178  </span></a>                <span class="s3">f&quot;Unrecognized save_freq: </span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">save_freq</span><span class="s0">}</span><span class="s3">. &quot;</span>
+<a name="l179"><span class="ln">179  </span></a>                <span class="s3">&quot;Expected save_freq are 'epoch' or integer values&quot;</span>
+<a name="l180"><span class="ln">180  </span></a>            <span class="s2">)</span>
+<a name="l181"><span class="ln">181  </span></a>
+<a name="l182"><span class="ln">182  </span></a>        <span class="s0">if </span><span class="s1">save_weights_only</span><span class="s2">:</span>
+<a name="l183"><span class="ln">183  </span></a>            <span class="s0">if not </span><span class="s1">self</span><span class="s2">.</span><span class="s1">filepath</span><span class="s2">.</span><span class="s1">endswith</span><span class="s2">(</span><span class="s3">&quot;.weights.h5&quot;</span><span class="s2">):</span>
+<a name="l184"><span class="ln">184  </span></a>                <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+<a name="l185"><span class="ln">185  </span></a>                    <span class="s3">&quot;When using `save_weights_only=True` in `ModelCheckpoint`&quot;</span>
+<a name="l186"><span class="ln">186  </span></a>                    <span class="s3">&quot;, the filepath provided must end in `.weights.h5` &quot;</span>
+<a name="l187"><span class="ln">187  </span></a>                    <span class="s3">&quot;(Keras weights format). Received: &quot;</span>
+<a name="l188"><span class="ln">188  </span></a>                    <span class="s3">f&quot;filepath=</span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">filepath</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l189"><span class="ln">189  </span></a>                <span class="s2">)</span>
+<a name="l190"><span class="ln">190  </span></a>        <span class="s0">else</span><span class="s2">:</span>
+<a name="l191"><span class="ln">191  </span></a>            <span class="s0">if not </span><span class="s1">any</span><span class="s2">(</span>
+<a name="l192"><span class="ln">192  </span></a>                <span class="s1">self</span><span class="s2">.</span><span class="s1">filepath</span><span class="s2">.</span><span class="s1">endswith</span><span class="s2">(</span><span class="s1">ext</span><span class="s2">) </span><span class="s0">for </span><span class="s1">ext </span><span class="s0">in </span><span class="s2">(</span><span class="s3">&quot;.keras&quot;</span><span class="s2">, </span><span class="s3">&quot;.h5&quot;</span><span class="s2">)</span>
+<a name="l193"><span class="ln">193  </span></a>            <span class="s2">):</span>
+<a name="l194"><span class="ln">194  </span></a>                <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span>
+<a name="l195"><span class="ln">195  </span></a>                    <span class="s3">&quot;The filepath provided must end in `.keras` &quot;</span>
+<a name="l196"><span class="ln">196  </span></a>                    <span class="s3">&quot;(Keras model format). Received: &quot;</span>
+<a name="l197"><span class="ln">197  </span></a>                    <span class="s3">f&quot;filepath=</span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">filepath</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l198"><span class="ln">198  </span></a>                <span class="s2">)</span>
+<a name="l199"><span class="ln">199  </span></a>
+<a name="l200"><span class="ln">200  </span></a>    <span class="s0">def </span><span class="s1">on_train_batch_end</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">batch</span><span class="s2">, </span><span class="s1">logs</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+<a name="l201"><span class="ln">201  </span></a>        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_should_save_on_batch</span><span class="s2">(</span><span class="s1">batch</span><span class="s2">):</span>
+<a name="l202"><span class="ln">202  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">_save_model</span><span class="s2">(</span><span class="s1">epoch</span><span class="s2">=</span><span class="s1">self</span><span class="s2">.</span><span class="s1">_current_epoch</span><span class="s2">, </span><span class="s1">batch</span><span class="s2">=</span><span class="s1">batch</span><span class="s2">, </span><span class="s1">logs</span><span class="s2">=</span><span class="s1">logs</span><span class="s2">)</span>
+<a name="l203"><span class="ln">203  </span></a>
+<a name="l204"><span class="ln">204  </span></a>    <span class="s0">def </span><span class="s1">on_epoch_begin</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">epoch</span><span class="s2">, </span><span class="s1">logs</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+<a name="l205"><span class="ln">205  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">_current_epoch </span><span class="s2">= </span><span class="s1">epoch</span>
+<a name="l206"><span class="ln">206  </span></a>
+<a name="l207"><span class="ln">207  </span></a>    <span class="s0">def </span><span class="s1">on_epoch_end</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">epoch</span><span class="s2">, </span><span class="s1">logs</span><span class="s2">=</span><span class="s0">None</span><span class="s2">):</span>
+<a name="l208"><span class="ln">208  </span></a>        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">save_freq </span><span class="s2">== </span><span class="s3">&quot;epoch&quot;</span><span class="s2">:</span>
+<a name="l209"><span class="ln">209  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">_save_model</span><span class="s2">(</span><span class="s1">epoch</span><span class="s2">=</span><span class="s1">epoch</span><span class="s2">, </span><span class="s1">batch</span><span class="s2">=</span><span class="s0">None</span><span class="s2">, </span><span class="s1">logs</span><span class="s2">=</span><span class="s1">logs</span><span class="s2">)</span>
+<a name="l210"><span class="ln">210  </span></a>
+<a name="l211"><span class="ln">211  </span></a>    <span class="s0">def </span><span class="s1">_should_save_on_batch</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">batch</span><span class="s2">):</span>
+<a name="l212"><span class="ln">212  </span></a>        <span class="s4">&quot;&quot;&quot;Handles batch-level saving logic, supports steps_per_execution.&quot;&quot;&quot;</span>
+<a name="l213"><span class="ln">213  </span></a>        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">save_freq </span><span class="s2">== </span><span class="s3">&quot;epoch&quot;</span><span class="s2">:</span>
+<a name="l214"><span class="ln">214  </span></a>            <span class="s0">return False</span>
+<a name="l215"><span class="ln">215  </span></a>        <span class="s0">if </span><span class="s1">batch </span><span class="s2">&lt;= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_last_batch_seen</span><span class="s2">:  </span><span class="s6"># New epoch.</span>
+<a name="l216"><span class="ln">216  </span></a>            <span class="s1">add_batches </span><span class="s2">= </span><span class="s1">batch </span><span class="s2">+ </span><span class="s5">1  </span><span class="s6"># batches are zero-indexed.</span>
+<a name="l217"><span class="ln">217  </span></a>        <span class="s0">else</span><span class="s2">:</span>
+<a name="l218"><span class="ln">218  </span></a>            <span class="s1">add_batches </span><span class="s2">= </span><span class="s1">batch </span><span class="s2">- </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_last_batch_seen</span>
+<a name="l219"><span class="ln">219  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">_batches_seen_since_last_saving </span><span class="s2">+= </span><span class="s1">add_batches</span>
+<a name="l220"><span class="ln">220  </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">_last_batch_seen </span><span class="s2">= </span><span class="s1">batch</span>
+<a name="l221"><span class="ln">221  </span></a>
+<a name="l222"><span class="ln">222  </span></a>        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_batches_seen_since_last_saving </span><span class="s2">&gt;= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">save_freq</span><span class="s2">:</span>
+<a name="l223"><span class="ln">223  </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">_batches_seen_since_last_saving </span><span class="s2">= </span><span class="s5">0</span>
+<a name="l224"><span class="ln">224  </span></a>            <span class="s0">return True</span>
+<a name="l225"><span class="ln">225  </span></a>        <span class="s0">return False</span>
+<a name="l226"><span class="ln">226  </span></a>
+<a name="l227"><span class="ln">227  </span></a>    <span class="s0">def </span><span class="s1">_save_model</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">epoch</span><span class="s2">, </span><span class="s1">batch</span><span class="s2">, </span><span class="s1">logs</span><span class="s2">):</span>
+<a name="l228"><span class="ln">228  </span></a>        <span class="s4">&quot;&quot;&quot;Saves the model. 
+<a name="l229"><span class="ln">229  </span></a> 
+<a name="l230"><span class="ln">230  </span></a>        Args: 
+<a name="l231"><span class="ln">231  </span></a>            epoch: the epoch this iteration is in. 
+<a name="l232"><span class="ln">232  </span></a>            batch: the batch this iteration is in. `None` if the `save_freq` 
+<a name="l233"><span class="ln">233  </span></a>                is set to `&quot;epoch&quot;`. 
+<a name="l234"><span class="ln">234  </span></a>            logs: the `logs` dict passed in to `on_batch_end` or `on_epoch_end`. 
+<a name="l235"><span class="ln">235  </span></a>        &quot;&quot;&quot;</span>
+<a name="l236"><span class="ln">236  </span></a>        <span class="s1">logs </span><span class="s2">= </span><span class="s1">logs </span><span class="s0">or </span><span class="s2">{}</span>
+<a name="l237"><span class="ln">237  </span></a>
+<a name="l238"><span class="ln">238  </span></a>        <span class="s1">filepath </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">_get_file_path</span><span class="s2">(</span><span class="s1">epoch</span><span class="s2">, </span><span class="s1">batch</span><span class="s2">, </span><span class="s1">logs</span><span class="s2">)</span>
+<a name="l239"><span class="ln">239  </span></a>        <span class="s6"># Create host directory if it doesn't exist.</span>
+<a name="l240"><span class="ln">240  </span></a>        <span class="s1">dirname </span><span class="s2">= </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">dirname</span><span class="s2">(</span><span class="s1">filepath</span><span class="s2">)</span>
+<a name="l241"><span class="ln">241  </span></a>        <span class="s0">if </span><span class="s1">dirname </span><span class="s0">and not </span><span class="s1">file_utils</span><span class="s2">.</span><span class="s1">exists</span><span class="s2">(</span><span class="s1">dirname</span><span class="s2">):</span>
+<a name="l242"><span class="ln">242  </span></a>            <span class="s1">file_utils</span><span class="s2">.</span><span class="s1">makedirs</span><span class="s2">(</span><span class="s1">dirname</span><span class="s2">)</span>
+<a name="l243"><span class="ln">243  </span></a>
+<a name="l244"><span class="ln">244  </span></a>        <span class="s0">try</span><span class="s2">:</span>
+<a name="l245"><span class="ln">245  </span></a>            <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">save_best_only</span><span class="s2">:</span>
+<a name="l246"><span class="ln">246  </span></a>                <span class="s1">current </span><span class="s2">= </span><span class="s1">logs</span><span class="s2">.</span><span class="s1">get</span><span class="s2">(</span><span class="s1">self</span><span class="s2">.</span><span class="s1">monitor</span><span class="s2">)</span>
+<a name="l247"><span class="ln">247  </span></a>                <span class="s0">if </span><span class="s1">current </span><span class="s0">is None</span><span class="s2">:</span>
+<a name="l248"><span class="ln">248  </span></a>                    <span class="s1">warnings</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span>
+<a name="l249"><span class="ln">249  </span></a>                        <span class="s3">f&quot;Can save best model only with </span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">monitor</span><span class="s0">} </span><span class="s3">&quot;</span>
+<a name="l250"><span class="ln">250  </span></a>                        <span class="s3">&quot;available, skipping.&quot;</span><span class="s2">,</span>
+<a name="l251"><span class="ln">251  </span></a>                        <span class="s1">stacklevel</span><span class="s2">=</span><span class="s5">2</span><span class="s2">,</span>
+<a name="l252"><span class="ln">252  </span></a>                    <span class="s2">)</span>
+<a name="l253"><span class="ln">253  </span></a>                <span class="s0">elif </span><span class="s2">(</span>
+<a name="l254"><span class="ln">254  </span></a>                    <span class="s1">isinstance</span><span class="s2">(</span><span class="s1">current</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">ndarray</span><span class="s2">)</span>
+<a name="l255"><span class="ln">255  </span></a>                    <span class="s0">or </span><span class="s1">backend</span><span class="s2">.</span><span class="s1">is_tensor</span><span class="s2">(</span><span class="s1">current</span><span class="s2">)</span>
+<a name="l256"><span class="ln">256  </span></a>                <span class="s2">) </span><span class="s0">and </span><span class="s1">len</span><span class="s2">(</span><span class="s1">current</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">) &gt; </span><span class="s5">0</span><span class="s2">:</span>
+<a name="l257"><span class="ln">257  </span></a>                    <span class="s1">warnings</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span>
+<a name="l258"><span class="ln">258  </span></a>                        <span class="s3">&quot;Can save best model only when `monitor` is &quot;</span>
+<a name="l259"><span class="ln">259  </span></a>                        <span class="s3">f&quot;a scalar value. Received: </span><span class="s0">{</span><span class="s1">current</span><span class="s0">}</span><span class="s3">. &quot;</span>
+<a name="l260"><span class="ln">260  </span></a>                        <span class="s3">&quot;Falling back to `save_best_only=False`.&quot;</span>
+<a name="l261"><span class="ln">261  </span></a>                    <span class="s2">)</span>
+<a name="l262"><span class="ln">262  </span></a>                    <span class="s1">self</span><span class="s2">.</span><span class="s1">model</span><span class="s2">.</span><span class="s1">save</span><span class="s2">(</span><span class="s1">filepath</span><span class="s2">, </span><span class="s1">overwrite</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+<a name="l263"><span class="ln">263  </span></a>                <span class="s0">else</span><span class="s2">:</span>
+<a name="l264"><span class="ln">264  </span></a>                    <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">monitor_op</span><span class="s2">(</span><span class="s1">current</span><span class="s2">, </span><span class="s1">self</span><span class="s2">.</span><span class="s1">best</span><span class="s2">):</span>
+<a name="l265"><span class="ln">265  </span></a>                        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">verbose </span><span class="s2">&gt; </span><span class="s5">0</span><span class="s2">:</span>
+<a name="l266"><span class="ln">266  </span></a>                            <span class="s1">io_utils</span><span class="s2">.</span><span class="s1">print_msg</span><span class="s2">(</span>
+<a name="l267"><span class="ln">267  </span></a>                                <span class="s3">f&quot;</span><span class="s0">\n</span><span class="s3">Epoch </span><span class="s0">{</span><span class="s1">epoch </span><span class="s2">+ </span><span class="s5">1</span><span class="s0">}</span><span class="s3">: </span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">monitor</span><span class="s0">} </span><span class="s3">&quot;</span>
+<a name="l268"><span class="ln">268  </span></a>                                <span class="s3">&quot;improved &quot;</span>
+<a name="l269"><span class="ln">269  </span></a>                                <span class="s3">f&quot;from </span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">best</span><span class="s0">:</span><span class="s3">.5f</span><span class="s0">} </span><span class="s3">to </span><span class="s0">{</span><span class="s1">current</span><span class="s0">:</span><span class="s3">.5f</span><span class="s0">}</span><span class="s3">, &quot;</span>
+<a name="l270"><span class="ln">270  </span></a>                                <span class="s3">f&quot;saving model to </span><span class="s0">{</span><span class="s1">filepath</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l271"><span class="ln">271  </span></a>                            <span class="s2">)</span>
+<a name="l272"><span class="ln">272  </span></a>                        <span class="s1">self</span><span class="s2">.</span><span class="s1">best </span><span class="s2">= </span><span class="s1">current</span>
+<a name="l273"><span class="ln">273  </span></a>                        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">save_weights_only</span><span class="s2">:</span>
+<a name="l274"><span class="ln">274  </span></a>                            <span class="s1">self</span><span class="s2">.</span><span class="s1">model</span><span class="s2">.</span><span class="s1">save_weights</span><span class="s2">(</span><span class="s1">filepath</span><span class="s2">, </span><span class="s1">overwrite</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+<a name="l275"><span class="ln">275  </span></a>                        <span class="s0">else</span><span class="s2">:</span>
+<a name="l276"><span class="ln">276  </span></a>                            <span class="s1">self</span><span class="s2">.</span><span class="s1">model</span><span class="s2">.</span><span class="s1">save</span><span class="s2">(</span><span class="s1">filepath</span><span class="s2">, </span><span class="s1">overwrite</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+<a name="l277"><span class="ln">277  </span></a>                    <span class="s0">else</span><span class="s2">:</span>
+<a name="l278"><span class="ln">278  </span></a>                        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">verbose </span><span class="s2">&gt; </span><span class="s5">0</span><span class="s2">:</span>
+<a name="l279"><span class="ln">279  </span></a>                            <span class="s1">io_utils</span><span class="s2">.</span><span class="s1">print_msg</span><span class="s2">(</span>
+<a name="l280"><span class="ln">280  </span></a>                                <span class="s3">f&quot;</span><span class="s0">\n</span><span class="s3">Epoch </span><span class="s0">{</span><span class="s1">epoch </span><span class="s2">+ </span><span class="s5">1</span><span class="s0">}</span><span class="s3">: &quot;</span>
+<a name="l281"><span class="ln">281  </span></a>                                <span class="s3">f&quot;</span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">monitor</span><span class="s0">} </span><span class="s3">did not improve &quot;</span>
+<a name="l282"><span class="ln">282  </span></a>                                <span class="s3">f&quot;from </span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">best</span><span class="s0">:</span><span class="s3">.5f</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l283"><span class="ln">283  </span></a>                            <span class="s2">)</span>
+<a name="l284"><span class="ln">284  </span></a>            <span class="s0">else</span><span class="s2">:</span>
+<a name="l285"><span class="ln">285  </span></a>                <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">verbose </span><span class="s2">&gt; </span><span class="s5">0</span><span class="s2">:</span>
+<a name="l286"><span class="ln">286  </span></a>                    <span class="s1">io_utils</span><span class="s2">.</span><span class="s1">print_msg</span><span class="s2">(</span>
+<a name="l287"><span class="ln">287  </span></a>                        <span class="s3">f&quot;</span><span class="s0">\n</span><span class="s3">Epoch </span><span class="s0">{</span><span class="s1">epoch </span><span class="s2">+ </span><span class="s5">1</span><span class="s0">}</span><span class="s3">: saving model to </span><span class="s0">{</span><span class="s1">filepath</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l288"><span class="ln">288  </span></a>                    <span class="s2">)</span>
+<a name="l289"><span class="ln">289  </span></a>                <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">save_weights_only</span><span class="s2">:</span>
+<a name="l290"><span class="ln">290  </span></a>                    <span class="s1">self</span><span class="s2">.</span><span class="s1">model</span><span class="s2">.</span><span class="s1">save_weights</span><span class="s2">(</span><span class="s1">filepath</span><span class="s2">, </span><span class="s1">overwrite</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+<a name="l291"><span class="ln">291  </span></a>                <span class="s0">else</span><span class="s2">:</span>
+<a name="l292"><span class="ln">292  </span></a>                    <span class="s1">self</span><span class="s2">.</span><span class="s1">model</span><span class="s2">.</span><span class="s1">save</span><span class="s2">(</span><span class="s1">filepath</span><span class="s2">, </span><span class="s1">overwrite</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+<a name="l293"><span class="ln">293  </span></a>        <span class="s0">except </span><span class="s1">IsADirectoryError</span><span class="s2">:  </span><span class="s6"># h5py 3.x</span>
+<a name="l294"><span class="ln">294  </span></a>            <span class="s0">raise </span><span class="s1">IOError</span><span class="s2">(</span>
+<a name="l295"><span class="ln">295  </span></a>                <span class="s3">&quot;Please specify a non-directory filepath for &quot;</span>
+<a name="l296"><span class="ln">296  </span></a>                <span class="s3">&quot;ModelCheckpoint. Filepath used is an existing &quot;</span>
+<a name="l297"><span class="ln">297  </span></a>                <span class="s3">f&quot;directory: </span><span class="s0">{</span><span class="s1">filepath</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l298"><span class="ln">298  </span></a>            <span class="s2">)</span>
+<a name="l299"><span class="ln">299  </span></a>        <span class="s0">except </span><span class="s1">IOError </span><span class="s0">as </span><span class="s1">e</span><span class="s2">:  </span><span class="s6"># h5py 2.x</span>
+<a name="l300"><span class="ln">300  </span></a>            <span class="s6"># `e.errno` appears to be `None` so checking the content of</span>
+<a name="l301"><span class="ln">301  </span></a>            <span class="s6"># `e.args[0]`.</span>
+<a name="l302"><span class="ln">302  </span></a>            <span class="s0">if </span><span class="s3">&quot;is a directory&quot; </span><span class="s0">in </span><span class="s1">str</span><span class="s2">(</span><span class="s1">e</span><span class="s2">.</span><span class="s1">args</span><span class="s2">[</span><span class="s5">0</span><span class="s2">]).</span><span class="s1">lower</span><span class="s2">():</span>
+<a name="l303"><span class="ln">303  </span></a>                <span class="s0">raise </span><span class="s1">IOError</span><span class="s2">(</span>
+<a name="l304"><span class="ln">304  </span></a>                    <span class="s3">&quot;Please specify a non-directory filepath for &quot;</span>
+<a name="l305"><span class="ln">305  </span></a>                    <span class="s3">&quot;ModelCheckpoint. Filepath used is an existing &quot;</span>
+<a name="l306"><span class="ln">306  </span></a>                    <span class="s3">f&quot;directory: f</span><span class="s0">{</span><span class="s1">filepath</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l307"><span class="ln">307  </span></a>                <span class="s2">)</span>
+<a name="l308"><span class="ln">308  </span></a>            <span class="s6"># Re-throw the error for any other causes.</span>
+<a name="l309"><span class="ln">309  </span></a>            <span class="s0">raise </span><span class="s1">e</span>
+<a name="l310"><span class="ln">310  </span></a>
+<a name="l311"><span class="ln">311  </span></a>    <span class="s0">def </span><span class="s1">_get_file_path</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">epoch</span><span class="s2">, </span><span class="s1">batch</span><span class="s2">, </span><span class="s1">logs</span><span class="s2">):</span>
+<a name="l312"><span class="ln">312  </span></a>        <span class="s4">&quot;&quot;&quot;Returns the file path for checkpoint.&quot;&quot;&quot;</span>
+<a name="l313"><span class="ln">313  </span></a>
+<a name="l314"><span class="ln">314  </span></a>        <span class="s0">try</span><span class="s2">:</span>
+<a name="l315"><span class="ln">315  </span></a>            <span class="s6"># `filepath` may contain placeholders such as</span>
+<a name="l316"><span class="ln">316  </span></a>            <span class="s6"># `{epoch:02d}`,`{batch:02d}` and `{mape:.2f}`. A mismatch between</span>
+<a name="l317"><span class="ln">317  </span></a>            <span class="s6"># logged metrics and the path's placeholders can cause formatting to</span>
+<a name="l318"><span class="ln">318  </span></a>            <span class="s6"># fail.</span>
+<a name="l319"><span class="ln">319  </span></a>            <span class="s0">if </span><span class="s1">batch </span><span class="s0">is None or </span><span class="s3">&quot;batch&quot; </span><span class="s0">in </span><span class="s1">logs</span><span class="s2">:</span>
+<a name="l320"><span class="ln">320  </span></a>                <span class="s1">file_path </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">filepath</span><span class="s2">.</span><span class="s1">format</span><span class="s2">(</span><span class="s1">epoch</span><span class="s2">=</span><span class="s1">epoch </span><span class="s2">+ </span><span class="s5">1</span><span class="s2">, **</span><span class="s1">logs</span><span class="s2">)</span>
+<a name="l321"><span class="ln">321  </span></a>            <span class="s0">else</span><span class="s2">:</span>
+<a name="l322"><span class="ln">322  </span></a>                <span class="s1">file_path </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">filepath</span><span class="s2">.</span><span class="s1">format</span><span class="s2">(</span>
+<a name="l323"><span class="ln">323  </span></a>                    <span class="s1">epoch</span><span class="s2">=</span><span class="s1">epoch </span><span class="s2">+ </span><span class="s5">1</span><span class="s2">, </span><span class="s1">batch</span><span class="s2">=</span><span class="s1">batch </span><span class="s2">+ </span><span class="s5">1</span><span class="s2">, **</span><span class="s1">logs</span>
+<a name="l324"><span class="ln">324  </span></a>                <span class="s2">)</span>
+<a name="l325"><span class="ln">325  </span></a>        <span class="s0">except </span><span class="s1">KeyError </span><span class="s0">as </span><span class="s1">e</span><span class="s2">:</span>
+<a name="l326"><span class="ln">326  </span></a>            <span class="s0">raise </span><span class="s1">KeyError</span><span class="s2">(</span>
+<a name="l327"><span class="ln">327  </span></a>                <span class="s3">f'Failed to format this callback filepath: &quot;</span><span class="s0">{</span><span class="s1">self</span><span class="s2">.</span><span class="s1">filepath</span><span class="s0">}</span><span class="s3">&quot;. '</span>
+<a name="l328"><span class="ln">328  </span></a>                <span class="s3">f&quot;Reason: </span><span class="s0">{</span><span class="s1">e</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l329"><span class="ln">329  </span></a>            <span class="s2">)</span>
+<a name="l330"><span class="ln">330  </span></a>        <span class="s0">return </span><span class="s1">file_path</span>
+<a name="l331"><span class="ln">331  </span></a>
+<a name="l332"><span class="ln">332  </span></a>    <span class="s0">def </span><span class="s1">_checkpoint_exists</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">filepath</span><span class="s2">):</span>
+<a name="l333"><span class="ln">333  </span></a>        <span class="s4">&quot;&quot;&quot;Returns whether the checkpoint `filepath` refers to exists.&quot;&quot;&quot;</span>
+<a name="l334"><span class="ln">334  </span></a>        <span class="s0">return </span><span class="s1">file_utils</span><span class="s2">.</span><span class="s1">exists</span><span class="s2">(</span><span class="s1">filepath</span><span class="s2">)</span>
+<a name="l335"><span class="ln">335  </span></a>
+<a name="l336"><span class="ln">336  </span></a>    <span class="s0">def </span><span class="s1">_get_most_recently_modified_file_matching_pattern</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">pattern</span><span class="s2">):</span>
+<a name="l337"><span class="ln">337  </span></a>        <span class="s4">&quot;&quot;&quot;Returns the most recently modified filepath matching pattern. 
+<a name="l338"><span class="ln">338  </span></a> 
+<a name="l339"><span class="ln">339  </span></a>        In the rare case where there are more than one pattern-matching file 
+<a name="l340"><span class="ln">340  </span></a>        having the same modified time that is most recent among all, return the 
+<a name="l341"><span class="ln">341  </span></a>        filepath that is largest (by `&gt;` operator, lexicographically using the 
+<a name="l342"><span class="ln">342  </span></a>        numeric equivalents). This provides a tie-breaker when multiple files 
+<a name="l343"><span class="ln">343  </span></a>        are most recent. Note that a larger `filepath` can sometimes indicate a 
+<a name="l344"><span class="ln">344  </span></a>        later time of modification (for instance, when epoch/batch is used as 
+<a name="l345"><span class="ln">345  </span></a>        formatting option), but not necessarily (when accuracy or loss is used). 
+<a name="l346"><span class="ln">346  </span></a>        The tie-breaker is put in the logic as best effort to return the most 
+<a name="l347"><span class="ln">347  </span></a>        recent, and to avoid nondeterministic result. 
+<a name="l348"><span class="ln">348  </span></a> 
+<a name="l349"><span class="ln">349  </span></a>        Modified time of a file is obtained with `os.path.getmtime()`. 
+<a name="l350"><span class="ln">350  </span></a> 
+<a name="l351"><span class="ln">351  </span></a>        This utility function is best demonstrated via an example: 
+<a name="l352"><span class="ln">352  </span></a> 
+<a name="l353"><span class="ln">353  </span></a>        ```python 
+<a name="l354"><span class="ln">354  </span></a>        file_pattern = 'batch{batch:02d}epoch{epoch:02d}.keras' 
+<a name="l355"><span class="ln">355  </span></a>        test_dir = self.get_temp_dir() 
+<a name="l356"><span class="ln">356  </span></a>        path_pattern = os.path.join(test_dir, file_pattern) 
+<a name="l357"><span class="ln">357  </span></a>        file_paths = [ 
+<a name="l358"><span class="ln">358  </span></a>            os.path.join(test_dir, file_name) for file_name in 
+<a name="l359"><span class="ln">359  </span></a>            ['batch03epoch02.keras', 
+<a name="l360"><span class="ln">360  </span></a>             'batch02epoch02.keras', 'batch01epoch01.keras'] 
+<a name="l361"><span class="ln">361  </span></a>        ] 
+<a name="l362"><span class="ln">362  </span></a>        for file_path in file_paths: 
+<a name="l363"><span class="ln">363  </span></a>            # Write something to each of the files 
+<a name="l364"><span class="ln">364  </span></a>            ... 
+<a name="l365"><span class="ln">365  </span></a>        self.assertEqual( 
+<a name="l366"><span class="ln">366  </span></a>            _get_most_recently_modified_file_matching_pattern(path_pattern), 
+<a name="l367"><span class="ln">367  </span></a>            file_paths[-1]) 
+<a name="l368"><span class="ln">368  </span></a>        ``` 
+<a name="l369"><span class="ln">369  </span></a> 
+<a name="l370"><span class="ln">370  </span></a>        Args: 
+<a name="l371"><span class="ln">371  </span></a>            pattern: The file pattern that may optionally contain python 
+<a name="l372"><span class="ln">372  </span></a>                placeholder such as `{epoch:02d}`. 
+<a name="l373"><span class="ln">373  </span></a> 
+<a name="l374"><span class="ln">374  </span></a>        Returns: 
+<a name="l375"><span class="ln">375  </span></a>            The most recently modified file's full filepath matching `pattern`. 
+<a name="l376"><span class="ln">376  </span></a>            If `pattern` does not contain any placeholder, this returns the 
+<a name="l377"><span class="ln">377  </span></a>            filepath that exactly matches `pattern`. Returns `None` if no match 
+<a name="l378"><span class="ln">378  </span></a>            is found. 
+<a name="l379"><span class="ln">379  </span></a>        &quot;&quot;&quot;</span>
+<a name="l380"><span class="ln">380  </span></a>        <span class="s1">dir_name </span><span class="s2">= </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">dirname</span><span class="s2">(</span><span class="s1">pattern</span><span class="s2">)</span>
+<a name="l381"><span class="ln">381  </span></a>        <span class="s1">base_name </span><span class="s2">= </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">basename</span><span class="s2">(</span><span class="s1">pattern</span><span class="s2">)</span>
+<a name="l382"><span class="ln">382  </span></a>        <span class="s1">base_name_regex </span><span class="s2">= </span><span class="s3">&quot;^&quot; </span><span class="s2">+ </span><span class="s1">re</span><span class="s2">.</span><span class="s1">sub</span><span class="s2">(</span><span class="s3">r&quot;{.*}&quot;</span><span class="s2">, </span><span class="s3">r&quot;.*&quot;</span><span class="s2">, </span><span class="s1">base_name</span><span class="s2">) + </span><span class="s3">&quot;$&quot;</span>
+<a name="l383"><span class="ln">383  </span></a>
+<a name="l384"><span class="ln">384  </span></a>        <span class="s1">latest_mod_time </span><span class="s2">= </span><span class="s5">0</span>
+<a name="l385"><span class="ln">385  </span></a>        <span class="s1">file_path_with_latest_mod_time </span><span class="s2">= </span><span class="s0">None</span>
+<a name="l386"><span class="ln">386  </span></a>        <span class="s1">n_file_with_latest_mod_time </span><span class="s2">= </span><span class="s5">0</span>
+<a name="l387"><span class="ln">387  </span></a>        <span class="s1">file_path_with_largest_file_name </span><span class="s2">= </span><span class="s0">None</span>
+<a name="l388"><span class="ln">388  </span></a>
+<a name="l389"><span class="ln">389  </span></a>        <span class="s0">if </span><span class="s1">file_utils</span><span class="s2">.</span><span class="s1">exists</span><span class="s2">(</span><span class="s1">dir_name</span><span class="s2">):</span>
+<a name="l390"><span class="ln">390  </span></a>            <span class="s0">for </span><span class="s1">file_name </span><span class="s0">in </span><span class="s1">os</span><span class="s2">.</span><span class="s1">listdir</span><span class="s2">(</span><span class="s1">dir_name</span><span class="s2">):</span>
+<a name="l391"><span class="ln">391  </span></a>                <span class="s6"># Only consider if `file_name` matches the pattern.</span>
+<a name="l392"><span class="ln">392  </span></a>                <span class="s0">if </span><span class="s1">re</span><span class="s2">.</span><span class="s1">match</span><span class="s2">(</span><span class="s1">base_name_regex</span><span class="s2">, </span><span class="s1">file_name</span><span class="s2">):</span>
+<a name="l393"><span class="ln">393  </span></a>                    <span class="s1">file_path </span><span class="s2">= </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">join</span><span class="s2">(</span><span class="s1">dir_name</span><span class="s2">, </span><span class="s1">file_name</span><span class="s2">)</span>
+<a name="l394"><span class="ln">394  </span></a>                    <span class="s1">mod_time </span><span class="s2">= </span><span class="s1">os</span><span class="s2">.</span><span class="s1">path</span><span class="s2">.</span><span class="s1">getmtime</span><span class="s2">(</span><span class="s1">file_path</span><span class="s2">)</span>
+<a name="l395"><span class="ln">395  </span></a>                    <span class="s0">if </span><span class="s2">(</span>
+<a name="l396"><span class="ln">396  </span></a>                        <span class="s1">file_path_with_largest_file_name </span><span class="s0">is None</span>
+<a name="l397"><span class="ln">397  </span></a>                        <span class="s0">or </span><span class="s1">file_path </span><span class="s2">&gt; </span><span class="s1">file_path_with_largest_file_name</span>
+<a name="l398"><span class="ln">398  </span></a>                    <span class="s2">):</span>
+<a name="l399"><span class="ln">399  </span></a>                        <span class="s1">file_path_with_largest_file_name </span><span class="s2">= </span><span class="s1">file_path</span>
+<a name="l400"><span class="ln">400  </span></a>                    <span class="s0">if </span><span class="s1">mod_time </span><span class="s2">&gt; </span><span class="s1">latest_mod_time</span><span class="s2">:</span>
+<a name="l401"><span class="ln">401  </span></a>                        <span class="s1">latest_mod_time </span><span class="s2">= </span><span class="s1">mod_time</span>
+<a name="l402"><span class="ln">402  </span></a>                        <span class="s1">file_path_with_latest_mod_time </span><span class="s2">= </span><span class="s1">file_path</span>
+<a name="l403"><span class="ln">403  </span></a>                        <span class="s6"># In the case a file with later modified time is found,</span>
+<a name="l404"><span class="ln">404  </span></a>                        <span class="s6"># reset the counter for the number of files with latest</span>
+<a name="l405"><span class="ln">405  </span></a>                        <span class="s6"># modified time.</span>
+<a name="l406"><span class="ln">406  </span></a>                        <span class="s1">n_file_with_latest_mod_time </span><span class="s2">= </span><span class="s5">1</span>
+<a name="l407"><span class="ln">407  </span></a>                    <span class="s0">elif </span><span class="s1">mod_time </span><span class="s2">== </span><span class="s1">latest_mod_time</span><span class="s2">:</span>
+<a name="l408"><span class="ln">408  </span></a>                        <span class="s6"># In the case a file has modified time tied with the</span>
+<a name="l409"><span class="ln">409  </span></a>                        <span class="s6"># most recent, increment the counter for the number of</span>
+<a name="l410"><span class="ln">410  </span></a>                        <span class="s6"># files with latest modified time by 1.</span>
+<a name="l411"><span class="ln">411  </span></a>                        <span class="s1">n_file_with_latest_mod_time </span><span class="s2">+= </span><span class="s5">1</span>
+<a name="l412"><span class="ln">412  </span></a>
+<a name="l413"><span class="ln">413  </span></a>        <span class="s0">if </span><span class="s1">n_file_with_latest_mod_time </span><span class="s2">== </span><span class="s5">1</span><span class="s2">:</span>
+<a name="l414"><span class="ln">414  </span></a>            <span class="s6"># Return the sole file that has most recent modified time.</span>
+<a name="l415"><span class="ln">415  </span></a>            <span class="s0">return </span><span class="s1">file_path_with_latest_mod_time</span>
+<a name="l416"><span class="ln">416  </span></a>        <span class="s0">else</span><span class="s2">:</span>
+<a name="l417"><span class="ln">417  </span></a>            <span class="s6"># If there are more than one file having latest modified time,</span>
+<a name="l418"><span class="ln">418  </span></a>            <span class="s6"># return the file path with the largest file name.</span>
+<a name="l419"><span class="ln">419  </span></a>            <span class="s0">return </span><span class="s1">file_path_with_largest_file_name</span>
+<a name="l420"><span class="ln">420  </span></a></pre>
+</body>
+</html>

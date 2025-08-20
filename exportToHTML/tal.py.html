@@ -1,0 +1,101 @@
+<html>
+<head>
+<title>tal.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+tal.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>    pygments.lexers.tal 
+<a name="l3"><span class="ln">3    </span></a>    ~~~~~~~~~~~~~~~~~~~ 
+<a name="l4"><span class="ln">4    </span></a> 
+<a name="l5"><span class="ln">5    </span></a>    Lexer for Uxntal 
+<a name="l6"><span class="ln">6    </span></a> 
+<a name="l7"><span class="ln">7    </span></a>    .. versionadded:: 2.12 
+<a name="l8"><span class="ln">8    </span></a> 
+<a name="l9"><span class="ln">9    </span></a>    :copyright: Copyright 2006-2025 by the Pygments team, see AUTHORS. 
+<a name="l10"><span class="ln">10   </span></a>    :license: BSD, see LICENSE for details. 
+<a name="l11"><span class="ln">11   </span></a>&quot;&quot;&quot;</span>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">lexer </span><span class="s2">import </span><span class="s1">RegexLexer</span><span class="s3">, </span><span class="s1">words</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">token </span><span class="s2">import </span><span class="s1">Comment</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">, </span><span class="s1">String</span><span class="s3">, </span><span class="s1">Number</span><span class="s3">, </span><span class="s1">\</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s1">Punctuation</span><span class="s3">, </span><span class="s1">Whitespace</span><span class="s3">, </span><span class="s1">Literal</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s1">__all__ </span><span class="s3">= [</span><span class="s4">'TalLexer'</span><span class="s3">]</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a>
+<a name="l20"><span class="ln">20   </span></a><span class="s2">class </span><span class="s1">TalLexer</span><span class="s3">(</span><span class="s1">RegexLexer</span><span class="s3">):</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l22"><span class="ln">22   </span></a>    For Uxntal source code. 
+<a name="l23"><span class="ln">23   </span></a>    &quot;&quot;&quot;</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s1">name </span><span class="s3">= </span><span class="s4">'Tal'</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s1">aliases </span><span class="s3">= [</span><span class="s4">'tal'</span><span class="s3">, </span><span class="s4">'uxntal'</span><span class="s3">]</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s1">filenames </span><span class="s3">= [</span><span class="s4">'*.tal'</span><span class="s3">]</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s1">mimetypes </span><span class="s3">= [</span><span class="s4">'text/x-uxntal'</span><span class="s3">]</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s1">url </span><span class="s3">= </span><span class="s4">'https://wiki.xxiivv.com/site/uxntal.html'</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s1">version_added </span><span class="s3">= </span><span class="s4">'2.12'</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">instructions </span><span class="s3">= [</span>
+<a name="l33"><span class="ln">33   </span></a>        <span class="s4">'BRK'</span><span class="s3">, </span><span class="s4">'LIT'</span><span class="s3">, </span><span class="s4">'INC'</span><span class="s3">, </span><span class="s4">'POP'</span><span class="s3">, </span><span class="s4">'DUP'</span><span class="s3">, </span><span class="s4">'NIP'</span><span class="s3">, </span><span class="s4">'SWP'</span><span class="s3">, </span><span class="s4">'OVR'</span><span class="s3">, </span><span class="s4">'ROT'</span><span class="s3">,</span>
+<a name="l34"><span class="ln">34   </span></a>        <span class="s4">'EQU'</span><span class="s3">, </span><span class="s4">'NEQ'</span><span class="s3">, </span><span class="s4">'GTH'</span><span class="s3">, </span><span class="s4">'LTH'</span><span class="s3">, </span><span class="s4">'JMP'</span><span class="s3">, </span><span class="s4">'JCN'</span><span class="s3">, </span><span class="s4">'JSR'</span><span class="s3">, </span><span class="s4">'STH'</span><span class="s3">,</span>
+<a name="l35"><span class="ln">35   </span></a>        <span class="s4">'LDZ'</span><span class="s3">, </span><span class="s4">'STZ'</span><span class="s3">, </span><span class="s4">'LDR'</span><span class="s3">, </span><span class="s4">'STR'</span><span class="s3">, </span><span class="s4">'LDA'</span><span class="s3">, </span><span class="s4">'STA'</span><span class="s3">, </span><span class="s4">'DEI'</span><span class="s3">, </span><span class="s4">'DEO'</span><span class="s3">,</span>
+<a name="l36"><span class="ln">36   </span></a>        <span class="s4">'ADD'</span><span class="s3">, </span><span class="s4">'SUB'</span><span class="s3">, </span><span class="s4">'MUL'</span><span class="s3">, </span><span class="s4">'DIV'</span><span class="s3">, </span><span class="s4">'AND'</span><span class="s3">, </span><span class="s4">'ORA'</span><span class="s3">, </span><span class="s4">'EOR'</span><span class="s3">, </span><span class="s4">'SFT'</span>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s3">]</span>
+<a name="l38"><span class="ln">38   </span></a>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s1">tokens </span><span class="s3">= {</span>
+<a name="l40"><span class="ln">40   </span></a>        <span class="s5"># the comment delimiters must not be adjacent to non-space characters.</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s5"># this means ( foo ) is a valid comment but (foo) is not. this also</span>
+<a name="l42"><span class="ln">42   </span></a>        <span class="s5"># applies to nested comments.</span>
+<a name="l43"><span class="ln">43   </span></a>        <span class="s4">'comment'</span><span class="s3">: [</span>
+<a name="l44"><span class="ln">44   </span></a>            <span class="s3">(</span><span class="s4">r'(?&lt;!\S)\((?!\S)'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">.</span><span class="s1">Multiline</span><span class="s3">, </span><span class="s4">'#push'</span><span class="s3">), </span><span class="s5"># nested comments</span>
+<a name="l45"><span class="ln">45   </span></a>            <span class="s3">(</span><span class="s4">r'(?&lt;!\S)\)(?!\S)'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">.</span><span class="s1">Multiline</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">), </span><span class="s5"># nested comments</span>
+<a name="l46"><span class="ln">46   </span></a>            <span class="s3">(</span><span class="s4">r'[^()]+'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">.</span><span class="s1">Multiline</span><span class="s3">), </span><span class="s5"># comments</span>
+<a name="l47"><span class="ln">47   </span></a>            <span class="s3">(</span><span class="s4">r'[()]+'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">.</span><span class="s1">Multiline</span><span class="s3">), </span><span class="s5"># comments</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s3">],</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s4">'root'</span><span class="s3">: [</span>
+<a name="l50"><span class="ln">50   </span></a>            <span class="s3">(</span><span class="s4">r'\s+'</span><span class="s3">, </span><span class="s1">Whitespace</span><span class="s3">), </span><span class="s5"># spaces</span>
+<a name="l51"><span class="ln">51   </span></a>            <span class="s3">(</span><span class="s4">r'(?&lt;!\S)\((?!\S)'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">.</span><span class="s1">Multiline</span><span class="s3">, </span><span class="s4">'comment'</span><span class="s3">), </span><span class="s5"># comments</span>
+<a name="l52"><span class="ln">52   </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">instructions</span><span class="s3">, </span><span class="s1">prefix</span><span class="s3">=</span><span class="s4">r'(?&lt;!\S)'</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s4">r'2?k?r?(?!\S)'</span><span class="s3">),</span>
+<a name="l53"><span class="ln">53   </span></a>             <span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Reserved</span><span class="s3">), </span><span class="s5"># instructions</span>
+<a name="l54"><span class="ln">54   </span></a>            <span class="s3">(</span><span class="s4">r'[][{}](?!\S)'</span><span class="s3">, </span><span class="s1">Punctuation</span><span class="s3">), </span><span class="s5"># delimiters</span>
+<a name="l55"><span class="ln">55   </span></a>            <span class="s3">(</span><span class="s4">r'#([0-9a-f]{2}){1,2}(?!\S)'</span><span class="s3">, </span><span class="s1">Number</span><span class="s3">.</span><span class="s1">Hex</span><span class="s3">), </span><span class="s5"># integer</span>
+<a name="l56"><span class="ln">56   </span></a>            <span class="s3">(</span><span class="s4">r'&quot;\S+'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">), </span><span class="s5"># raw string</span>
+<a name="l57"><span class="ln">57   </span></a>            <span class="s3">(</span><span class="s4">r'([0-9a-f]{2}){1,2}(?!\S)'</span><span class="s3">, </span><span class="s1">Literal</span><span class="s3">), </span><span class="s5"># raw integer</span>
+<a name="l58"><span class="ln">58   </span></a>            <span class="s3">(</span><span class="s4">r'[|$][0-9a-f]{1,4}(?!\S)'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Declaration</span><span class="s3">), </span><span class="s5"># abs/rel pad</span>
+<a name="l59"><span class="ln">59   </span></a>            <span class="s3">(</span><span class="s4">r'%\S+'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Decorator</span><span class="s3">), </span><span class="s5"># macro</span>
+<a name="l60"><span class="ln">60   </span></a>            <span class="s3">(</span><span class="s4">r'@\S+'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Function</span><span class="s3">), </span><span class="s5"># label</span>
+<a name="l61"><span class="ln">61   </span></a>            <span class="s3">(</span><span class="s4">r'&amp;\S+'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Label</span><span class="s3">), </span><span class="s5"># sublabel</span>
+<a name="l62"><span class="ln">62   </span></a>            <span class="s3">(</span><span class="s4">r'/\S+'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Tag</span><span class="s3">), </span><span class="s5"># spacer</span>
+<a name="l63"><span class="ln">63   </span></a>            <span class="s3">(</span><span class="s4">r'\.\S+'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">.</span><span class="s1">Magic</span><span class="s3">), </span><span class="s5"># literal zero page addr</span>
+<a name="l64"><span class="ln">64   </span></a>            <span class="s3">(</span><span class="s4">r',\S+'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">.</span><span class="s1">Instance</span><span class="s3">), </span><span class="s5"># literal rel addr</span>
+<a name="l65"><span class="ln">65   </span></a>            <span class="s3">(</span><span class="s4">r';\S+'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">.</span><span class="s1">Global</span><span class="s3">), </span><span class="s5"># literal abs addr</span>
+<a name="l66"><span class="ln">66   </span></a>            <span class="s3">(</span><span class="s4">r'-\S+'</span><span class="s3">, </span><span class="s1">Literal</span><span class="s3">), </span><span class="s5"># raw zero page addr</span>
+<a name="l67"><span class="ln">67   </span></a>            <span class="s3">(</span><span class="s4">r'_\S+'</span><span class="s3">, </span><span class="s1">Literal</span><span class="s3">), </span><span class="s5"># raw relative addr</span>
+<a name="l68"><span class="ln">68   </span></a>            <span class="s3">(</span><span class="s4">r'=\S+'</span><span class="s3">, </span><span class="s1">Literal</span><span class="s3">), </span><span class="s5"># raw absolute addr</span>
+<a name="l69"><span class="ln">69   </span></a>            <span class="s3">(</span><span class="s4">r'!\S+'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Function</span><span class="s3">), </span><span class="s5"># immediate jump</span>
+<a name="l70"><span class="ln">70   </span></a>            <span class="s3">(</span><span class="s4">r'\?\S+'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Function</span><span class="s3">), </span><span class="s5"># conditional immediate jump</span>
+<a name="l71"><span class="ln">71   </span></a>            <span class="s3">(</span><span class="s4">r'~\S+'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Namespace</span><span class="s3">), </span><span class="s5"># include</span>
+<a name="l72"><span class="ln">72   </span></a>            <span class="s3">(</span><span class="s4">r'\S+'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Function</span><span class="s3">), </span><span class="s5"># macro invocation, immediate subroutine</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s3">]</span>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s3">}</span>
+<a name="l75"><span class="ln">75   </span></a>
+<a name="l76"><span class="ln">76   </span></a>    <span class="s2">def </span><span class="s1">analyse_text</span><span class="s3">(</span><span class="s1">text</span><span class="s3">):</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s2">return </span><span class="s4">'|0100' </span><span class="s2">in </span><span class="s1">text</span><span class="s3">[:</span><span class="s6">500</span><span class="s3">]</span>
+<a name="l78"><span class="ln">78   </span></a></pre>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<html>
+<head>
+<title>qt_for_kernel.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #7a7e85;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+qt_for_kernel.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot;Import Qt in a manner suitable for an IPython kernel. 
+<a name="l2"><span class="ln">2    </span></a> 
+<a name="l3"><span class="ln">3    </span></a>This is the import used for the `gui=qt` or `matplotlib=qt` initialization. 
+<a name="l4"><span class="ln">4    </span></a> 
+<a name="l5"><span class="ln">5    </span></a>Import Priority: 
+<a name="l6"><span class="ln">6    </span></a> 
+<a name="l7"><span class="ln">7    </span></a>if Qt has been imported anywhere else: 
+<a name="l8"><span class="ln">8    </span></a>   use that 
+<a name="l9"><span class="ln">9    </span></a> 
+<a name="l10"><span class="ln">10   </span></a>if matplotlib has been imported and doesn't support v2 (&lt;= 1.0.1): 
+<a name="l11"><span class="ln">11   </span></a>    use PyQt4 @v1 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>Next, ask QT_API env variable 
+<a name="l14"><span class="ln">14   </span></a> 
+<a name="l15"><span class="ln">15   </span></a>if QT_API not set: 
+<a name="l16"><span class="ln">16   </span></a>    ask matplotlib what it's using. If Qt4Agg or Qt5Agg, then use the 
+<a name="l17"><span class="ln">17   </span></a>        version matplotlib is configured with 
+<a name="l18"><span class="ln">18   </span></a> 
+<a name="l19"><span class="ln">19   </span></a>    else: (matplotlib said nothing) 
+<a name="l20"><span class="ln">20   </span></a>        # this is the default path - nobody told us anything 
+<a name="l21"><span class="ln">21   </span></a>        try in this order: 
+<a name="l22"><span class="ln">22   </span></a>            PyQt default version, PySide, PyQt5 
+<a name="l23"><span class="ln">23   </span></a>else: 
+<a name="l24"><span class="ln">24   </span></a>    use what QT_API says 
+<a name="l25"><span class="ln">25   </span></a> 
+<a name="l26"><span class="ln">26   </span></a>    Note that %gui's implementation will always set a `QT_API`, see 
+<a name="l27"><span class="ln">27   </span></a>    `IPython.terminal.pt_inputhooks.get_inputhook_name_and_func` 
+<a name="l28"><span class="ln">28   </span></a> 
+<a name="l29"><span class="ln">29   </span></a>&quot;&quot;&quot;</span>
+<a name="l30"><span class="ln">30   </span></a><span class="s2"># NOTE: This is no longer an external, third-party module, and should be</span>
+<a name="l31"><span class="ln">31   </span></a><span class="s2"># considered part of IPython. For compatibility however, it is being kept in</span>
+<a name="l32"><span class="ln">32   </span></a><span class="s2"># IPython/external.</span>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a><span class="s3">import </span><span class="s1">os</span>
+<a name="l35"><span class="ln">35   </span></a><span class="s3">import </span><span class="s1">sys</span>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a><span class="s3">from </span><span class="s1">IPython</span><span class="s4">.</span><span class="s1">external</span><span class="s4">.</span><span class="s1">qt_loaders </span><span class="s3">import </span><span class="s4">(</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s1">load_qt</span><span class="s4">,</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s1">loaded_api</span><span class="s4">,</span>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s1">enum_factory</span><span class="s4">,</span>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s2"># QT6</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s1">QT_API_PYQT6</span><span class="s4">,</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s1">QT_API_PYSIDE6</span><span class="s4">,</span>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s2"># QT5</span>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s1">QT_API_PYQT5</span><span class="s4">,</span>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s1">QT_API_PYSIDE2</span><span class="s4">,</span>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s2"># QT4</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s1">QT_API_PYQT</span><span class="s4">,</span>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s1">QT_API_PYSIDE</span><span class="s4">,</span>
+<a name="l50"><span class="ln">50   </span></a>    <span class="s2"># default</span>
+<a name="l51"><span class="ln">51   </span></a>    <span class="s1">QT_API_PYQT_DEFAULT</span><span class="s4">,</span>
+<a name="l52"><span class="ln">52   </span></a><span class="s4">)</span>
+<a name="l53"><span class="ln">53   </span></a>
+<a name="l54"><span class="ln">54   </span></a><span class="s1">_qt_apis </span><span class="s4">= (</span>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s2"># QT6</span>
+<a name="l56"><span class="ln">56   </span></a>    <span class="s1">QT_API_PYQT6</span><span class="s4">,</span>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s1">QT_API_PYSIDE6</span><span class="s4">,</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s2"># QT5</span>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s1">QT_API_PYQT5</span><span class="s4">,</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s1">QT_API_PYSIDE2</span><span class="s4">,</span>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s2"># default</span>
+<a name="l62"><span class="ln">62   </span></a>    <span class="s1">QT_API_PYQT_DEFAULT</span><span class="s4">,</span>
+<a name="l63"><span class="ln">63   </span></a><span class="s4">)</span>
+<a name="l64"><span class="ln">64   </span></a>
+<a name="l65"><span class="ln">65   </span></a>
+<a name="l66"><span class="ln">66   </span></a><span class="s3">def </span><span class="s1">matplotlib_options</span><span class="s4">(</span><span class="s1">mpl</span><span class="s4">):</span>
+<a name="l67"><span class="ln">67   </span></a>    <span class="s0">&quot;&quot;&quot;Constraints placed on an imported matplotlib.&quot;&quot;&quot;</span>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s3">if </span><span class="s1">mpl </span><span class="s3">is None</span><span class="s4">:</span>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s3">return</span>
+<a name="l70"><span class="ln">70   </span></a>    <span class="s1">backend </span><span class="s4">= </span><span class="s1">mpl</span><span class="s4">.</span><span class="s1">rcParams</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'backend'</span><span class="s4">, </span><span class="s3">None</span><span class="s4">)</span>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s3">if </span><span class="s1">backend </span><span class="s4">== </span><span class="s5">'Qt4Agg'</span><span class="s4">:</span>
+<a name="l72"><span class="ln">72   </span></a>        <span class="s1">mpqt </span><span class="s4">= </span><span class="s1">mpl</span><span class="s4">.</span><span class="s1">rcParams</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'backend.qt4'</span><span class="s4">, </span><span class="s3">None</span><span class="s4">)</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s3">if </span><span class="s1">mpqt </span><span class="s3">is None</span><span class="s4">:</span>
+<a name="l74"><span class="ln">74   </span></a>            <span class="s3">return None</span>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s3">if </span><span class="s1">mpqt</span><span class="s4">.</span><span class="s1">lower</span><span class="s4">() == </span><span class="s5">'pyside'</span><span class="s4">:</span>
+<a name="l76"><span class="ln">76   </span></a>            <span class="s3">return </span><span class="s4">[</span><span class="s1">QT_API_PYSIDE</span><span class="s4">]</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s3">elif </span><span class="s1">mpqt</span><span class="s4">.</span><span class="s1">lower</span><span class="s4">() == </span><span class="s5">'pyqt4'</span><span class="s4">:</span>
+<a name="l78"><span class="ln">78   </span></a>            <span class="s3">return </span><span class="s4">[</span><span class="s1">QT_API_PYQT_DEFAULT</span><span class="s4">]</span>
+<a name="l79"><span class="ln">79   </span></a>        <span class="s3">elif </span><span class="s1">mpqt</span><span class="s4">.</span><span class="s1">lower</span><span class="s4">() == </span><span class="s5">'pyqt4v2'</span><span class="s4">:</span>
+<a name="l80"><span class="ln">80   </span></a>            <span class="s3">return </span><span class="s4">[</span><span class="s1">QT_API_PYQT</span><span class="s4">]</span>
+<a name="l81"><span class="ln">81   </span></a>        <span class="s3">raise </span><span class="s1">ImportError</span><span class="s4">(</span><span class="s5">&quot;unhandled value for backend.qt4 from matplotlib: %r&quot; </span><span class="s4">%</span>
+<a name="l82"><span class="ln">82   </span></a>                          <span class="s1">mpqt</span><span class="s4">)</span>
+<a name="l83"><span class="ln">83   </span></a>    <span class="s3">elif </span><span class="s1">backend </span><span class="s4">== </span><span class="s5">'Qt5Agg'</span><span class="s4">:</span>
+<a name="l84"><span class="ln">84   </span></a>        <span class="s1">mpqt </span><span class="s4">= </span><span class="s1">mpl</span><span class="s4">.</span><span class="s1">rcParams</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'backend.qt5'</span><span class="s4">, </span><span class="s3">None</span><span class="s4">)</span>
+<a name="l85"><span class="ln">85   </span></a>        <span class="s3">if </span><span class="s1">mpqt </span><span class="s3">is None</span><span class="s4">:</span>
+<a name="l86"><span class="ln">86   </span></a>            <span class="s3">return None</span>
+<a name="l87"><span class="ln">87   </span></a>        <span class="s3">if </span><span class="s1">mpqt</span><span class="s4">.</span><span class="s1">lower</span><span class="s4">() == </span><span class="s5">'pyqt5'</span><span class="s4">:</span>
+<a name="l88"><span class="ln">88   </span></a>            <span class="s3">return </span><span class="s4">[</span><span class="s1">QT_API_PYQT5</span><span class="s4">]</span>
+<a name="l89"><span class="ln">89   </span></a>        <span class="s3">raise </span><span class="s1">ImportError</span><span class="s4">(</span><span class="s5">&quot;unhandled value for backend.qt5 from matplotlib: %r&quot; </span><span class="s4">%</span>
+<a name="l90"><span class="ln">90   </span></a>                          <span class="s1">mpqt</span><span class="s4">)</span>
+<a name="l91"><span class="ln">91   </span></a>
+<a name="l92"><span class="ln">92   </span></a><span class="s3">def </span><span class="s1">get_options</span><span class="s4">():</span>
+<a name="l93"><span class="ln">93   </span></a>    <span class="s0">&quot;&quot;&quot;Return a list of acceptable QT APIs, in decreasing order of preference.&quot;&quot;&quot;</span>
+<a name="l94"><span class="ln">94   </span></a>    <span class="s2">#already imported Qt somewhere. Use that</span>
+<a name="l95"><span class="ln">95   </span></a>    <span class="s1">loaded </span><span class="s4">= </span><span class="s1">loaded_api</span><span class="s4">()</span>
+<a name="l96"><span class="ln">96   </span></a>    <span class="s3">if </span><span class="s1">loaded </span><span class="s3">is not None</span><span class="s4">:</span>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s3">return </span><span class="s4">[</span><span class="s1">loaded</span><span class="s4">]</span>
+<a name="l98"><span class="ln">98   </span></a>
+<a name="l99"><span class="ln">99   </span></a>    <span class="s1">mpl </span><span class="s4">= </span><span class="s1">sys</span><span class="s4">.</span><span class="s1">modules</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">&quot;matplotlib&quot;</span><span class="s4">, </span><span class="s3">None</span><span class="s4">)</span>
+<a name="l100"><span class="ln">100  </span></a>
+<a name="l101"><span class="ln">101  </span></a>    <span class="s3">if </span><span class="s1">mpl </span><span class="s3">is not None and </span><span class="s1">tuple</span><span class="s4">(</span><span class="s1">mpl</span><span class="s4">.</span><span class="s1">__version__</span><span class="s4">.</span><span class="s1">split</span><span class="s4">(</span><span class="s5">&quot;.&quot;</span><span class="s4">)) &lt; (</span><span class="s5">&quot;1&quot;</span><span class="s4">, </span><span class="s5">&quot;0&quot;</span><span class="s4">, </span><span class="s5">&quot;2&quot;</span><span class="s4">):</span>
+<a name="l102"><span class="ln">102  </span></a>        <span class="s2"># 1.0.1 only supports PyQt4 v1</span>
+<a name="l103"><span class="ln">103  </span></a>        <span class="s3">return </span><span class="s4">[</span><span class="s1">QT_API_PYQT_DEFAULT</span><span class="s4">]</span>
+<a name="l104"><span class="ln">104  </span></a>
+<a name="l105"><span class="ln">105  </span></a>    <span class="s1">qt_api </span><span class="s4">= </span><span class="s1">os</span><span class="s4">.</span><span class="s1">environ</span><span class="s4">.</span><span class="s1">get</span><span class="s4">(</span><span class="s5">'QT_API'</span><span class="s4">, </span><span class="s3">None</span><span class="s4">)</span>
+<a name="l106"><span class="ln">106  </span></a>    <span class="s3">if </span><span class="s1">qt_api </span><span class="s3">is None</span><span class="s4">:</span>
+<a name="l107"><span class="ln">107  </span></a>        <span class="s2">#no ETS variable. Ask mpl, then use default fallback path</span>
+<a name="l108"><span class="ln">108  </span></a>        <span class="s3">return </span><span class="s1">matplotlib_options</span><span class="s4">(</span><span class="s1">mpl</span><span class="s4">) </span><span class="s3">or </span><span class="s4">[</span>
+<a name="l109"><span class="ln">109  </span></a>            <span class="s1">QT_API_PYQT_DEFAULT</span><span class="s4">,</span>
+<a name="l110"><span class="ln">110  </span></a>            <span class="s1">QT_API_PYQT6</span><span class="s4">,</span>
+<a name="l111"><span class="ln">111  </span></a>            <span class="s1">QT_API_PYSIDE6</span><span class="s4">,</span>
+<a name="l112"><span class="ln">112  </span></a>            <span class="s1">QT_API_PYQT5</span><span class="s4">,</span>
+<a name="l113"><span class="ln">113  </span></a>            <span class="s1">QT_API_PYSIDE2</span><span class="s4">,</span>
+<a name="l114"><span class="ln">114  </span></a>        <span class="s4">]</span>
+<a name="l115"><span class="ln">115  </span></a>    <span class="s3">elif </span><span class="s1">qt_api </span><span class="s3">not in </span><span class="s1">_qt_apis</span><span class="s4">:</span>
+<a name="l116"><span class="ln">116  </span></a>        <span class="s3">raise </span><span class="s1">RuntimeError</span><span class="s4">(</span><span class="s5">&quot;Invalid Qt API %r, valid values are: %r&quot; </span><span class="s4">%</span>
+<a name="l117"><span class="ln">117  </span></a>                           <span class="s4">(</span><span class="s1">qt_api</span><span class="s4">, </span><span class="s5">', '</span><span class="s4">.</span><span class="s1">join</span><span class="s4">(</span><span class="s1">_qt_apis</span><span class="s4">)))</span>
+<a name="l118"><span class="ln">118  </span></a>    <span class="s3">else</span><span class="s4">:</span>
+<a name="l119"><span class="ln">119  </span></a>        <span class="s3">return </span><span class="s4">[</span><span class="s1">qt_api</span><span class="s4">]</span>
+<a name="l120"><span class="ln">120  </span></a>
+<a name="l121"><span class="ln">121  </span></a>
+<a name="l122"><span class="ln">122  </span></a><span class="s1">api_opts </span><span class="s4">= </span><span class="s1">get_options</span><span class="s4">()</span>
+<a name="l123"><span class="ln">123  </span></a><span class="s1">QtCore</span><span class="s4">, </span><span class="s1">QtGui</span><span class="s4">, </span><span class="s1">QtSvg</span><span class="s4">, </span><span class="s1">QT_API </span><span class="s4">= </span><span class="s1">load_qt</span><span class="s4">(</span><span class="s1">api_opts</span><span class="s4">)</span>
+<a name="l124"><span class="ln">124  </span></a><span class="s1">enum_helper </span><span class="s4">= </span><span class="s1">enum_factory</span><span class="s4">(</span><span class="s1">QT_API</span><span class="s4">, </span><span class="s1">QtCore</span><span class="s4">)</span>
+<a name="l125"><span class="ln">125  </span></a></pre>
+</body>
+</html>

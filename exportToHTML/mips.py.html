@@ -1,0 +1,153 @@
+<html>
+<head>
+<title>mips.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.s5 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+mips.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot; 
+<a name="l2"><span class="ln">2    </span></a>    pygments.lexers.mips 
+<a name="l3"><span class="ln">3    </span></a>    ~~~~~~~~~~~~~~~~~~~~ 
+<a name="l4"><span class="ln">4    </span></a> 
+<a name="l5"><span class="ln">5    </span></a>    Lexers for MIPS assembly. 
+<a name="l6"><span class="ln">6    </span></a> 
+<a name="l7"><span class="ln">7    </span></a>    :copyright: Copyright 2006-2025 by the Pygments team, see AUTHORS. 
+<a name="l8"><span class="ln">8    </span></a>    :license: BSD, see LICENSE for details. 
+<a name="l9"><span class="ln">9    </span></a>&quot;&quot;&quot;</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">lexer </span><span class="s2">import </span><span class="s1">RegexLexer</span><span class="s3">, </span><span class="s1">words</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">from </span><span class="s1">pygments</span><span class="s3">.</span><span class="s1">token </span><span class="s2">import </span><span class="s1">Whitespace</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">, </span><span class="s1">String</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">, </span><span class="s1">Text</span>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a><span class="s1">__all__ </span><span class="s3">= [</span><span class="s4">&quot;MIPSLexer&quot;</span><span class="s3">]</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s2">class </span><span class="s1">MIPSLexer</span><span class="s3">(</span><span class="s1">RegexLexer</span><span class="s3">):</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s0">&quot;&quot;&quot; 
+<a name="l19"><span class="ln">19   </span></a>    A MIPS Assembly Lexer. 
+<a name="l20"><span class="ln">20   </span></a> 
+<a name="l21"><span class="ln">21   </span></a>    Based on the Emacs major mode by hlissner: 
+<a name="l22"><span class="ln">22   </span></a>    https://github.com/hlissner/emacs-mips-mode 
+<a name="l23"><span class="ln">23   </span></a>    &quot;&quot;&quot;</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s1">name </span><span class="s3">= </span><span class="s4">'MIPS'</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s1">aliases </span><span class="s3">= [</span><span class="s4">'mips'</span><span class="s3">]</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s1">version_added </span><span class="s3">= </span><span class="s4">''</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s5"># TODO: add '*.s' and '*.asm', which will require designing an analyse_text</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s5"># method for this lexer and refactoring those from Gas and Nasm in order to</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s5"># have relatively reliable detection</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s1">filenames </span><span class="s3">= [</span><span class="s4">'*.mips'</span><span class="s3">, </span><span class="s4">'*.MIPS'</span><span class="s3">]</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">url </span><span class="s3">= </span><span class="s4">'https://mips.com'</span>
+<a name="l33"><span class="ln">33   </span></a>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s1">keywords </span><span class="s3">= [</span>
+<a name="l35"><span class="ln">35   </span></a>        <span class="s5"># Arithmetic insturctions</span>
+<a name="l36"><span class="ln">36   </span></a>        <span class="s4">&quot;add&quot;</span><span class="s3">, </span><span class="s4">&quot;sub&quot;</span><span class="s3">, </span><span class="s4">&quot;subu&quot;</span><span class="s3">, </span><span class="s4">&quot;addi&quot;</span><span class="s3">, </span><span class="s4">&quot;subi&quot;</span><span class="s3">, </span><span class="s4">&quot;addu&quot;</span><span class="s3">, </span><span class="s4">&quot;addiu&quot;</span><span class="s3">,</span>
+<a name="l37"><span class="ln">37   </span></a>        <span class="s5"># Multiplication/division</span>
+<a name="l38"><span class="ln">38   </span></a>        <span class="s4">&quot;mul&quot;</span><span class="s3">, </span><span class="s4">&quot;mult&quot;</span><span class="s3">, </span><span class="s4">&quot;multu&quot;</span><span class="s3">, </span><span class="s4">&quot;mulu&quot;</span><span class="s3">, </span><span class="s4">&quot;madd&quot;</span><span class="s3">, </span><span class="s4">&quot;maddu&quot;</span><span class="s3">, </span><span class="s4">&quot;msub&quot;</span><span class="s3">, </span><span class="s4">&quot;msubu&quot;</span><span class="s3">, </span><span class="s4">&quot;div&quot;</span><span class="s3">, </span><span class="s4">&quot;divu&quot;</span><span class="s3">,</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s5"># Bitwise operations</span>
+<a name="l40"><span class="ln">40   </span></a>        <span class="s4">&quot;and&quot;</span><span class="s3">, </span><span class="s4">&quot;or&quot;</span><span class="s3">, </span><span class="s4">&quot;nor&quot;</span><span class="s3">, </span><span class="s4">&quot;xor&quot;</span><span class="s3">, </span><span class="s4">&quot;andi&quot;</span><span class="s3">, </span><span class="s4">&quot;ori&quot;</span><span class="s3">, </span><span class="s4">&quot;xori&quot;</span><span class="s3">, </span><span class="s4">&quot;clo&quot;</span><span class="s3">, </span><span class="s4">&quot;clz&quot;</span><span class="s3">,</span>
+<a name="l41"><span class="ln">41   </span></a>        <span class="s5"># Shifts</span>
+<a name="l42"><span class="ln">42   </span></a>        <span class="s4">&quot;sll&quot;</span><span class="s3">, </span><span class="s4">&quot;srl&quot;</span><span class="s3">, </span><span class="s4">&quot;sllv&quot;</span><span class="s3">, </span><span class="s4">&quot;srlv&quot;</span><span class="s3">, </span><span class="s4">&quot;sra&quot;</span><span class="s3">, </span><span class="s4">&quot;srav&quot;</span><span class="s3">,</span>
+<a name="l43"><span class="ln">43   </span></a>        <span class="s5"># Comparisons</span>
+<a name="l44"><span class="ln">44   </span></a>        <span class="s4">&quot;slt&quot;</span><span class="s3">, </span><span class="s4">&quot;sltu&quot;</span><span class="s3">, </span><span class="s4">&quot;slti&quot;</span><span class="s3">, </span><span class="s4">&quot;sltiu&quot;</span><span class="s3">,</span>
+<a name="l45"><span class="ln">45   </span></a>        <span class="s5"># Move data</span>
+<a name="l46"><span class="ln">46   </span></a>        <span class="s4">&quot;mfhi&quot;</span><span class="s3">, </span><span class="s4">&quot;mthi&quot;</span><span class="s3">, </span><span class="s4">&quot;mflo&quot;</span><span class="s3">, </span><span class="s4">&quot;mtlo&quot;</span><span class="s3">, </span><span class="s4">&quot;movn&quot;</span><span class="s3">, </span><span class="s4">&quot;movz&quot;</span><span class="s3">, </span><span class="s4">&quot;movf&quot;</span><span class="s3">, </span><span class="s4">&quot;movt&quot;</span><span class="s3">,</span>
+<a name="l47"><span class="ln">47   </span></a>        <span class="s5"># Jump</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s4">&quot;j&quot;</span><span class="s3">, </span><span class="s4">&quot;jal&quot;</span><span class="s3">, </span><span class="s4">&quot;jalr&quot;</span><span class="s3">, </span><span class="s4">&quot;jr&quot;</span><span class="s3">,</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s5"># branch</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s4">&quot;bc1f&quot;</span><span class="s3">, </span><span class="s4">&quot;bc1t&quot;</span><span class="s3">, </span><span class="s4">&quot;beq&quot;</span><span class="s3">, </span><span class="s4">&quot;bgez&quot;</span><span class="s3">, </span><span class="s4">&quot;bgezal&quot;</span><span class="s3">, </span><span class="s4">&quot;bgtz&quot;</span><span class="s3">, </span><span class="s4">&quot;blez&quot;</span><span class="s3">, </span><span class="s4">&quot;bltzal&quot;</span><span class="s3">, </span><span class="s4">&quot;bltz&quot;</span><span class="s3">, </span><span class="s4">&quot;bne&quot;</span><span class="s3">,</span>
+<a name="l51"><span class="ln">51   </span></a>        <span class="s5"># Load</span>
+<a name="l52"><span class="ln">52   </span></a>        <span class="s4">&quot;lui&quot;</span><span class="s3">, </span><span class="s4">&quot;lb&quot;</span><span class="s3">, </span><span class="s4">&quot;lbu&quot;</span><span class="s3">, </span><span class="s4">&quot;lh&quot;</span><span class="s3">, </span><span class="s4">&quot;lhu&quot;</span><span class="s3">, </span><span class="s4">&quot;lw&quot;</span><span class="s3">, </span><span class="s4">&quot;lwcl&quot;</span><span class="s3">, </span><span class="s4">&quot;lwl&quot;</span><span class="s3">, </span><span class="s4">&quot;lwr&quot;</span><span class="s3">,</span>
+<a name="l53"><span class="ln">53   </span></a>        <span class="s5"># Store</span>
+<a name="l54"><span class="ln">54   </span></a>        <span class="s4">&quot;sb&quot;</span><span class="s3">, </span><span class="s4">&quot;sh&quot;</span><span class="s3">, </span><span class="s4">&quot;sw&quot;</span><span class="s3">, </span><span class="s4">&quot;swl&quot;</span><span class="s3">, </span><span class="s4">&quot;swr&quot;</span><span class="s3">, </span><span class="s5"># coproc: swc1 sdc1</span>
+<a name="l55"><span class="ln">55   </span></a>        <span class="s5"># Concurrent load/store</span>
+<a name="l56"><span class="ln">56   </span></a>        <span class="s4">&quot;ll&quot;</span><span class="s3">, </span><span class="s4">&quot;sc&quot;</span><span class="s3">,</span>
+<a name="l57"><span class="ln">57   </span></a>        <span class="s5"># Trap handling</span>
+<a name="l58"><span class="ln">58   </span></a>        <span class="s4">&quot;teq&quot;</span><span class="s3">, </span><span class="s4">&quot;teqi&quot;</span><span class="s3">, </span><span class="s4">&quot;tne&quot;</span><span class="s3">, </span><span class="s4">&quot;tneqi&quot;</span><span class="s3">, </span><span class="s4">&quot;tge&quot;</span><span class="s3">, </span><span class="s4">&quot;tgeu&quot;</span><span class="s3">, </span><span class="s4">&quot;tgei&quot;</span><span class="s3">, </span><span class="s4">&quot;tgeiu&quot;</span><span class="s3">, </span><span class="s4">&quot;tlt&quot;</span><span class="s3">, </span><span class="s4">&quot;tltu&quot;</span><span class="s3">, </span><span class="s4">&quot;tlti&quot;</span><span class="s3">,</span>
+<a name="l59"><span class="ln">59   </span></a>        <span class="s4">&quot;tltiu&quot;</span><span class="s3">,</span>
+<a name="l60"><span class="ln">60   </span></a>        <span class="s5"># Exception / Interrupt</span>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s4">&quot;eret&quot;</span><span class="s3">, </span><span class="s4">&quot;break&quot;</span><span class="s3">, </span><span class="s4">&quot;bop&quot;</span><span class="s3">, </span><span class="s4">&quot;syscall&quot;</span><span class="s3">,</span>
+<a name="l62"><span class="ln">62   </span></a>        <span class="s5"># --- Floats -----------------------------------------------------</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s5"># Arithmetic</span>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s4">&quot;add.s&quot;</span><span class="s3">, </span><span class="s4">&quot;add.d&quot;</span><span class="s3">, </span><span class="s4">&quot;sub.s&quot;</span><span class="s3">, </span><span class="s4">&quot;sub.d&quot;</span><span class="s3">, </span><span class="s4">&quot;mul.s&quot;</span><span class="s3">, </span><span class="s4">&quot;mul.d&quot;</span><span class="s3">, </span><span class="s4">&quot;div.s&quot;</span><span class="s3">, </span><span class="s4">&quot;div.d&quot;</span><span class="s3">, </span><span class="s4">&quot;neg.d&quot;</span><span class="s3">,</span>
+<a name="l65"><span class="ln">65   </span></a>        <span class="s4">&quot;neg.s&quot;</span><span class="s3">,</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s5"># Comparison</span>
+<a name="l67"><span class="ln">67   </span></a>        <span class="s4">&quot;c.e.d&quot;</span><span class="s3">, </span><span class="s4">&quot;c.e.s&quot;</span><span class="s3">, </span><span class="s4">&quot;c.le.d&quot;</span><span class="s3">, </span><span class="s4">&quot;c.le.s&quot;</span><span class="s3">, </span><span class="s4">&quot;c.lt.s&quot;</span><span class="s3">, </span><span class="s4">&quot;c.lt.d&quot;</span><span class="s3">, </span><span class="s5"># &quot;c.gt.s&quot;, &quot;c.gt.d&quot;,</span>
+<a name="l68"><span class="ln">68   </span></a>        <span class="s4">&quot;madd.s&quot;</span><span class="s3">, </span><span class="s4">&quot;madd.d&quot;</span><span class="s3">, </span><span class="s4">&quot;msub.s&quot;</span><span class="s3">, </span><span class="s4">&quot;msub.d&quot;</span><span class="s3">,</span>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s5"># Move Floats</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s4">&quot;mov.d&quot;</span><span class="s3">, </span><span class="s4">&quot;move.s&quot;</span><span class="s3">, </span><span class="s4">&quot;movf.d&quot;</span><span class="s3">, </span><span class="s4">&quot;movf.s&quot;</span><span class="s3">, </span><span class="s4">&quot;movt.d&quot;</span><span class="s3">, </span><span class="s4">&quot;movt.s&quot;</span><span class="s3">, </span><span class="s4">&quot;movn.d&quot;</span><span class="s3">, </span><span class="s4">&quot;movn.s&quot;</span><span class="s3">,</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s4">&quot;movnzd&quot;</span><span class="s3">, </span><span class="s4">&quot;movz.s&quot;</span><span class="s3">, </span><span class="s4">&quot;movz.d&quot;</span><span class="s3">,</span>
+<a name="l72"><span class="ln">72   </span></a>        <span class="s5"># Conversion</span>
+<a name="l73"><span class="ln">73   </span></a>        <span class="s4">&quot;cvt.d.s&quot;</span><span class="s3">, </span><span class="s4">&quot;cvt.d.w&quot;</span><span class="s3">, </span><span class="s4">&quot;cvt.s.d&quot;</span><span class="s3">, </span><span class="s4">&quot;cvt.s.w&quot;</span><span class="s3">, </span><span class="s4">&quot;cvt.w.d&quot;</span><span class="s3">, </span><span class="s4">&quot;cvt.w.s&quot;</span><span class="s3">, </span><span class="s4">&quot;trunc.w.d&quot;</span><span class="s3">,</span>
+<a name="l74"><span class="ln">74   </span></a>        <span class="s4">&quot;trunc.w.s&quot;</span><span class="s3">,</span>
+<a name="l75"><span class="ln">75   </span></a>        <span class="s5"># Math</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s4">&quot;abs.s&quot;</span><span class="s3">, </span><span class="s4">&quot;abs.d&quot;</span><span class="s3">, </span><span class="s4">&quot;sqrt.s&quot;</span><span class="s3">, </span><span class="s4">&quot;sqrt.d&quot;</span><span class="s3">, </span><span class="s4">&quot;ceil.w.d&quot;</span><span class="s3">, </span><span class="s4">&quot;ceil.w.s&quot;</span><span class="s3">, </span><span class="s4">&quot;floor.w.d&quot;</span><span class="s3">,</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s4">&quot;floor.w.s&quot;</span><span class="s3">, </span><span class="s4">&quot;round.w.d&quot;</span><span class="s3">, </span><span class="s4">&quot;round.w.s&quot;</span><span class="s3">,</span>
+<a name="l78"><span class="ln">78   </span></a>    <span class="s3">]</span>
+<a name="l79"><span class="ln">79   </span></a>
+<a name="l80"><span class="ln">80   </span></a>    <span class="s1">pseudoinstructions </span><span class="s3">= [</span>
+<a name="l81"><span class="ln">81   </span></a>        <span class="s5"># Arithmetic &amp; logical</span>
+<a name="l82"><span class="ln">82   </span></a>        <span class="s4">&quot;rem&quot;</span><span class="s3">, </span><span class="s4">&quot;remu&quot;</span><span class="s3">, </span><span class="s4">&quot;mulo&quot;</span><span class="s3">, </span><span class="s4">&quot;mulou&quot;</span><span class="s3">, </span><span class="s4">&quot;abs&quot;</span><span class="s3">, </span><span class="s4">&quot;neg&quot;</span><span class="s3">, </span><span class="s4">&quot;negu&quot;</span><span class="s3">, </span><span class="s4">&quot;not&quot;</span><span class="s3">, </span><span class="s4">&quot;rol&quot;</span><span class="s3">, </span><span class="s4">&quot;ror&quot;</span><span class="s3">,</span>
+<a name="l83"><span class="ln">83   </span></a>        <span class="s5"># branches</span>
+<a name="l84"><span class="ln">84   </span></a>        <span class="s4">&quot;b&quot;</span><span class="s3">, </span><span class="s4">&quot;beqz&quot;</span><span class="s3">, </span><span class="s4">&quot;bge&quot;</span><span class="s3">, </span><span class="s4">&quot;bgeu&quot;</span><span class="s3">, </span><span class="s4">&quot;bgt&quot;</span><span class="s3">, </span><span class="s4">&quot;bgtu&quot;</span><span class="s3">, </span><span class="s4">&quot;ble&quot;</span><span class="s3">, </span><span class="s4">&quot;bleu&quot;</span><span class="s3">, </span><span class="s4">&quot;blt&quot;</span><span class="s3">, </span><span class="s4">&quot;bltu&quot;</span><span class="s3">, </span><span class="s4">&quot;bnez&quot;</span><span class="s3">,</span>
+<a name="l85"><span class="ln">85   </span></a>        <span class="s5"># loads</span>
+<a name="l86"><span class="ln">86   </span></a>        <span class="s4">&quot;la&quot;</span><span class="s3">, </span><span class="s4">&quot;li&quot;</span><span class="s3">, </span><span class="s4">&quot;ld&quot;</span><span class="s3">, </span><span class="s4">&quot;ulh&quot;</span><span class="s3">, </span><span class="s4">&quot;ulhu&quot;</span><span class="s3">, </span><span class="s4">&quot;ulw&quot;</span><span class="s3">,</span>
+<a name="l87"><span class="ln">87   </span></a>        <span class="s5"># Store</span>
+<a name="l88"><span class="ln">88   </span></a>        <span class="s4">&quot;sd&quot;</span><span class="s3">, </span><span class="s4">&quot;ush&quot;</span><span class="s3">, </span><span class="s4">&quot;usw&quot;</span><span class="s3">,</span>
+<a name="l89"><span class="ln">89   </span></a>        <span class="s5"># move</span>
+<a name="l90"><span class="ln">90   </span></a>        <span class="s4">&quot;move&quot;</span><span class="s3">, </span><span class="s5"># coproc: &quot;mfc1.d&quot;,</span>
+<a name="l91"><span class="ln">91   </span></a>        <span class="s5"># comparisons</span>
+<a name="l92"><span class="ln">92   </span></a>        <span class="s4">&quot;sgt&quot;</span><span class="s3">, </span><span class="s4">&quot;sgtu&quot;</span><span class="s3">, </span><span class="s4">&quot;sge&quot;</span><span class="s3">, </span><span class="s4">&quot;sgeu&quot;</span><span class="s3">, </span><span class="s4">&quot;sle&quot;</span><span class="s3">, </span><span class="s4">&quot;sleu&quot;</span><span class="s3">, </span><span class="s4">&quot;sne&quot;</span><span class="s3">, </span><span class="s4">&quot;seq&quot;</span><span class="s3">,</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s5"># --- Floats -----------------------------------------------------</span>
+<a name="l94"><span class="ln">94   </span></a>        <span class="s5"># load-store</span>
+<a name="l95"><span class="ln">95   </span></a>        <span class="s4">&quot;l.d&quot;</span><span class="s3">, </span><span class="s4">&quot;l.s&quot;</span><span class="s3">, </span><span class="s4">&quot;s.d&quot;</span><span class="s3">, </span><span class="s4">&quot;s.s&quot;</span><span class="s3">,</span>
+<a name="l96"><span class="ln">96   </span></a>    <span class="s3">]</span>
+<a name="l97"><span class="ln">97   </span></a>
+<a name="l98"><span class="ln">98   </span></a>    <span class="s1">directives </span><span class="s3">= [</span>
+<a name="l99"><span class="ln">99   </span></a>        <span class="s4">&quot;.align&quot;</span><span class="s3">, </span><span class="s4">&quot;.ascii&quot;</span><span class="s3">, </span><span class="s4">&quot;.asciiz&quot;</span><span class="s3">, </span><span class="s4">&quot;.byte&quot;</span><span class="s3">, </span><span class="s4">&quot;.data&quot;</span><span class="s3">, </span><span class="s4">&quot;.double&quot;</span><span class="s3">, </span><span class="s4">&quot;.extern&quot;</span><span class="s3">, </span><span class="s4">&quot;.float&quot;</span><span class="s3">,</span>
+<a name="l100"><span class="ln">100  </span></a>        <span class="s4">&quot;.globl&quot;</span><span class="s3">, </span><span class="s4">&quot;.half&quot;</span><span class="s3">, </span><span class="s4">&quot;.kdata&quot;</span><span class="s3">, </span><span class="s4">&quot;.ktext&quot;</span><span class="s3">, </span><span class="s4">&quot;.space&quot;</span><span class="s3">, </span><span class="s4">&quot;.text&quot;</span><span class="s3">, </span><span class="s4">&quot;.word&quot;</span><span class="s3">,</span>
+<a name="l101"><span class="ln">101  </span></a>    <span class="s3">]</span>
+<a name="l102"><span class="ln">102  </span></a>
+<a name="l103"><span class="ln">103  </span></a>    <span class="s1">deprecated </span><span class="s3">= [</span>
+<a name="l104"><span class="ln">104  </span></a>        <span class="s4">&quot;beql&quot;</span><span class="s3">, </span><span class="s4">&quot;bnel&quot;</span><span class="s3">, </span><span class="s4">&quot;bgtzl&quot;</span><span class="s3">, </span><span class="s4">&quot;bgezl&quot;</span><span class="s3">, </span><span class="s4">&quot;bltzl&quot;</span><span class="s3">, </span><span class="s4">&quot;blezl&quot;</span><span class="s3">, </span><span class="s4">&quot;bltzall&quot;</span><span class="s3">, </span><span class="s4">&quot;bgezall&quot;</span><span class="s3">,</span>
+<a name="l105"><span class="ln">105  </span></a>    <span class="s3">]</span>
+<a name="l106"><span class="ln">106  </span></a>
+<a name="l107"><span class="ln">107  </span></a>    <span class="s1">tokens </span><span class="s3">= {</span>
+<a name="l108"><span class="ln">108  </span></a>        <span class="s4">'root'</span><span class="s3">: [</span>
+<a name="l109"><span class="ln">109  </span></a>            <span class="s3">(</span><span class="s4">r'\s+'</span><span class="s3">, </span><span class="s1">Whitespace</span><span class="s3">),</span>
+<a name="l110"><span class="ln">110  </span></a>            <span class="s3">(</span><span class="s4">r'#.*'</span><span class="s3">, </span><span class="s1">Comment</span><span class="s3">),</span>
+<a name="l111"><span class="ln">111  </span></a>            <span class="s3">(</span><span class="s4">r'&quot;'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">, </span><span class="s4">'string'</span><span class="s3">),</span>
+<a name="l112"><span class="ln">112  </span></a>            <span class="s3">(</span><span class="s4">r'-?[0-9]+?'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Constant</span><span class="s3">),</span>
+<a name="l113"><span class="ln">113  </span></a>            <span class="s3">(</span><span class="s4">r'\w*:'</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Function</span><span class="s3">),</span>
+<a name="l114"><span class="ln">114  </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">deprecated</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s4">r'\b'</span><span class="s3">), </span><span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Pseudo</span><span class="s3">), </span><span class="s5"># need warning face</span>
+<a name="l115"><span class="ln">115  </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">pseudoinstructions</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s4">r'\b'</span><span class="s3">), </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Variable</span><span class="s3">),</span>
+<a name="l116"><span class="ln">116  </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">keywords</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s4">r'\b'</span><span class="s3">), </span><span class="s1">Keyword</span><span class="s3">),</span>
+<a name="l117"><span class="ln">117  </span></a>            <span class="s3">(</span><span class="s4">r'[slm][ftwd]c[0-9]([.]d)?'</span><span class="s3">, </span><span class="s1">Keyword</span><span class="s3">),</span>
+<a name="l118"><span class="ln">118  </span></a>            <span class="s3">(</span><span class="s4">r'\$(f?[0-2][0-9]|f?3[01]|[ft]?[0-9]|[vk][01]|a[0-3]|s[0-7]|[gsf]p|ra|at|zero)'</span><span class="s3">,</span>
+<a name="l119"><span class="ln">119  </span></a>             <span class="s1">Keyword</span><span class="s3">.</span><span class="s1">Type</span><span class="s3">),</span>
+<a name="l120"><span class="ln">120  </span></a>            <span class="s3">(</span><span class="s1">words</span><span class="s3">(</span><span class="s1">directives</span><span class="s3">, </span><span class="s1">suffix</span><span class="s3">=</span><span class="s4">r'\b'</span><span class="s3">), </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Entity</span><span class="s3">), </span><span class="s5"># Preprocessor?</span>
+<a name="l121"><span class="ln">121  </span></a>            <span class="s3">(</span><span class="s4">r':|,|;|\{|\}|=&gt;|@|\$|='</span><span class="s3">, </span><span class="s1">Name</span><span class="s3">.</span><span class="s1">Builtin</span><span class="s3">),</span>
+<a name="l122"><span class="ln">122  </span></a>            <span class="s3">(</span><span class="s4">r'\w+'</span><span class="s3">, </span><span class="s1">Text</span><span class="s3">),</span>
+<a name="l123"><span class="ln">123  </span></a>            <span class="s3">(</span><span class="s4">r'.'</span><span class="s3">, </span><span class="s1">Text</span><span class="s3">),</span>
+<a name="l124"><span class="ln">124  </span></a>        <span class="s3">],</span>
+<a name="l125"><span class="ln">125  </span></a>        <span class="s4">'string'</span><span class="s3">: [</span>
+<a name="l126"><span class="ln">126  </span></a>            <span class="s3">(</span><span class="s4">r'\\.'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">.</span><span class="s1">Escape</span><span class="s3">),</span>
+<a name="l127"><span class="ln">127  </span></a>            <span class="s3">(</span><span class="s4">r'&quot;'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">, </span><span class="s4">'#pop'</span><span class="s3">),</span>
+<a name="l128"><span class="ln">128  </span></a>            <span class="s3">(</span><span class="s4">r'[^\\&quot;]+'</span><span class="s3">, </span><span class="s1">String</span><span class="s3">),</span>
+<a name="l129"><span class="ln">129  </span></a>        <span class="s3">],</span>
+<a name="l130"><span class="ln">130  </span></a>    <span class="s3">}</span>
+<a name="l131"><span class="ln">131  </span></a></pre>
+</body>
+</html>

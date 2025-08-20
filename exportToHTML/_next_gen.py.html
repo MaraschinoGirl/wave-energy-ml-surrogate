@@ -1,0 +1,646 @@
+<html>
+<head>
+<title>_next_gen.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_next_gen.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># SPDX-License-Identifier: MIT</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s2">&quot;&quot;&quot; 
+<a name="l4"><span class="ln">4    </span></a>These are keyword-only APIs that call `attr.s` and `attr.ib` with different 
+<a name="l5"><span class="ln">5    </span></a>default values. 
+<a name="l6"><span class="ln">6    </span></a>&quot;&quot;&quot;</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a><span class="s3">from </span><span class="s1">functools </span><span class="s3">import </span><span class="s1">partial</span>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s3">from </span><span class="s4">. </span><span class="s3">import </span><span class="s1">setters</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">_funcs </span><span class="s3">import </span><span class="s1">asdict </span><span class="s3">as </span><span class="s1">_asdict</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">_funcs </span><span class="s3">import </span><span class="s1">astuple </span><span class="s3">as </span><span class="s1">_astuple</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">_make </span><span class="s3">import </span><span class="s4">(</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s1">_DEFAULT_ON_SETATTR</span><span class="s4">,</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s1">NOTHING</span><span class="s4">,</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s1">_frozen_setattrs</span><span class="s4">,</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s1">attrib</span><span class="s4">,</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s1">attrs</span><span class="s4">,</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s4">)</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">exceptions </span><span class="s3">import </span><span class="s1">UnannotatedAttributeError</span>
+<a name="l21"><span class="ln">21   </span></a>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a><span class="s3">def </span><span class="s1">define</span><span class="s4">(</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s1">maybe_cls</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s4">*,</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s1">these</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s1">repr</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s1">unsafe_hash</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s1">hash</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s1">init</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s1">slots</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">frozen</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s1">weakref_slot</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s1">str</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s1">auto_attribs</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s1">kw_only</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s1">cache_hash</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s1">auto_exc</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s1">eq</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s1">order</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s1">auto_detect</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s1">getstate_setstate</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s1">on_setattr</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s1">field_transformer</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s1">match_args</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l46"><span class="ln">46   </span></a><span class="s4">):</span>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s2">r&quot;&quot;&quot; 
+<a name="l48"><span class="ln">48   </span></a>    A class decorator that adds :term:`dunder methods` according to 
+<a name="l49"><span class="ln">49   </span></a>    :term:`fields &lt;field&gt;` specified using :doc:`type annotations &lt;types&gt;`, 
+<a name="l50"><span class="ln">50   </span></a>    `field()` calls, or the *these* argument. 
+<a name="l51"><span class="ln">51   </span></a> 
+<a name="l52"><span class="ln">52   </span></a>    Since *attrs* patches or replaces an existing class, you cannot use 
+<a name="l53"><span class="ln">53   </span></a>    `object.__init_subclass__` with *attrs* classes, because it runs too early. 
+<a name="l54"><span class="ln">54   </span></a>    As a replacement, you can define ``__attrs_init_subclass__`` on your class. 
+<a name="l55"><span class="ln">55   </span></a>    It will be called by *attrs* classes that subclass it after they're 
+<a name="l56"><span class="ln">56   </span></a>    created. See also :ref:`init-subclass`. 
+<a name="l57"><span class="ln">57   </span></a> 
+<a name="l58"><span class="ln">58   </span></a>    Args: 
+<a name="l59"><span class="ln">59   </span></a>        slots (bool): 
+<a name="l60"><span class="ln">60   </span></a>            Create a :term:`slotted class &lt;slotted classes&gt;` that's more 
+<a name="l61"><span class="ln">61   </span></a>            memory-efficient. Slotted classes are generally superior to the 
+<a name="l62"><span class="ln">62   </span></a>            default dict classes, but have some gotchas you should know about, 
+<a name="l63"><span class="ln">63   </span></a>            so we encourage you to read the :term:`glossary entry &lt;slotted 
+<a name="l64"><span class="ln">64   </span></a>            classes&gt;`. 
+<a name="l65"><span class="ln">65   </span></a> 
+<a name="l66"><span class="ln">66   </span></a>        auto_detect (bool): 
+<a name="l67"><span class="ln">67   </span></a>            Instead of setting the *init*, *repr*, *eq*, and *hash* arguments 
+<a name="l68"><span class="ln">68   </span></a>            explicitly, assume they are set to True **unless any** of the 
+<a name="l69"><span class="ln">69   </span></a>            involved methods for one of the arguments is implemented in the 
+<a name="l70"><span class="ln">70   </span></a>            *current* class (meaning, it is *not* inherited from some base 
+<a name="l71"><span class="ln">71   </span></a>            class). 
+<a name="l72"><span class="ln">72   </span></a> 
+<a name="l73"><span class="ln">73   </span></a>            So, for example by implementing ``__eq__`` on a class yourself, 
+<a name="l74"><span class="ln">74   </span></a>            *attrs* will deduce ``eq=False`` and will create *neither* 
+<a name="l75"><span class="ln">75   </span></a>            ``__eq__`` *nor* ``__ne__`` (but Python classes come with a 
+<a name="l76"><span class="ln">76   </span></a>            sensible ``__ne__`` by default, so it *should* be enough to only 
+<a name="l77"><span class="ln">77   </span></a>            implement ``__eq__`` in most cases). 
+<a name="l78"><span class="ln">78   </span></a> 
+<a name="l79"><span class="ln">79   </span></a>            Passing True or False` to *init*, *repr*, *eq*, or *hash* 
+<a name="l80"><span class="ln">80   </span></a>            overrides whatever *auto_detect* would determine. 
+<a name="l81"><span class="ln">81   </span></a> 
+<a name="l82"><span class="ln">82   </span></a>        auto_exc (bool): 
+<a name="l83"><span class="ln">83   </span></a>            If the class subclasses `BaseException` (which implicitly includes 
+<a name="l84"><span class="ln">84   </span></a>            any subclass of any exception), the following happens to behave 
+<a name="l85"><span class="ln">85   </span></a>            like a well-behaved Python exception class: 
+<a name="l86"><span class="ln">86   </span></a> 
+<a name="l87"><span class="ln">87   </span></a>            - the values for *eq*, *order*, and *hash* are ignored and the 
+<a name="l88"><span class="ln">88   </span></a>              instances compare and hash by the instance's ids [#]_ , 
+<a name="l89"><span class="ln">89   </span></a>            - all attributes that are either passed into ``__init__`` or have a 
+<a name="l90"><span class="ln">90   </span></a>              default value are additionally available as a tuple in the 
+<a name="l91"><span class="ln">91   </span></a>              ``args`` attribute, 
+<a name="l92"><span class="ln">92   </span></a>            - the value of *str* is ignored leaving ``__str__`` to base 
+<a name="l93"><span class="ln">93   </span></a>              classes. 
+<a name="l94"><span class="ln">94   </span></a> 
+<a name="l95"><span class="ln">95   </span></a>            .. [#] 
+<a name="l96"><span class="ln">96   </span></a>               Note that *attrs* will *not* remove existing implementations of 
+<a name="l97"><span class="ln">97   </span></a>               ``__hash__`` or the equality methods. It just won't add own 
+<a name="l98"><span class="ln">98   </span></a>               ones. 
+<a name="l99"><span class="ln">99   </span></a> 
+<a name="l100"><span class="ln">100  </span></a>        on_setattr (~typing.Callable | list[~typing.Callable] | None | ~typing.Literal[attrs.setters.NO_OP]): 
+<a name="l101"><span class="ln">101  </span></a>            A callable that is run whenever the user attempts to set an 
+<a name="l102"><span class="ln">102  </span></a>            attribute (either by assignment like ``i.x = 42`` or by using 
+<a name="l103"><span class="ln">103  </span></a>            `setattr` like ``setattr(i, &quot;x&quot;, 42)``). It receives the same 
+<a name="l104"><span class="ln">104  </span></a>            arguments as validators: the instance, the attribute that is being 
+<a name="l105"><span class="ln">105  </span></a>            modified, and the new value. 
+<a name="l106"><span class="ln">106  </span></a> 
+<a name="l107"><span class="ln">107  </span></a>            If no exception is raised, the attribute is set to the return value 
+<a name="l108"><span class="ln">108  </span></a>            of the callable. 
+<a name="l109"><span class="ln">109  </span></a> 
+<a name="l110"><span class="ln">110  </span></a>            If a list of callables is passed, they're automatically wrapped in 
+<a name="l111"><span class="ln">111  </span></a>            an `attrs.setters.pipe`. 
+<a name="l112"><span class="ln">112  </span></a> 
+<a name="l113"><span class="ln">113  </span></a>            If left None, the default behavior is to run converters and 
+<a name="l114"><span class="ln">114  </span></a>            validators whenever an attribute is set. 
+<a name="l115"><span class="ln">115  </span></a> 
+<a name="l116"><span class="ln">116  </span></a>        init (bool): 
+<a name="l117"><span class="ln">117  </span></a>            Create a ``__init__`` method that initializes the *attrs* 
+<a name="l118"><span class="ln">118  </span></a>            attributes. Leading underscores are stripped for the argument name, 
+<a name="l119"><span class="ln">119  </span></a>            unless an alias is set on the attribute. 
+<a name="l120"><span class="ln">120  </span></a> 
+<a name="l121"><span class="ln">121  </span></a>            .. seealso:: 
+<a name="l122"><span class="ln">122  </span></a>                `init` shows advanced ways to customize the generated 
+<a name="l123"><span class="ln">123  </span></a>                ``__init__`` method, including executing code before and after. 
+<a name="l124"><span class="ln">124  </span></a> 
+<a name="l125"><span class="ln">125  </span></a>        repr(bool): 
+<a name="l126"><span class="ln">126  </span></a>            Create a ``__repr__`` method with a human readable representation 
+<a name="l127"><span class="ln">127  </span></a>            of *attrs* attributes. 
+<a name="l128"><span class="ln">128  </span></a> 
+<a name="l129"><span class="ln">129  </span></a>        str (bool): 
+<a name="l130"><span class="ln">130  </span></a>            Create a ``__str__`` method that is identical to ``__repr__``. This 
+<a name="l131"><span class="ln">131  </span></a>            is usually not necessary except for `Exception`\ s. 
+<a name="l132"><span class="ln">132  </span></a> 
+<a name="l133"><span class="ln">133  </span></a>        eq (bool | None): 
+<a name="l134"><span class="ln">134  </span></a>            If True or None (default), add ``__eq__`` and ``__ne__`` methods 
+<a name="l135"><span class="ln">135  </span></a>            that check two instances for equality. 
+<a name="l136"><span class="ln">136  </span></a> 
+<a name="l137"><span class="ln">137  </span></a>            .. seealso:: 
+<a name="l138"><span class="ln">138  </span></a>                `comparison` describes how to customize the comparison behavior 
+<a name="l139"><span class="ln">139  </span></a>                going as far comparing NumPy arrays. 
+<a name="l140"><span class="ln">140  </span></a> 
+<a name="l141"><span class="ln">141  </span></a>        order (bool | None): 
+<a name="l142"><span class="ln">142  </span></a>            If True, add ``__lt__``, ``__le__``, ``__gt__``, and ``__ge__`` 
+<a name="l143"><span class="ln">143  </span></a>            methods that behave like *eq* above and allow instances to be 
+<a name="l144"><span class="ln">144  </span></a>            ordered. 
+<a name="l145"><span class="ln">145  </span></a> 
+<a name="l146"><span class="ln">146  </span></a>            They compare the instances as if they were tuples of their *attrs* 
+<a name="l147"><span class="ln">147  </span></a>            attributes if and only if the types of both classes are 
+<a name="l148"><span class="ln">148  </span></a>            *identical*. 
+<a name="l149"><span class="ln">149  </span></a> 
+<a name="l150"><span class="ln">150  </span></a>            If `None` mirror value of *eq*. 
+<a name="l151"><span class="ln">151  </span></a> 
+<a name="l152"><span class="ln">152  </span></a>            .. seealso:: `comparison` 
+<a name="l153"><span class="ln">153  </span></a> 
+<a name="l154"><span class="ln">154  </span></a>        unsafe_hash (bool | None): 
+<a name="l155"><span class="ln">155  </span></a>            If None (default), the ``__hash__`` method is generated according 
+<a name="l156"><span class="ln">156  </span></a>            how *eq* and *frozen* are set. 
+<a name="l157"><span class="ln">157  </span></a> 
+<a name="l158"><span class="ln">158  </span></a>            1. If *both* are True, *attrs* will generate a ``__hash__`` for 
+<a name="l159"><span class="ln">159  </span></a>               you. 
+<a name="l160"><span class="ln">160  </span></a>            2. If *eq* is True and *frozen* is False, ``__hash__`` will be set 
+<a name="l161"><span class="ln">161  </span></a>               to None, marking it unhashable (which it is). 
+<a name="l162"><span class="ln">162  </span></a>            3. If *eq* is False, ``__hash__`` will be left untouched meaning 
+<a name="l163"><span class="ln">163  </span></a>               the ``__hash__`` method of the base class will be used. If the 
+<a name="l164"><span class="ln">164  </span></a>               base class is `object`, this means it will fall back to id-based 
+<a name="l165"><span class="ln">165  </span></a>               hashing. 
+<a name="l166"><span class="ln">166  </span></a> 
+<a name="l167"><span class="ln">167  </span></a>            Although not recommended, you can decide for yourself and force 
+<a name="l168"><span class="ln">168  </span></a>            *attrs* to create one (for example, if the class is immutable even 
+<a name="l169"><span class="ln">169  </span></a>            though you didn't freeze it programmatically) by passing True or 
+<a name="l170"><span class="ln">170  </span></a>            not.  Both of these cases are rather special and should be used 
+<a name="l171"><span class="ln">171  </span></a>            carefully. 
+<a name="l172"><span class="ln">172  </span></a> 
+<a name="l173"><span class="ln">173  </span></a>            .. seealso:: 
+<a name="l174"><span class="ln">174  </span></a> 
+<a name="l175"><span class="ln">175  </span></a>                - Our documentation on `hashing`, 
+<a name="l176"><span class="ln">176  </span></a>                - Python's documentation on `object.__hash__`, 
+<a name="l177"><span class="ln">177  </span></a>                - and the `GitHub issue that led to the default \ behavior 
+<a name="l178"><span class="ln">178  </span></a>                  &lt;https://github.com/python-attrs/attrs/issues/136&gt;`_ for more 
+<a name="l179"><span class="ln">179  </span></a>                  details. 
+<a name="l180"><span class="ln">180  </span></a> 
+<a name="l181"><span class="ln">181  </span></a>        hash (bool | None): 
+<a name="l182"><span class="ln">182  </span></a>            Deprecated alias for *unsafe_hash*. *unsafe_hash* takes precedence. 
+<a name="l183"><span class="ln">183  </span></a> 
+<a name="l184"><span class="ln">184  </span></a>        cache_hash (bool): 
+<a name="l185"><span class="ln">185  </span></a>            Ensure that the object's hash code is computed only once and stored 
+<a name="l186"><span class="ln">186  </span></a>            on the object.  If this is set to True, hashing must be either 
+<a name="l187"><span class="ln">187  </span></a>            explicitly or implicitly enabled for this class.  If the hash code 
+<a name="l188"><span class="ln">188  </span></a>            is cached, avoid any reassignments of fields involved in hash code 
+<a name="l189"><span class="ln">189  </span></a>            computation or mutations of the objects those fields point to after 
+<a name="l190"><span class="ln">190  </span></a>            object creation.  If such changes occur, the behavior of the 
+<a name="l191"><span class="ln">191  </span></a>            object's hash code is undefined. 
+<a name="l192"><span class="ln">192  </span></a> 
+<a name="l193"><span class="ln">193  </span></a>        frozen (bool): 
+<a name="l194"><span class="ln">194  </span></a>            Make instances immutable after initialization.  If someone attempts 
+<a name="l195"><span class="ln">195  </span></a>            to modify a frozen instance, `attrs.exceptions.FrozenInstanceError` 
+<a name="l196"><span class="ln">196  </span></a>            is raised. 
+<a name="l197"><span class="ln">197  </span></a> 
+<a name="l198"><span class="ln">198  </span></a>            .. note:: 
+<a name="l199"><span class="ln">199  </span></a> 
+<a name="l200"><span class="ln">200  </span></a>                1. This is achieved by installing a custom ``__setattr__`` 
+<a name="l201"><span class="ln">201  </span></a>                   method on your class, so you can't implement your own. 
+<a name="l202"><span class="ln">202  </span></a> 
+<a name="l203"><span class="ln">203  </span></a>                2. True immutability is impossible in Python. 
+<a name="l204"><span class="ln">204  </span></a> 
+<a name="l205"><span class="ln">205  </span></a>                3. This *does* have a minor a runtime performance `impact 
+<a name="l206"><span class="ln">206  </span></a>                   &lt;how-frozen&gt;` when initializing new instances.  In other 
+<a name="l207"><span class="ln">207  </span></a>                   words: ``__init__`` is slightly slower with ``frozen=True``. 
+<a name="l208"><span class="ln">208  </span></a> 
+<a name="l209"><span class="ln">209  </span></a>                4. If a class is frozen, you cannot modify ``self`` in 
+<a name="l210"><span class="ln">210  </span></a>                   ``__attrs_post_init__`` or a self-written ``__init__``. You 
+<a name="l211"><span class="ln">211  </span></a>                   can circumvent that limitation by using 
+<a name="l212"><span class="ln">212  </span></a>                   ``object.__setattr__(self, &quot;attribute_name&quot;, value)``. 
+<a name="l213"><span class="ln">213  </span></a> 
+<a name="l214"><span class="ln">214  </span></a>                5. Subclasses of a frozen class are frozen too. 
+<a name="l215"><span class="ln">215  </span></a> 
+<a name="l216"><span class="ln">216  </span></a>        kw_only (bool): 
+<a name="l217"><span class="ln">217  </span></a>            Make all attributes keyword-only in the generated ``__init__`` (if 
+<a name="l218"><span class="ln">218  </span></a>            *init* is False, this parameter is ignored). 
+<a name="l219"><span class="ln">219  </span></a> 
+<a name="l220"><span class="ln">220  </span></a>        weakref_slot (bool): 
+<a name="l221"><span class="ln">221  </span></a>            Make instances weak-referenceable.  This has no effect unless 
+<a name="l222"><span class="ln">222  </span></a>            *slots* is True. 
+<a name="l223"><span class="ln">223  </span></a> 
+<a name="l224"><span class="ln">224  </span></a>        field_transformer (~typing.Callable | None): 
+<a name="l225"><span class="ln">225  </span></a>            A function that is called with the original class object and all 
+<a name="l226"><span class="ln">226  </span></a>            fields right before *attrs* finalizes the class.  You can use this, 
+<a name="l227"><span class="ln">227  </span></a>            for example, to automatically add converters or validators to 
+<a name="l228"><span class="ln">228  </span></a>            fields based on their types. 
+<a name="l229"><span class="ln">229  </span></a> 
+<a name="l230"><span class="ln">230  </span></a>            .. seealso:: `transform-fields` 
+<a name="l231"><span class="ln">231  </span></a> 
+<a name="l232"><span class="ln">232  </span></a>        match_args (bool): 
+<a name="l233"><span class="ln">233  </span></a>            If True (default), set ``__match_args__`` on the class to support 
+<a name="l234"><span class="ln">234  </span></a>            :pep:`634` (*Structural Pattern Matching*). It is a tuple of all 
+<a name="l235"><span class="ln">235  </span></a>            non-keyword-only ``__init__`` parameter names on Python 3.10 and 
+<a name="l236"><span class="ln">236  </span></a>            later. Ignored on older Python versions. 
+<a name="l237"><span class="ln">237  </span></a> 
+<a name="l238"><span class="ln">238  </span></a>        collect_by_mro (bool): 
+<a name="l239"><span class="ln">239  </span></a>            If True, *attrs* collects attributes from base classes correctly 
+<a name="l240"><span class="ln">240  </span></a>            according to the `method resolution order 
+<a name="l241"><span class="ln">241  </span></a>            &lt;https://docs.python.org/3/howto/mro.html&gt;`_. If False, *attrs* 
+<a name="l242"><span class="ln">242  </span></a>            will mimic the (wrong) behavior of `dataclasses` and :pep:`681`. 
+<a name="l243"><span class="ln">243  </span></a> 
+<a name="l244"><span class="ln">244  </span></a>            See also `issue #428 
+<a name="l245"><span class="ln">245  </span></a>            &lt;https://github.com/python-attrs/attrs/issues/428&gt;`_. 
+<a name="l246"><span class="ln">246  </span></a> 
+<a name="l247"><span class="ln">247  </span></a>        getstate_setstate (bool | None): 
+<a name="l248"><span class="ln">248  </span></a>            .. note:: 
+<a name="l249"><span class="ln">249  </span></a> 
+<a name="l250"><span class="ln">250  </span></a>                This is usually only interesting for slotted classes and you 
+<a name="l251"><span class="ln">251  </span></a>                should probably just set *auto_detect* to True. 
+<a name="l252"><span class="ln">252  </span></a> 
+<a name="l253"><span class="ln">253  </span></a>            If True, ``__getstate__`` and ``__setstate__`` are generated and 
+<a name="l254"><span class="ln">254  </span></a>            attached to the class. This is necessary for slotted classes to be 
+<a name="l255"><span class="ln">255  </span></a>            pickleable. If left None, it's True by default for slotted classes 
+<a name="l256"><span class="ln">256  </span></a>            and False for dict classes. 
+<a name="l257"><span class="ln">257  </span></a> 
+<a name="l258"><span class="ln">258  </span></a>            If *auto_detect* is True, and *getstate_setstate* is left None, and 
+<a name="l259"><span class="ln">259  </span></a>            **either** ``__getstate__`` or ``__setstate__`` is detected 
+<a name="l260"><span class="ln">260  </span></a>            directly on the class (meaning: not inherited), it is set to False 
+<a name="l261"><span class="ln">261  </span></a>            (this is usually what you want). 
+<a name="l262"><span class="ln">262  </span></a> 
+<a name="l263"><span class="ln">263  </span></a>        auto_attribs (bool | None): 
+<a name="l264"><span class="ln">264  </span></a>            If True, look at type annotations to determine which attributes to 
+<a name="l265"><span class="ln">265  </span></a>            use, like `dataclasses`. If False, it will only look for explicit 
+<a name="l266"><span class="ln">266  </span></a>            :func:`field` class attributes, like classic *attrs*. 
+<a name="l267"><span class="ln">267  </span></a> 
+<a name="l268"><span class="ln">268  </span></a>            If left None, it will guess: 
+<a name="l269"><span class="ln">269  </span></a> 
+<a name="l270"><span class="ln">270  </span></a>            1. If any attributes are annotated and no unannotated 
+<a name="l271"><span class="ln">271  </span></a>               `attrs.field`\ s are found, it assumes *auto_attribs=True*. 
+<a name="l272"><span class="ln">272  </span></a>            2. Otherwise it assumes *auto_attribs=False* and tries to collect 
+<a name="l273"><span class="ln">273  </span></a>               `attrs.field`\ s. 
+<a name="l274"><span class="ln">274  </span></a> 
+<a name="l275"><span class="ln">275  </span></a>            If *attrs* decides to look at type annotations, **all** fields 
+<a name="l276"><span class="ln">276  </span></a>            **must** be annotated. If *attrs* encounters a field that is set to 
+<a name="l277"><span class="ln">277  </span></a>            a :func:`field` / `attr.ib` but lacks a type annotation, an 
+<a name="l278"><span class="ln">278  </span></a>            `attrs.exceptions.UnannotatedAttributeError` is raised.  Use 
+<a name="l279"><span class="ln">279  </span></a>            ``field_name: typing.Any = field(...)`` if you don't want to set a 
+<a name="l280"><span class="ln">280  </span></a>            type. 
+<a name="l281"><span class="ln">281  </span></a> 
+<a name="l282"><span class="ln">282  </span></a>            .. warning:: 
+<a name="l283"><span class="ln">283  </span></a> 
+<a name="l284"><span class="ln">284  </span></a>                For features that use the attribute name to create decorators 
+<a name="l285"><span class="ln">285  </span></a>                (for example, :ref:`validators &lt;validators&gt;`), you still *must* 
+<a name="l286"><span class="ln">286  </span></a>                assign :func:`field` / `attr.ib` to them. Otherwise Python will 
+<a name="l287"><span class="ln">287  </span></a>                either not find the name or try to use the default value to 
+<a name="l288"><span class="ln">288  </span></a>                call, for example, ``validator`` on it. 
+<a name="l289"><span class="ln">289  </span></a> 
+<a name="l290"><span class="ln">290  </span></a>            Attributes annotated as `typing.ClassVar`, and attributes that are 
+<a name="l291"><span class="ln">291  </span></a>            neither annotated nor set to an `field()` are **ignored**. 
+<a name="l292"><span class="ln">292  </span></a> 
+<a name="l293"><span class="ln">293  </span></a>        these (dict[str, object]): 
+<a name="l294"><span class="ln">294  </span></a>            A dictionary of name to the (private) return value of `field()` 
+<a name="l295"><span class="ln">295  </span></a>            mappings. This is useful to avoid the definition of your attributes 
+<a name="l296"><span class="ln">296  </span></a>            within the class body because you can't (for example, if you want 
+<a name="l297"><span class="ln">297  </span></a>            to add ``__repr__`` methods to Django models) or don't want to. 
+<a name="l298"><span class="ln">298  </span></a> 
+<a name="l299"><span class="ln">299  </span></a>            If *these* is not `None`, *attrs* will *not* search the class body 
+<a name="l300"><span class="ln">300  </span></a>            for attributes and will *not* remove any attributes from it. 
+<a name="l301"><span class="ln">301  </span></a> 
+<a name="l302"><span class="ln">302  </span></a>            The order is deduced from the order of the attributes inside 
+<a name="l303"><span class="ln">303  </span></a>            *these*. 
+<a name="l304"><span class="ln">304  </span></a> 
+<a name="l305"><span class="ln">305  </span></a>            Arguably, this is a rather obscure feature. 
+<a name="l306"><span class="ln">306  </span></a> 
+<a name="l307"><span class="ln">307  </span></a>    .. versionadded:: 20.1.0 
+<a name="l308"><span class="ln">308  </span></a>    .. versionchanged:: 21.3.0 Converters are also run ``on_setattr``. 
+<a name="l309"><span class="ln">309  </span></a>    .. versionadded:: 22.2.0 
+<a name="l310"><span class="ln">310  </span></a>       *unsafe_hash* as an alias for *hash* (for :pep:`681` compliance). 
+<a name="l311"><span class="ln">311  </span></a>    .. versionchanged:: 24.1.0 
+<a name="l312"><span class="ln">312  </span></a>       Instances are not compared as tuples of attributes anymore, but using a 
+<a name="l313"><span class="ln">313  </span></a>       big ``and`` condition. This is faster and has more correct behavior for 
+<a name="l314"><span class="ln">314  </span></a>       uncomparable values like `math.nan`. 
+<a name="l315"><span class="ln">315  </span></a>    .. versionadded:: 24.1.0 
+<a name="l316"><span class="ln">316  </span></a>       If a class has an *inherited* classmethod called 
+<a name="l317"><span class="ln">317  </span></a>       ``__attrs_init_subclass__``, it is executed after the class is created. 
+<a name="l318"><span class="ln">318  </span></a>    .. deprecated:: 24.1.0 *hash* is deprecated in favor of *unsafe_hash*. 
+<a name="l319"><span class="ln">319  </span></a>    .. versionadded:: 24.3.0 
+<a name="l320"><span class="ln">320  </span></a>       Unless already present, a ``__replace__`` method is automatically 
+<a name="l321"><span class="ln">321  </span></a>       created for `copy.replace` (Python 3.13+ only). 
+<a name="l322"><span class="ln">322  </span></a> 
+<a name="l323"><span class="ln">323  </span></a>    .. note:: 
+<a name="l324"><span class="ln">324  </span></a> 
+<a name="l325"><span class="ln">325  </span></a>        The main differences to the classic `attr.s` are: 
+<a name="l326"><span class="ln">326  </span></a> 
+<a name="l327"><span class="ln">327  </span></a>        - Automatically detect whether or not *auto_attribs* should be `True` 
+<a name="l328"><span class="ln">328  </span></a>          (c.f. *auto_attribs* parameter). 
+<a name="l329"><span class="ln">329  </span></a>        - Converters and validators run when attributes are set by default -- 
+<a name="l330"><span class="ln">330  </span></a>          if *frozen* is `False`. 
+<a name="l331"><span class="ln">331  </span></a>        - *slots=True* 
+<a name="l332"><span class="ln">332  </span></a> 
+<a name="l333"><span class="ln">333  </span></a>          Usually, this has only upsides and few visible effects in everyday 
+<a name="l334"><span class="ln">334  </span></a>          programming. But it *can* lead to some surprising behaviors, so 
+<a name="l335"><span class="ln">335  </span></a>          please make sure to read :term:`slotted classes`. 
+<a name="l336"><span class="ln">336  </span></a> 
+<a name="l337"><span class="ln">337  </span></a>        - *auto_exc=True* 
+<a name="l338"><span class="ln">338  </span></a>        - *auto_detect=True* 
+<a name="l339"><span class="ln">339  </span></a>        - *order=False* 
+<a name="l340"><span class="ln">340  </span></a>        - Some options that were only relevant on Python 2 or were kept around 
+<a name="l341"><span class="ln">341  </span></a>          for backwards-compatibility have been removed. 
+<a name="l342"><span class="ln">342  </span></a> 
+<a name="l343"><span class="ln">343  </span></a>    &quot;&quot;&quot;</span>
+<a name="l344"><span class="ln">344  </span></a>
+<a name="l345"><span class="ln">345  </span></a>    <span class="s3">def </span><span class="s1">do_it</span><span class="s4">(</span><span class="s1">cls</span><span class="s4">, </span><span class="s1">auto_attribs</span><span class="s4">):</span>
+<a name="l346"><span class="ln">346  </span></a>        <span class="s3">return </span><span class="s1">attrs</span><span class="s4">(</span>
+<a name="l347"><span class="ln">347  </span></a>            <span class="s1">maybe_cls</span><span class="s4">=</span><span class="s1">cls</span><span class="s4">,</span>
+<a name="l348"><span class="ln">348  </span></a>            <span class="s1">these</span><span class="s4">=</span><span class="s1">these</span><span class="s4">,</span>
+<a name="l349"><span class="ln">349  </span></a>            <span class="s1">repr</span><span class="s4">=</span><span class="s1">repr</span><span class="s4">,</span>
+<a name="l350"><span class="ln">350  </span></a>            <span class="s1">hash</span><span class="s4">=</span><span class="s1">hash</span><span class="s4">,</span>
+<a name="l351"><span class="ln">351  </span></a>            <span class="s1">unsafe_hash</span><span class="s4">=</span><span class="s1">unsafe_hash</span><span class="s4">,</span>
+<a name="l352"><span class="ln">352  </span></a>            <span class="s1">init</span><span class="s4">=</span><span class="s1">init</span><span class="s4">,</span>
+<a name="l353"><span class="ln">353  </span></a>            <span class="s1">slots</span><span class="s4">=</span><span class="s1">slots</span><span class="s4">,</span>
+<a name="l354"><span class="ln">354  </span></a>            <span class="s1">frozen</span><span class="s4">=</span><span class="s1">frozen</span><span class="s4">,</span>
+<a name="l355"><span class="ln">355  </span></a>            <span class="s1">weakref_slot</span><span class="s4">=</span><span class="s1">weakref_slot</span><span class="s4">,</span>
+<a name="l356"><span class="ln">356  </span></a>            <span class="s1">str</span><span class="s4">=</span><span class="s1">str</span><span class="s4">,</span>
+<a name="l357"><span class="ln">357  </span></a>            <span class="s1">auto_attribs</span><span class="s4">=</span><span class="s1">auto_attribs</span><span class="s4">,</span>
+<a name="l358"><span class="ln">358  </span></a>            <span class="s1">kw_only</span><span class="s4">=</span><span class="s1">kw_only</span><span class="s4">,</span>
+<a name="l359"><span class="ln">359  </span></a>            <span class="s1">cache_hash</span><span class="s4">=</span><span class="s1">cache_hash</span><span class="s4">,</span>
+<a name="l360"><span class="ln">360  </span></a>            <span class="s1">auto_exc</span><span class="s4">=</span><span class="s1">auto_exc</span><span class="s4">,</span>
+<a name="l361"><span class="ln">361  </span></a>            <span class="s1">eq</span><span class="s4">=</span><span class="s1">eq</span><span class="s4">,</span>
+<a name="l362"><span class="ln">362  </span></a>            <span class="s1">order</span><span class="s4">=</span><span class="s1">order</span><span class="s4">,</span>
+<a name="l363"><span class="ln">363  </span></a>            <span class="s1">auto_detect</span><span class="s4">=</span><span class="s1">auto_detect</span><span class="s4">,</span>
+<a name="l364"><span class="ln">364  </span></a>            <span class="s1">collect_by_mro</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l365"><span class="ln">365  </span></a>            <span class="s1">getstate_setstate</span><span class="s4">=</span><span class="s1">getstate_setstate</span><span class="s4">,</span>
+<a name="l366"><span class="ln">366  </span></a>            <span class="s1">on_setattr</span><span class="s4">=</span><span class="s1">on_setattr</span><span class="s4">,</span>
+<a name="l367"><span class="ln">367  </span></a>            <span class="s1">field_transformer</span><span class="s4">=</span><span class="s1">field_transformer</span><span class="s4">,</span>
+<a name="l368"><span class="ln">368  </span></a>            <span class="s1">match_args</span><span class="s4">=</span><span class="s1">match_args</span><span class="s4">,</span>
+<a name="l369"><span class="ln">369  </span></a>        <span class="s4">)</span>
+<a name="l370"><span class="ln">370  </span></a>
+<a name="l371"><span class="ln">371  </span></a>    <span class="s3">def </span><span class="s1">wrap</span><span class="s4">(</span><span class="s1">cls</span><span class="s4">):</span>
+<a name="l372"><span class="ln">372  </span></a>        <span class="s2">&quot;&quot;&quot; 
+<a name="l373"><span class="ln">373  </span></a>        Making this a wrapper ensures this code runs during class creation. 
+<a name="l374"><span class="ln">374  </span></a> 
+<a name="l375"><span class="ln">375  </span></a>        We also ensure that frozen-ness of classes is inherited. 
+<a name="l376"><span class="ln">376  </span></a>        &quot;&quot;&quot;</span>
+<a name="l377"><span class="ln">377  </span></a>        <span class="s3">nonlocal </span><span class="s1">frozen</span><span class="s4">, </span><span class="s1">on_setattr</span>
+<a name="l378"><span class="ln">378  </span></a>
+<a name="l379"><span class="ln">379  </span></a>        <span class="s1">had_on_setattr </span><span class="s4">= </span><span class="s1">on_setattr </span><span class="s3">not in </span><span class="s4">(</span><span class="s3">None</span><span class="s4">, </span><span class="s1">setters</span><span class="s4">.</span><span class="s1">NO_OP</span><span class="s4">)</span>
+<a name="l380"><span class="ln">380  </span></a>
+<a name="l381"><span class="ln">381  </span></a>        <span class="s0"># By default, mutable classes convert &amp; validate on setattr.</span>
+<a name="l382"><span class="ln">382  </span></a>        <span class="s3">if </span><span class="s1">frozen </span><span class="s3">is False and </span><span class="s1">on_setattr </span><span class="s3">is None</span><span class="s4">:</span>
+<a name="l383"><span class="ln">383  </span></a>            <span class="s1">on_setattr </span><span class="s4">= </span><span class="s1">_DEFAULT_ON_SETATTR</span>
+<a name="l384"><span class="ln">384  </span></a>
+<a name="l385"><span class="ln">385  </span></a>        <span class="s0"># However, if we subclass a frozen class, we inherit the immutability</span>
+<a name="l386"><span class="ln">386  </span></a>        <span class="s0"># and disable on_setattr.</span>
+<a name="l387"><span class="ln">387  </span></a>        <span class="s3">for </span><span class="s1">base_cls </span><span class="s3">in </span><span class="s1">cls</span><span class="s4">.</span><span class="s1">__bases__</span><span class="s4">:</span>
+<a name="l388"><span class="ln">388  </span></a>            <span class="s3">if </span><span class="s1">base_cls</span><span class="s4">.</span><span class="s1">__setattr__ </span><span class="s3">is </span><span class="s1">_frozen_setattrs</span><span class="s4">:</span>
+<a name="l389"><span class="ln">389  </span></a>                <span class="s3">if </span><span class="s1">had_on_setattr</span><span class="s4">:</span>
+<a name="l390"><span class="ln">390  </span></a>                    <span class="s1">msg </span><span class="s4">= </span><span class="s5">&quot;Frozen classes can't use on_setattr (frozen-ness was inherited).&quot;</span>
+<a name="l391"><span class="ln">391  </span></a>                    <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s1">msg</span><span class="s4">)</span>
+<a name="l392"><span class="ln">392  </span></a>
+<a name="l393"><span class="ln">393  </span></a>                <span class="s1">on_setattr </span><span class="s4">= </span><span class="s1">setters</span><span class="s4">.</span><span class="s1">NO_OP</span>
+<a name="l394"><span class="ln">394  </span></a>                <span class="s3">break</span>
+<a name="l395"><span class="ln">395  </span></a>
+<a name="l396"><span class="ln">396  </span></a>        <span class="s3">if </span><span class="s1">auto_attribs </span><span class="s3">is not None</span><span class="s4">:</span>
+<a name="l397"><span class="ln">397  </span></a>            <span class="s3">return </span><span class="s1">do_it</span><span class="s4">(</span><span class="s1">cls</span><span class="s4">, </span><span class="s1">auto_attribs</span><span class="s4">)</span>
+<a name="l398"><span class="ln">398  </span></a>
+<a name="l399"><span class="ln">399  </span></a>        <span class="s3">try</span><span class="s4">:</span>
+<a name="l400"><span class="ln">400  </span></a>            <span class="s3">return </span><span class="s1">do_it</span><span class="s4">(</span><span class="s1">cls</span><span class="s4">, </span><span class="s3">True</span><span class="s4">)</span>
+<a name="l401"><span class="ln">401  </span></a>        <span class="s3">except </span><span class="s1">UnannotatedAttributeError</span><span class="s4">:</span>
+<a name="l402"><span class="ln">402  </span></a>            <span class="s3">return </span><span class="s1">do_it</span><span class="s4">(</span><span class="s1">cls</span><span class="s4">, </span><span class="s3">False</span><span class="s4">)</span>
+<a name="l403"><span class="ln">403  </span></a>
+<a name="l404"><span class="ln">404  </span></a>    <span class="s0"># maybe_cls's type depends on the usage of the decorator.  It's a class</span>
+<a name="l405"><span class="ln">405  </span></a>    <span class="s0"># if it's used as `@attrs` but `None` if used as `@attrs()`.</span>
+<a name="l406"><span class="ln">406  </span></a>    <span class="s3">if </span><span class="s1">maybe_cls </span><span class="s3">is None</span><span class="s4">:</span>
+<a name="l407"><span class="ln">407  </span></a>        <span class="s3">return </span><span class="s1">wrap</span>
+<a name="l408"><span class="ln">408  </span></a>
+<a name="l409"><span class="ln">409  </span></a>    <span class="s3">return </span><span class="s1">wrap</span><span class="s4">(</span><span class="s1">maybe_cls</span><span class="s4">)</span>
+<a name="l410"><span class="ln">410  </span></a>
+<a name="l411"><span class="ln">411  </span></a>
+<a name="l412"><span class="ln">412  </span></a><span class="s1">mutable </span><span class="s4">= </span><span class="s1">define</span>
+<a name="l413"><span class="ln">413  </span></a><span class="s1">frozen </span><span class="s4">= </span><span class="s1">partial</span><span class="s4">(</span><span class="s1">define</span><span class="s4">, </span><span class="s1">frozen</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, </span><span class="s1">on_setattr</span><span class="s4">=</span><span class="s3">None</span><span class="s4">)</span>
+<a name="l414"><span class="ln">414  </span></a>
+<a name="l415"><span class="ln">415  </span></a>
+<a name="l416"><span class="ln">416  </span></a><span class="s3">def </span><span class="s1">field</span><span class="s4">(</span>
+<a name="l417"><span class="ln">417  </span></a>    <span class="s4">*,</span>
+<a name="l418"><span class="ln">418  </span></a>    <span class="s1">default</span><span class="s4">=</span><span class="s1">NOTHING</span><span class="s4">,</span>
+<a name="l419"><span class="ln">419  </span></a>    <span class="s1">validator</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l420"><span class="ln">420  </span></a>    <span class="s1">repr</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l421"><span class="ln">421  </span></a>    <span class="s1">hash</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l422"><span class="ln">422  </span></a>    <span class="s1">init</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l423"><span class="ln">423  </span></a>    <span class="s1">metadata</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l424"><span class="ln">424  </span></a>    <span class="s1">type</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l425"><span class="ln">425  </span></a>    <span class="s1">converter</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l426"><span class="ln">426  </span></a>    <span class="s1">factory</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l427"><span class="ln">427  </span></a>    <span class="s1">kw_only</span><span class="s4">=</span><span class="s3">False</span><span class="s4">,</span>
+<a name="l428"><span class="ln">428  </span></a>    <span class="s1">eq</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l429"><span class="ln">429  </span></a>    <span class="s1">order</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l430"><span class="ln">430  </span></a>    <span class="s1">on_setattr</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l431"><span class="ln">431  </span></a>    <span class="s1">alias</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l432"><span class="ln">432  </span></a><span class="s4">):</span>
+<a name="l433"><span class="ln">433  </span></a>    <span class="s2">&quot;&quot;&quot; 
+<a name="l434"><span class="ln">434  </span></a>    Create a new :term:`field` / :term:`attribute` on a class. 
+<a name="l435"><span class="ln">435  </span></a> 
+<a name="l436"><span class="ln">436  </span></a>    ..  warning:: 
+<a name="l437"><span class="ln">437  </span></a> 
+<a name="l438"><span class="ln">438  </span></a>        Does **nothing** unless the class is also decorated with 
+<a name="l439"><span class="ln">439  </span></a>        `attrs.define` (or similar)! 
+<a name="l440"><span class="ln">440  </span></a> 
+<a name="l441"><span class="ln">441  </span></a>    Args: 
+<a name="l442"><span class="ln">442  </span></a>        default: 
+<a name="l443"><span class="ln">443  </span></a>            A value that is used if an *attrs*-generated ``__init__`` is used 
+<a name="l444"><span class="ln">444  </span></a>            and no value is passed while instantiating or the attribute is 
+<a name="l445"><span class="ln">445  </span></a>            excluded using ``init=False``. 
+<a name="l446"><span class="ln">446  </span></a> 
+<a name="l447"><span class="ln">447  </span></a>            If the value is an instance of `attrs.Factory`, its callable will 
+<a name="l448"><span class="ln">448  </span></a>            be used to construct a new value (useful for mutable data types 
+<a name="l449"><span class="ln">449  </span></a>            like lists or dicts). 
+<a name="l450"><span class="ln">450  </span></a> 
+<a name="l451"><span class="ln">451  </span></a>            If a default is not set (or set manually to `attrs.NOTHING`), a 
+<a name="l452"><span class="ln">452  </span></a>            value *must* be supplied when instantiating; otherwise a 
+<a name="l453"><span class="ln">453  </span></a>            `TypeError` will be raised. 
+<a name="l454"><span class="ln">454  </span></a> 
+<a name="l455"><span class="ln">455  </span></a>            .. seealso:: `defaults` 
+<a name="l456"><span class="ln">456  </span></a> 
+<a name="l457"><span class="ln">457  </span></a>        factory (~typing.Callable): 
+<a name="l458"><span class="ln">458  </span></a>            Syntactic sugar for ``default=attr.Factory(factory)``. 
+<a name="l459"><span class="ln">459  </span></a> 
+<a name="l460"><span class="ln">460  </span></a>        validator (~typing.Callable | list[~typing.Callable]): 
+<a name="l461"><span class="ln">461  </span></a>            Callable that is called by *attrs*-generated ``__init__`` methods 
+<a name="l462"><span class="ln">462  </span></a>            after the instance has been initialized.  They receive the 
+<a name="l463"><span class="ln">463  </span></a>            initialized instance, the :func:`~attrs.Attribute`, and the passed 
+<a name="l464"><span class="ln">464  </span></a>            value. 
+<a name="l465"><span class="ln">465  </span></a> 
+<a name="l466"><span class="ln">466  </span></a>            The return value is *not* inspected so the validator has to throw 
+<a name="l467"><span class="ln">467  </span></a>            an exception itself. 
+<a name="l468"><span class="ln">468  </span></a> 
+<a name="l469"><span class="ln">469  </span></a>            If a `list` is passed, its items are treated as validators and must 
+<a name="l470"><span class="ln">470  </span></a>            all pass. 
+<a name="l471"><span class="ln">471  </span></a> 
+<a name="l472"><span class="ln">472  </span></a>            Validators can be globally disabled and re-enabled using 
+<a name="l473"><span class="ln">473  </span></a>            `attrs.validators.get_disabled` / `attrs.validators.set_disabled`. 
+<a name="l474"><span class="ln">474  </span></a> 
+<a name="l475"><span class="ln">475  </span></a>            The validator can also be set using decorator notation as shown 
+<a name="l476"><span class="ln">476  </span></a>            below. 
+<a name="l477"><span class="ln">477  </span></a> 
+<a name="l478"><span class="ln">478  </span></a>            .. seealso:: :ref:`validators` 
+<a name="l479"><span class="ln">479  </span></a> 
+<a name="l480"><span class="ln">480  </span></a>        repr (bool | ~typing.Callable): 
+<a name="l481"><span class="ln">481  </span></a>            Include this attribute in the generated ``__repr__`` method. If 
+<a name="l482"><span class="ln">482  </span></a>            True, include the attribute; if False, omit it. By default, the 
+<a name="l483"><span class="ln">483  </span></a>            built-in ``repr()`` function is used. To override how the attribute 
+<a name="l484"><span class="ln">484  </span></a>            value is formatted, pass a ``callable`` that takes a single value 
+<a name="l485"><span class="ln">485  </span></a>            and returns a string. Note that the resulting string is used as-is, 
+<a name="l486"><span class="ln">486  </span></a>            which means it will be used directly *instead* of calling 
+<a name="l487"><span class="ln">487  </span></a>            ``repr()`` (the default). 
+<a name="l488"><span class="ln">488  </span></a> 
+<a name="l489"><span class="ln">489  </span></a>        eq (bool | ~typing.Callable): 
+<a name="l490"><span class="ln">490  </span></a>            If True (default), include this attribute in the generated 
+<a name="l491"><span class="ln">491  </span></a>            ``__eq__`` and ``__ne__`` methods that check two instances for 
+<a name="l492"><span class="ln">492  </span></a>            equality. To override how the attribute value is compared, pass a 
+<a name="l493"><span class="ln">493  </span></a>            callable that takes a single value and returns the value to be 
+<a name="l494"><span class="ln">494  </span></a>            compared. 
+<a name="l495"><span class="ln">495  </span></a> 
+<a name="l496"><span class="ln">496  </span></a>            .. seealso:: `comparison` 
+<a name="l497"><span class="ln">497  </span></a> 
+<a name="l498"><span class="ln">498  </span></a>        order (bool | ~typing.Callable): 
+<a name="l499"><span class="ln">499  </span></a>            If True (default), include this attributes in the generated 
+<a name="l500"><span class="ln">500  </span></a>            ``__lt__``, ``__le__``, ``__gt__`` and ``__ge__`` methods. To 
+<a name="l501"><span class="ln">501  </span></a>            override how the attribute value is ordered, pass a callable that 
+<a name="l502"><span class="ln">502  </span></a>            takes a single value and returns the value to be ordered. 
+<a name="l503"><span class="ln">503  </span></a> 
+<a name="l504"><span class="ln">504  </span></a>            .. seealso:: `comparison` 
+<a name="l505"><span class="ln">505  </span></a> 
+<a name="l506"><span class="ln">506  </span></a>        hash (bool | None): 
+<a name="l507"><span class="ln">507  </span></a>            Include this attribute in the generated ``__hash__`` method.  If 
+<a name="l508"><span class="ln">508  </span></a>            None (default), mirror *eq*'s value.  This is the correct behavior 
+<a name="l509"><span class="ln">509  </span></a>            according the Python spec.  Setting this value to anything else 
+<a name="l510"><span class="ln">510  </span></a>            than None is *discouraged*. 
+<a name="l511"><span class="ln">511  </span></a> 
+<a name="l512"><span class="ln">512  </span></a>            .. seealso:: `hashing` 
+<a name="l513"><span class="ln">513  </span></a> 
+<a name="l514"><span class="ln">514  </span></a>        init (bool): 
+<a name="l515"><span class="ln">515  </span></a>            Include this attribute in the generated ``__init__`` method. 
+<a name="l516"><span class="ln">516  </span></a> 
+<a name="l517"><span class="ln">517  </span></a>            It is possible to set this to False and set a default value. In 
+<a name="l518"><span class="ln">518  </span></a>            that case this attributed is unconditionally initialized with the 
+<a name="l519"><span class="ln">519  </span></a>            specified default value or factory. 
+<a name="l520"><span class="ln">520  </span></a> 
+<a name="l521"><span class="ln">521  </span></a>            .. seealso:: `init` 
+<a name="l522"><span class="ln">522  </span></a> 
+<a name="l523"><span class="ln">523  </span></a>        converter (typing.Callable | Converter): 
+<a name="l524"><span class="ln">524  </span></a>            A callable that is called by *attrs*-generated ``__init__`` methods 
+<a name="l525"><span class="ln">525  </span></a>            to convert attribute's value to the desired format. 
+<a name="l526"><span class="ln">526  </span></a> 
+<a name="l527"><span class="ln">527  </span></a>            If a vanilla callable is passed, it is given the passed-in value as 
+<a name="l528"><span class="ln">528  </span></a>            the only positional argument. It is possible to receive additional 
+<a name="l529"><span class="ln">529  </span></a>            arguments by wrapping the callable in a `Converter`. 
+<a name="l530"><span class="ln">530  </span></a> 
+<a name="l531"><span class="ln">531  </span></a>            Either way, the returned value will be used as the new value of the 
+<a name="l532"><span class="ln">532  </span></a>            attribute.  The value is converted before being passed to the 
+<a name="l533"><span class="ln">533  </span></a>            validator, if any. 
+<a name="l534"><span class="ln">534  </span></a> 
+<a name="l535"><span class="ln">535  </span></a>            .. seealso:: :ref:`converters` 
+<a name="l536"><span class="ln">536  </span></a> 
+<a name="l537"><span class="ln">537  </span></a>        metadata (dict | None): 
+<a name="l538"><span class="ln">538  </span></a>            An arbitrary mapping, to be used by third-party code. 
+<a name="l539"><span class="ln">539  </span></a> 
+<a name="l540"><span class="ln">540  </span></a>            .. seealso:: `extending-metadata`. 
+<a name="l541"><span class="ln">541  </span></a> 
+<a name="l542"><span class="ln">542  </span></a>        type (type): 
+<a name="l543"><span class="ln">543  </span></a>            The type of the attribute. Nowadays, the preferred method to 
+<a name="l544"><span class="ln">544  </span></a>            specify the type is using a variable annotation (see :pep:`526`). 
+<a name="l545"><span class="ln">545  </span></a>            This argument is provided for backwards-compatibility and for usage 
+<a name="l546"><span class="ln">546  </span></a>            with `make_class`. Regardless of the approach used, the type will 
+<a name="l547"><span class="ln">547  </span></a>            be stored on ``Attribute.type``. 
+<a name="l548"><span class="ln">548  </span></a> 
+<a name="l549"><span class="ln">549  </span></a>            Please note that *attrs* doesn't do anything with this metadata by 
+<a name="l550"><span class="ln">550  </span></a>            itself. You can use it as part of your own code or for `static type 
+<a name="l551"><span class="ln">551  </span></a>            checking &lt;types&gt;`. 
+<a name="l552"><span class="ln">552  </span></a> 
+<a name="l553"><span class="ln">553  </span></a>        kw_only (bool): 
+<a name="l554"><span class="ln">554  </span></a>            Make this attribute keyword-only in the generated ``__init__`` (if 
+<a name="l555"><span class="ln">555  </span></a>            ``init`` is False, this parameter is ignored). 
+<a name="l556"><span class="ln">556  </span></a> 
+<a name="l557"><span class="ln">557  </span></a>        on_setattr (~typing.Callable | list[~typing.Callable] | None | ~typing.Literal[attrs.setters.NO_OP]): 
+<a name="l558"><span class="ln">558  </span></a>            Allows to overwrite the *on_setattr* setting from `attr.s`. If left 
+<a name="l559"><span class="ln">559  </span></a>            None, the *on_setattr* value from `attr.s` is used. Set to 
+<a name="l560"><span class="ln">560  </span></a>            `attrs.setters.NO_OP` to run **no** `setattr` hooks for this 
+<a name="l561"><span class="ln">561  </span></a>            attribute -- regardless of the setting in `define()`. 
+<a name="l562"><span class="ln">562  </span></a> 
+<a name="l563"><span class="ln">563  </span></a>        alias (str | None): 
+<a name="l564"><span class="ln">564  </span></a>            Override this attribute's parameter name in the generated 
+<a name="l565"><span class="ln">565  </span></a>            ``__init__`` method. If left None, default to ``name`` stripped 
+<a name="l566"><span class="ln">566  </span></a>            of leading underscores. See `private-attributes`. 
+<a name="l567"><span class="ln">567  </span></a> 
+<a name="l568"><span class="ln">568  </span></a>    .. versionadded:: 20.1.0 
+<a name="l569"><span class="ln">569  </span></a>    .. versionchanged:: 21.1.0 
+<a name="l570"><span class="ln">570  </span></a>       *eq*, *order*, and *cmp* also accept a custom callable 
+<a name="l571"><span class="ln">571  </span></a>    .. versionadded:: 22.2.0 *alias* 
+<a name="l572"><span class="ln">572  </span></a>    .. versionadded:: 23.1.0 
+<a name="l573"><span class="ln">573  </span></a>       The *type* parameter has been re-added; mostly for `attrs.make_class`. 
+<a name="l574"><span class="ln">574  </span></a>       Please note that type checkers ignore this metadata. 
+<a name="l575"><span class="ln">575  </span></a> 
+<a name="l576"><span class="ln">576  </span></a>    .. seealso:: 
+<a name="l577"><span class="ln">577  </span></a> 
+<a name="l578"><span class="ln">578  </span></a>       `attr.ib` 
+<a name="l579"><span class="ln">579  </span></a>    &quot;&quot;&quot;</span>
+<a name="l580"><span class="ln">580  </span></a>    <span class="s3">return </span><span class="s1">attrib</span><span class="s4">(</span>
+<a name="l581"><span class="ln">581  </span></a>        <span class="s1">default</span><span class="s4">=</span><span class="s1">default</span><span class="s4">,</span>
+<a name="l582"><span class="ln">582  </span></a>        <span class="s1">validator</span><span class="s4">=</span><span class="s1">validator</span><span class="s4">,</span>
+<a name="l583"><span class="ln">583  </span></a>        <span class="s1">repr</span><span class="s4">=</span><span class="s1">repr</span><span class="s4">,</span>
+<a name="l584"><span class="ln">584  </span></a>        <span class="s1">hash</span><span class="s4">=</span><span class="s1">hash</span><span class="s4">,</span>
+<a name="l585"><span class="ln">585  </span></a>        <span class="s1">init</span><span class="s4">=</span><span class="s1">init</span><span class="s4">,</span>
+<a name="l586"><span class="ln">586  </span></a>        <span class="s1">metadata</span><span class="s4">=</span><span class="s1">metadata</span><span class="s4">,</span>
+<a name="l587"><span class="ln">587  </span></a>        <span class="s1">type</span><span class="s4">=</span><span class="s1">type</span><span class="s4">,</span>
+<a name="l588"><span class="ln">588  </span></a>        <span class="s1">converter</span><span class="s4">=</span><span class="s1">converter</span><span class="s4">,</span>
+<a name="l589"><span class="ln">589  </span></a>        <span class="s1">factory</span><span class="s4">=</span><span class="s1">factory</span><span class="s4">,</span>
+<a name="l590"><span class="ln">590  </span></a>        <span class="s1">kw_only</span><span class="s4">=</span><span class="s1">kw_only</span><span class="s4">,</span>
+<a name="l591"><span class="ln">591  </span></a>        <span class="s1">eq</span><span class="s4">=</span><span class="s1">eq</span><span class="s4">,</span>
+<a name="l592"><span class="ln">592  </span></a>        <span class="s1">order</span><span class="s4">=</span><span class="s1">order</span><span class="s4">,</span>
+<a name="l593"><span class="ln">593  </span></a>        <span class="s1">on_setattr</span><span class="s4">=</span><span class="s1">on_setattr</span><span class="s4">,</span>
+<a name="l594"><span class="ln">594  </span></a>        <span class="s1">alias</span><span class="s4">=</span><span class="s1">alias</span><span class="s4">,</span>
+<a name="l595"><span class="ln">595  </span></a>    <span class="s4">)</span>
+<a name="l596"><span class="ln">596  </span></a>
+<a name="l597"><span class="ln">597  </span></a>
+<a name="l598"><span class="ln">598  </span></a><span class="s3">def </span><span class="s1">asdict</span><span class="s4">(</span><span class="s1">inst</span><span class="s4">, *, </span><span class="s1">recurse</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, </span><span class="s1">filter</span><span class="s4">=</span><span class="s3">None</span><span class="s4">, </span><span class="s1">value_serializer</span><span class="s4">=</span><span class="s3">None</span><span class="s4">):</span>
+<a name="l599"><span class="ln">599  </span></a>    <span class="s2">&quot;&quot;&quot; 
+<a name="l600"><span class="ln">600  </span></a>    Same as `attr.asdict`, except that collections types are always retained 
+<a name="l601"><span class="ln">601  </span></a>    and dict is always used as *dict_factory*. 
+<a name="l602"><span class="ln">602  </span></a> 
+<a name="l603"><span class="ln">603  </span></a>    .. versionadded:: 21.3.0 
+<a name="l604"><span class="ln">604  </span></a>    &quot;&quot;&quot;</span>
+<a name="l605"><span class="ln">605  </span></a>    <span class="s3">return </span><span class="s1">_asdict</span><span class="s4">(</span>
+<a name="l606"><span class="ln">606  </span></a>        <span class="s1">inst</span><span class="s4">=</span><span class="s1">inst</span><span class="s4">,</span>
+<a name="l607"><span class="ln">607  </span></a>        <span class="s1">recurse</span><span class="s4">=</span><span class="s1">recurse</span><span class="s4">,</span>
+<a name="l608"><span class="ln">608  </span></a>        <span class="s1">filter</span><span class="s4">=</span><span class="s1">filter</span><span class="s4">,</span>
+<a name="l609"><span class="ln">609  </span></a>        <span class="s1">value_serializer</span><span class="s4">=</span><span class="s1">value_serializer</span><span class="s4">,</span>
+<a name="l610"><span class="ln">610  </span></a>        <span class="s1">retain_collection_types</span><span class="s4">=</span><span class="s3">True</span><span class="s4">,</span>
+<a name="l611"><span class="ln">611  </span></a>    <span class="s4">)</span>
+<a name="l612"><span class="ln">612  </span></a>
+<a name="l613"><span class="ln">613  </span></a>
+<a name="l614"><span class="ln">614  </span></a><span class="s3">def </span><span class="s1">astuple</span><span class="s4">(</span><span class="s1">inst</span><span class="s4">, *, </span><span class="s1">recurse</span><span class="s4">=</span><span class="s3">True</span><span class="s4">, </span><span class="s1">filter</span><span class="s4">=</span><span class="s3">None</span><span class="s4">):</span>
+<a name="l615"><span class="ln">615  </span></a>    <span class="s2">&quot;&quot;&quot; 
+<a name="l616"><span class="ln">616  </span></a>    Same as `attr.astuple`, except that collections types are always retained 
+<a name="l617"><span class="ln">617  </span></a>    and `tuple` is always used as the *tuple_factory*. 
+<a name="l618"><span class="ln">618  </span></a> 
+<a name="l619"><span class="ln">619  </span></a>    .. versionadded:: 21.3.0 
+<a name="l620"><span class="ln">620  </span></a>    &quot;&quot;&quot;</span>
+<a name="l621"><span class="ln">621  </span></a>    <span class="s3">return </span><span class="s1">_astuple</span><span class="s4">(</span>
+<a name="l622"><span class="ln">622  </span></a>        <span class="s1">inst</span><span class="s4">=</span><span class="s1">inst</span><span class="s4">, </span><span class="s1">recurse</span><span class="s4">=</span><span class="s1">recurse</span><span class="s4">, </span><span class="s1">filter</span><span class="s4">=</span><span class="s1">filter</span><span class="s4">, </span><span class="s1">retain_collection_types</span><span class="s4">=</span><span class="s3">True</span>
+<a name="l623"><span class="ln">623  </span></a>    <span class="s4">)</span>
+<a name="l624"><span class="ln">624  </span></a></pre>
+</body>
+</html>

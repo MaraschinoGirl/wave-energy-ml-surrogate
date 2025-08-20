@@ -1,0 +1,203 @@
+<html>
+<head>
+<title>_unsupervised.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #5f826b; font-style: italic;}
+.s1 { color: #bcbec4;}
+.s2 { color: #7a7e85;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #2aacb8;}
+.s6 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_unsupervised.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&quot;&quot;&quot;Unsupervised nearest neighbors learner&quot;&quot;&quot;</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s2"># Authors: The scikit-learn developers</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s2"># SPDX-License-Identifier: BSD-3-Clause</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s3">from </span><span class="s4">..</span><span class="s1">base </span><span class="s3">import </span><span class="s1">_fit_context</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s3">from </span><span class="s4">.</span><span class="s1">_base </span><span class="s3">import </span><span class="s1">KNeighborsMixin</span><span class="s4">, </span><span class="s1">NeighborsBase</span><span class="s4">, </span><span class="s1">RadiusNeighborsMixin</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s3">class </span><span class="s1">NearestNeighbors</span><span class="s4">(</span><span class="s1">KNeighborsMixin</span><span class="s4">, </span><span class="s1">RadiusNeighborsMixin</span><span class="s4">, </span><span class="s1">NeighborsBase</span><span class="s4">):</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s0">&quot;&quot;&quot;Unsupervised learner for implementing neighbor searches. 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>    Read more in the :ref:`User Guide &lt;unsupervised_neighbors&gt;`. 
+<a name="l14"><span class="ln">14   </span></a> 
+<a name="l15"><span class="ln">15   </span></a>    .. versionadded:: 0.9 
+<a name="l16"><span class="ln">16   </span></a> 
+<a name="l17"><span class="ln">17   </span></a>    Parameters 
+<a name="l18"><span class="ln">18   </span></a>    ---------- 
+<a name="l19"><span class="ln">19   </span></a>    n_neighbors : int, default=5 
+<a name="l20"><span class="ln">20   </span></a>        Number of neighbors to use by default for :meth:`kneighbors` queries. 
+<a name="l21"><span class="ln">21   </span></a> 
+<a name="l22"><span class="ln">22   </span></a>    radius : float, default=1.0 
+<a name="l23"><span class="ln">23   </span></a>        Range of parameter space to use by default for :meth:`radius_neighbors` 
+<a name="l24"><span class="ln">24   </span></a>        queries. 
+<a name="l25"><span class="ln">25   </span></a> 
+<a name="l26"><span class="ln">26   </span></a>    algorithm : {'auto', 'ball_tree', 'kd_tree', 'brute'}, default='auto' 
+<a name="l27"><span class="ln">27   </span></a>        Algorithm used to compute the nearest neighbors: 
+<a name="l28"><span class="ln">28   </span></a> 
+<a name="l29"><span class="ln">29   </span></a>        - 'ball_tree' will use :class:`BallTree` 
+<a name="l30"><span class="ln">30   </span></a>        - 'kd_tree' will use :class:`KDTree` 
+<a name="l31"><span class="ln">31   </span></a>        - 'brute' will use a brute-force search. 
+<a name="l32"><span class="ln">32   </span></a>        - 'auto' will attempt to decide the most appropriate algorithm 
+<a name="l33"><span class="ln">33   </span></a>          based on the values passed to :meth:`fit` method. 
+<a name="l34"><span class="ln">34   </span></a> 
+<a name="l35"><span class="ln">35   </span></a>        Note: fitting on sparse input will override the setting of 
+<a name="l36"><span class="ln">36   </span></a>        this parameter, using brute force. 
+<a name="l37"><span class="ln">37   </span></a> 
+<a name="l38"><span class="ln">38   </span></a>    leaf_size : int, default=30 
+<a name="l39"><span class="ln">39   </span></a>        Leaf size passed to BallTree or KDTree.  This can affect the 
+<a name="l40"><span class="ln">40   </span></a>        speed of the construction and query, as well as the memory 
+<a name="l41"><span class="ln">41   </span></a>        required to store the tree.  The optimal value depends on the 
+<a name="l42"><span class="ln">42   </span></a>        nature of the problem. 
+<a name="l43"><span class="ln">43   </span></a> 
+<a name="l44"><span class="ln">44   </span></a>    metric : str or callable, default='minkowski' 
+<a name="l45"><span class="ln">45   </span></a>        Metric to use for distance computation. Default is &quot;minkowski&quot;, which 
+<a name="l46"><span class="ln">46   </span></a>        results in the standard Euclidean distance when p = 2. See the 
+<a name="l47"><span class="ln">47   </span></a>        documentation of `scipy.spatial.distance 
+<a name="l48"><span class="ln">48   </span></a>        &lt;https://docs.scipy.org/doc/scipy/reference/spatial.distance.html&gt;`_ and 
+<a name="l49"><span class="ln">49   </span></a>        the metrics listed in 
+<a name="l50"><span class="ln">50   </span></a>        :class:`~sklearn.metrics.pairwise.distance_metrics` for valid metric 
+<a name="l51"><span class="ln">51   </span></a>        values. 
+<a name="l52"><span class="ln">52   </span></a> 
+<a name="l53"><span class="ln">53   </span></a>        If metric is &quot;precomputed&quot;, X is assumed to be a distance matrix and 
+<a name="l54"><span class="ln">54   </span></a>        must be square during fit. X may be a :term:`sparse graph`, in which 
+<a name="l55"><span class="ln">55   </span></a>        case only &quot;nonzero&quot; elements may be considered neighbors. 
+<a name="l56"><span class="ln">56   </span></a> 
+<a name="l57"><span class="ln">57   </span></a>        If metric is a callable function, it takes two arrays representing 1D 
+<a name="l58"><span class="ln">58   </span></a>        vectors as inputs and must return one value indicating the distance 
+<a name="l59"><span class="ln">59   </span></a>        between those vectors. This works for Scipy's metrics, but is less 
+<a name="l60"><span class="ln">60   </span></a>        efficient than passing the metric name as a string. 
+<a name="l61"><span class="ln">61   </span></a> 
+<a name="l62"><span class="ln">62   </span></a>    p : float (positive), default=2 
+<a name="l63"><span class="ln">63   </span></a>        Parameter for the Minkowski metric from 
+<a name="l64"><span class="ln">64   </span></a>        sklearn.metrics.pairwise.pairwise_distances. When p = 1, this is 
+<a name="l65"><span class="ln">65   </span></a>        equivalent to using manhattan_distance (l1), and euclidean_distance 
+<a name="l66"><span class="ln">66   </span></a>        (l2) for p = 2. For arbitrary p, minkowski_distance (l_p) is used. 
+<a name="l67"><span class="ln">67   </span></a> 
+<a name="l68"><span class="ln">68   </span></a>    metric_params : dict, default=None 
+<a name="l69"><span class="ln">69   </span></a>        Additional keyword arguments for the metric function. 
+<a name="l70"><span class="ln">70   </span></a> 
+<a name="l71"><span class="ln">71   </span></a>    n_jobs : int, default=None 
+<a name="l72"><span class="ln">72   </span></a>        The number of parallel jobs to run for neighbors search. 
+<a name="l73"><span class="ln">73   </span></a>        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context. 
+<a name="l74"><span class="ln">74   </span></a>        ``-1`` means using all processors. See :term:`Glossary &lt;n_jobs&gt;` 
+<a name="l75"><span class="ln">75   </span></a>        for more details. 
+<a name="l76"><span class="ln">76   </span></a> 
+<a name="l77"><span class="ln">77   </span></a>    Attributes 
+<a name="l78"><span class="ln">78   </span></a>    ---------- 
+<a name="l79"><span class="ln">79   </span></a>    effective_metric_ : str 
+<a name="l80"><span class="ln">80   </span></a>        Metric used to compute distances to neighbors. 
+<a name="l81"><span class="ln">81   </span></a> 
+<a name="l82"><span class="ln">82   </span></a>    effective_metric_params_ : dict 
+<a name="l83"><span class="ln">83   </span></a>        Parameters for the metric used to compute distances to neighbors. 
+<a name="l84"><span class="ln">84   </span></a> 
+<a name="l85"><span class="ln">85   </span></a>    n_features_in_ : int 
+<a name="l86"><span class="ln">86   </span></a>        Number of features seen during :term:`fit`. 
+<a name="l87"><span class="ln">87   </span></a> 
+<a name="l88"><span class="ln">88   </span></a>        .. versionadded:: 0.24 
+<a name="l89"><span class="ln">89   </span></a> 
+<a name="l90"><span class="ln">90   </span></a>    feature_names_in_ : ndarray of shape (`n_features_in_`,) 
+<a name="l91"><span class="ln">91   </span></a>        Names of features seen during :term:`fit`. Defined only when `X` 
+<a name="l92"><span class="ln">92   </span></a>        has feature names that are all strings. 
+<a name="l93"><span class="ln">93   </span></a> 
+<a name="l94"><span class="ln">94   </span></a>        .. versionadded:: 1.0 
+<a name="l95"><span class="ln">95   </span></a> 
+<a name="l96"><span class="ln">96   </span></a>    n_samples_fit_ : int 
+<a name="l97"><span class="ln">97   </span></a>        Number of samples in the fitted data. 
+<a name="l98"><span class="ln">98   </span></a> 
+<a name="l99"><span class="ln">99   </span></a>    See Also 
+<a name="l100"><span class="ln">100  </span></a>    -------- 
+<a name="l101"><span class="ln">101  </span></a>    KNeighborsClassifier : Classifier implementing the k-nearest neighbors 
+<a name="l102"><span class="ln">102  </span></a>        vote. 
+<a name="l103"><span class="ln">103  </span></a>    RadiusNeighborsClassifier : Classifier implementing a vote among neighbors 
+<a name="l104"><span class="ln">104  </span></a>        within a given radius. 
+<a name="l105"><span class="ln">105  </span></a>    KNeighborsRegressor : Regression based on k-nearest neighbors. 
+<a name="l106"><span class="ln">106  </span></a>    RadiusNeighborsRegressor : Regression based on neighbors within a fixed 
+<a name="l107"><span class="ln">107  </span></a>        radius. 
+<a name="l108"><span class="ln">108  </span></a>    BallTree : Space partitioning data structure for organizing points in a 
+<a name="l109"><span class="ln">109  </span></a>        multi-dimensional space, used for nearest neighbor search. 
+<a name="l110"><span class="ln">110  </span></a> 
+<a name="l111"><span class="ln">111  </span></a>    Notes 
+<a name="l112"><span class="ln">112  </span></a>    ----- 
+<a name="l113"><span class="ln">113  </span></a>    See :ref:`Nearest Neighbors &lt;neighbors&gt;` in the online documentation 
+<a name="l114"><span class="ln">114  </span></a>    for a discussion of the choice of ``algorithm`` and ``leaf_size``. 
+<a name="l115"><span class="ln">115  </span></a> 
+<a name="l116"><span class="ln">116  </span></a>    https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm 
+<a name="l117"><span class="ln">117  </span></a> 
+<a name="l118"><span class="ln">118  </span></a>    Examples 
+<a name="l119"><span class="ln">119  </span></a>    -------- 
+<a name="l120"><span class="ln">120  </span></a>    &gt;&gt;&gt; import numpy as np 
+<a name="l121"><span class="ln">121  </span></a>    &gt;&gt;&gt; from sklearn.neighbors import NearestNeighbors 
+<a name="l122"><span class="ln">122  </span></a>    &gt;&gt;&gt; samples = [[0, 0, 2], [1, 0, 0], [0, 0, 1]] 
+<a name="l123"><span class="ln">123  </span></a>    &gt;&gt;&gt; neigh = NearestNeighbors(n_neighbors=2, radius=0.4) 
+<a name="l124"><span class="ln">124  </span></a>    &gt;&gt;&gt; neigh.fit(samples) 
+<a name="l125"><span class="ln">125  </span></a>    NearestNeighbors(...) 
+<a name="l126"><span class="ln">126  </span></a>    &gt;&gt;&gt; neigh.kneighbors([[0, 0, 1.3]], 2, return_distance=False) 
+<a name="l127"><span class="ln">127  </span></a>    array([[2, 0]]...) 
+<a name="l128"><span class="ln">128  </span></a>    &gt;&gt;&gt; nbrs = neigh.radius_neighbors( 
+<a name="l129"><span class="ln">129  </span></a>    ...    [[0, 0, 1.3]], 0.4, return_distance=False 
+<a name="l130"><span class="ln">130  </span></a>    ... ) 
+<a name="l131"><span class="ln">131  </span></a>    &gt;&gt;&gt; np.asarray(nbrs[0][0]) 
+<a name="l132"><span class="ln">132  </span></a>    array(2) 
+<a name="l133"><span class="ln">133  </span></a>    &quot;&quot;&quot;</span>
+<a name="l134"><span class="ln">134  </span></a>
+<a name="l135"><span class="ln">135  </span></a>    <span class="s3">def </span><span class="s1">__init__</span><span class="s4">(</span>
+<a name="l136"><span class="ln">136  </span></a>        <span class="s1">self</span><span class="s4">,</span>
+<a name="l137"><span class="ln">137  </span></a>        <span class="s4">*,</span>
+<a name="l138"><span class="ln">138  </span></a>        <span class="s1">n_neighbors</span><span class="s4">=</span><span class="s5">5</span><span class="s4">,</span>
+<a name="l139"><span class="ln">139  </span></a>        <span class="s1">radius</span><span class="s4">=</span><span class="s5">1.0</span><span class="s4">,</span>
+<a name="l140"><span class="ln">140  </span></a>        <span class="s1">algorithm</span><span class="s4">=</span><span class="s6">&quot;auto&quot;</span><span class="s4">,</span>
+<a name="l141"><span class="ln">141  </span></a>        <span class="s1">leaf_size</span><span class="s4">=</span><span class="s5">30</span><span class="s4">,</span>
+<a name="l142"><span class="ln">142  </span></a>        <span class="s1">metric</span><span class="s4">=</span><span class="s6">&quot;minkowski&quot;</span><span class="s4">,</span>
+<a name="l143"><span class="ln">143  </span></a>        <span class="s1">p</span><span class="s4">=</span><span class="s5">2</span><span class="s4">,</span>
+<a name="l144"><span class="ln">144  </span></a>        <span class="s1">metric_params</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l145"><span class="ln">145  </span></a>        <span class="s1">n_jobs</span><span class="s4">=</span><span class="s3">None</span><span class="s4">,</span>
+<a name="l146"><span class="ln">146  </span></a>    <span class="s4">):</span>
+<a name="l147"><span class="ln">147  </span></a>        <span class="s1">super</span><span class="s4">().</span><span class="s1">__init__</span><span class="s4">(</span>
+<a name="l148"><span class="ln">148  </span></a>            <span class="s1">n_neighbors</span><span class="s4">=</span><span class="s1">n_neighbors</span><span class="s4">,</span>
+<a name="l149"><span class="ln">149  </span></a>            <span class="s1">radius</span><span class="s4">=</span><span class="s1">radius</span><span class="s4">,</span>
+<a name="l150"><span class="ln">150  </span></a>            <span class="s1">algorithm</span><span class="s4">=</span><span class="s1">algorithm</span><span class="s4">,</span>
+<a name="l151"><span class="ln">151  </span></a>            <span class="s1">leaf_size</span><span class="s4">=</span><span class="s1">leaf_size</span><span class="s4">,</span>
+<a name="l152"><span class="ln">152  </span></a>            <span class="s1">metric</span><span class="s4">=</span><span class="s1">metric</span><span class="s4">,</span>
+<a name="l153"><span class="ln">153  </span></a>            <span class="s1">p</span><span class="s4">=</span><span class="s1">p</span><span class="s4">,</span>
+<a name="l154"><span class="ln">154  </span></a>            <span class="s1">metric_params</span><span class="s4">=</span><span class="s1">metric_params</span><span class="s4">,</span>
+<a name="l155"><span class="ln">155  </span></a>            <span class="s1">n_jobs</span><span class="s4">=</span><span class="s1">n_jobs</span><span class="s4">,</span>
+<a name="l156"><span class="ln">156  </span></a>        <span class="s4">)</span>
+<a name="l157"><span class="ln">157  </span></a>
+<a name="l158"><span class="ln">158  </span></a>    <span class="s4">@</span><span class="s1">_fit_context</span><span class="s4">(</span>
+<a name="l159"><span class="ln">159  </span></a>        <span class="s2"># NearestNeighbors.metric is not validated yet</span>
+<a name="l160"><span class="ln">160  </span></a>        <span class="s1">prefer_skip_nested_validation</span><span class="s4">=</span><span class="s3">False</span>
+<a name="l161"><span class="ln">161  </span></a>    <span class="s4">)</span>
+<a name="l162"><span class="ln">162  </span></a>    <span class="s3">def </span><span class="s1">fit</span><span class="s4">(</span><span class="s1">self</span><span class="s4">, </span><span class="s1">X</span><span class="s4">, </span><span class="s1">y</span><span class="s4">=</span><span class="s3">None</span><span class="s4">):</span>
+<a name="l163"><span class="ln">163  </span></a>        <span class="s0">&quot;&quot;&quot;Fit the nearest neighbors estimator from the training dataset. 
+<a name="l164"><span class="ln">164  </span></a> 
+<a name="l165"><span class="ln">165  </span></a>        Parameters 
+<a name="l166"><span class="ln">166  </span></a>        ---------- 
+<a name="l167"><span class="ln">167  </span></a>        X : {array-like, sparse matrix} of shape (n_samples, n_features) or \ 
+<a name="l168"><span class="ln">168  </span></a>                (n_samples, n_samples) if metric='precomputed' 
+<a name="l169"><span class="ln">169  </span></a>            Training data. 
+<a name="l170"><span class="ln">170  </span></a> 
+<a name="l171"><span class="ln">171  </span></a>        y : Ignored 
+<a name="l172"><span class="ln">172  </span></a>            Not used, present for API consistency by convention. 
+<a name="l173"><span class="ln">173  </span></a> 
+<a name="l174"><span class="ln">174  </span></a>        Returns 
+<a name="l175"><span class="ln">175  </span></a>        ------- 
+<a name="l176"><span class="ln">176  </span></a>        self : NearestNeighbors 
+<a name="l177"><span class="ln">177  </span></a>            The fitted nearest neighbors estimator. 
+<a name="l178"><span class="ln">178  </span></a>        &quot;&quot;&quot;</span>
+<a name="l179"><span class="ln">179  </span></a>        <span class="s3">return </span><span class="s1">self</span><span class="s4">.</span><span class="s1">_fit</span><span class="s4">(</span><span class="s1">X</span><span class="s4">)</span>
+<a name="l180"><span class="ln">180  </span></a></pre>
+</body>
+</html>

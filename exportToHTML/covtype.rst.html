@@ -1,0 +1,54 @@
+<html>
+<head>
+<title>covtype.rst</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #6aab73;}
+.s2 { color: #2aacb8;}
+.s3 { color: #bcbec4; font-weight: bold;}
+.s4 { color: #cf8e6d;}
+.s5 { color: #bcbec4;}
+.s6 { color: #bcbec4;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+covtype.rst</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">.. </span><span class="s1">_covtype_dataset:</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s2">Forest covertypes 
+<a name="l4"><span class="ln">4    </span></a>----------------- 
+<a name="l5"><span class="ln">5    </span></a></span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">The samples in this dataset correspond to 30×30m patches of forest in the US,</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">collected for the task of predicting each patch's cover type,</span>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">i.e. the dominant species of tree.</span>
+<a name="l9"><span class="ln">9    </span></a><span class="s0">There are seven covertypes, making this a multiclass classification problem.</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">Each sample has 54 features, described on the</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s1">`dataset's homepage &lt;https://archive.ics.uci.edu/ml/datasets/Covertype&gt;`__</span><span class="s0">.</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s0">Some of the features are boolean indicators,</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s0">while others are discrete or continuous measurements.</span>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a><span class="s3">**Data Set Characteristics:**</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s0">=================   ============</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s0">Classes                        7</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s0">Samples total             581012</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s0">Dimensionality                54</span>
+<a name="l21"><span class="ln">21   </span></a><span class="s0">Features                     int</span>
+<a name="l22"><span class="ln">22   </span></a><span class="s0">=================   ============</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a><span class="s4">:func:</span><span class="s5">`sklearn.datasets.fetch_covtype` </span><span class="s0">will load the covertype dataset;</span>
+<a name="l25"><span class="ln">25   </span></a><span class="s0">it returns a dictionary-like 'Bunch' object</span>
+<a name="l26"><span class="ln">26   </span></a><span class="s0">with the feature matrix in the </span><span class="s6">``data`` </span><span class="s0">member</span>
+<a name="l27"><span class="ln">27   </span></a><span class="s0">and the target values in </span><span class="s6">``target``</span><span class="s0">. If optional argument 'as_frame' is</span>
+<a name="l28"><span class="ln">28   </span></a><span class="s0">set to 'True', it will return </span><span class="s6">``data`` </span><span class="s0">and </span><span class="s6">``target`` </span><span class="s0">as pandas</span>
+<a name="l29"><span class="ln">29   </span></a><span class="s0">data frame, and there will be an additional member </span><span class="s6">``frame`` </span><span class="s0">as well.</span>
+<a name="l30"><span class="ln">30   </span></a><span class="s0">The dataset will be downloaded from the web if necessary.</span>
+<a name="l31"><span class="ln">31   </span></a></pre>
+</body>
+</html>

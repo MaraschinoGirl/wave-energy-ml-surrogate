@@ -1,0 +1,49 @@
+<html>
+<head>
+<title>_argkmin.pxd.tp</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_argkmin.pxd.tp</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from ...utils._typedefs cimport intp_t, float64_t</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">{{for name_suffix in ['64', '32']}}</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">from ._base cimport BaseDistancesReduction{{name_suffix}}</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">from ._middle_term_computer cimport MiddleTermComputer{{name_suffix}}</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a><span class="s0">cdef class ArgKmin{{name_suffix}}(BaseDistancesReduction{{name_suffix}}):</span>
+<a name="l9"><span class="ln">9    </span></a>    <span class="s0">&quot;&quot;&quot;float{{name_suffix}} implementation of the ArgKmin.&quot;&quot;&quot;</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s0">cdef:</span>
+<a name="l12"><span class="ln">12   </span></a>        <span class="s0">intp_t k</span>
+<a name="l13"><span class="ln">13   </span></a>
+<a name="l14"><span class="ln">14   </span></a>        <span class="s0">intp_t[:, ::1] argkmin_indices</span>
+<a name="l15"><span class="ln">15   </span></a>        <span class="s0">float64_t[:, ::1] argkmin_distances</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a>        <span class="s0"># Used as array of pointers to private datastructures used in threads.</span>
+<a name="l18"><span class="ln">18   </span></a>        <span class="s0">float64_t ** heaps_r_distances_chunks</span>
+<a name="l19"><span class="ln">19   </span></a>        <span class="s0">intp_t ** heaps_indices_chunks</span>
+<a name="l20"><span class="ln">20   </span></a>
+<a name="l21"><span class="ln">21   </span></a>
+<a name="l22"><span class="ln">22   </span></a><span class="s0">cdef class EuclideanArgKmin{{name_suffix}}(ArgKmin{{name_suffix}}):</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s0">&quot;&quot;&quot;EuclideanDistance-specialisation of ArgKmin{{name_suffix}}.&quot;&quot;&quot;</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s0">cdef:</span>
+<a name="l25"><span class="ln">25   </span></a>        <span class="s0">MiddleTermComputer{{name_suffix}} middle_term_computer</span>
+<a name="l26"><span class="ln">26   </span></a>        <span class="s0">const float64_t[::1] X_norm_squared</span>
+<a name="l27"><span class="ln">27   </span></a>        <span class="s0">const float64_t[::1] Y_norm_squared</span>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a>        <span class="s0">bint use_squared_distances</span>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a><span class="s0">{{endfor}}</span>
+<a name="l32"><span class="ln">32   </span></a></pre>
+</body>
+</html>

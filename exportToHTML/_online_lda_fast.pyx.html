@@ -1,0 +1,133 @@
+<html>
+<head>
+<title>_online_lda_fast.pyx</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #5f826b; font-style: italic;}
+.s4 { color: #2aacb8;}
+.s5 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_online_lda_fast.pyx</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">from </span><span class="s1">cython </span><span class="s0">cimport </span><span class="s1">floating</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0">from </span><span class="s1">libc</span><span class="s2">.</span><span class="s1">math </span><span class="s0">cimport </span><span class="s1">exp</span><span class="s2">, </span><span class="s1">fabs</span><span class="s2">, </span><span class="s1">log</span>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">from </span><span class="s2">..</span><span class="s1">utils</span><span class="s2">.</span><span class="s1">_typedefs </span><span class="s0">cimport </span><span class="s1">float64_t</span><span class="s2">, </span><span class="s1">intp_t</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a><span class="s0">def </span><span class="s1">mean_change</span><span class="s2">(</span><span class="s1">const floating</span><span class="s2">[:] </span><span class="s1">arr_1</span><span class="s2">, </span><span class="s1">const floating</span><span class="s2">[:] </span><span class="s1">arr_2</span><span class="s2">):</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s3">&quot;&quot;&quot;Calculate the mean difference between two arrays. 
+<a name="l12"><span class="ln">12   </span></a> 
+<a name="l13"><span class="ln">13   </span></a>    Equivalent to np.abs(arr_1 - arr2).mean(). 
+<a name="l14"><span class="ln">14   </span></a>    &quot;&quot;&quot;</span>
+<a name="l15"><span class="ln">15   </span></a>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s0">cdef </span><span class="s1">float64_t total</span><span class="s2">, </span><span class="s1">diff</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s0">cdef </span><span class="s1">intp_t i</span><span class="s2">, </span><span class="s1">size</span>
+<a name="l18"><span class="ln">18   </span></a>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s1">size </span><span class="s2">= </span><span class="s1">arr_1</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s4">0</span><span class="s2">]</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s1">total </span><span class="s2">= </span><span class="s4">0.0</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">size</span><span class="s2">):</span>
+<a name="l22"><span class="ln">22   </span></a>        <span class="s1">diff </span><span class="s2">= </span><span class="s1">fabs</span><span class="s2">(</span><span class="s1">arr_1</span><span class="s2">[</span><span class="s1">i</span><span class="s2">] - </span><span class="s1">arr_2</span><span class="s2">[</span><span class="s1">i</span><span class="s2">])</span>
+<a name="l23"><span class="ln">23   </span></a>        <span class="s1">total </span><span class="s2">+= </span><span class="s1">diff</span>
+<a name="l24"><span class="ln">24   </span></a>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s0">return </span><span class="s1">total </span><span class="s2">/ </span><span class="s1">size</span>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a>
+<a name="l28"><span class="ln">28   </span></a><span class="s0">def </span><span class="s1">_dirichlet_expectation_1d</span><span class="s2">(</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s1">floating</span><span class="s2">[:] </span><span class="s1">doc_topic</span><span class="s2">,</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s1">floating doc_topic_prior</span><span class="s2">,</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s1">floating</span><span class="s2">[:] </span><span class="s1">out</span>
+<a name="l32"><span class="ln">32   </span></a><span class="s2">):</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s3">&quot;&quot;&quot;Dirichlet expectation for a single sample: 
+<a name="l34"><span class="ln">34   </span></a>        exp(E[log(theta)]) for theta ~ Dir(doc_topic) 
+<a name="l35"><span class="ln">35   </span></a>    after adding doc_topic_prior to doc_topic, in-place. 
+<a name="l36"><span class="ln">36   </span></a> 
+<a name="l37"><span class="ln">37   </span></a>    Equivalent to 
+<a name="l38"><span class="ln">38   </span></a>        doc_topic += doc_topic_prior 
+<a name="l39"><span class="ln">39   </span></a>        out[:] = np.exp(psi(doc_topic) - psi(np.sum(doc_topic))) 
+<a name="l40"><span class="ln">40   </span></a>    &quot;&quot;&quot;</span>
+<a name="l41"><span class="ln">41   </span></a>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s0">cdef </span><span class="s1">floating dt</span><span class="s2">, </span><span class="s1">psi_total</span><span class="s2">, </span><span class="s1">total</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s0">cdef </span><span class="s1">intp_t i</span><span class="s2">, </span><span class="s1">size</span>
+<a name="l44"><span class="ln">44   </span></a>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s1">size </span><span class="s2">= </span><span class="s1">doc_topic</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s4">0</span><span class="s2">]</span>
+<a name="l46"><span class="ln">46   </span></a>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s1">total </span><span class="s2">= </span><span class="s4">0.0</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">size</span><span class="s2">):</span>
+<a name="l49"><span class="ln">49   </span></a>        <span class="s1">dt </span><span class="s2">= </span><span class="s1">doc_topic</span><span class="s2">[</span><span class="s1">i</span><span class="s2">] + </span><span class="s1">doc_topic_prior</span>
+<a name="l50"><span class="ln">50   </span></a>        <span class="s1">doc_topic</span><span class="s2">[</span><span class="s1">i</span><span class="s2">] = </span><span class="s1">dt</span>
+<a name="l51"><span class="ln">51   </span></a>        <span class="s1">total </span><span class="s2">+= </span><span class="s1">dt</span>
+<a name="l52"><span class="ln">52   </span></a>    <span class="s1">psi_total </span><span class="s2">= </span><span class="s1">psi</span><span class="s2">(</span><span class="s1">total</span><span class="s2">)</span>
+<a name="l53"><span class="ln">53   </span></a>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">size</span><span class="s2">):</span>
+<a name="l55"><span class="ln">55   </span></a>        <span class="s1">out</span><span class="s2">[</span><span class="s1">i</span><span class="s2">] = </span><span class="s1">exp</span><span class="s2">(</span><span class="s1">psi</span><span class="s2">(</span><span class="s1">doc_topic</span><span class="s2">[</span><span class="s1">i</span><span class="s2">]) - </span><span class="s1">psi_total</span><span class="s2">)</span>
+<a name="l56"><span class="ln">56   </span></a>
+<a name="l57"><span class="ln">57   </span></a>
+<a name="l58"><span class="ln">58   </span></a><span class="s0">def </span><span class="s1">_dirichlet_expectation_2d</span><span class="s2">(</span><span class="s1">const floating</span><span class="s2">[:, :] </span><span class="s1">arr</span><span class="s2">):</span>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s3">&quot;&quot;&quot;Dirichlet expectation for multiple samples: 
+<a name="l60"><span class="ln">60   </span></a>    E[log(theta)] for theta ~ Dir(arr). 
+<a name="l61"><span class="ln">61   </span></a> 
+<a name="l62"><span class="ln">62   </span></a>    Equivalent to psi(arr) - psi(np.sum(arr, axis=1))[:, np.newaxis]. 
+<a name="l63"><span class="ln">63   </span></a> 
+<a name="l64"><span class="ln">64   </span></a>    Note that unlike _dirichlet_expectation_1d, this function doesn't compute 
+<a name="l65"><span class="ln">65   </span></a>    the exp and doesn't add in the prior. 
+<a name="l66"><span class="ln">66   </span></a>    &quot;&quot;&quot;</span>
+<a name="l67"><span class="ln">67   </span></a>    <span class="s0">cdef </span><span class="s1">floating row_total</span><span class="s2">, </span><span class="s1">psi_row_total</span>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s0">cdef </span><span class="s1">floating</span><span class="s2">[:, :] </span><span class="s1">d_exp</span>
+<a name="l69"><span class="ln">69   </span></a>    <span class="s0">cdef </span><span class="s1">intp_t i</span><span class="s2">, </span><span class="s1">j</span><span class="s2">, </span><span class="s1">n_rows</span><span class="s2">, </span><span class="s1">n_cols</span>
+<a name="l70"><span class="ln">70   </span></a>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s1">n_rows </span><span class="s2">= </span><span class="s1">arr</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s4">0</span><span class="s2">]</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s1">n_cols </span><span class="s2">= </span><span class="s1">arr</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s4">1</span><span class="s2">]</span>
+<a name="l73"><span class="ln">73   </span></a>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s1">d_exp </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">empty_like</span><span class="s2">(</span><span class="s1">arr</span><span class="s2">)</span>
+<a name="l75"><span class="ln">75   </span></a>    <span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">n_rows</span><span class="s2">):</span>
+<a name="l76"><span class="ln">76   </span></a>        <span class="s1">row_total </span><span class="s2">= </span><span class="s4">0</span>
+<a name="l77"><span class="ln">77   </span></a>        <span class="s0">for </span><span class="s1">j </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">n_cols</span><span class="s2">):</span>
+<a name="l78"><span class="ln">78   </span></a>            <span class="s1">row_total </span><span class="s2">+= </span><span class="s1">arr</span><span class="s2">[</span><span class="s1">i</span><span class="s2">, </span><span class="s1">j</span><span class="s2">]</span>
+<a name="l79"><span class="ln">79   </span></a>        <span class="s1">psi_row_total </span><span class="s2">= </span><span class="s1">psi</span><span class="s2">(</span><span class="s1">row_total</span><span class="s2">)</span>
+<a name="l80"><span class="ln">80   </span></a>
+<a name="l81"><span class="ln">81   </span></a>        <span class="s0">for </span><span class="s1">j </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">n_cols</span><span class="s2">):</span>
+<a name="l82"><span class="ln">82   </span></a>            <span class="s1">d_exp</span><span class="s2">[</span><span class="s1">i</span><span class="s2">, </span><span class="s1">j</span><span class="s2">] = </span><span class="s1">psi</span><span class="s2">(</span><span class="s1">arr</span><span class="s2">[</span><span class="s1">i</span><span class="s2">, </span><span class="s1">j</span><span class="s2">]) - </span><span class="s1">psi_row_total</span>
+<a name="l83"><span class="ln">83   </span></a>
+<a name="l84"><span class="ln">84   </span></a>    <span class="s0">return </span><span class="s1">d_exp</span><span class="s2">.</span><span class="s1">base</span>
+<a name="l85"><span class="ln">85   </span></a>
+<a name="l86"><span class="ln">86   </span></a>
+<a name="l87"><span class="ln">87   </span></a><span class="s5"># Psi function for positive arguments. Optimized for speed, not accuracy.</span>
+<a name="l88"><span class="ln">88   </span></a><span class="s5">#</span>
+<a name="l89"><span class="ln">89   </span></a><span class="s5"># After: J. Bernardo (1976). Algorithm AS 103: Psi (Digamma) Function.</span>
+<a name="l90"><span class="ln">90   </span></a><span class="s5"># https://www.uv.es/~bernardo/1976AppStatist.pdf</span>
+<a name="l91"><span class="ln">91   </span></a><span class="s0">cdef </span><span class="s1">floating psi</span><span class="s2">(</span><span class="s1">floating x</span><span class="s2">) </span><span class="s1">noexcept nogil</span><span class="s2">:</span>
+<a name="l92"><span class="ln">92   </span></a>    <span class="s0">cdef </span><span class="s1">double EULER </span><span class="s2">= </span><span class="s4">0.577215664901532860606512090082402431</span>
+<a name="l93"><span class="ln">93   </span></a>    <span class="s0">if </span><span class="s1">x </span><span class="s2">&lt;= </span><span class="s4">1e-6</span><span class="s2">:</span>
+<a name="l94"><span class="ln">94   </span></a>        <span class="s5"># psi(x) = -EULER - 1/x + O(x)</span>
+<a name="l95"><span class="ln">95   </span></a>        <span class="s0">return </span><span class="s2">-</span><span class="s1">EULER </span><span class="s2">- </span><span class="s4">1. </span><span class="s2">/ </span><span class="s1">x</span>
+<a name="l96"><span class="ln">96   </span></a>
+<a name="l97"><span class="ln">97   </span></a>    <span class="s0">cdef </span><span class="s1">floating r</span><span class="s2">, </span><span class="s1">result </span><span class="s2">= </span><span class="s4">0</span>
+<a name="l98"><span class="ln">98   </span></a>
+<a name="l99"><span class="ln">99   </span></a>    <span class="s5"># psi(x + 1) = psi(x) + 1/x</span>
+<a name="l100"><span class="ln">100  </span></a>    <span class="s0">while </span><span class="s1">x </span><span class="s2">&lt; </span><span class="s4">6</span><span class="s2">:</span>
+<a name="l101"><span class="ln">101  </span></a>        <span class="s1">result </span><span class="s2">-= </span><span class="s4">1. </span><span class="s2">/ </span><span class="s1">x</span>
+<a name="l102"><span class="ln">102  </span></a>        <span class="s1">x </span><span class="s2">+= </span><span class="s4">1</span>
+<a name="l103"><span class="ln">103  </span></a>
+<a name="l104"><span class="ln">104  </span></a>    <span class="s5"># psi(x) = log(x) - 1/(2x) - 1/(12x**2) + 1/(120x**4) - 1/(252x**6)</span>
+<a name="l105"><span class="ln">105  </span></a>    <span class="s5">#          + O(1/x**8)</span>
+<a name="l106"><span class="ln">106  </span></a>    <span class="s1">r </span><span class="s2">= </span><span class="s4">1. </span><span class="s2">/ </span><span class="s1">x</span>
+<a name="l107"><span class="ln">107  </span></a>    <span class="s1">result </span><span class="s2">+= </span><span class="s1">log</span><span class="s2">(</span><span class="s1">x</span><span class="s2">) - </span><span class="s4">.5 </span><span class="s2">* </span><span class="s1">r</span>
+<a name="l108"><span class="ln">108  </span></a>    <span class="s1">r </span><span class="s2">= </span><span class="s1">r </span><span class="s2">* </span><span class="s1">r</span>
+<a name="l109"><span class="ln">109  </span></a>    <span class="s1">result </span><span class="s2">-= </span><span class="s1">r </span><span class="s2">* ((</span><span class="s4">1.</span><span class="s2">/</span><span class="s4">12.</span><span class="s2">) - </span><span class="s1">r </span><span class="s2">* ((</span><span class="s4">1.</span><span class="s2">/</span><span class="s4">120.</span><span class="s2">) - </span><span class="s1">r </span><span class="s2">* (</span><span class="s4">1.</span><span class="s2">/</span><span class="s4">252.</span><span class="s2">)))</span>
+<a name="l110"><span class="ln">110  </span></a>    <span class="s0">return </span><span class="s1">result</span>
+<a name="l111"><span class="ln">111  </span></a></pre>
+</body>
+</html>

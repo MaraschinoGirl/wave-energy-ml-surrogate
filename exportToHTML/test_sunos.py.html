@@ -1,0 +1,63 @@
+<html>
+<head>
+<title>test_sunos.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #5f826b; font-style: italic;}
+.s3 { color: #cf8e6d;}
+.s4 { color: #bcbec4;}
+.s5 { color: #6aab73;}
+.s6 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+test_sunos.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">#!/usr/bin/env python3</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0"># Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0"># Use of this source code is governed by a BSD-style license that can be</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0"># found in the LICENSE file.</span>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">&quot;&quot;&quot;Sun OS specific tests.&quot;&quot;&quot;</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s3">import </span><span class="s1">os</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a><span class="s3">import </span><span class="s1">psutil</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s3">from </span><span class="s1">psutil </span><span class="s3">import </span><span class="s1">SUNOS</span>
+<a name="l13"><span class="ln">13   </span></a><span class="s3">from </span><span class="s1">psutil</span><span class="s4">.</span><span class="s1">tests </span><span class="s3">import </span><span class="s1">PsutilTestCase</span>
+<a name="l14"><span class="ln">14   </span></a><span class="s3">from </span><span class="s1">psutil</span><span class="s4">.</span><span class="s1">tests </span><span class="s3">import </span><span class="s1">pytest</span>
+<a name="l15"><span class="ln">15   </span></a><span class="s3">from </span><span class="s1">psutil</span><span class="s4">.</span><span class="s1">tests </span><span class="s3">import </span><span class="s1">sh</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a>
+<a name="l18"><span class="ln">18   </span></a><span class="s4">@</span><span class="s1">pytest</span><span class="s4">.</span><span class="s1">mark</span><span class="s4">.</span><span class="s1">skipif</span><span class="s4">(</span><span class="s3">not </span><span class="s1">SUNOS</span><span class="s4">, </span><span class="s1">reason</span><span class="s4">=</span><span class="s5">&quot;SUNOS only&quot;</span><span class="s4">)</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s3">class </span><span class="s1">SunOSSpecificTestCase</span><span class="s4">(</span><span class="s1">PsutilTestCase</span><span class="s4">):</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s3">def </span><span class="s1">test_swap_memory</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l21"><span class="ln">21   </span></a>        <span class="s1">out </span><span class="s4">= </span><span class="s1">sh</span><span class="s4">(</span><span class="s5">f&quot;env PATH=/usr/sbin:/sbin:</span><span class="s3">{</span><span class="s1">os</span><span class="s4">.</span><span class="s1">environ</span><span class="s4">[</span><span class="s5">'PATH'</span><span class="s4">]</span><span class="s3">} </span><span class="s5">swap -l&quot;</span><span class="s4">)</span>
+<a name="l22"><span class="ln">22   </span></a>        <span class="s1">lines </span><span class="s4">= </span><span class="s1">out</span><span class="s4">.</span><span class="s1">strip</span><span class="s4">().</span><span class="s1">split</span><span class="s4">(</span><span class="s5">'</span><span class="s3">\n</span><span class="s5">'</span><span class="s4">)[</span><span class="s6">1</span><span class="s4">:]</span>
+<a name="l23"><span class="ln">23   </span></a>        <span class="s3">if not </span><span class="s1">lines</span><span class="s4">:</span>
+<a name="l24"><span class="ln">24   </span></a>            <span class="s3">raise </span><span class="s1">ValueError</span><span class="s4">(</span><span class="s5">'no swap device(s) configured'</span><span class="s4">)</span>
+<a name="l25"><span class="ln">25   </span></a>        <span class="s1">total </span><span class="s4">= </span><span class="s1">free </span><span class="s4">= </span><span class="s6">0</span>
+<a name="l26"><span class="ln">26   </span></a>        <span class="s3">for </span><span class="s1">line </span><span class="s3">in </span><span class="s1">lines</span><span class="s4">:</span>
+<a name="l27"><span class="ln">27   </span></a>            <span class="s1">fields </span><span class="s4">= </span><span class="s1">line</span><span class="s4">.</span><span class="s1">split</span><span class="s4">()</span>
+<a name="l28"><span class="ln">28   </span></a>            <span class="s1">total </span><span class="s4">= </span><span class="s1">int</span><span class="s4">(</span><span class="s1">fields</span><span class="s4">[</span><span class="s6">3</span><span class="s4">]) * </span><span class="s6">512</span>
+<a name="l29"><span class="ln">29   </span></a>            <span class="s1">free </span><span class="s4">= </span><span class="s1">int</span><span class="s4">(</span><span class="s1">fields</span><span class="s4">[</span><span class="s6">4</span><span class="s4">]) * </span><span class="s6">512</span>
+<a name="l30"><span class="ln">30   </span></a>        <span class="s1">used </span><span class="s4">= </span><span class="s1">total </span><span class="s4">- </span><span class="s1">free</span>
+<a name="l31"><span class="ln">31   </span></a>
+<a name="l32"><span class="ln">32   </span></a>        <span class="s1">psutil_swap </span><span class="s4">= </span><span class="s1">psutil</span><span class="s4">.</span><span class="s1">swap_memory</span><span class="s4">()</span>
+<a name="l33"><span class="ln">33   </span></a>        <span class="s3">assert </span><span class="s1">psutil_swap</span><span class="s4">.</span><span class="s1">total </span><span class="s4">== </span><span class="s1">total</span>
+<a name="l34"><span class="ln">34   </span></a>        <span class="s3">assert </span><span class="s1">psutil_swap</span><span class="s4">.</span><span class="s1">used </span><span class="s4">== </span><span class="s1">used</span>
+<a name="l35"><span class="ln">35   </span></a>        <span class="s3">assert </span><span class="s1">psutil_swap</span><span class="s4">.</span><span class="s1">free </span><span class="s4">== </span><span class="s1">free</span>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s3">def </span><span class="s1">test_cpu_count</span><span class="s4">(</span><span class="s1">self</span><span class="s4">):</span>
+<a name="l38"><span class="ln">38   </span></a>        <span class="s1">out </span><span class="s4">= </span><span class="s1">sh</span><span class="s4">(</span><span class="s5">&quot;/usr/sbin/psrinfo&quot;</span><span class="s4">)</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s3">assert </span><span class="s1">psutil</span><span class="s4">.</span><span class="s1">cpu_count</span><span class="s4">() == </span><span class="s1">len</span><span class="s4">(</span><span class="s1">out</span><span class="s4">.</span><span class="s1">split</span><span class="s4">(</span><span class="s5">'</span><span class="s3">\n</span><span class="s5">'</span><span class="s4">))</span>
+<a name="l40"><span class="ln">40   </span></a></pre>
+</body>
+</html>

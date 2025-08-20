@@ -1,0 +1,127 @@
+<html>
+<head>
+<title>additive_attention.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #2aacb8;}
+.s6 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+additive_attention.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src </span><span class="s0">import </span><span class="s1">ops</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">api_export </span><span class="s0">import </span><span class="s1">keras_export</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">from </span><span class="s1">keras</span><span class="s2">.</span><span class="s1">src</span><span class="s2">.</span><span class="s1">layers</span><span class="s2">.</span><span class="s1">attention</span><span class="s2">.</span><span class="s1">attention </span><span class="s0">import </span><span class="s1">Attention</span>
+<a name="l4"><span class="ln">4    </span></a>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">@</span><span class="s1">keras_export</span><span class="s2">(</span><span class="s3">&quot;keras.layers.AdditiveAttention&quot;</span><span class="s2">)</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s0">class </span><span class="s1">AdditiveAttention</span><span class="s2">(</span><span class="s1">Attention</span><span class="s2">):</span>
+<a name="l8"><span class="ln">8    </span></a>    <span class="s4">&quot;&quot;&quot;Additive attention layer, a.k.a. Bahdanau-style attention. 
+<a name="l9"><span class="ln">9    </span></a> 
+<a name="l10"><span class="ln">10   </span></a>    Inputs are a list with 2 or 3 elements: 
+<a name="l11"><span class="ln">11   </span></a>    1. A `query` tensor of shape `(batch_size, Tq, dim)`. 
+<a name="l12"><span class="ln">12   </span></a>    2. A `value` tensor of shape `(batch_size, Tv, dim)`. 
+<a name="l13"><span class="ln">13   </span></a>    3. A optional `key` tensor of shape `(batch_size, Tv, dim)`. If none 
+<a name="l14"><span class="ln">14   </span></a>        supplied, `value` will be used as `key`. 
+<a name="l15"><span class="ln">15   </span></a> 
+<a name="l16"><span class="ln">16   </span></a>    The calculation follows the steps: 
+<a name="l17"><span class="ln">17   </span></a>    1. Calculate attention scores using `query` and `key` with shape 
+<a name="l18"><span class="ln">18   </span></a>        `(batch_size, Tq, Tv)` as a non-linear sum 
+<a name="l19"><span class="ln">19   </span></a>        `scores = reduce_sum(tanh(query + key), axis=-1)`. 
+<a name="l20"><span class="ln">20   </span></a>    2. Use scores to calculate a softmax distribution with shape 
+<a name="l21"><span class="ln">21   </span></a>        `(batch_size, Tq, Tv)`. 
+<a name="l22"><span class="ln">22   </span></a>    3. Use the softmax distribution to create a linear combination of `value` 
+<a name="l23"><span class="ln">23   </span></a>        with shape `(batch_size, Tq, dim)`. 
+<a name="l24"><span class="ln">24   </span></a> 
+<a name="l25"><span class="ln">25   </span></a>    Args: 
+<a name="l26"><span class="ln">26   </span></a>        use_scale: If `True`, will create a scalar variable to scale the 
+<a name="l27"><span class="ln">27   </span></a>            attention scores. 
+<a name="l28"><span class="ln">28   </span></a>        dropout: Float between 0 and 1. Fraction of the units to drop for the 
+<a name="l29"><span class="ln">29   </span></a>            attention scores. Defaults to `0.0`. 
+<a name="l30"><span class="ln">30   </span></a> 
+<a name="l31"><span class="ln">31   </span></a>    Call arguments: 
+<a name="l32"><span class="ln">32   </span></a>        inputs: List of the following tensors: 
+<a name="l33"><span class="ln">33   </span></a>            - `query`: Query tensor of shape `(batch_size, Tq, dim)`. 
+<a name="l34"><span class="ln">34   </span></a>            - `value`: Value tensor of shape `(batch_size, Tv, dim)`. 
+<a name="l35"><span class="ln">35   </span></a>            - `key`: Optional key tensor of shape `(batch_size, Tv, dim)`. If 
+<a name="l36"><span class="ln">36   </span></a>                not given, will use `value` for both `key` and `value`, which is 
+<a name="l37"><span class="ln">37   </span></a>                the most common case. 
+<a name="l38"><span class="ln">38   </span></a>        mask: List of the following tensors: 
+<a name="l39"><span class="ln">39   </span></a>            - `query_mask`: A boolean mask tensor of shape `(batch_size, Tq)`. 
+<a name="l40"><span class="ln">40   </span></a>                If given, the output will be zero at the positions where 
+<a name="l41"><span class="ln">41   </span></a>                `mask==False`. 
+<a name="l42"><span class="ln">42   </span></a>            - `value_mask`: A boolean mask tensor of shape `(batch_size, Tv)`. 
+<a name="l43"><span class="ln">43   </span></a>                If given, will apply the mask such that values at positions 
+<a name="l44"><span class="ln">44   </span></a>                 where `mask==False` do not contribute to the result. 
+<a name="l45"><span class="ln">45   </span></a>        return_attention_scores: bool, it `True`, returns the attention scores 
+<a name="l46"><span class="ln">46   </span></a>            (after masking and softmax) as an additional output argument. 
+<a name="l47"><span class="ln">47   </span></a>        training: Python boolean indicating whether the layer should behave in 
+<a name="l48"><span class="ln">48   </span></a>            training mode (adding dropout) or in inference mode (no dropout). 
+<a name="l49"><span class="ln">49   </span></a>        use_causal_mask: Boolean. Set to `True` for decoder self-attention. Adds 
+<a name="l50"><span class="ln">50   </span></a>            a mask such that position `i` cannot attend to positions `j &gt; i`. 
+<a name="l51"><span class="ln">51   </span></a>            This prevents the flow of information from the future towards the 
+<a name="l52"><span class="ln">52   </span></a>            past. Defaults to `False`. 
+<a name="l53"><span class="ln">53   </span></a> 
+<a name="l54"><span class="ln">54   </span></a>    Output: 
+<a name="l55"><span class="ln">55   </span></a>        Attention outputs of shape `(batch_size, Tq, dim)`. 
+<a name="l56"><span class="ln">56   </span></a>        (Optional) Attention scores after masking and softmax with shape 
+<a name="l57"><span class="ln">57   </span></a>            `(batch_size, Tq, Tv)`. 
+<a name="l58"><span class="ln">58   </span></a>    &quot;&quot;&quot;</span>
+<a name="l59"><span class="ln">59   </span></a>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s0">def </span><span class="s1">__init__</span><span class="s2">(</span>
+<a name="l61"><span class="ln">61   </span></a>        <span class="s1">self</span><span class="s2">,</span>
+<a name="l62"><span class="ln">62   </span></a>        <span class="s1">use_scale</span><span class="s2">=</span><span class="s0">True</span><span class="s2">,</span>
+<a name="l63"><span class="ln">63   </span></a>        <span class="s1">dropout</span><span class="s2">=</span><span class="s5">0.0</span><span class="s2">,</span>
+<a name="l64"><span class="ln">64   </span></a>        <span class="s2">**</span><span class="s1">kwargs</span><span class="s2">,</span>
+<a name="l65"><span class="ln">65   </span></a>    <span class="s2">):</span>
+<a name="l66"><span class="ln">66   </span></a>        <span class="s1">super</span><span class="s2">().</span><span class="s1">__init__</span><span class="s2">(</span><span class="s1">use_scale</span><span class="s2">=</span><span class="s1">use_scale</span><span class="s2">, </span><span class="s1">dropout</span><span class="s2">=</span><span class="s1">dropout</span><span class="s2">, **</span><span class="s1">kwargs</span><span class="s2">)</span>
+<a name="l67"><span class="ln">67   </span></a>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s0">def </span><span class="s1">build</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">input_shape</span><span class="s2">):</span>
+<a name="l69"><span class="ln">69   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">_validate_inputs</span><span class="s2">(</span><span class="s1">input_shape</span><span class="s2">)</span>
+<a name="l70"><span class="ln">70   </span></a>        <span class="s1">dim </span><span class="s2">= </span><span class="s1">input_shape</span><span class="s2">[</span><span class="s5">0</span><span class="s2">][-</span><span class="s5">1</span><span class="s2">]</span>
+<a name="l71"><span class="ln">71   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">scale </span><span class="s2">= </span><span class="s0">None</span>
+<a name="l72"><span class="ln">72   </span></a>        <span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">use_scale</span><span class="s2">:</span>
+<a name="l73"><span class="ln">73   </span></a>            <span class="s1">self</span><span class="s2">.</span><span class="s1">scale </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">add_weight</span><span class="s2">(</span>
+<a name="l74"><span class="ln">74   </span></a>                <span class="s1">name</span><span class="s2">=</span><span class="s3">&quot;scale&quot;</span><span class="s2">,</span>
+<a name="l75"><span class="ln">75   </span></a>                <span class="s1">shape</span><span class="s2">=[</span><span class="s1">dim</span><span class="s2">],</span>
+<a name="l76"><span class="ln">76   </span></a>                <span class="s1">initializer</span><span class="s2">=</span><span class="s3">&quot;glorot_uniform&quot;</span><span class="s2">,</span>
+<a name="l77"><span class="ln">77   </span></a>                <span class="s1">dtype</span><span class="s2">=</span><span class="s1">self</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">,</span>
+<a name="l78"><span class="ln">78   </span></a>                <span class="s1">trainable</span><span class="s2">=</span><span class="s0">True</span><span class="s2">,</span>
+<a name="l79"><span class="ln">79   </span></a>            <span class="s2">)</span>
+<a name="l80"><span class="ln">80   </span></a>        <span class="s1">self</span><span class="s2">.</span><span class="s1">built </span><span class="s2">= </span><span class="s0">True</span>
+<a name="l81"><span class="ln">81   </span></a>
+<a name="l82"><span class="ln">82   </span></a>    <span class="s0">def </span><span class="s1">_calculate_scores</span><span class="s2">(</span><span class="s1">self</span><span class="s2">, </span><span class="s1">query</span><span class="s2">, </span><span class="s1">key</span><span class="s2">):</span>
+<a name="l83"><span class="ln">83   </span></a>        <span class="s4">&quot;&quot;&quot;Calculates attention scores as a nonlinear sum of query and key. 
+<a name="l84"><span class="ln">84   </span></a> 
+<a name="l85"><span class="ln">85   </span></a>        Args: 
+<a name="l86"><span class="ln">86   </span></a>            query: Query tensor of shape `(batch_size, Tq, dim)`. 
+<a name="l87"><span class="ln">87   </span></a>            key: Key tensor of shape `(batch_size, Tv, dim)`. 
+<a name="l88"><span class="ln">88   </span></a> 
+<a name="l89"><span class="ln">89   </span></a>        Returns: 
+<a name="l90"><span class="ln">90   </span></a>            Tensor of shape `(batch_size, Tq, Tv)`. 
+<a name="l91"><span class="ln">91   </span></a>        &quot;&quot;&quot;</span>
+<a name="l92"><span class="ln">92   </span></a>        <span class="s6"># Reshape tensors to enable broadcasting.</span>
+<a name="l93"><span class="ln">93   </span></a>        <span class="s6"># Reshape into [batch_size, Tq, 1, dim].</span>
+<a name="l94"><span class="ln">94   </span></a>        <span class="s1">q_reshaped </span><span class="s2">= </span><span class="s1">ops</span><span class="s2">.</span><span class="s1">expand_dims</span><span class="s2">(</span><span class="s1">query</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=-</span><span class="s5">2</span><span class="s2">)</span>
+<a name="l95"><span class="ln">95   </span></a>        <span class="s6"># Reshape into [batch_size, 1, Tv, dim].</span>
+<a name="l96"><span class="ln">96   </span></a>        <span class="s1">k_reshaped </span><span class="s2">= </span><span class="s1">ops</span><span class="s2">.</span><span class="s1">expand_dims</span><span class="s2">(</span><span class="s1">key</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=-</span><span class="s5">3</span><span class="s2">)</span>
+<a name="l97"><span class="ln">97   </span></a>        <span class="s1">scale </span><span class="s2">= </span><span class="s1">self</span><span class="s2">.</span><span class="s1">scale </span><span class="s0">if </span><span class="s1">self</span><span class="s2">.</span><span class="s1">use_scale </span><span class="s0">else </span><span class="s5">1.0</span>
+<a name="l98"><span class="ln">98   </span></a>        <span class="s0">return </span><span class="s1">ops</span><span class="s2">.</span><span class="s1">sum</span><span class="s2">(</span><span class="s1">scale </span><span class="s2">* </span><span class="s1">ops</span><span class="s2">.</span><span class="s1">tanh</span><span class="s2">(</span><span class="s1">q_reshaped </span><span class="s2">+ </span><span class="s1">k_reshaped</span><span class="s2">), </span><span class="s1">axis</span><span class="s2">=-</span><span class="s5">1</span><span class="s2">)</span>
+<a name="l99"><span class="ln">99   </span></a>
+<a name="l100"><span class="ln">100  </span></a>    <span class="s0">def </span><span class="s1">get_config</span><span class="s2">(</span><span class="s1">self</span><span class="s2">):</span>
+<a name="l101"><span class="ln">101  </span></a>        <span class="s1">base_config </span><span class="s2">= </span><span class="s1">super</span><span class="s2">().</span><span class="s1">get_config</span><span class="s2">()</span>
+<a name="l102"><span class="ln">102  </span></a>        <span class="s0">del </span><span class="s1">base_config</span><span class="s2">[</span><span class="s3">&quot;score_mode&quot;</span><span class="s2">]</span>
+<a name="l103"><span class="ln">103  </span></a>        <span class="s0">return </span><span class="s1">base_config</span>
+<a name="l104"><span class="ln">104  </span></a></pre>
+</body>
+</html>

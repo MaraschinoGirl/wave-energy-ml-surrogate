@@ -1,0 +1,114 @@
+<html>
+<head>
+<title>_quad_tree.pxd</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_quad_tree.pxd</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># Author: Thomas Moreau &lt;thomas.moreau.2010@gmail.com&gt;</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># Author: Olivier Grisel &lt;olivier.grisel@ensta.fr&gt;</span>
+<a name="l3"><span class="ln">3    </span></a>
+<a name="l4"><span class="ln">4    </span></a><span class="s0"># See quad_tree.pyx for details.</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">cimport </span><span class="s1">numpy </span><span class="s2">as </span><span class="s1">cnp</span>
+<a name="l7"><span class="ln">7    </span></a><span class="s2">from </span><span class="s3">..</span><span class="s1">utils</span><span class="s3">.</span><span class="s1">_typedefs </span><span class="s2">cimport </span><span class="s1">float32_t</span><span class="s3">, </span><span class="s1">intp_t</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s0"># This is effectively an ifdef statement in Cython</span>
+<a name="l10"><span class="ln">10   </span></a><span class="s0"># It allows us to write printf debugging lines</span>
+<a name="l11"><span class="ln">11   </span></a><span class="s0"># and remove them at compile time</span>
+<a name="l12"><span class="ln">12   </span></a><span class="s2">cdef </span><span class="s1">enum</span><span class="s3">:</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s1">DEBUGFLAG </span><span class="s3">= </span><span class="s4">0</span>
+<a name="l14"><span class="ln">14   </span></a>
+<a name="l15"><span class="ln">15   </span></a><span class="s2">cdef </span><span class="s1">float EPSILON </span><span class="s3">= </span><span class="s4">1e-6</span>
+<a name="l16"><span class="ln">16   </span></a>
+<a name="l17"><span class="ln">17   </span></a><span class="s0"># XXX: Careful to not change the order of the arguments. It is important to</span>
+<a name="l18"><span class="ln">18   </span></a><span class="s0"># have is_leaf and max_width consecutive as it permits to avoid padding by</span>
+<a name="l19"><span class="ln">19   </span></a><span class="s0"># the compiler and keep the size coherent for both C and numpy data structures.</span>
+<a name="l20"><span class="ln">20   </span></a><span class="s2">cdef </span><span class="s1">struct Cell</span><span class="s3">:</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s0"># Base storage structure for cells in a QuadTree object</span>
+<a name="l22"><span class="ln">22   </span></a>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s0"># Tree structure</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s1">intp_t parent                </span><span class="s0"># Parent cell of this cell</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s1">intp_t</span><span class="s3">[</span><span class="s4">8</span><span class="s3">] </span><span class="s1">children           </span><span class="s0"># Array pointing to children of this cell</span>
+<a name="l26"><span class="ln">26   </span></a>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s0"># Cell description</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s1">intp_t cell_id               </span><span class="s0"># Id of the cell in the cells array in the Tree</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s1">intp_t point_index           </span><span class="s0"># Index of the point at this cell (only defined</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s0">#                            # in non empty leaf)</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s1">bint is_leaf                 </span><span class="s0"># Does this cell have children?</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s1">float32_t squared_max_width  </span><span class="s0"># Squared value of the maximum width w</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s1">intp_t depth                 </span><span class="s0"># Depth of the cell in the tree</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s1">intp_t cumulative_size       </span><span class="s0"># Number of points included in the subtree with</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s0">#                            # this cell as a root.</span>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s0"># Internal constants</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s1">float32_t</span><span class="s3">[</span><span class="s4">3</span><span class="s3">] </span><span class="s1">center          </span><span class="s0"># Store the center for quick split of cells</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s1">float32_t</span><span class="s3">[</span><span class="s4">3</span><span class="s3">] </span><span class="s1">barycenter      </span><span class="s0"># Keep track of the center of mass of the cell</span>
+<a name="l40"><span class="ln">40   </span></a>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s0"># Cell boundaries</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s1">float32_t</span><span class="s3">[</span><span class="s4">3</span><span class="s3">] </span><span class="s1">min_bounds      </span><span class="s0"># Inferior boundaries of this cell (inclusive)</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s1">float32_t</span><span class="s3">[</span><span class="s4">3</span><span class="s3">] </span><span class="s1">max_bounds      </span><span class="s0"># Superior boundaries of this cell (exclusive)</span>
+<a name="l44"><span class="ln">44   </span></a>
+<a name="l45"><span class="ln">45   </span></a>
+<a name="l46"><span class="ln">46   </span></a><span class="s2">cdef class </span><span class="s1">_QuadTree</span><span class="s3">:</span>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s0"># The QuadTree object is a quad tree structure constructed by inserting</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s0"># recursively points in the tree and splitting cells in 4 so that each</span>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s0"># leaf cell contains at most one point.</span>
+<a name="l50"><span class="ln">50   </span></a>    <span class="s0"># This structure also handle 3D data, inserted in trees with 8 children</span>
+<a name="l51"><span class="ln">51   </span></a>    <span class="s0"># for each node.</span>
+<a name="l52"><span class="ln">52   </span></a>
+<a name="l53"><span class="ln">53   </span></a>    <span class="s0"># Parameters of the tree</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s2">cdef </span><span class="s1">public int n_dimensions         </span><span class="s0"># Number of dimensions in X</span>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s2">cdef </span><span class="s1">public int verbose              </span><span class="s0"># Verbosity of the output</span>
+<a name="l56"><span class="ln">56   </span></a>    <span class="s2">cdef </span><span class="s1">intp_t n_cells_per_cell         </span><span class="s0"># Number of children per node. (2 ** n_dimension)</span>
+<a name="l57"><span class="ln">57   </span></a>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s0"># Tree inner structure</span>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s2">cdef </span><span class="s1">public intp_t max_depth         </span><span class="s0"># Max depth of the tree</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s2">cdef </span><span class="s1">public intp_t cell_count        </span><span class="s0"># Counter for node IDs</span>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s2">cdef </span><span class="s1">public intp_t capacity          </span><span class="s0"># Capacity of tree, in terms of nodes</span>
+<a name="l62"><span class="ln">62   </span></a>    <span class="s2">cdef </span><span class="s1">public intp_t n_points          </span><span class="s0"># Total number of points</span>
+<a name="l63"><span class="ln">63   </span></a>    <span class="s2">cdef </span><span class="s1">Cell</span><span class="s3">* </span><span class="s1">cells                     </span><span class="s0"># Array of nodes</span>
+<a name="l64"><span class="ln">64   </span></a>
+<a name="l65"><span class="ln">65   </span></a>    <span class="s0"># Point insertion methods</span>
+<a name="l66"><span class="ln">66   </span></a>    <span class="s2">cdef </span><span class="s1">int insert_point</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">float32_t</span><span class="s3">[</span><span class="s4">3</span><span class="s3">] </span><span class="s1">point</span><span class="s3">, </span><span class="s1">intp_t point_index</span><span class="s3">,</span>
+<a name="l67"><span class="ln">67   </span></a>                          <span class="s1">intp_t cell_id</span><span class="s3">=*) </span><span class="s2">except </span><span class="s3">-</span><span class="s4">1 </span><span class="s1">nogil</span>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s2">cdef </span><span class="s1">intp_t _insert_point_in_new_child</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">float32_t</span><span class="s3">[</span><span class="s4">3</span><span class="s3">] </span><span class="s1">point</span><span class="s3">, </span><span class="s1">Cell</span><span class="s3">* </span><span class="s1">cell</span><span class="s3">,</span>
+<a name="l69"><span class="ln">69   </span></a>                                           <span class="s1">intp_t point_index</span><span class="s3">, </span><span class="s1">intp_t size</span><span class="s3">=*</span>
+<a name="l70"><span class="ln">70   </span></a>                                           <span class="s3">) </span><span class="s1">noexcept nogil</span>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s2">cdef </span><span class="s1">intp_t _select_child</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">float32_t</span><span class="s3">[</span><span class="s4">3</span><span class="s3">] </span><span class="s1">point</span><span class="s3">, </span><span class="s1">Cell</span><span class="s3">* </span><span class="s1">cell</span><span class="s3">) </span><span class="s1">noexcept nogil</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s2">cdef </span><span class="s1">bint _is_duplicate</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">float32_t</span><span class="s3">[</span><span class="s4">3</span><span class="s3">] </span><span class="s1">point1</span><span class="s3">, </span><span class="s1">float32_t</span><span class="s3">[</span><span class="s4">3</span><span class="s3">] </span><span class="s1">point2</span><span class="s3">) </span><span class="s1">noexcept nogil</span>
+<a name="l73"><span class="ln">73   </span></a>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s0"># Create a summary of the Tree compare to a query point</span>
+<a name="l75"><span class="ln">75   </span></a>    <span class="s2">cdef </span><span class="s1">long summarize</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">float32_t</span><span class="s3">[</span><span class="s4">3</span><span class="s3">] </span><span class="s1">point</span><span class="s3">, </span><span class="s1">float32_t</span><span class="s3">* </span><span class="s1">results</span><span class="s3">,</span>
+<a name="l76"><span class="ln">76   </span></a>                        <span class="s1">float squared_theta</span><span class="s3">=*, </span><span class="s1">intp_t cell_id</span><span class="s3">=*, </span><span class="s1">long idx</span><span class="s3">=*</span>
+<a name="l77"><span class="ln">77   </span></a>                        <span class="s3">) </span><span class="s1">noexcept nogil</span>
+<a name="l78"><span class="ln">78   </span></a>
+<a name="l79"><span class="ln">79   </span></a>    <span class="s0"># Internal cell initialization methods</span>
+<a name="l80"><span class="ln">80   </span></a>    <span class="s2">cdef </span><span class="s1">void _init_cell</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">Cell</span><span class="s3">* </span><span class="s1">cell</span><span class="s3">, </span><span class="s1">intp_t parent</span><span class="s3">, </span><span class="s1">intp_t depth</span><span class="s3">) </span><span class="s1">noexcept nogil</span>
+<a name="l81"><span class="ln">81   </span></a>    <span class="s2">cdef </span><span class="s1">void _init_root</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">float32_t</span><span class="s3">[</span><span class="s4">3</span><span class="s3">] </span><span class="s1">min_bounds</span><span class="s3">, </span><span class="s1">float32_t</span><span class="s3">[</span><span class="s4">3</span><span class="s3">] </span><span class="s1">max_bounds</span>
+<a name="l82"><span class="ln">82   </span></a>                         <span class="s3">) </span><span class="s1">noexcept nogil</span>
+<a name="l83"><span class="ln">83   </span></a>
+<a name="l84"><span class="ln">84   </span></a>    <span class="s0"># Private methods</span>
+<a name="l85"><span class="ln">85   </span></a>    <span class="s2">cdef </span><span class="s1">int _check_point_in_cell</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">float32_t</span><span class="s3">[</span><span class="s4">3</span><span class="s3">] </span><span class="s1">point</span><span class="s3">, </span><span class="s1">Cell</span><span class="s3">* </span><span class="s1">cell</span>
+<a name="l86"><span class="ln">86   </span></a>                                  <span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s4">1 </span><span class="s1">nogil</span>
+<a name="l87"><span class="ln">87   </span></a>
+<a name="l88"><span class="ln">88   </span></a>    <span class="s0"># Private array manipulation to manage the ``cells`` array</span>
+<a name="l89"><span class="ln">89   </span></a>    <span class="s2">cdef </span><span class="s1">int _resize</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">intp_t capacity</span><span class="s3">) </span><span class="s2">except </span><span class="s3">-</span><span class="s4">1 </span><span class="s1">nogil</span>
+<a name="l90"><span class="ln">90   </span></a>    <span class="s2">cdef </span><span class="s1">int _resize_c</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">intp_t capacity</span><span class="s3">=*) </span><span class="s2">except </span><span class="s3">-</span><span class="s4">1 </span><span class="s1">nogil</span>
+<a name="l91"><span class="ln">91   </span></a>    <span class="s2">cdef </span><span class="s1">int _get_cell</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">float32_t</span><span class="s3">[</span><span class="s4">3</span><span class="s3">] </span><span class="s1">point</span><span class="s3">, </span><span class="s1">intp_t cell_id</span><span class="s3">=*) </span><span class="s2">except </span><span class="s3">-</span><span class="s4">1 </span><span class="s1">nogil</span>
+<a name="l92"><span class="ln">92   </span></a>    <span class="s2">cdef </span><span class="s1">Cell</span><span class="s3">[:] </span><span class="s1">_get_cell_ndarray</span><span class="s3">(</span><span class="s1">self</span><span class="s3">)</span>
+<a name="l93"><span class="ln">93   </span></a></pre>
+</body>
+</html>

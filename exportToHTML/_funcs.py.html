@@ -1,0 +1,508 @@
+<html>
+<head>
+<title>_funcs.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #5f826b; font-style: italic;}
+.s5 { color: #2aacb8;}
+.s6 { color: #7a7e85;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_funcs.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">from </span><span class="s1">__future__ </span><span class="s0">import </span><span class="s1">annotations</span>
+<a name="l2"><span class="ln">2    </span></a>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">import </span><span class="s1">warnings</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">TYPE_CHECKING</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a><span class="s0">if </span><span class="s1">TYPE_CHECKING</span><span class="s2">:</span>
+<a name="l7"><span class="ln">7    </span></a>    <span class="s0">from </span><span class="s2">.</span><span class="s1">_typing </span><span class="s0">import </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">ModuleType</span>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a><span class="s1">__all__ </span><span class="s2">= [</span><span class="s3">&quot;atleast_nd&quot;</span><span class="s2">, </span><span class="s3">&quot;cov&quot;</span><span class="s2">, </span><span class="s3">&quot;create_diagonal&quot;</span><span class="s2">, </span><span class="s3">&quot;expand_dims&quot;</span><span class="s2">, </span><span class="s3">&quot;kron&quot;</span><span class="s2">, </span><span class="s3">&quot;sinc&quot;</span><span class="s2">]</span>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a><span class="s0">def </span><span class="s1">atleast_nd</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /, *, </span><span class="s1">ndim</span><span class="s2">: </span><span class="s1">int</span><span class="s2">, </span><span class="s1">xp</span><span class="s2">: </span><span class="s1">ModuleType</span><span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s4">&quot;&quot;&quot; 
+<a name="l14"><span class="ln">14   </span></a>    Recursively expand the dimension of an array to at least `ndim`. 
+<a name="l15"><span class="ln">15   </span></a> 
+<a name="l16"><span class="ln">16   </span></a>    Parameters 
+<a name="l17"><span class="ln">17   </span></a>    ---------- 
+<a name="l18"><span class="ln">18   </span></a>    x : array 
+<a name="l19"><span class="ln">19   </span></a>    ndim : int 
+<a name="l20"><span class="ln">20   </span></a>        The minimum number of dimensions for the result. 
+<a name="l21"><span class="ln">21   </span></a>    xp : array_namespace 
+<a name="l22"><span class="ln">22   </span></a>        The standard-compatible namespace for `x`. 
+<a name="l23"><span class="ln">23   </span></a> 
+<a name="l24"><span class="ln">24   </span></a>    Returns 
+<a name="l25"><span class="ln">25   </span></a>    ------- 
+<a name="l26"><span class="ln">26   </span></a>    res : array 
+<a name="l27"><span class="ln">27   </span></a>        An array with ``res.ndim`` &gt;= `ndim`. 
+<a name="l28"><span class="ln">28   </span></a>        If ``x.ndim`` &gt;= `ndim`, `x` is returned. 
+<a name="l29"><span class="ln">29   </span></a>        If ``x.ndim`` &lt; `ndim`, `x` is expanded by prepending new axes 
+<a name="l30"><span class="ln">30   </span></a>        until ``res.ndim`` equals `ndim`. 
+<a name="l31"><span class="ln">31   </span></a> 
+<a name="l32"><span class="ln">32   </span></a>    Examples 
+<a name="l33"><span class="ln">33   </span></a>    -------- 
+<a name="l34"><span class="ln">34   </span></a>    &gt;&gt;&gt; import array_api_strict as xp 
+<a name="l35"><span class="ln">35   </span></a>    &gt;&gt;&gt; import array_api_extra as xpx 
+<a name="l36"><span class="ln">36   </span></a>    &gt;&gt;&gt; x = xp.asarray([1]) 
+<a name="l37"><span class="ln">37   </span></a>    &gt;&gt;&gt; xpx.atleast_nd(x, ndim=3, xp=xp) 
+<a name="l38"><span class="ln">38   </span></a>    Array([[[1]]], dtype=array_api_strict.int64) 
+<a name="l39"><span class="ln">39   </span></a> 
+<a name="l40"><span class="ln">40   </span></a>    &gt;&gt;&gt; x = xp.asarray([[[1, 2], 
+<a name="l41"><span class="ln">41   </span></a>    ...                  [3, 4]]]) 
+<a name="l42"><span class="ln">42   </span></a>    &gt;&gt;&gt; xpx.atleast_nd(x, ndim=1, xp=xp) is x 
+<a name="l43"><span class="ln">43   </span></a>    True 
+<a name="l44"><span class="ln">44   </span></a> 
+<a name="l45"><span class="ln">45   </span></a>    &quot;&quot;&quot;</span>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">ndim </span><span class="s2">&lt; </span><span class="s1">ndim</span><span class="s2">:</span>
+<a name="l47"><span class="ln">47   </span></a>        <span class="s1">x </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">expand_dims</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s5">0</span><span class="s2">)</span>
+<a name="l48"><span class="ln">48   </span></a>        <span class="s1">x </span><span class="s2">= </span><span class="s1">atleast_nd</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">ndim</span><span class="s2">=</span><span class="s1">ndim</span><span class="s2">, </span><span class="s1">xp</span><span class="s2">=</span><span class="s1">xp</span><span class="s2">)</span>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s0">return </span><span class="s1">x</span>
+<a name="l50"><span class="ln">50   </span></a>
+<a name="l51"><span class="ln">51   </span></a>
+<a name="l52"><span class="ln">52   </span></a><span class="s0">def </span><span class="s1">cov</span><span class="s2">(</span><span class="s1">m</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /, *, </span><span class="s1">xp</span><span class="s2">: </span><span class="s1">ModuleType</span><span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+<a name="l53"><span class="ln">53   </span></a>    <span class="s4">&quot;&quot;&quot; 
+<a name="l54"><span class="ln">54   </span></a>    Estimate a covariance matrix. 
+<a name="l55"><span class="ln">55   </span></a> 
+<a name="l56"><span class="ln">56   </span></a>    Covariance indicates the level to which two variables vary together. 
+<a name="l57"><span class="ln">57   </span></a>    If we examine N-dimensional samples, :math:`X = [x_1, x_2, ... x_N]^T`, 
+<a name="l58"><span class="ln">58   </span></a>    then the covariance matrix element :math:`C_{ij}` is the covariance of 
+<a name="l59"><span class="ln">59   </span></a>    :math:`x_i` and :math:`x_j`. The element :math:`C_{ii}` is the variance 
+<a name="l60"><span class="ln">60   </span></a>    of :math:`x_i`. 
+<a name="l61"><span class="ln">61   </span></a> 
+<a name="l62"><span class="ln">62   </span></a>    This provides a subset of the functionality of ``numpy.cov``. 
+<a name="l63"><span class="ln">63   </span></a> 
+<a name="l64"><span class="ln">64   </span></a>    Parameters 
+<a name="l65"><span class="ln">65   </span></a>    ---------- 
+<a name="l66"><span class="ln">66   </span></a>    m : array 
+<a name="l67"><span class="ln">67   </span></a>        A 1-D or 2-D array containing multiple variables and observations. 
+<a name="l68"><span class="ln">68   </span></a>        Each row of `m` represents a variable, and each column a single 
+<a name="l69"><span class="ln">69   </span></a>        observation of all those variables. 
+<a name="l70"><span class="ln">70   </span></a>    xp : array_namespace 
+<a name="l71"><span class="ln">71   </span></a>        The standard-compatible namespace for `m`. 
+<a name="l72"><span class="ln">72   </span></a> 
+<a name="l73"><span class="ln">73   </span></a>    Returns 
+<a name="l74"><span class="ln">74   </span></a>    ------- 
+<a name="l75"><span class="ln">75   </span></a>    res : array 
+<a name="l76"><span class="ln">76   </span></a>        The covariance matrix of the variables. 
+<a name="l77"><span class="ln">77   </span></a> 
+<a name="l78"><span class="ln">78   </span></a>    Examples 
+<a name="l79"><span class="ln">79   </span></a>    -------- 
+<a name="l80"><span class="ln">80   </span></a>    &gt;&gt;&gt; import array_api_strict as xp 
+<a name="l81"><span class="ln">81   </span></a>    &gt;&gt;&gt; import array_api_extra as xpx 
+<a name="l82"><span class="ln">82   </span></a> 
+<a name="l83"><span class="ln">83   </span></a>    Consider two variables, :math:`x_0` and :math:`x_1`, which 
+<a name="l84"><span class="ln">84   </span></a>    correlate perfectly, but in opposite directions: 
+<a name="l85"><span class="ln">85   </span></a> 
+<a name="l86"><span class="ln">86   </span></a>    &gt;&gt;&gt; x = xp.asarray([[0, 2], [1, 1], [2, 0]]).T 
+<a name="l87"><span class="ln">87   </span></a>    &gt;&gt;&gt; x 
+<a name="l88"><span class="ln">88   </span></a>    Array([[0, 1, 2], 
+<a name="l89"><span class="ln">89   </span></a>           [2, 1, 0]], dtype=array_api_strict.int64) 
+<a name="l90"><span class="ln">90   </span></a> 
+<a name="l91"><span class="ln">91   </span></a>    Note how :math:`x_0` increases while :math:`x_1` decreases. The covariance 
+<a name="l92"><span class="ln">92   </span></a>    matrix shows this clearly: 
+<a name="l93"><span class="ln">93   </span></a> 
+<a name="l94"><span class="ln">94   </span></a>    &gt;&gt;&gt; xpx.cov(x, xp=xp) 
+<a name="l95"><span class="ln">95   </span></a>    Array([[ 1., -1.], 
+<a name="l96"><span class="ln">96   </span></a>           [-1.,  1.]], dtype=array_api_strict.float64) 
+<a name="l97"><span class="ln">97   </span></a> 
+<a name="l98"><span class="ln">98   </span></a> 
+<a name="l99"><span class="ln">99   </span></a>    Note that element :math:`C_{0,1}`, which shows the correlation between 
+<a name="l100"><span class="ln">100  </span></a>    :math:`x_0` and :math:`x_1`, is negative. 
+<a name="l101"><span class="ln">101  </span></a> 
+<a name="l102"><span class="ln">102  </span></a>    Further, note how `x` and `y` are combined: 
+<a name="l103"><span class="ln">103  </span></a> 
+<a name="l104"><span class="ln">104  </span></a>    &gt;&gt;&gt; x = xp.asarray([-2.1, -1,  4.3]) 
+<a name="l105"><span class="ln">105  </span></a>    &gt;&gt;&gt; y = xp.asarray([3,  1.1,  0.12]) 
+<a name="l106"><span class="ln">106  </span></a>    &gt;&gt;&gt; X = xp.stack((x, y), axis=0) 
+<a name="l107"><span class="ln">107  </span></a>    &gt;&gt;&gt; xpx.cov(X, xp=xp) 
+<a name="l108"><span class="ln">108  </span></a>    Array([[11.71      , -4.286     ], 
+<a name="l109"><span class="ln">109  </span></a>           [-4.286     ,  2.14413333]], dtype=array_api_strict.float64) 
+<a name="l110"><span class="ln">110  </span></a> 
+<a name="l111"><span class="ln">111  </span></a>    &gt;&gt;&gt; xpx.cov(x, xp=xp) 
+<a name="l112"><span class="ln">112  </span></a>    Array(11.71, dtype=array_api_strict.float64) 
+<a name="l113"><span class="ln">113  </span></a> 
+<a name="l114"><span class="ln">114  </span></a>    &gt;&gt;&gt; xpx.cov(y, xp=xp) 
+<a name="l115"><span class="ln">115  </span></a>    Array(2.14413333, dtype=array_api_strict.float64) 
+<a name="l116"><span class="ln">116  </span></a> 
+<a name="l117"><span class="ln">117  </span></a>    &quot;&quot;&quot;</span>
+<a name="l118"><span class="ln">118  </span></a>    <span class="s1">m </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">m</span><span class="s2">, </span><span class="s1">copy</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)</span>
+<a name="l119"><span class="ln">119  </span></a>    <span class="s1">dtype </span><span class="s2">= (</span>
+<a name="l120"><span class="ln">120  </span></a>        <span class="s1">xp</span><span class="s2">.</span><span class="s1">float64 </span><span class="s0">if </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">isdtype</span><span class="s2">(</span><span class="s1">m</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s3">&quot;integral&quot;</span><span class="s2">) </span><span class="s0">else </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">result_type</span><span class="s2">(</span><span class="s1">m</span><span class="s2">, </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">float64</span><span class="s2">)</span>
+<a name="l121"><span class="ln">121  </span></a>    <span class="s2">)</span>
+<a name="l122"><span class="ln">122  </span></a>
+<a name="l123"><span class="ln">123  </span></a>    <span class="s1">m </span><span class="s2">= </span><span class="s1">atleast_nd</span><span class="s2">(</span><span class="s1">m</span><span class="s2">, </span><span class="s1">ndim</span><span class="s2">=</span><span class="s5">2</span><span class="s2">, </span><span class="s1">xp</span><span class="s2">=</span><span class="s1">xp</span><span class="s2">)</span>
+<a name="l124"><span class="ln">124  </span></a>    <span class="s1">m </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">astype</span><span class="s2">(</span><span class="s1">m</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">)</span>
+<a name="l125"><span class="ln">125  </span></a>
+<a name="l126"><span class="ln">126  </span></a>    <span class="s1">avg </span><span class="s2">= </span><span class="s1">_mean</span><span class="s2">(</span><span class="s1">m</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s5">1</span><span class="s2">, </span><span class="s1">xp</span><span class="s2">=</span><span class="s1">xp</span><span class="s2">)</span>
+<a name="l127"><span class="ln">127  </span></a>    <span class="s1">fact </span><span class="s2">= </span><span class="s1">m</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s5">1</span><span class="s2">] - </span><span class="s5">1</span>
+<a name="l128"><span class="ln">128  </span></a>
+<a name="l129"><span class="ln">129  </span></a>    <span class="s0">if </span><span class="s1">fact </span><span class="s2">&lt;= </span><span class="s5">0</span><span class="s2">:</span>
+<a name="l130"><span class="ln">130  </span></a>        <span class="s1">warnings</span><span class="s2">.</span><span class="s1">warn</span><span class="s2">(</span><span class="s3">&quot;Degrees of freedom &lt;= 0 for slice&quot;</span><span class="s2">, </span><span class="s1">RuntimeWarning</span><span class="s2">, </span><span class="s1">stacklevel</span><span class="s2">=</span><span class="s5">2</span><span class="s2">)</span>
+<a name="l131"><span class="ln">131  </span></a>        <span class="s1">fact </span><span class="s2">= </span><span class="s5">0.0</span>
+<a name="l132"><span class="ln">132  </span></a>
+<a name="l133"><span class="ln">133  </span></a>    <span class="s1">m </span><span class="s2">-= </span><span class="s1">avg</span><span class="s2">[:, </span><span class="s0">None</span><span class="s2">]</span>
+<a name="l134"><span class="ln">134  </span></a>    <span class="s1">m_transpose </span><span class="s2">= </span><span class="s1">m</span><span class="s2">.</span><span class="s1">T</span>
+<a name="l135"><span class="ln">135  </span></a>    <span class="s0">if </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">isdtype</span><span class="s2">(</span><span class="s1">m_transpose</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s3">&quot;complex floating&quot;</span><span class="s2">):</span>
+<a name="l136"><span class="ln">136  </span></a>        <span class="s1">m_transpose </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">conj</span><span class="s2">(</span><span class="s1">m_transpose</span><span class="s2">)</span>
+<a name="l137"><span class="ln">137  </span></a>    <span class="s1">c </span><span class="s2">= </span><span class="s1">m </span><span class="s2">@ </span><span class="s1">m_transpose</span>
+<a name="l138"><span class="ln">138  </span></a>    <span class="s1">c </span><span class="s2">/= </span><span class="s1">fact</span>
+<a name="l139"><span class="ln">139  </span></a>    <span class="s1">axes </span><span class="s2">= </span><span class="s1">tuple</span><span class="s2">(</span><span class="s1">axis </span><span class="s0">for </span><span class="s1">axis</span><span class="s2">, </span><span class="s1">length </span><span class="s0">in </span><span class="s1">enumerate</span><span class="s2">(</span><span class="s1">c</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">) </span><span class="s0">if </span><span class="s1">length </span><span class="s2">== </span><span class="s5">1</span><span class="s2">)</span>
+<a name="l140"><span class="ln">140  </span></a>    <span class="s0">return </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">squeeze</span><span class="s2">(</span><span class="s1">c</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axes</span><span class="s2">)</span>
+<a name="l141"><span class="ln">141  </span></a>
+<a name="l142"><span class="ln">142  </span></a>
+<a name="l143"><span class="ln">143  </span></a><span class="s0">def </span><span class="s1">create_diagonal</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /, *, </span><span class="s1">offset</span><span class="s2">: </span><span class="s1">int </span><span class="s2">= </span><span class="s5">0</span><span class="s2">, </span><span class="s1">xp</span><span class="s2">: </span><span class="s1">ModuleType</span><span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+<a name="l144"><span class="ln">144  </span></a>    <span class="s4">&quot;&quot;&quot; 
+<a name="l145"><span class="ln">145  </span></a>    Construct a diagonal array. 
+<a name="l146"><span class="ln">146  </span></a> 
+<a name="l147"><span class="ln">147  </span></a>    Parameters 
+<a name="l148"><span class="ln">148  </span></a>    ---------- 
+<a name="l149"><span class="ln">149  </span></a>    x : array 
+<a name="l150"><span class="ln">150  </span></a>        A 1-D array 
+<a name="l151"><span class="ln">151  </span></a>    offset : int, optional 
+<a name="l152"><span class="ln">152  </span></a>        Offset from the leading diagonal (default is ``0``). 
+<a name="l153"><span class="ln">153  </span></a>        Use positive ints for diagonals above the leading diagonal, 
+<a name="l154"><span class="ln">154  </span></a>        and negative ints for diagonals below the leading diagonal. 
+<a name="l155"><span class="ln">155  </span></a>    xp : array_namespace 
+<a name="l156"><span class="ln">156  </span></a>        The standard-compatible namespace for `x`. 
+<a name="l157"><span class="ln">157  </span></a> 
+<a name="l158"><span class="ln">158  </span></a>    Returns 
+<a name="l159"><span class="ln">159  </span></a>    ------- 
+<a name="l160"><span class="ln">160  </span></a>    res : array 
+<a name="l161"><span class="ln">161  </span></a>        A 2-D array with `x` on the diagonal (offset by `offset`). 
+<a name="l162"><span class="ln">162  </span></a> 
+<a name="l163"><span class="ln">163  </span></a>    Examples 
+<a name="l164"><span class="ln">164  </span></a>    -------- 
+<a name="l165"><span class="ln">165  </span></a>    &gt;&gt;&gt; import array_api_strict as xp 
+<a name="l166"><span class="ln">166  </span></a>    &gt;&gt;&gt; import array_api_extra as xpx 
+<a name="l167"><span class="ln">167  </span></a>    &gt;&gt;&gt; x = xp.asarray([2, 4, 8]) 
+<a name="l168"><span class="ln">168  </span></a> 
+<a name="l169"><span class="ln">169  </span></a>    &gt;&gt;&gt; xpx.create_diagonal(x, xp=xp) 
+<a name="l170"><span class="ln">170  </span></a>    Array([[2, 0, 0], 
+<a name="l171"><span class="ln">171  </span></a>           [0, 4, 0], 
+<a name="l172"><span class="ln">172  </span></a>           [0, 0, 8]], dtype=array_api_strict.int64) 
+<a name="l173"><span class="ln">173  </span></a> 
+<a name="l174"><span class="ln">174  </span></a>    &gt;&gt;&gt; xpx.create_diagonal(x, offset=-2, xp=xp) 
+<a name="l175"><span class="ln">175  </span></a>    Array([[0, 0, 0, 0, 0], 
+<a name="l176"><span class="ln">176  </span></a>           [0, 0, 0, 0, 0], 
+<a name="l177"><span class="ln">177  </span></a>           [2, 0, 0, 0, 0], 
+<a name="l178"><span class="ln">178  </span></a>           [0, 4, 0, 0, 0], 
+<a name="l179"><span class="ln">179  </span></a>           [0, 0, 8, 0, 0]], dtype=array_api_strict.int64) 
+<a name="l180"><span class="ln">180  </span></a> 
+<a name="l181"><span class="ln">181  </span></a>    &quot;&quot;&quot;</span>
+<a name="l182"><span class="ln">182  </span></a>    <span class="s0">if </span><span class="s1">x</span><span class="s2">.</span><span class="s1">ndim </span><span class="s2">!= </span><span class="s5">1</span><span class="s2">:</span>
+<a name="l183"><span class="ln">183  </span></a>        <span class="s1">err_msg </span><span class="s2">= </span><span class="s3">&quot;`x` must be 1-dimensional.&quot;</span>
+<a name="l184"><span class="ln">184  </span></a>        <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s1">err_msg</span><span class="s2">)</span>
+<a name="l185"><span class="ln">185  </span></a>    <span class="s1">n </span><span class="s2">= </span><span class="s1">x</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s5">0</span><span class="s2">] + </span><span class="s1">abs</span><span class="s2">(</span><span class="s1">offset</span><span class="s2">)</span>
+<a name="l186"><span class="ln">186  </span></a>    <span class="s1">diag </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">zeros</span><span class="s2">(</span><span class="s1">n</span><span class="s2">**</span><span class="s5">2</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+<a name="l187"><span class="ln">187  </span></a>    <span class="s1">i </span><span class="s2">= </span><span class="s1">offset </span><span class="s0">if </span><span class="s1">offset </span><span class="s2">&gt;= </span><span class="s5">0 </span><span class="s0">else </span><span class="s1">abs</span><span class="s2">(</span><span class="s1">offset</span><span class="s2">) * </span><span class="s1">n</span>
+<a name="l188"><span class="ln">188  </span></a>    <span class="s1">diag</span><span class="s2">[</span><span class="s1">i </span><span class="s2">: </span><span class="s1">min</span><span class="s2">(</span><span class="s1">n </span><span class="s2">* (</span><span class="s1">n </span><span class="s2">- </span><span class="s1">offset</span><span class="s2">), </span><span class="s1">diag</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">[</span><span class="s5">0</span><span class="s2">]) : </span><span class="s1">n </span><span class="s2">+ </span><span class="s5">1</span><span class="s2">] = </span><span class="s1">x</span>
+<a name="l189"><span class="ln">189  </span></a>    <span class="s0">return </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">reshape</span><span class="s2">(</span><span class="s1">diag</span><span class="s2">, (</span><span class="s1">n</span><span class="s2">, </span><span class="s1">n</span><span class="s2">))</span>
+<a name="l190"><span class="ln">190  </span></a>
+<a name="l191"><span class="ln">191  </span></a>
+<a name="l192"><span class="ln">192  </span></a><span class="s0">def </span><span class="s1">_mean</span><span class="s2">(</span>
+<a name="l193"><span class="ln">193  </span></a>    <span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">,</span>
+<a name="l194"><span class="ln">194  </span></a>    <span class="s2">/,</span>
+<a name="l195"><span class="ln">195  </span></a>    <span class="s2">*,</span>
+<a name="l196"><span class="ln">196  </span></a>    <span class="s1">axis</span><span class="s2">: </span><span class="s1">int </span><span class="s2">| </span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, ...] | </span><span class="s0">None </span><span class="s2">= </span><span class="s0">None</span><span class="s2">,</span>
+<a name="l197"><span class="ln">197  </span></a>    <span class="s1">keepdims</span><span class="s2">: </span><span class="s1">bool </span><span class="s2">= </span><span class="s0">False</span><span class="s2">,</span>
+<a name="l198"><span class="ln">198  </span></a>    <span class="s1">xp</span><span class="s2">: </span><span class="s1">ModuleType</span><span class="s2">,</span>
+<a name="l199"><span class="ln">199  </span></a><span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+<a name="l200"><span class="ln">200  </span></a>    <span class="s4">&quot;&quot;&quot; 
+<a name="l201"><span class="ln">201  </span></a>    Complex mean, https://github.com/data-apis/array-api/issues/846. 
+<a name="l202"><span class="ln">202  </span></a>    &quot;&quot;&quot;</span>
+<a name="l203"><span class="ln">203  </span></a>    <span class="s0">if </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">isdtype</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s3">&quot;complex floating&quot;</span><span class="s2">):</span>
+<a name="l204"><span class="ln">204  </span></a>        <span class="s1">x_real </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">real</span><span class="s2">(</span><span class="s1">x</span><span class="s2">)</span>
+<a name="l205"><span class="ln">205  </span></a>        <span class="s1">x_imag </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">imag</span><span class="s2">(</span><span class="s1">x</span><span class="s2">)</span>
+<a name="l206"><span class="ln">206  </span></a>        <span class="s1">mean_real </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">mean</span><span class="s2">(</span><span class="s1">x_real</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">keepdims</span><span class="s2">=</span><span class="s1">keepdims</span><span class="s2">)</span>
+<a name="l207"><span class="ln">207  </span></a>        <span class="s1">mean_imag </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">mean</span><span class="s2">(</span><span class="s1">x_imag</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">keepdims</span><span class="s2">=</span><span class="s1">keepdims</span><span class="s2">)</span>
+<a name="l208"><span class="ln">208  </span></a>        <span class="s0">return </span><span class="s1">mean_real </span><span class="s2">+ (</span><span class="s1">mean_imag </span><span class="s2">* </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s5">1j</span><span class="s2">))</span>
+<a name="l209"><span class="ln">209  </span></a>    <span class="s0">return </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">mean</span><span class="s2">(</span><span class="s1">x</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">keepdims</span><span class="s2">=</span><span class="s1">keepdims</span><span class="s2">)</span>
+<a name="l210"><span class="ln">210  </span></a>
+<a name="l211"><span class="ln">211  </span></a>
+<a name="l212"><span class="ln">212  </span></a><span class="s0">def </span><span class="s1">expand_dims</span><span class="s2">(</span>
+<a name="l213"><span class="ln">213  </span></a>    <span class="s1">a</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /, *, </span><span class="s1">axis</span><span class="s2">: </span><span class="s1">int </span><span class="s2">| </span><span class="s1">tuple</span><span class="s2">[</span><span class="s1">int</span><span class="s2">, ...] = (</span><span class="s5">0</span><span class="s2">,), </span><span class="s1">xp</span><span class="s2">: </span><span class="s1">ModuleType</span>
+<a name="l214"><span class="ln">214  </span></a><span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+<a name="l215"><span class="ln">215  </span></a>    <span class="s4">&quot;&quot;&quot; 
+<a name="l216"><span class="ln">216  </span></a>    Expand the shape of an array. 
+<a name="l217"><span class="ln">217  </span></a> 
+<a name="l218"><span class="ln">218  </span></a>    Insert (a) new axis/axes that will appear at the position(s) specified by 
+<a name="l219"><span class="ln">219  </span></a>    `axis` in the expanded array shape. 
+<a name="l220"><span class="ln">220  </span></a> 
+<a name="l221"><span class="ln">221  </span></a>    This is ``xp.expand_dims`` for `axis` an int *or a tuple of ints*. 
+<a name="l222"><span class="ln">222  </span></a>    Roughly equivalent to ``numpy.expand_dims`` for NumPy arrays. 
+<a name="l223"><span class="ln">223  </span></a> 
+<a name="l224"><span class="ln">224  </span></a>    Parameters 
+<a name="l225"><span class="ln">225  </span></a>    ---------- 
+<a name="l226"><span class="ln">226  </span></a>    a : array 
+<a name="l227"><span class="ln">227  </span></a>    axis : int or tuple of ints, optional 
+<a name="l228"><span class="ln">228  </span></a>        Position(s) in the expanded axes where the new axis (or axes) is/are placed. 
+<a name="l229"><span class="ln">229  </span></a>        If multiple positions are provided, they should be unique (note that a position 
+<a name="l230"><span class="ln">230  </span></a>        given by a positive index could also be referred to by a negative index - 
+<a name="l231"><span class="ln">231  </span></a>        that will also result in an error). 
+<a name="l232"><span class="ln">232  </span></a>        Default: ``(0,)``. 
+<a name="l233"><span class="ln">233  </span></a>    xp : array_namespace 
+<a name="l234"><span class="ln">234  </span></a>        The standard-compatible namespace for `a`. 
+<a name="l235"><span class="ln">235  </span></a> 
+<a name="l236"><span class="ln">236  </span></a>    Returns 
+<a name="l237"><span class="ln">237  </span></a>    ------- 
+<a name="l238"><span class="ln">238  </span></a>    res : array 
+<a name="l239"><span class="ln">239  </span></a>        `a` with an expanded shape. 
+<a name="l240"><span class="ln">240  </span></a> 
+<a name="l241"><span class="ln">241  </span></a>    Examples 
+<a name="l242"><span class="ln">242  </span></a>    -------- 
+<a name="l243"><span class="ln">243  </span></a>    &gt;&gt;&gt; import array_api_strict as xp 
+<a name="l244"><span class="ln">244  </span></a>    &gt;&gt;&gt; import array_api_extra as xpx 
+<a name="l245"><span class="ln">245  </span></a>    &gt;&gt;&gt; x = xp.asarray([1, 2]) 
+<a name="l246"><span class="ln">246  </span></a>    &gt;&gt;&gt; x.shape 
+<a name="l247"><span class="ln">247  </span></a>    (2,) 
+<a name="l248"><span class="ln">248  </span></a> 
+<a name="l249"><span class="ln">249  </span></a>    The following is equivalent to ``x[xp.newaxis, :]`` or ``x[xp.newaxis]``: 
+<a name="l250"><span class="ln">250  </span></a> 
+<a name="l251"><span class="ln">251  </span></a>    &gt;&gt;&gt; y = xpx.expand_dims(x, axis=0, xp=xp) 
+<a name="l252"><span class="ln">252  </span></a>    &gt;&gt;&gt; y 
+<a name="l253"><span class="ln">253  </span></a>    Array([[1, 2]], dtype=array_api_strict.int64) 
+<a name="l254"><span class="ln">254  </span></a>    &gt;&gt;&gt; y.shape 
+<a name="l255"><span class="ln">255  </span></a>    (1, 2) 
+<a name="l256"><span class="ln">256  </span></a> 
+<a name="l257"><span class="ln">257  </span></a>    The following is equivalent to ``x[:, xp.newaxis]``: 
+<a name="l258"><span class="ln">258  </span></a> 
+<a name="l259"><span class="ln">259  </span></a>    &gt;&gt;&gt; y = xpx.expand_dims(x, axis=1, xp=xp) 
+<a name="l260"><span class="ln">260  </span></a>    &gt;&gt;&gt; y 
+<a name="l261"><span class="ln">261  </span></a>    Array([[1], 
+<a name="l262"><span class="ln">262  </span></a>           [2]], dtype=array_api_strict.int64) 
+<a name="l263"><span class="ln">263  </span></a>    &gt;&gt;&gt; y.shape 
+<a name="l264"><span class="ln">264  </span></a>    (2, 1) 
+<a name="l265"><span class="ln">265  </span></a> 
+<a name="l266"><span class="ln">266  </span></a>    ``axis`` may also be a tuple: 
+<a name="l267"><span class="ln">267  </span></a> 
+<a name="l268"><span class="ln">268  </span></a>    &gt;&gt;&gt; y = xpx.expand_dims(x, axis=(0, 1), xp=xp) 
+<a name="l269"><span class="ln">269  </span></a>    &gt;&gt;&gt; y 
+<a name="l270"><span class="ln">270  </span></a>    Array([[[1, 2]]], dtype=array_api_strict.int64) 
+<a name="l271"><span class="ln">271  </span></a> 
+<a name="l272"><span class="ln">272  </span></a>    &gt;&gt;&gt; y = xpx.expand_dims(x, axis=(2, 0), xp=xp) 
+<a name="l273"><span class="ln">273  </span></a>    &gt;&gt;&gt; y 
+<a name="l274"><span class="ln">274  </span></a>    Array([[[1], 
+<a name="l275"><span class="ln">275  </span></a>            [2]]], dtype=array_api_strict.int64) 
+<a name="l276"><span class="ln">276  </span></a> 
+<a name="l277"><span class="ln">277  </span></a>    &quot;&quot;&quot;</span>
+<a name="l278"><span class="ln">278  </span></a>    <span class="s0">if not </span><span class="s1">isinstance</span><span class="s2">(</span><span class="s1">axis</span><span class="s2">, </span><span class="s1">tuple</span><span class="s2">):</span>
+<a name="l279"><span class="ln">279  </span></a>        <span class="s1">axis </span><span class="s2">= (</span><span class="s1">axis</span><span class="s2">,)</span>
+<a name="l280"><span class="ln">280  </span></a>    <span class="s1">ndim </span><span class="s2">= </span><span class="s1">a</span><span class="s2">.</span><span class="s1">ndim </span><span class="s2">+ </span><span class="s1">len</span><span class="s2">(</span><span class="s1">axis</span><span class="s2">)</span>
+<a name="l281"><span class="ln">281  </span></a>    <span class="s0">if </span><span class="s1">axis </span><span class="s2">!= () </span><span class="s0">and </span><span class="s2">(</span><span class="s1">min</span><span class="s2">(</span><span class="s1">axis</span><span class="s2">) &lt; -</span><span class="s1">ndim </span><span class="s0">or </span><span class="s1">max</span><span class="s2">(</span><span class="s1">axis</span><span class="s2">) &gt;= </span><span class="s1">ndim</span><span class="s2">):</span>
+<a name="l282"><span class="ln">282  </span></a>        <span class="s1">err_msg </span><span class="s2">= (</span>
+<a name="l283"><span class="ln">283  </span></a>            <span class="s3">f&quot;a provided axis position is out of bounds for array of dimension </span><span class="s0">{</span><span class="s1">a</span><span class="s2">.</span><span class="s1">ndim</span><span class="s0">}</span><span class="s3">&quot;</span>
+<a name="l284"><span class="ln">284  </span></a>        <span class="s2">)</span>
+<a name="l285"><span class="ln">285  </span></a>        <span class="s0">raise </span><span class="s1">IndexError</span><span class="s2">(</span><span class="s1">err_msg</span><span class="s2">)</span>
+<a name="l286"><span class="ln">286  </span></a>    <span class="s1">axis </span><span class="s2">= </span><span class="s1">tuple</span><span class="s2">(</span><span class="s1">dim </span><span class="s2">% </span><span class="s1">ndim </span><span class="s0">for </span><span class="s1">dim </span><span class="s0">in </span><span class="s1">axis</span><span class="s2">)</span>
+<a name="l287"><span class="ln">287  </span></a>    <span class="s0">if </span><span class="s1">len</span><span class="s2">(</span><span class="s1">set</span><span class="s2">(</span><span class="s1">axis</span><span class="s2">)) != </span><span class="s1">len</span><span class="s2">(</span><span class="s1">axis</span><span class="s2">):</span>
+<a name="l288"><span class="ln">288  </span></a>        <span class="s1">err_msg </span><span class="s2">= </span><span class="s3">&quot;Duplicate dimensions specified in `axis`.&quot;</span>
+<a name="l289"><span class="ln">289  </span></a>        <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s1">err_msg</span><span class="s2">)</span>
+<a name="l290"><span class="ln">290  </span></a>    <span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">sorted</span><span class="s2">(</span><span class="s1">axis</span><span class="s2">):</span>
+<a name="l291"><span class="ln">291  </span></a>        <span class="s1">a </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">expand_dims</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">i</span><span class="s2">)</span>
+<a name="l292"><span class="ln">292  </span></a>    <span class="s0">return </span><span class="s1">a</span>
+<a name="l293"><span class="ln">293  </span></a>
+<a name="l294"><span class="ln">294  </span></a>
+<a name="l295"><span class="ln">295  </span></a><span class="s0">def </span><span class="s1">kron</span><span class="s2">(</span><span class="s1">a</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, </span><span class="s1">b</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /, *, </span><span class="s1">xp</span><span class="s2">: </span><span class="s1">ModuleType</span><span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+<a name="l296"><span class="ln">296  </span></a>    <span class="s4">&quot;&quot;&quot; 
+<a name="l297"><span class="ln">297  </span></a>    Kronecker product of two arrays. 
+<a name="l298"><span class="ln">298  </span></a> 
+<a name="l299"><span class="ln">299  </span></a>    Computes the Kronecker product, a composite array made of blocks of the 
+<a name="l300"><span class="ln">300  </span></a>    second array scaled by the first. 
+<a name="l301"><span class="ln">301  </span></a> 
+<a name="l302"><span class="ln">302  </span></a>    Equivalent to ``numpy.kron`` for NumPy arrays. 
+<a name="l303"><span class="ln">303  </span></a> 
+<a name="l304"><span class="ln">304  </span></a>    Parameters 
+<a name="l305"><span class="ln">305  </span></a>    ---------- 
+<a name="l306"><span class="ln">306  </span></a>    a, b : array 
+<a name="l307"><span class="ln">307  </span></a>    xp : array_namespace 
+<a name="l308"><span class="ln">308  </span></a>        The standard-compatible namespace for `a` and `b`. 
+<a name="l309"><span class="ln">309  </span></a> 
+<a name="l310"><span class="ln">310  </span></a>    Returns 
+<a name="l311"><span class="ln">311  </span></a>    ------- 
+<a name="l312"><span class="ln">312  </span></a>    res : array 
+<a name="l313"><span class="ln">313  </span></a>        The Kronecker product of `a` and `b`. 
+<a name="l314"><span class="ln">314  </span></a> 
+<a name="l315"><span class="ln">315  </span></a>    Notes 
+<a name="l316"><span class="ln">316  </span></a>    ----- 
+<a name="l317"><span class="ln">317  </span></a>    The function assumes that the number of dimensions of `a` and `b` 
+<a name="l318"><span class="ln">318  </span></a>    are the same, if necessary prepending the smallest with ones. 
+<a name="l319"><span class="ln">319  </span></a>    If ``a.shape = (r0,r1,..,rN)`` and ``b.shape = (s0,s1,...,sN)``, 
+<a name="l320"><span class="ln">320  </span></a>    the Kronecker product has shape ``(r0*s0, r1*s1, ..., rN*SN)``. 
+<a name="l321"><span class="ln">321  </span></a>    The elements are products of elements from `a` and `b`, organized 
+<a name="l322"><span class="ln">322  </span></a>    explicitly by:: 
+<a name="l323"><span class="ln">323  </span></a> 
+<a name="l324"><span class="ln">324  </span></a>        kron(a,b)[k0,k1,...,kN] = a[i0,i1,...,iN] * b[j0,j1,...,jN] 
+<a name="l325"><span class="ln">325  </span></a> 
+<a name="l326"><span class="ln">326  </span></a>    where:: 
+<a name="l327"><span class="ln">327  </span></a> 
+<a name="l328"><span class="ln">328  </span></a>        kt = it * st + jt,  t = 0,...,N 
+<a name="l329"><span class="ln">329  </span></a> 
+<a name="l330"><span class="ln">330  </span></a>    In the common 2-D case (N=1), the block structure can be visualized:: 
+<a name="l331"><span class="ln">331  </span></a> 
+<a name="l332"><span class="ln">332  </span></a>        [[ a[0,0]*b,   a[0,1]*b,  ... , a[0,-1]*b  ], 
+<a name="l333"><span class="ln">333  </span></a>         [  ...                              ...   ], 
+<a name="l334"><span class="ln">334  </span></a>         [ a[-1,0]*b,  a[-1,1]*b, ... , a[-1,-1]*b ]] 
+<a name="l335"><span class="ln">335  </span></a> 
+<a name="l336"><span class="ln">336  </span></a> 
+<a name="l337"><span class="ln">337  </span></a>    Examples 
+<a name="l338"><span class="ln">338  </span></a>    -------- 
+<a name="l339"><span class="ln">339  </span></a>    &gt;&gt;&gt; import array_api_strict as xp 
+<a name="l340"><span class="ln">340  </span></a>    &gt;&gt;&gt; import array_api_extra as xpx 
+<a name="l341"><span class="ln">341  </span></a>    &gt;&gt;&gt; xpx.kron(xp.asarray([1, 10, 100]), xp.asarray([5, 6, 7]), xp=xp) 
+<a name="l342"><span class="ln">342  </span></a>    Array([  5,   6,   7,  50,  60,  70, 500, 
+<a name="l343"><span class="ln">343  </span></a>           600, 700], dtype=array_api_strict.int64) 
+<a name="l344"><span class="ln">344  </span></a> 
+<a name="l345"><span class="ln">345  </span></a>    &gt;&gt;&gt; xpx.kron(xp.asarray([5, 6, 7]), xp.asarray([1, 10, 100]), xp=xp) 
+<a name="l346"><span class="ln">346  </span></a>    Array([  5,  50, 500,   6,  60, 600,   7, 
+<a name="l347"><span class="ln">347  </span></a>            70, 700], dtype=array_api_strict.int64) 
+<a name="l348"><span class="ln">348  </span></a> 
+<a name="l349"><span class="ln">349  </span></a>    &gt;&gt;&gt; xpx.kron(xp.eye(2), xp.ones((2, 2)), xp=xp) 
+<a name="l350"><span class="ln">350  </span></a>    Array([[1., 1., 0., 0.], 
+<a name="l351"><span class="ln">351  </span></a>           [1., 1., 0., 0.], 
+<a name="l352"><span class="ln">352  </span></a>           [0., 0., 1., 1.], 
+<a name="l353"><span class="ln">353  </span></a>           [0., 0., 1., 1.]], dtype=array_api_strict.float64) 
+<a name="l354"><span class="ln">354  </span></a> 
+<a name="l355"><span class="ln">355  </span></a> 
+<a name="l356"><span class="ln">356  </span></a>    &gt;&gt;&gt; a = xp.reshape(xp.arange(100), (2, 5, 2, 5)) 
+<a name="l357"><span class="ln">357  </span></a>    &gt;&gt;&gt; b = xp.reshape(xp.arange(24), (2, 3, 4)) 
+<a name="l358"><span class="ln">358  </span></a>    &gt;&gt;&gt; c = xpx.kron(a, b, xp=xp) 
+<a name="l359"><span class="ln">359  </span></a>    &gt;&gt;&gt; c.shape 
+<a name="l360"><span class="ln">360  </span></a>    (2, 10, 6, 20) 
+<a name="l361"><span class="ln">361  </span></a>    &gt;&gt;&gt; I = (1, 3, 0, 2) 
+<a name="l362"><span class="ln">362  </span></a>    &gt;&gt;&gt; J = (0, 2, 1) 
+<a name="l363"><span class="ln">363  </span></a>    &gt;&gt;&gt; J1 = (0,) + J             # extend to ndim=4 
+<a name="l364"><span class="ln">364  </span></a>    &gt;&gt;&gt; S1 = (1,) + b.shape 
+<a name="l365"><span class="ln">365  </span></a>    &gt;&gt;&gt; K = tuple(xp.asarray(I) * xp.asarray(S1) + xp.asarray(J1)) 
+<a name="l366"><span class="ln">366  </span></a>    &gt;&gt;&gt; c[K] == a[I]*b[J] 
+<a name="l367"><span class="ln">367  </span></a>    Array(True, dtype=array_api_strict.bool) 
+<a name="l368"><span class="ln">368  </span></a> 
+<a name="l369"><span class="ln">369  </span></a>    &quot;&quot;&quot;</span>
+<a name="l370"><span class="ln">370  </span></a>
+<a name="l371"><span class="ln">371  </span></a>    <span class="s1">b </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">b</span><span class="s2">)</span>
+<a name="l372"><span class="ln">372  </span></a>    <span class="s1">singletons </span><span class="s2">= (</span><span class="s5">1</span><span class="s2">,) * (</span><span class="s1">b</span><span class="s2">.</span><span class="s1">ndim </span><span class="s2">- </span><span class="s1">a</span><span class="s2">.</span><span class="s1">ndim</span><span class="s2">)</span>
+<a name="l373"><span class="ln">373  </span></a>    <span class="s1">a </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">broadcast_to</span><span class="s2">(</span><span class="s1">xp</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">a</span><span class="s2">), </span><span class="s1">singletons </span><span class="s2">+ </span><span class="s1">a</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">)</span>
+<a name="l374"><span class="ln">374  </span></a>
+<a name="l375"><span class="ln">375  </span></a>    <span class="s1">nd_b</span><span class="s2">, </span><span class="s1">nd_a </span><span class="s2">= </span><span class="s1">b</span><span class="s2">.</span><span class="s1">ndim</span><span class="s2">, </span><span class="s1">a</span><span class="s2">.</span><span class="s1">ndim</span>
+<a name="l376"><span class="ln">376  </span></a>    <span class="s1">nd_max </span><span class="s2">= </span><span class="s1">max</span><span class="s2">(</span><span class="s1">nd_b</span><span class="s2">, </span><span class="s1">nd_a</span><span class="s2">)</span>
+<a name="l377"><span class="ln">377  </span></a>    <span class="s0">if </span><span class="s1">nd_a </span><span class="s2">== </span><span class="s5">0 </span><span class="s0">or </span><span class="s1">nd_b </span><span class="s2">== </span><span class="s5">0</span><span class="s2">:</span>
+<a name="l378"><span class="ln">378  </span></a>        <span class="s0">return </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">multiply</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">b</span><span class="s2">)</span>
+<a name="l379"><span class="ln">379  </span></a>
+<a name="l380"><span class="ln">380  </span></a>    <span class="s1">a_shape </span><span class="s2">= </span><span class="s1">a</span><span class="s2">.</span><span class="s1">shape</span>
+<a name="l381"><span class="ln">381  </span></a>    <span class="s1">b_shape </span><span class="s2">= </span><span class="s1">b</span><span class="s2">.</span><span class="s1">shape</span>
+<a name="l382"><span class="ln">382  </span></a>
+<a name="l383"><span class="ln">383  </span></a>    <span class="s6"># Equalise the shapes by prepending smaller one with 1s</span>
+<a name="l384"><span class="ln">384  </span></a>    <span class="s1">a_shape </span><span class="s2">= (</span><span class="s5">1</span><span class="s2">,) * </span><span class="s1">max</span><span class="s2">(</span><span class="s5">0</span><span class="s2">, </span><span class="s1">nd_b </span><span class="s2">- </span><span class="s1">nd_a</span><span class="s2">) + </span><span class="s1">a_shape</span>
+<a name="l385"><span class="ln">385  </span></a>    <span class="s1">b_shape </span><span class="s2">= (</span><span class="s5">1</span><span class="s2">,) * </span><span class="s1">max</span><span class="s2">(</span><span class="s5">0</span><span class="s2">, </span><span class="s1">nd_a </span><span class="s2">- </span><span class="s1">nd_b</span><span class="s2">) + </span><span class="s1">b_shape</span>
+<a name="l386"><span class="ln">386  </span></a>
+<a name="l387"><span class="ln">387  </span></a>    <span class="s6"># Insert empty dimensions</span>
+<a name="l388"><span class="ln">388  </span></a>    <span class="s1">a_arr </span><span class="s2">= </span><span class="s1">expand_dims</span><span class="s2">(</span><span class="s1">a</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">tuple</span><span class="s2">(</span><span class="s1">range</span><span class="s2">(</span><span class="s1">nd_b </span><span class="s2">- </span><span class="s1">nd_a</span><span class="s2">)), </span><span class="s1">xp</span><span class="s2">=</span><span class="s1">xp</span><span class="s2">)</span>
+<a name="l389"><span class="ln">389  </span></a>    <span class="s1">b_arr </span><span class="s2">= </span><span class="s1">expand_dims</span><span class="s2">(</span><span class="s1">b</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">tuple</span><span class="s2">(</span><span class="s1">range</span><span class="s2">(</span><span class="s1">nd_a </span><span class="s2">- </span><span class="s1">nd_b</span><span class="s2">)), </span><span class="s1">xp</span><span class="s2">=</span><span class="s1">xp</span><span class="s2">)</span>
+<a name="l390"><span class="ln">390  </span></a>
+<a name="l391"><span class="ln">391  </span></a>    <span class="s6"># Compute the product</span>
+<a name="l392"><span class="ln">392  </span></a>    <span class="s1">a_arr </span><span class="s2">= </span><span class="s1">expand_dims</span><span class="s2">(</span><span class="s1">a_arr</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">tuple</span><span class="s2">(</span><span class="s1">range</span><span class="s2">(</span><span class="s5">1</span><span class="s2">, </span><span class="s1">nd_max </span><span class="s2">* </span><span class="s5">2</span><span class="s2">, </span><span class="s5">2</span><span class="s2">)), </span><span class="s1">xp</span><span class="s2">=</span><span class="s1">xp</span><span class="s2">)</span>
+<a name="l393"><span class="ln">393  </span></a>    <span class="s1">b_arr </span><span class="s2">= </span><span class="s1">expand_dims</span><span class="s2">(</span><span class="s1">b_arr</span><span class="s2">, </span><span class="s1">axis</span><span class="s2">=</span><span class="s1">tuple</span><span class="s2">(</span><span class="s1">range</span><span class="s2">(</span><span class="s5">0</span><span class="s2">, </span><span class="s1">nd_max </span><span class="s2">* </span><span class="s5">2</span><span class="s2">, </span><span class="s5">2</span><span class="s2">)), </span><span class="s1">xp</span><span class="s2">=</span><span class="s1">xp</span><span class="s2">)</span>
+<a name="l394"><span class="ln">394  </span></a>    <span class="s1">result </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">multiply</span><span class="s2">(</span><span class="s1">a_arr</span><span class="s2">, </span><span class="s1">b_arr</span><span class="s2">)</span>
+<a name="l395"><span class="ln">395  </span></a>
+<a name="l396"><span class="ln">396  </span></a>    <span class="s6"># Reshape back and return</span>
+<a name="l397"><span class="ln">397  </span></a>    <span class="s1">a_shape </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">a_shape</span><span class="s2">)</span>
+<a name="l398"><span class="ln">398  </span></a>    <span class="s1">b_shape </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">b_shape</span><span class="s2">)</span>
+<a name="l399"><span class="ln">399  </span></a>    <span class="s0">return </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">reshape</span><span class="s2">(</span><span class="s1">result</span><span class="s2">, </span><span class="s1">tuple</span><span class="s2">(</span><span class="s1">xp</span><span class="s2">.</span><span class="s1">multiply</span><span class="s2">(</span><span class="s1">a_shape</span><span class="s2">, </span><span class="s1">b_shape</span><span class="s2">)))</span>
+<a name="l400"><span class="ln">400  </span></a>
+<a name="l401"><span class="ln">401  </span></a>
+<a name="l402"><span class="ln">402  </span></a><span class="s0">def </span><span class="s1">sinc</span><span class="s2">(</span><span class="s1">x</span><span class="s2">: </span><span class="s1">Array</span><span class="s2">, /, *, </span><span class="s1">xp</span><span class="s2">: </span><span class="s1">ModuleType</span><span class="s2">) </span><span class="s1">-&gt; Array</span><span class="s2">:</span>
+<a name="l403"><span class="ln">403  </span></a>    <span class="s4">r&quot;&quot;&quot; 
+<a name="l404"><span class="ln">404  </span></a>    Return the normalized sinc function. 
+<a name="l405"><span class="ln">405  </span></a> 
+<a name="l406"><span class="ln">406  </span></a>    The sinc function is equal to :math:`\sin(\pi x)/(\pi x)` for any argument 
+<a name="l407"><span class="ln">407  </span></a>    :math:`x\ne 0`. ``sinc(0)`` takes the limit value 1, making ``sinc`` not 
+<a name="l408"><span class="ln">408  </span></a>    only everywhere continuous but also infinitely differentiable. 
+<a name="l409"><span class="ln">409  </span></a> 
+<a name="l410"><span class="ln">410  </span></a>    .. note:: 
+<a name="l411"><span class="ln">411  </span></a> 
+<a name="l412"><span class="ln">412  </span></a>        Note the normalization factor of ``pi`` used in the definition. 
+<a name="l413"><span class="ln">413  </span></a>        This is the most commonly used definition in signal processing. 
+<a name="l414"><span class="ln">414  </span></a>        Use ``sinc(x / xp.pi)`` to obtain the unnormalized sinc function 
+<a name="l415"><span class="ln">415  </span></a>        :math:`\sin(x)/x` that is more common in mathematics. 
+<a name="l416"><span class="ln">416  </span></a> 
+<a name="l417"><span class="ln">417  </span></a>    Parameters 
+<a name="l418"><span class="ln">418  </span></a>    ---------- 
+<a name="l419"><span class="ln">419  </span></a>    x : array 
+<a name="l420"><span class="ln">420  </span></a>        Array (possibly multi-dimensional) of values for which to calculate 
+<a name="l421"><span class="ln">421  </span></a>        ``sinc(x)``. Must have a real floating point dtype. 
+<a name="l422"><span class="ln">422  </span></a>    xp : array_namespace 
+<a name="l423"><span class="ln">423  </span></a>        The standard-compatible namespace for `x`. 
+<a name="l424"><span class="ln">424  </span></a> 
+<a name="l425"><span class="ln">425  </span></a>    Returns 
+<a name="l426"><span class="ln">426  </span></a>    ------- 
+<a name="l427"><span class="ln">427  </span></a>    res : array 
+<a name="l428"><span class="ln">428  </span></a>        ``sinc(x)`` calculated elementwise, which has the same shape as the input. 
+<a name="l429"><span class="ln">429  </span></a> 
+<a name="l430"><span class="ln">430  </span></a>    Notes 
+<a name="l431"><span class="ln">431  </span></a>    ----- 
+<a name="l432"><span class="ln">432  </span></a>    The name sinc is short for &quot;sine cardinal&quot; or &quot;sinus cardinalis&quot;. 
+<a name="l433"><span class="ln">433  </span></a> 
+<a name="l434"><span class="ln">434  </span></a>    The sinc function is used in various signal processing applications, 
+<a name="l435"><span class="ln">435  </span></a>    including in anti-aliasing, in the construction of a Lanczos resampling 
+<a name="l436"><span class="ln">436  </span></a>    filter, and in interpolation. 
+<a name="l437"><span class="ln">437  </span></a> 
+<a name="l438"><span class="ln">438  </span></a>    For bandlimited interpolation of discrete-time signals, the ideal 
+<a name="l439"><span class="ln">439  </span></a>    interpolation kernel is proportional to the sinc function. 
+<a name="l440"><span class="ln">440  </span></a> 
+<a name="l441"><span class="ln">441  </span></a>    References 
+<a name="l442"><span class="ln">442  </span></a>    ---------- 
+<a name="l443"><span class="ln">443  </span></a>    .. [1] Weisstein, Eric W. &quot;Sinc Function.&quot; From MathWorld--A Wolfram Web 
+<a name="l444"><span class="ln">444  </span></a>           Resource. https://mathworld.wolfram.com/SincFunction.html 
+<a name="l445"><span class="ln">445  </span></a>    .. [2] Wikipedia, &quot;Sinc function&quot;, 
+<a name="l446"><span class="ln">446  </span></a>           https://en.wikipedia.org/wiki/Sinc_function 
+<a name="l447"><span class="ln">447  </span></a> 
+<a name="l448"><span class="ln">448  </span></a>    Examples 
+<a name="l449"><span class="ln">449  </span></a>    -------- 
+<a name="l450"><span class="ln">450  </span></a>    &gt;&gt;&gt; import array_api_strict as xp 
+<a name="l451"><span class="ln">451  </span></a>    &gt;&gt;&gt; import array_api_extra as xpx 
+<a name="l452"><span class="ln">452  </span></a>    &gt;&gt;&gt; x = xp.linspace(-4, 4, 41) 
+<a name="l453"><span class="ln">453  </span></a>    &gt;&gt;&gt; xpx.sinc(x, xp=xp) 
+<a name="l454"><span class="ln">454  </span></a>    Array([-3.89817183e-17, -4.92362781e-02, 
+<a name="l455"><span class="ln">455  </span></a>           -8.40918587e-02, -8.90384387e-02, 
+<a name="l456"><span class="ln">456  </span></a>           -5.84680802e-02,  3.89817183e-17, 
+<a name="l457"><span class="ln">457  </span></a>            6.68206631e-02,  1.16434881e-01, 
+<a name="l458"><span class="ln">458  </span></a>            1.26137788e-01,  8.50444803e-02, 
+<a name="l459"><span class="ln">459  </span></a>           -3.89817183e-17, -1.03943254e-01, 
+<a name="l460"><span class="ln">460  </span></a>           -1.89206682e-01, -2.16236208e-01, 
+<a name="l461"><span class="ln">461  </span></a>           -1.55914881e-01,  3.89817183e-17, 
+<a name="l462"><span class="ln">462  </span></a>            2.33872321e-01,  5.04551152e-01, 
+<a name="l463"><span class="ln">463  </span></a>            7.56826729e-01,  9.35489284e-01, 
+<a name="l464"><span class="ln">464  </span></a>            1.00000000e+00,  9.35489284e-01, 
+<a name="l465"><span class="ln">465  </span></a>            7.56826729e-01,  5.04551152e-01, 
+<a name="l466"><span class="ln">466  </span></a>            2.33872321e-01,  3.89817183e-17, 
+<a name="l467"><span class="ln">467  </span></a>           -1.55914881e-01, -2.16236208e-01, 
+<a name="l468"><span class="ln">468  </span></a>           -1.89206682e-01, -1.03943254e-01, 
+<a name="l469"><span class="ln">469  </span></a>           -3.89817183e-17,  8.50444803e-02, 
+<a name="l470"><span class="ln">470  </span></a>            1.26137788e-01,  1.16434881e-01, 
+<a name="l471"><span class="ln">471  </span></a>            6.68206631e-02,  3.89817183e-17, 
+<a name="l472"><span class="ln">472  </span></a>           -5.84680802e-02, -8.90384387e-02, 
+<a name="l473"><span class="ln">473  </span></a>           -8.40918587e-02, -4.92362781e-02, 
+<a name="l474"><span class="ln">474  </span></a>           -3.89817183e-17], dtype=array_api_strict.float64) 
+<a name="l475"><span class="ln">475  </span></a> 
+<a name="l476"><span class="ln">476  </span></a>    &quot;&quot;&quot;</span>
+<a name="l477"><span class="ln">477  </span></a>    <span class="s0">if not </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">isdtype</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">, </span><span class="s3">&quot;real floating&quot;</span><span class="s2">):</span>
+<a name="l478"><span class="ln">478  </span></a>        <span class="s1">err_msg </span><span class="s2">= </span><span class="s3">&quot;`x` must have a real floating data type.&quot;</span>
+<a name="l479"><span class="ln">479  </span></a>        <span class="s0">raise </span><span class="s1">ValueError</span><span class="s2">(</span><span class="s1">err_msg</span><span class="s2">)</span>
+<a name="l480"><span class="ln">480  </span></a>    <span class="s6"># no scalars in `where` - array-api#807</span>
+<a name="l481"><span class="ln">481  </span></a>    <span class="s1">y </span><span class="s2">= </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">pi </span><span class="s2">* </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">where</span><span class="s2">(</span>
+<a name="l482"><span class="ln">482  </span></a>        <span class="s1">x</span><span class="s2">, </span><span class="s1">x</span><span class="s2">, </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">asarray</span><span class="s2">(</span><span class="s1">xp</span><span class="s2">.</span><span class="s1">finfo</span><span class="s2">(</span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">).</span><span class="s1">smallest_normal</span><span class="s2">, </span><span class="s1">dtype</span><span class="s2">=</span><span class="s1">x</span><span class="s2">.</span><span class="s1">dtype</span><span class="s2">)</span>
+<a name="l483"><span class="ln">483  </span></a>    <span class="s2">)</span>
+<a name="l484"><span class="ln">484  </span></a>    <span class="s0">return </span><span class="s1">xp</span><span class="s2">.</span><span class="s1">sin</span><span class="s2">(</span><span class="s1">y</span><span class="s2">) / </span><span class="s1">y</span>
+<a name="l485"><span class="ln">485  </span></a></pre>
+</body>
+</html>

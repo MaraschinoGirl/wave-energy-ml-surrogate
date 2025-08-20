@@ -1,0 +1,179 @@
+<html>
+<head>
+<title>_color_data.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #6aab73;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+_color_data.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0"># GH37967: Enable the use of CSS named colors, as defined in</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0"># matplotlib.colors.CSS4_COLORS, when exporting to Excel.</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0"># This data has been copied here, instead of being imported from matplotlib,</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0"># not to have ``to_excel`` methods require matplotlib.</span>
+<a name="l5"><span class="ln">5    </span></a><span class="s0"># source: matplotlib._color_data (3.3.3)</span>
+<a name="l6"><span class="ln">6    </span></a><span class="s2">from </span><span class="s1">__future__ </span><span class="s2">import </span><span class="s1">annotations</span>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a><span class="s1">CSS4_COLORS </span><span class="s3">= {</span>
+<a name="l9"><span class="ln">9    </span></a>    <span class="s4">&quot;aliceblue&quot;</span><span class="s3">: </span><span class="s4">&quot;F0F8FF&quot;</span><span class="s3">,</span>
+<a name="l10"><span class="ln">10   </span></a>    <span class="s4">&quot;antiquewhite&quot;</span><span class="s3">: </span><span class="s4">&quot;FAEBD7&quot;</span><span class="s3">,</span>
+<a name="l11"><span class="ln">11   </span></a>    <span class="s4">&quot;aqua&quot;</span><span class="s3">: </span><span class="s4">&quot;00FFFF&quot;</span><span class="s3">,</span>
+<a name="l12"><span class="ln">12   </span></a>    <span class="s4">&quot;aquamarine&quot;</span><span class="s3">: </span><span class="s4">&quot;7FFFD4&quot;</span><span class="s3">,</span>
+<a name="l13"><span class="ln">13   </span></a>    <span class="s4">&quot;azure&quot;</span><span class="s3">: </span><span class="s4">&quot;F0FFFF&quot;</span><span class="s3">,</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s4">&quot;beige&quot;</span><span class="s3">: </span><span class="s4">&quot;F5F5DC&quot;</span><span class="s3">,</span>
+<a name="l15"><span class="ln">15   </span></a>    <span class="s4">&quot;bisque&quot;</span><span class="s3">: </span><span class="s4">&quot;FFE4C4&quot;</span><span class="s3">,</span>
+<a name="l16"><span class="ln">16   </span></a>    <span class="s4">&quot;black&quot;</span><span class="s3">: </span><span class="s4">&quot;000000&quot;</span><span class="s3">,</span>
+<a name="l17"><span class="ln">17   </span></a>    <span class="s4">&quot;blanchedalmond&quot;</span><span class="s3">: </span><span class="s4">&quot;FFEBCD&quot;</span><span class="s3">,</span>
+<a name="l18"><span class="ln">18   </span></a>    <span class="s4">&quot;blue&quot;</span><span class="s3">: </span><span class="s4">&quot;0000FF&quot;</span><span class="s3">,</span>
+<a name="l19"><span class="ln">19   </span></a>    <span class="s4">&quot;blueviolet&quot;</span><span class="s3">: </span><span class="s4">&quot;8A2BE2&quot;</span><span class="s3">,</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s4">&quot;brown&quot;</span><span class="s3">: </span><span class="s4">&quot;A52A2A&quot;</span><span class="s3">,</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s4">&quot;burlywood&quot;</span><span class="s3">: </span><span class="s4">&quot;DEB887&quot;</span><span class="s3">,</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s4">&quot;cadetblue&quot;</span><span class="s3">: </span><span class="s4">&quot;5F9EA0&quot;</span><span class="s3">,</span>
+<a name="l23"><span class="ln">23   </span></a>    <span class="s4">&quot;chartreuse&quot;</span><span class="s3">: </span><span class="s4">&quot;7FFF00&quot;</span><span class="s3">,</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s4">&quot;chocolate&quot;</span><span class="s3">: </span><span class="s4">&quot;D2691E&quot;</span><span class="s3">,</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s4">&quot;coral&quot;</span><span class="s3">: </span><span class="s4">&quot;FF7F50&quot;</span><span class="s3">,</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s4">&quot;cornflowerblue&quot;</span><span class="s3">: </span><span class="s4">&quot;6495ED&quot;</span><span class="s3">,</span>
+<a name="l27"><span class="ln">27   </span></a>    <span class="s4">&quot;cornsilk&quot;</span><span class="s3">: </span><span class="s4">&quot;FFF8DC&quot;</span><span class="s3">,</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s4">&quot;crimson&quot;</span><span class="s3">: </span><span class="s4">&quot;DC143C&quot;</span><span class="s3">,</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s4">&quot;cyan&quot;</span><span class="s3">: </span><span class="s4">&quot;00FFFF&quot;</span><span class="s3">,</span>
+<a name="l30"><span class="ln">30   </span></a>    <span class="s4">&quot;darkblue&quot;</span><span class="s3">: </span><span class="s4">&quot;00008B&quot;</span><span class="s3">,</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s4">&quot;darkcyan&quot;</span><span class="s3">: </span><span class="s4">&quot;008B8B&quot;</span><span class="s3">,</span>
+<a name="l32"><span class="ln">32   </span></a>    <span class="s4">&quot;darkgoldenrod&quot;</span><span class="s3">: </span><span class="s4">&quot;B8860B&quot;</span><span class="s3">,</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s4">&quot;darkgray&quot;</span><span class="s3">: </span><span class="s4">&quot;A9A9A9&quot;</span><span class="s3">,</span>
+<a name="l34"><span class="ln">34   </span></a>    <span class="s4">&quot;darkgreen&quot;</span><span class="s3">: </span><span class="s4">&quot;006400&quot;</span><span class="s3">,</span>
+<a name="l35"><span class="ln">35   </span></a>    <span class="s4">&quot;darkgrey&quot;</span><span class="s3">: </span><span class="s4">&quot;A9A9A9&quot;</span><span class="s3">,</span>
+<a name="l36"><span class="ln">36   </span></a>    <span class="s4">&quot;darkkhaki&quot;</span><span class="s3">: </span><span class="s4">&quot;BDB76B&quot;</span><span class="s3">,</span>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s4">&quot;darkmagenta&quot;</span><span class="s3">: </span><span class="s4">&quot;8B008B&quot;</span><span class="s3">,</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s4">&quot;darkolivegreen&quot;</span><span class="s3">: </span><span class="s4">&quot;556B2F&quot;</span><span class="s3">,</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s4">&quot;darkorange&quot;</span><span class="s3">: </span><span class="s4">&quot;FF8C00&quot;</span><span class="s3">,</span>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s4">&quot;darkorchid&quot;</span><span class="s3">: </span><span class="s4">&quot;9932CC&quot;</span><span class="s3">,</span>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s4">&quot;darkred&quot;</span><span class="s3">: </span><span class="s4">&quot;8B0000&quot;</span><span class="s3">,</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s4">&quot;darksalmon&quot;</span><span class="s3">: </span><span class="s4">&quot;E9967A&quot;</span><span class="s3">,</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s4">&quot;darkseagreen&quot;</span><span class="s3">: </span><span class="s4">&quot;8FBC8F&quot;</span><span class="s3">,</span>
+<a name="l44"><span class="ln">44   </span></a>    <span class="s4">&quot;darkslateblue&quot;</span><span class="s3">: </span><span class="s4">&quot;483D8B&quot;</span><span class="s3">,</span>
+<a name="l45"><span class="ln">45   </span></a>    <span class="s4">&quot;darkslategray&quot;</span><span class="s3">: </span><span class="s4">&quot;2F4F4F&quot;</span><span class="s3">,</span>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s4">&quot;darkslategrey&quot;</span><span class="s3">: </span><span class="s4">&quot;2F4F4F&quot;</span><span class="s3">,</span>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s4">&quot;darkturquoise&quot;</span><span class="s3">: </span><span class="s4">&quot;00CED1&quot;</span><span class="s3">,</span>
+<a name="l48"><span class="ln">48   </span></a>    <span class="s4">&quot;darkviolet&quot;</span><span class="s3">: </span><span class="s4">&quot;9400D3&quot;</span><span class="s3">,</span>
+<a name="l49"><span class="ln">49   </span></a>    <span class="s4">&quot;deeppink&quot;</span><span class="s3">: </span><span class="s4">&quot;FF1493&quot;</span><span class="s3">,</span>
+<a name="l50"><span class="ln">50   </span></a>    <span class="s4">&quot;deepskyblue&quot;</span><span class="s3">: </span><span class="s4">&quot;00BFFF&quot;</span><span class="s3">,</span>
+<a name="l51"><span class="ln">51   </span></a>    <span class="s4">&quot;dimgray&quot;</span><span class="s3">: </span><span class="s4">&quot;696969&quot;</span><span class="s3">,</span>
+<a name="l52"><span class="ln">52   </span></a>    <span class="s4">&quot;dimgrey&quot;</span><span class="s3">: </span><span class="s4">&quot;696969&quot;</span><span class="s3">,</span>
+<a name="l53"><span class="ln">53   </span></a>    <span class="s4">&quot;dodgerblue&quot;</span><span class="s3">: </span><span class="s4">&quot;1E90FF&quot;</span><span class="s3">,</span>
+<a name="l54"><span class="ln">54   </span></a>    <span class="s4">&quot;firebrick&quot;</span><span class="s3">: </span><span class="s4">&quot;B22222&quot;</span><span class="s3">,</span>
+<a name="l55"><span class="ln">55   </span></a>    <span class="s4">&quot;floralwhite&quot;</span><span class="s3">: </span><span class="s4">&quot;FFFAF0&quot;</span><span class="s3">,</span>
+<a name="l56"><span class="ln">56   </span></a>    <span class="s4">&quot;forestgreen&quot;</span><span class="s3">: </span><span class="s4">&quot;228B22&quot;</span><span class="s3">,</span>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s4">&quot;fuchsia&quot;</span><span class="s3">: </span><span class="s4">&quot;FF00FF&quot;</span><span class="s3">,</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s4">&quot;gainsboro&quot;</span><span class="s3">: </span><span class="s4">&quot;DCDCDC&quot;</span><span class="s3">,</span>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s4">&quot;ghostwhite&quot;</span><span class="s3">: </span><span class="s4">&quot;F8F8FF&quot;</span><span class="s3">,</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s4">&quot;gold&quot;</span><span class="s3">: </span><span class="s4">&quot;FFD700&quot;</span><span class="s3">,</span>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s4">&quot;goldenrod&quot;</span><span class="s3">: </span><span class="s4">&quot;DAA520&quot;</span><span class="s3">,</span>
+<a name="l62"><span class="ln">62   </span></a>    <span class="s4">&quot;gray&quot;</span><span class="s3">: </span><span class="s4">&quot;808080&quot;</span><span class="s3">,</span>
+<a name="l63"><span class="ln">63   </span></a>    <span class="s4">&quot;green&quot;</span><span class="s3">: </span><span class="s4">&quot;008000&quot;</span><span class="s3">,</span>
+<a name="l64"><span class="ln">64   </span></a>    <span class="s4">&quot;greenyellow&quot;</span><span class="s3">: </span><span class="s4">&quot;ADFF2F&quot;</span><span class="s3">,</span>
+<a name="l65"><span class="ln">65   </span></a>    <span class="s4">&quot;grey&quot;</span><span class="s3">: </span><span class="s4">&quot;808080&quot;</span><span class="s3">,</span>
+<a name="l66"><span class="ln">66   </span></a>    <span class="s4">&quot;honeydew&quot;</span><span class="s3">: </span><span class="s4">&quot;F0FFF0&quot;</span><span class="s3">,</span>
+<a name="l67"><span class="ln">67   </span></a>    <span class="s4">&quot;hotpink&quot;</span><span class="s3">: </span><span class="s4">&quot;FF69B4&quot;</span><span class="s3">,</span>
+<a name="l68"><span class="ln">68   </span></a>    <span class="s4">&quot;indianred&quot;</span><span class="s3">: </span><span class="s4">&quot;CD5C5C&quot;</span><span class="s3">,</span>
+<a name="l69"><span class="ln">69   </span></a>    <span class="s4">&quot;indigo&quot;</span><span class="s3">: </span><span class="s4">&quot;4B0082&quot;</span><span class="s3">,</span>
+<a name="l70"><span class="ln">70   </span></a>    <span class="s4">&quot;ivory&quot;</span><span class="s3">: </span><span class="s4">&quot;FFFFF0&quot;</span><span class="s3">,</span>
+<a name="l71"><span class="ln">71   </span></a>    <span class="s4">&quot;khaki&quot;</span><span class="s3">: </span><span class="s4">&quot;F0E68C&quot;</span><span class="s3">,</span>
+<a name="l72"><span class="ln">72   </span></a>    <span class="s4">&quot;lavender&quot;</span><span class="s3">: </span><span class="s4">&quot;E6E6FA&quot;</span><span class="s3">,</span>
+<a name="l73"><span class="ln">73   </span></a>    <span class="s4">&quot;lavenderblush&quot;</span><span class="s3">: </span><span class="s4">&quot;FFF0F5&quot;</span><span class="s3">,</span>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s4">&quot;lawngreen&quot;</span><span class="s3">: </span><span class="s4">&quot;7CFC00&quot;</span><span class="s3">,</span>
+<a name="l75"><span class="ln">75   </span></a>    <span class="s4">&quot;lemonchiffon&quot;</span><span class="s3">: </span><span class="s4">&quot;FFFACD&quot;</span><span class="s3">,</span>
+<a name="l76"><span class="ln">76   </span></a>    <span class="s4">&quot;lightblue&quot;</span><span class="s3">: </span><span class="s4">&quot;ADD8E6&quot;</span><span class="s3">,</span>
+<a name="l77"><span class="ln">77   </span></a>    <span class="s4">&quot;lightcoral&quot;</span><span class="s3">: </span><span class="s4">&quot;F08080&quot;</span><span class="s3">,</span>
+<a name="l78"><span class="ln">78   </span></a>    <span class="s4">&quot;lightcyan&quot;</span><span class="s3">: </span><span class="s4">&quot;E0FFFF&quot;</span><span class="s3">,</span>
+<a name="l79"><span class="ln">79   </span></a>    <span class="s4">&quot;lightgoldenrodyellow&quot;</span><span class="s3">: </span><span class="s4">&quot;FAFAD2&quot;</span><span class="s3">,</span>
+<a name="l80"><span class="ln">80   </span></a>    <span class="s4">&quot;lightgray&quot;</span><span class="s3">: </span><span class="s4">&quot;D3D3D3&quot;</span><span class="s3">,</span>
+<a name="l81"><span class="ln">81   </span></a>    <span class="s4">&quot;lightgreen&quot;</span><span class="s3">: </span><span class="s4">&quot;90EE90&quot;</span><span class="s3">,</span>
+<a name="l82"><span class="ln">82   </span></a>    <span class="s4">&quot;lightgrey&quot;</span><span class="s3">: </span><span class="s4">&quot;D3D3D3&quot;</span><span class="s3">,</span>
+<a name="l83"><span class="ln">83   </span></a>    <span class="s4">&quot;lightpink&quot;</span><span class="s3">: </span><span class="s4">&quot;FFB6C1&quot;</span><span class="s3">,</span>
+<a name="l84"><span class="ln">84   </span></a>    <span class="s4">&quot;lightsalmon&quot;</span><span class="s3">: </span><span class="s4">&quot;FFA07A&quot;</span><span class="s3">,</span>
+<a name="l85"><span class="ln">85   </span></a>    <span class="s4">&quot;lightseagreen&quot;</span><span class="s3">: </span><span class="s4">&quot;20B2AA&quot;</span><span class="s3">,</span>
+<a name="l86"><span class="ln">86   </span></a>    <span class="s4">&quot;lightskyblue&quot;</span><span class="s3">: </span><span class="s4">&quot;87CEFA&quot;</span><span class="s3">,</span>
+<a name="l87"><span class="ln">87   </span></a>    <span class="s4">&quot;lightslategray&quot;</span><span class="s3">: </span><span class="s4">&quot;778899&quot;</span><span class="s3">,</span>
+<a name="l88"><span class="ln">88   </span></a>    <span class="s4">&quot;lightslategrey&quot;</span><span class="s3">: </span><span class="s4">&quot;778899&quot;</span><span class="s3">,</span>
+<a name="l89"><span class="ln">89   </span></a>    <span class="s4">&quot;lightsteelblue&quot;</span><span class="s3">: </span><span class="s4">&quot;B0C4DE&quot;</span><span class="s3">,</span>
+<a name="l90"><span class="ln">90   </span></a>    <span class="s4">&quot;lightyellow&quot;</span><span class="s3">: </span><span class="s4">&quot;FFFFE0&quot;</span><span class="s3">,</span>
+<a name="l91"><span class="ln">91   </span></a>    <span class="s4">&quot;lime&quot;</span><span class="s3">: </span><span class="s4">&quot;00FF00&quot;</span><span class="s3">,</span>
+<a name="l92"><span class="ln">92   </span></a>    <span class="s4">&quot;limegreen&quot;</span><span class="s3">: </span><span class="s4">&quot;32CD32&quot;</span><span class="s3">,</span>
+<a name="l93"><span class="ln">93   </span></a>    <span class="s4">&quot;linen&quot;</span><span class="s3">: </span><span class="s4">&quot;FAF0E6&quot;</span><span class="s3">,</span>
+<a name="l94"><span class="ln">94   </span></a>    <span class="s4">&quot;magenta&quot;</span><span class="s3">: </span><span class="s4">&quot;FF00FF&quot;</span><span class="s3">,</span>
+<a name="l95"><span class="ln">95   </span></a>    <span class="s4">&quot;maroon&quot;</span><span class="s3">: </span><span class="s4">&quot;800000&quot;</span><span class="s3">,</span>
+<a name="l96"><span class="ln">96   </span></a>    <span class="s4">&quot;mediumaquamarine&quot;</span><span class="s3">: </span><span class="s4">&quot;66CDAA&quot;</span><span class="s3">,</span>
+<a name="l97"><span class="ln">97   </span></a>    <span class="s4">&quot;mediumblue&quot;</span><span class="s3">: </span><span class="s4">&quot;0000CD&quot;</span><span class="s3">,</span>
+<a name="l98"><span class="ln">98   </span></a>    <span class="s4">&quot;mediumorchid&quot;</span><span class="s3">: </span><span class="s4">&quot;BA55D3&quot;</span><span class="s3">,</span>
+<a name="l99"><span class="ln">99   </span></a>    <span class="s4">&quot;mediumpurple&quot;</span><span class="s3">: </span><span class="s4">&quot;9370DB&quot;</span><span class="s3">,</span>
+<a name="l100"><span class="ln">100  </span></a>    <span class="s4">&quot;mediumseagreen&quot;</span><span class="s3">: </span><span class="s4">&quot;3CB371&quot;</span><span class="s3">,</span>
+<a name="l101"><span class="ln">101  </span></a>    <span class="s4">&quot;mediumslateblue&quot;</span><span class="s3">: </span><span class="s4">&quot;7B68EE&quot;</span><span class="s3">,</span>
+<a name="l102"><span class="ln">102  </span></a>    <span class="s4">&quot;mediumspringgreen&quot;</span><span class="s3">: </span><span class="s4">&quot;00FA9A&quot;</span><span class="s3">,</span>
+<a name="l103"><span class="ln">103  </span></a>    <span class="s4">&quot;mediumturquoise&quot;</span><span class="s3">: </span><span class="s4">&quot;48D1CC&quot;</span><span class="s3">,</span>
+<a name="l104"><span class="ln">104  </span></a>    <span class="s4">&quot;mediumvioletred&quot;</span><span class="s3">: </span><span class="s4">&quot;C71585&quot;</span><span class="s3">,</span>
+<a name="l105"><span class="ln">105  </span></a>    <span class="s4">&quot;midnightblue&quot;</span><span class="s3">: </span><span class="s4">&quot;191970&quot;</span><span class="s3">,</span>
+<a name="l106"><span class="ln">106  </span></a>    <span class="s4">&quot;mintcream&quot;</span><span class="s3">: </span><span class="s4">&quot;F5FFFA&quot;</span><span class="s3">,</span>
+<a name="l107"><span class="ln">107  </span></a>    <span class="s4">&quot;mistyrose&quot;</span><span class="s3">: </span><span class="s4">&quot;FFE4E1&quot;</span><span class="s3">,</span>
+<a name="l108"><span class="ln">108  </span></a>    <span class="s4">&quot;moccasin&quot;</span><span class="s3">: </span><span class="s4">&quot;FFE4B5&quot;</span><span class="s3">,</span>
+<a name="l109"><span class="ln">109  </span></a>    <span class="s4">&quot;navajowhite&quot;</span><span class="s3">: </span><span class="s4">&quot;FFDEAD&quot;</span><span class="s3">,</span>
+<a name="l110"><span class="ln">110  </span></a>    <span class="s4">&quot;navy&quot;</span><span class="s3">: </span><span class="s4">&quot;000080&quot;</span><span class="s3">,</span>
+<a name="l111"><span class="ln">111  </span></a>    <span class="s4">&quot;oldlace&quot;</span><span class="s3">: </span><span class="s4">&quot;FDF5E6&quot;</span><span class="s3">,</span>
+<a name="l112"><span class="ln">112  </span></a>    <span class="s4">&quot;olive&quot;</span><span class="s3">: </span><span class="s4">&quot;808000&quot;</span><span class="s3">,</span>
+<a name="l113"><span class="ln">113  </span></a>    <span class="s4">&quot;olivedrab&quot;</span><span class="s3">: </span><span class="s4">&quot;6B8E23&quot;</span><span class="s3">,</span>
+<a name="l114"><span class="ln">114  </span></a>    <span class="s4">&quot;orange&quot;</span><span class="s3">: </span><span class="s4">&quot;FFA500&quot;</span><span class="s3">,</span>
+<a name="l115"><span class="ln">115  </span></a>    <span class="s4">&quot;orangered&quot;</span><span class="s3">: </span><span class="s4">&quot;FF4500&quot;</span><span class="s3">,</span>
+<a name="l116"><span class="ln">116  </span></a>    <span class="s4">&quot;orchid&quot;</span><span class="s3">: </span><span class="s4">&quot;DA70D6&quot;</span><span class="s3">,</span>
+<a name="l117"><span class="ln">117  </span></a>    <span class="s4">&quot;palegoldenrod&quot;</span><span class="s3">: </span><span class="s4">&quot;EEE8AA&quot;</span><span class="s3">,</span>
+<a name="l118"><span class="ln">118  </span></a>    <span class="s4">&quot;palegreen&quot;</span><span class="s3">: </span><span class="s4">&quot;98FB98&quot;</span><span class="s3">,</span>
+<a name="l119"><span class="ln">119  </span></a>    <span class="s4">&quot;paleturquoise&quot;</span><span class="s3">: </span><span class="s4">&quot;AFEEEE&quot;</span><span class="s3">,</span>
+<a name="l120"><span class="ln">120  </span></a>    <span class="s4">&quot;palevioletred&quot;</span><span class="s3">: </span><span class="s4">&quot;DB7093&quot;</span><span class="s3">,</span>
+<a name="l121"><span class="ln">121  </span></a>    <span class="s4">&quot;papayawhip&quot;</span><span class="s3">: </span><span class="s4">&quot;FFEFD5&quot;</span><span class="s3">,</span>
+<a name="l122"><span class="ln">122  </span></a>    <span class="s4">&quot;peachpuff&quot;</span><span class="s3">: </span><span class="s4">&quot;FFDAB9&quot;</span><span class="s3">,</span>
+<a name="l123"><span class="ln">123  </span></a>    <span class="s4">&quot;peru&quot;</span><span class="s3">: </span><span class="s4">&quot;CD853F&quot;</span><span class="s3">,</span>
+<a name="l124"><span class="ln">124  </span></a>    <span class="s4">&quot;pink&quot;</span><span class="s3">: </span><span class="s4">&quot;FFC0CB&quot;</span><span class="s3">,</span>
+<a name="l125"><span class="ln">125  </span></a>    <span class="s4">&quot;plum&quot;</span><span class="s3">: </span><span class="s4">&quot;DDA0DD&quot;</span><span class="s3">,</span>
+<a name="l126"><span class="ln">126  </span></a>    <span class="s4">&quot;powderblue&quot;</span><span class="s3">: </span><span class="s4">&quot;B0E0E6&quot;</span><span class="s3">,</span>
+<a name="l127"><span class="ln">127  </span></a>    <span class="s4">&quot;purple&quot;</span><span class="s3">: </span><span class="s4">&quot;800080&quot;</span><span class="s3">,</span>
+<a name="l128"><span class="ln">128  </span></a>    <span class="s4">&quot;rebeccapurple&quot;</span><span class="s3">: </span><span class="s4">&quot;663399&quot;</span><span class="s3">,</span>
+<a name="l129"><span class="ln">129  </span></a>    <span class="s4">&quot;red&quot;</span><span class="s3">: </span><span class="s4">&quot;FF0000&quot;</span><span class="s3">,</span>
+<a name="l130"><span class="ln">130  </span></a>    <span class="s4">&quot;rosybrown&quot;</span><span class="s3">: </span><span class="s4">&quot;BC8F8F&quot;</span><span class="s3">,</span>
+<a name="l131"><span class="ln">131  </span></a>    <span class="s4">&quot;royalblue&quot;</span><span class="s3">: </span><span class="s4">&quot;4169E1&quot;</span><span class="s3">,</span>
+<a name="l132"><span class="ln">132  </span></a>    <span class="s4">&quot;saddlebrown&quot;</span><span class="s3">: </span><span class="s4">&quot;8B4513&quot;</span><span class="s3">,</span>
+<a name="l133"><span class="ln">133  </span></a>    <span class="s4">&quot;salmon&quot;</span><span class="s3">: </span><span class="s4">&quot;FA8072&quot;</span><span class="s3">,</span>
+<a name="l134"><span class="ln">134  </span></a>    <span class="s4">&quot;sandybrown&quot;</span><span class="s3">: </span><span class="s4">&quot;F4A460&quot;</span><span class="s3">,</span>
+<a name="l135"><span class="ln">135  </span></a>    <span class="s4">&quot;seagreen&quot;</span><span class="s3">: </span><span class="s4">&quot;2E8B57&quot;</span><span class="s3">,</span>
+<a name="l136"><span class="ln">136  </span></a>    <span class="s4">&quot;seashell&quot;</span><span class="s3">: </span><span class="s4">&quot;FFF5EE&quot;</span><span class="s3">,</span>
+<a name="l137"><span class="ln">137  </span></a>    <span class="s4">&quot;sienna&quot;</span><span class="s3">: </span><span class="s4">&quot;A0522D&quot;</span><span class="s3">,</span>
+<a name="l138"><span class="ln">138  </span></a>    <span class="s4">&quot;silver&quot;</span><span class="s3">: </span><span class="s4">&quot;C0C0C0&quot;</span><span class="s3">,</span>
+<a name="l139"><span class="ln">139  </span></a>    <span class="s4">&quot;skyblue&quot;</span><span class="s3">: </span><span class="s4">&quot;87CEEB&quot;</span><span class="s3">,</span>
+<a name="l140"><span class="ln">140  </span></a>    <span class="s4">&quot;slateblue&quot;</span><span class="s3">: </span><span class="s4">&quot;6A5ACD&quot;</span><span class="s3">,</span>
+<a name="l141"><span class="ln">141  </span></a>    <span class="s4">&quot;slategray&quot;</span><span class="s3">: </span><span class="s4">&quot;708090&quot;</span><span class="s3">,</span>
+<a name="l142"><span class="ln">142  </span></a>    <span class="s4">&quot;slategrey&quot;</span><span class="s3">: </span><span class="s4">&quot;708090&quot;</span><span class="s3">,</span>
+<a name="l143"><span class="ln">143  </span></a>    <span class="s4">&quot;snow&quot;</span><span class="s3">: </span><span class="s4">&quot;FFFAFA&quot;</span><span class="s3">,</span>
+<a name="l144"><span class="ln">144  </span></a>    <span class="s4">&quot;springgreen&quot;</span><span class="s3">: </span><span class="s4">&quot;00FF7F&quot;</span><span class="s3">,</span>
+<a name="l145"><span class="ln">145  </span></a>    <span class="s4">&quot;steelblue&quot;</span><span class="s3">: </span><span class="s4">&quot;4682B4&quot;</span><span class="s3">,</span>
+<a name="l146"><span class="ln">146  </span></a>    <span class="s4">&quot;tan&quot;</span><span class="s3">: </span><span class="s4">&quot;D2B48C&quot;</span><span class="s3">,</span>
+<a name="l147"><span class="ln">147  </span></a>    <span class="s4">&quot;teal&quot;</span><span class="s3">: </span><span class="s4">&quot;008080&quot;</span><span class="s3">,</span>
+<a name="l148"><span class="ln">148  </span></a>    <span class="s4">&quot;thistle&quot;</span><span class="s3">: </span><span class="s4">&quot;D8BFD8&quot;</span><span class="s3">,</span>
+<a name="l149"><span class="ln">149  </span></a>    <span class="s4">&quot;tomato&quot;</span><span class="s3">: </span><span class="s4">&quot;FF6347&quot;</span><span class="s3">,</span>
+<a name="l150"><span class="ln">150  </span></a>    <span class="s4">&quot;turquoise&quot;</span><span class="s3">: </span><span class="s4">&quot;40E0D0&quot;</span><span class="s3">,</span>
+<a name="l151"><span class="ln">151  </span></a>    <span class="s4">&quot;violet&quot;</span><span class="s3">: </span><span class="s4">&quot;EE82EE&quot;</span><span class="s3">,</span>
+<a name="l152"><span class="ln">152  </span></a>    <span class="s4">&quot;wheat&quot;</span><span class="s3">: </span><span class="s4">&quot;F5DEB3&quot;</span><span class="s3">,</span>
+<a name="l153"><span class="ln">153  </span></a>    <span class="s4">&quot;white&quot;</span><span class="s3">: </span><span class="s4">&quot;FFFFFF&quot;</span><span class="s3">,</span>
+<a name="l154"><span class="ln">154  </span></a>    <span class="s4">&quot;whitesmoke&quot;</span><span class="s3">: </span><span class="s4">&quot;F5F5F5&quot;</span><span class="s3">,</span>
+<a name="l155"><span class="ln">155  </span></a>    <span class="s4">&quot;yellow&quot;</span><span class="s3">: </span><span class="s4">&quot;FFFF00&quot;</span><span class="s3">,</span>
+<a name="l156"><span class="ln">156  </span></a>    <span class="s4">&quot;yellowgreen&quot;</span><span class="s3">: </span><span class="s4">&quot;9ACD32&quot;</span><span class="s3">,</span>
+<a name="l157"><span class="ln">157  </span></a><span class="s3">}</span>
+<a name="l158"><span class="ln">158  </span></a></pre>
+</body>
+</html>

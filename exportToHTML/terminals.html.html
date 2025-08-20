@@ -1,0 +1,30 @@
+<html>
+<head>
+<title>terminals.html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #d5b778;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bababa;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #cf8e6d;}
+.ln { color: #4b5059; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+terminals.html</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">&lt;!doctype </span><span class="s2">html</span><span class="s0">&gt;&lt;html&gt;&lt;head&gt;&lt;meta </span><span class="s2">charset</span><span class="s3">=&quot;utf-8&quot;</span><span class="s0">/&gt;&lt;meta </span><span class="s2">name</span><span class="s3">=&quot;viewport&quot; </span><span class="s2">content</span><span class="s3">=&quot;width=device-width,initial-scale=1&quot;</span><span class="s0">/&gt;&lt;title&gt;</span><span class="s1">{{page_config['appName'] | e}} - Terminal</span><span class="s0">&lt;/title&gt;</span><span class="s1">{% block favicon %}</span><span class="s0">&lt;link </span><span class="s2">rel</span><span class="s3">=&quot;icon&quot; </span><span class="s2">type</span><span class="s3">=&quot;image/x-icon&quot; </span><span class="s2">href</span><span class="s3">=&quot;{{ base_url | escape }}static/favicons/favicon-terminal.ico&quot; </span><span class="s2">class</span><span class="s3">=&quot;favicon&quot;</span><span class="s0">/&gt;</span><span class="s1">{% endblock %} {% if custom_css %}</span><span class="s0">&lt;link </span><span class="s2">rel</span><span class="s3">=&quot;stylesheet&quot; </span><span class="s2">href</span><span class="s3">=&quot;{{ base_url | escape }}custom/custom.css&quot;</span><span class="s0">/&gt;</span><span class="s1">{% endif %}</span><span class="s0">&lt;script </span><span class="s2">defer</span><span class="s3">=&quot;defer&quot; </span><span class="s2">src</span><span class="s3">=&quot;{{page_config.fullStaticUrl}}/main.fba732deea80efe92de1.js?v=fba732deea80efe92de1&quot;</span><span class="s0">&gt;&lt;/script&gt;&lt;/head&gt;&lt;body </span><span class="s2">class</span><span class="s3">=&quot;jp-ThemedContainer&quot;</span><span class="s0">&gt;</span><span class="s1">{# Copy so we do not modify the page_config with updates. #} {% set page_config_full = page_config.copy() %} {# Set a dummy variable - we just want the side effect of the update. #} {% set _ = page_config_full.update(baseUrl=base_url, wsUrl=ws_url) %} {# Sentinel value to say that we are on the tree page #} {% set _ = page_config_full.update(notebookPage='terminals') %}</span><span class="s0">&lt;script </span><span class="s2">id</span><span class="s3">=&quot;jupyter-config-data&quot; </span><span class="s2">type</span><span class="s3">=&quot;application/json&quot;</span><span class="s0">&gt;</span><span class="s1">{{ page_config_full | tojson }}</span><span class="s0">&lt;/script&gt;&lt;script&gt;</span><span class="s4">/* Remove token from URL. */</span>
+<a name="l2"><span class="ln">2    </span></a>      <span class="s1">(</span><span class="s5">function </span><span class="s1">() {</span>
+<a name="l3"><span class="ln">3    </span></a>        <span class="s5">var </span><span class="s1">parsedUrl = </span><span class="s5">new </span><span class="s1">URL(window.location.href);</span>
+<a name="l4"><span class="ln">4    </span></a>        <span class="s5">if </span><span class="s1">(parsedUrl.searchParams.get(</span><span class="s3">'token'</span><span class="s1">)) {</span>
+<a name="l5"><span class="ln">5    </span></a>          <span class="s1">parsedUrl.searchParams.delete(</span><span class="s3">'token'</span><span class="s1">);</span>
+<a name="l6"><span class="ln">6    </span></a>          <span class="s1">window.history.replaceState({}, </span><span class="s3">''</span><span class="s1">, parsedUrl.href);</span>
+<a name="l7"><span class="ln">7    </span></a>        <span class="s1">}</span>
+<a name="l8"><span class="ln">8    </span></a>      <span class="s1">})();</span><span class="s0">&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;</span></pre>
+</body>
+</html>
